@@ -87,7 +87,7 @@ from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
 from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
-from sympy.printing.ccode import ccode, CCodePrinter
+from sympy.printing.ccode import ccode, c_code_printers
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.printing.julia import julia_code, JuliaCodePrinter
 from sympy.printing.octave import octave_code, OctaveCodePrinter
@@ -760,6 +760,11 @@ class CCodeGen(CodeGen):
 
     code_extension = "c"
     interface_extension = "h"
+    standard = 'nochoice'
+
+    def _ccode(self, *args, **kwargs):
+        kwargs['standard'] = kwargs.get('standard', self.standard)
+        return ccode(*args, **kwargs)
 
     def _get_header(self):
         """Writes a common header for the generated files."""
@@ -790,7 +795,7 @@ class CCodeGen(CodeGen):
 
         type_args = []
         for arg in routine.arguments:
-            name = ccode(arg.name)
+            name = self._ccode(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
                 type_args.append((arg.get_datatype('C'), "*%s" % name))
             else:
@@ -842,13 +847,13 @@ class CCodeGen(CodeGen):
                 assign_to = result.result_var
 
             try:
-                constants, not_c, c_expr = ccode(result.expr, human=False,
+                constants, not_c, c_expr = self._ccode(result.expr, human=False,
                         assign_to=assign_to, dereference=dereference)
             except AssignmentError:
                 assign_to = result.result_var
                 code_lines.append(
                     "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = ccode(result.expr, human=False,
+                constants, not_c, c_expr = self._ccode(result.expr, human=False,
                         assign_to=assign_to, dereference=dereference)
 
             for name, value in sorted(constants, key=str):
@@ -860,7 +865,7 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def _indent_code(self, codelines):
-        p = CCodePrinter()
+        p = c_code_printers[(self.standard or 'nochoice').lower()]()
         return p.indent_code(codelines)
 
     def _get_routine_ending(self, routine):
@@ -925,6 +930,11 @@ class CCodeGen(CodeGen):
     # functions it has to call.
     dump_fns = [dump_c, dump_h]
 
+class C89CodeGen(CCodeGen):
+    standard = 'C89'
+
+class C99CodeGen(CCodeGen):
+    standard = 'C99'
 
 class FCodeGen(CodeGen):
     """Generator for Fortran 95 code
@@ -1593,8 +1603,16 @@ class OctaveCodeGen(CodeGen):
     dump_fns = [dump_m]
 
 
-def get_code_generator(language, project):
-    CodeGenClass = {"C": CCodeGen, "F95": FCodeGen, "JULIA": JuliaCodeGen,
+def get_code_generator(language, project, standard=None):
+    if language == 'C':
+        if standard is None:
+            pass
+        elif standard.lower() == 'c89':
+            language = 'C89'
+        elif standard.lower() == 'c99':
+            language = 'C99'
+    CodeGenClass = {"C": CCodeGen, "C89": C89CodeGen, "C99": C99CodeGen,
+                    "F95": FCodeGen, "JULIA": JuliaCodeGen,
                     "OCTAVE": OctaveCodeGen}.get(language.upper())
     if CodeGenClass is None:
         raise ValueError("Language '%s' is not supported." % language)
@@ -1608,7 +1626,7 @@ def get_code_generator(language, project):
 
 def codegen(name_expr, language, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None):
+            global_vars=None, standard=None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -1727,7 +1745,7 @@ def codegen(name_expr, language, prefix=None, project="project",
     """
 
     # Initialize the code generator.
-    code_gen = get_code_generator(language, project)
+    code_gen = get_code_generator(language, project, standard)
 
     if isinstance(name_expr[0], string_types):
         # single tuple is given, turn it into a singleton list with a tuple.

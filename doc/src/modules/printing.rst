@@ -60,14 +60,16 @@ to strings of C code).
 Usage::
 
     >>> from sympy.printing import print_ccode
-    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.functions import sin, cos, Abs, gamma
     >>> from sympy.abc import x
-    >>> print_ccode(sin(x)**2 + cos(x)**2)
+    >>> print_ccode(sin(x)**2 + cos(x)**2, standard='C89')
     pow(sin(x), 2) + pow(cos(x), 2)
-    >>> print_ccode(2*x + cos(x), assign_to="result")
+    >>> print_ccode(2*x + cos(x), assign_to="result", standard='C89')
     result = 2*x + cos(x);
-    >>> print_ccode(Abs(x**2))
+    >>> print_ccode(Abs(x**2), standard='C89')
     fabs(pow(x, 2))
+    >>> print_ccode(gamma(x**2), standard='C99')
+    tgamma(pow(x, 2))
 
 .. autodata:: sympy.printing.ccode.known_functions
 
