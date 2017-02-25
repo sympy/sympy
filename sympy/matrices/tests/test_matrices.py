@@ -603,25 +603,6 @@ def test_LUdecomp():
     assert U.is_upper
     assert (L*U).permuteBkwd(p) - testmat == zeros(4)
 
-    # non-square
-    testmat = Matrix([[1, 2, 3],
-                      [4, 5, 6],
-                      [7, 8, 9],
-                      [10, 11, 12]])
-    L, U, p = testmat.LUdecomposition()
-    assert L.is_lower
-    assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4, 3)
-
-    # square and singular
-    testmat = Matrix([[1, 2, 3],
-                      [2, 4, 6],
-                      [4, 5, 6]])
-    L, U, p = testmat.LUdecomposition()
-    assert L.is_lower
-    assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(3)
-
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower
@@ -1805,6 +1786,8 @@ def test_errors():
     raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
            ]).QRdecomposition())
     raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
+    raises(
+        NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
