@@ -2,12 +2,9 @@ from __future__ import (absolute_import, division, print_function)
 """
 C++ code printer
 """
+from functools import wraps
+from .ccode import C89CodePrinter, C99CodePrinter
 
-
-from .ccode import (
-    CCodePrinter, C99CodePrinter, known_functions as _c_known_functions,
-    reserved_words as _c_reserved_words
-)
 
 # from http://en.cppreference.com/w/cpp/keyword
 reserved = {
@@ -26,11 +23,10 @@ reserved = {
     ]
 }
 
-reserved['C++11'] = reserved['C++98'][:]
-reserved['C++11'].extend([
+reserved['C++11'] = reserved['C++98'][:] + [
     'alignas', 'alignof', 'char16_t', 'char32_t', 'constexpr', 'decltype',
     'noexcept', 'nullptr', 'static_assert', 'thread_local'
-])
+]
 reserved['C++17'] = []
 # TM TS: atomic_cancel, atomic_commit, atomic_noexcept, synchronized
 # concepts TS: concept, requires
@@ -39,59 +35,89 @@ reserved['C++17'] = []
 
 _math_functions = {
     'C++98': {
-        'Mod': 'std::fmod',
-        'ceiling': 'std::ceil',
+        'Mod': ('fmod', 'cmath'),
+        'ceiling': ('ceil', 'cmath'),
+    },
+    'C++11': {
+        'gamma': ('tgamma', 'cmath'),
+    },
+    'C++17': {
+        'beta': ('beta', 'cmath'),
+        'Ei': ('expint', 'cmath'),
+        'zeta': ('riemann_zeta', 'cmath'),
     }
 }
 
 # from http://en.cppreference.com/w/cpp/header/cmath
 for k in ('Abs', 'exp', 'log', 'log10', 'sqrt', 'sin', 'cos', 'tan',  # 'Pow'
           'asin', 'acos', 'atan', 'atan2', 'sinh', 'cosh', 'tanh', 'floor'):
-    _math_functions['C++98'][k] = 'std::' + k.lower()
+    _math_functions['C++98'][k] = (k.lower(), 'cmath')
 
-_math_functions['C++11'] = {
-    'gamma': 'tgamma',
-}
 
 for k in ('asinh', 'acosh', 'atanh', 'erf', 'erfc'):
-    _math_functions['C++11'][k] = 'std::' + k.lower()
+    _math_functions['C++11'][k] = (k.lower(), 'cmath')
 
 
-def _attach_print_method(cls, k, v):
-    method_name = '_print_' + k
-    if hasattr(cls, method_name):
+def adds_header(per_ns_mapping):
+    if per_ns_mapping:
+        def decorator_factory(_print_method):
+            @wraps(_print_method)
+            def _print_wrapper(self, expr):
+                if self._ns in per_ns_mapping:
+                    self._headers.add(per_ns_mapping[self._ns])
+                return _print_method(self, expr)
+            return _print_wrapper
+        return decorator_factory
+    else:
+        return lambda func: func
+
+
+def _attach_print_method(cls, sympy_name, func_name, std_header):
+    meth_name = '_print_%s' % sympy_name
+    if hasattr(cls, meth_name):
         raise ValueError("Edit method (or subclass) instead of overwriting.")
-    setattr(cls, method_name, lambda self, expr:
-            v+'(' + ', '.join(map(self._print, expr.args)) + ')')
+    def _print_method(self, expr):
+        return '{0}{1}({2})'.format(self._ns, func_name, ', '.join(map(self._print, expr.args)))
+    _print_method.__doc__ = "Prints code for %s" % k
+    setattr(cls, meth_name, adds_header({'std::': std_header})(_print_method))
 
-def _attach_methods(cls, cont):
-    for k, v in cont[cls.standard].items():
-        _attach_print_method(cls, k, v)
+
+def _attach_print_methods(cls, cont):
+    for sympy_name, (cxx_name, std_header) in cont[cls.standard].items():
+        _attach_print_method(cls, sympy_name, cxx_name, std_header)
 
 
 class _CXXCodePrinterBase(object):
     language = 'C++'
-    _ns = 'std::'
+    _ns = 'std::'  # namespace
+
+    def __init__(self, settings=None):
+        super(_CXXCodePrinterBase, self).__init__(settings or {})
+        self._headers = set()
 
     def _print_Max(self, expr):
         from sympy import Max
         if len(expr.args) == 1:
             return self._print(expr.args[0])
+        if self._ns == 'std::':
+            self._headers.add('algorithm')
         return "%smax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
 
     def _print_Min(self, expr):
         from sympy import Min
         if len(expr.args) == 1:
             return self._print(expr.args[0])
+        if self._ns == 'std::':
+            self._headers.add('algorithm')
         return "%smin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
 
 
-class CXX98CodePrinter(_CXXCodePrinterBase, CCodePrinter):
+class CXX98CodePrinter(_CXXCodePrinterBase, C89CodePrinter):
     standard = 'C++98'
     reserved_words = set(reserved['C++98'])
 
 
-_attach_methods(CXX98CodePrinter, _math_functions)
+_attach_print_methods(CXX98CodePrinter, _math_functions)
 
 
 class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
@@ -99,30 +125,20 @@ class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     reserved_words = set(reserved['C++11'])
 
 
-_attach_methods(CXX11CodePrinter, _math_functions)
+_attach_print_methods(CXX11CodePrinter, _math_functions)
 
 
-# C++17 standard not finalized, below is just an example (unoffical API)
-class _CXX17CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
+class CXX17CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     standard = 'C++17'
+    reserved_words = set(reserved['C++17'])
 
-    def __init__(self, settings=None):
-        super(_CXX17CodePrinter, self).__init__(settings or {})
-        self.reserved_words = set(reserved[self.standard])
 
-    def _print_beta(self, expr):
-        return '{0}beta({1}, {2})'.format(self._ns, *map(self._print, expr.args))
-
-    def _print_Ei(self, expr):
-        return '{0}expint({1})'.format(self._ns, self._print(expr.args[0]))
-
-    def _print_zeta(self, expr):
-        return '{0}riemann_zeta({1})'.format(self._ns, self._print(expr.args[0]))
+_attach_print_methods(CXX17CodePrinter, _math_functions)
 
 cxx_code_printers = {
     'c++98': CXX98CodePrinter,
     'c++11': CXX11CodePrinter,
-    'c++17': _CXX17CodePrinter
+    'c++17': CXX17CodePrinter
 }
 
 def cxxcode(expr, assign_to=None, standard='c++98', **settings):

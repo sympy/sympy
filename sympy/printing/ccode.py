@@ -49,6 +49,7 @@ _known_functions_C9X = dict(known_functions_C89, **{
     "erf": "erf",
     "gamma": "tgamma",
 })
+known_functions = _known_functions_C9X
 
 known_functions_C99 = dict(_known_functions_C9X, **{
     "erfc": "erfc",

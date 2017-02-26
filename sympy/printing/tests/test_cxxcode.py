@@ -1,6 +1,6 @@
 from sympy import symbols
-from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
-from sympy.printing.cxxcode import CXX98CodePrinter, CXX11CodePrinter, _CXX17CodePrinter, cxxcode
+from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, exp
+from sympy.printing.cxxcode import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
 
 x, y = symbols('x y')
@@ -14,6 +14,15 @@ def test_CXX98CodePrinter():
     assert cxx98printer.standard == 'C++98'
     assert 'template' in cxx98printer.reserved_words
     assert 'alignas' not in cxx98printer.reserved_words
+
+
+def test_CXX98CodePrinter__headers():
+    cxx98printer = CXX98CodePrinter()
+    assert cxx98printer._headers == set()
+    assert cxx98printer.doprint(sqrt(x)) == 'std::sqrt(x)'
+    assert cxx98printer._headers == {'cmath',}
+    assert cxx98printer.doprint(Max(x, 3))
+    assert cxx98printer._headers == {'algorithm', 'cmath'}
 
 
 def test_CXX11CodePrinter():
@@ -35,10 +44,23 @@ def test_subclass_print_method():
     assert MyPrinter().doprint(log1p(x)) == 'my_library::log1p(x)'
 
 
+def test_subclass_print_method__ns():
+    class MyPrinter(CXX11CodePrinter):
+        _ns = 'my_library::'
+
+    p = CXX11CodePrinter()
+    myp = MyPrinter()
+
+    assert p.doprint(log1p(x)) == 'std::log1p(x)'
+    assert p._headers == {'cmath',}
+    assert myp.doprint(log1p(x)) == 'my_library::log1p(x)'
+    assert myp._headers == {}
+
+
 def test_CXX17CodePrinter():
-    assert _CXX17CodePrinter().doprint(beta(x, y)) == 'std::beta(x, y)'
-    assert _CXX17CodePrinter().doprint(Ei(x)) == 'std::expint(x)'
-    assert _CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
+    assert CXX17CodePrinter().doprint(beta(x, y)) == 'std::beta(x, y)'
+    assert CXX17CodePrinter().doprint(Ei(x)) == 'std::expint(x)'
+    assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
 
 
 def test_cxxcode():
