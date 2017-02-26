@@ -834,6 +834,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     """
     f = sympify(f)
 
+    symbol = sympify(symbol)
+
     if f is S.true:
         return domain
 
@@ -842,6 +844,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % (f))
+
+    if isinstance(symbol, Number):
+        raise ValueError(filldedent('''
+            symbol should not be a constant or a number '''))
 
     free_symbols = f.free_symbols
 
