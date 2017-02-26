@@ -1,8 +1,8 @@
 """
 C code printer
 
-The CCodePrinter converts single sympy expressions into single C expressions,
-using the functions defined in math.h where possible.
+The C89CodePrinter & C99CodePrinter converts single sympy expressions into
+single C expressions, using the functions defined in math.h where possible.
 
 A complete code generator, which uses ccode extensively, can be found in
 sympy.utilities.codegen. The codegen module can be used to generate complete
@@ -22,7 +22,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
-# Used in CCodePrinter._print_Function(self)
+# Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
     "Abs": [(lambda x: not x.is_integer, "fabs")],
     "sin": "sin",
@@ -343,6 +343,11 @@ class _C9XCodePrinter(object):
     issue=12220,
     deprecated_since_version='1.1')
 class CCodePrinter(_C9XCodePrinter, C89CodePrinter):
+    """
+    Deprecated.
+
+    Alias for C89CodePrinter, for backwards compatibility.
+    """
     _kf = _known_functions_C9X  # known_functions-dict to copy
 
 

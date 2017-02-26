@@ -430,9 +430,9 @@ def _get_code_wrapper_class(backend):
 # Here we define a lookup of backends -> tuples of languages. For now, each
 # tuple is of length 1, but if a backend supports more than one language,
 # the most preferable language is listed first.
-_lang_lookup = {'CYTHON': ('C',),
+_lang_lookup = {'CYTHON': ('C', 'C89', 'C99'),
                 'F2PY': ('F95',),
-                'NUMPY': ('C',),
+                'NUMPY': ('C', 'C89', 'C99'),
                 'DUMMY': ('F95',)}     # Dummy here just for testing
 
 def _infer_language(backend):

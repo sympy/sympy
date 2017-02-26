@@ -54,6 +54,8 @@ def test_all_classes_are_tested():
 
             def is_Basic(name):
                 cls = getattr(mod, name)
+                if hasattr(cls, '_sympy_deprecated_func'):
+                    cls = cls._sympy_deprecated_func
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
