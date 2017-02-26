@@ -35,56 +35,42 @@ reserved['C++17'] = []
 
 _math_functions = {
     'C++98': {
-        'Mod': ('fmod', 'cmath'),
-        'ceiling': ('ceil', 'cmath'),
+        'Mod': 'fmod',
+        'ceiling': 'ceil',
     },
     'C++11': {
-        'gamma': ('tgamma', 'cmath'),
+        'gamma': 'tgamma',
     },
     'C++17': {
-        'beta': ('beta', 'cmath'),
-        'Ei': ('expint', 'cmath'),
-        'zeta': ('riemann_zeta', 'cmath'),
+        'beta': 'beta',
+        'Ei': 'expint',
+        'zeta': 'riemann_zeta',
     }
 }
 
 # from http://en.cppreference.com/w/cpp/header/cmath
 for k in ('Abs', 'exp', 'log', 'log10', 'sqrt', 'sin', 'cos', 'tan',  # 'Pow'
           'asin', 'acos', 'atan', 'atan2', 'sinh', 'cosh', 'tanh', 'floor'):
-    _math_functions['C++98'][k] = (k.lower(), 'cmath')
+    _math_functions['C++98'][k] = k.lower()
 
 
 for k in ('asinh', 'acosh', 'atanh', 'erf', 'erfc'):
-    _math_functions['C++11'][k] = (k.lower(), 'cmath')
+    _math_functions['C++11'][k] = k.lower()
 
 
-def adds_header(per_ns_mapping):
-    if per_ns_mapping:
-        def decorator_factory(_print_method):
-            @wraps(_print_method)
-            def _print_wrapper(self, expr):
-                if self._ns in per_ns_mapping:
-                    self._headers.add(per_ns_mapping[self._ns])
-                return _print_method(self, expr)
-            return _print_wrapper
-        return decorator_factory
-    else:
-        return lambda func: func
-
-
-def _attach_print_method(cls, sympy_name, func_name, std_header):
+def _attach_print_method(cls, sympy_name, func_name):
     meth_name = '_print_%s' % sympy_name
     if hasattr(cls, meth_name):
         raise ValueError("Edit method (or subclass) instead of overwriting.")
     def _print_method(self, expr):
         return '{0}{1}({2})'.format(self._ns, func_name, ', '.join(map(self._print, expr.args)))
     _print_method.__doc__ = "Prints code for %s" % k
-    setattr(cls, meth_name, adds_header({'std::': std_header})(_print_method))
+    setattr(cls, meth_name, _print_method)
 
 
 def _attach_print_methods(cls, cont):
-    for sympy_name, (cxx_name, std_header) in cont[cls.standard].items():
-        _attach_print_method(cls, sympy_name, cxx_name, std_header)
+    for sympy_name, cxx_name in cont[cls.standard].items():
+        _attach_print_method(cls, sympy_name, cxx_name)
 
 
 class _CXXCodePrinterBase(object):
@@ -93,22 +79,17 @@ class _CXXCodePrinterBase(object):
 
     def __init__(self, settings=None):
         super(_CXXCodePrinterBase, self).__init__(settings or {})
-        self._headers = set()
 
     def _print_Max(self, expr):
         from sympy import Max
         if len(expr.args) == 1:
             return self._print(expr.args[0])
-        if self._ns == 'std::':
-            self._headers.add('algorithm')
         return "%smax(%s, %s)" % (self._ns, expr.args[0], self._print(Max(*expr.args[1:])))
 
     def _print_Min(self, expr):
         from sympy import Min
         if len(expr.args) == 1:
             return self._print(expr.args[0])
-        if self._ns == 'std::':
-            self._headers.add('algorithm')
         return "%smin(%s, %s)" % (self._ns, expr.args[0], self._print(Min(*expr.args[1:])))
 
 
