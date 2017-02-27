@@ -1,2 +1,2 @@
 general:
-  build_dir: sympy/pysics/tests
+  build_dir: sympy/physics/tests
