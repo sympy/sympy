@@ -74,6 +74,7 @@ def _attach_print_methods(cls, cont):
 
 
 class _CXXCodePrinterBase(object):
+    printmethod = "_cxxcode"
     language = 'C++'
     _ns = 'std::'  # namespace
 
