@@ -445,7 +445,7 @@ def differentiate_finite(expr, *symbols,
 
     Note that the above form preserves the product rule in discrete form.
     If we want we can pass ``evaluate=True`` to get another form (which is
-    usually no what we want):
+    usually not what we want):
 
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h], evaluate=True).simplify()
     -((f(-h + x) - f(h + x))*g(x) + (g(-h + x) - g(h + x))*f(x))/(2*h)
