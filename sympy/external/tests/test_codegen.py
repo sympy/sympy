@@ -47,7 +47,7 @@ program main
 end program
 """
 
-main_template['C'] = """
+main_template['C89'] = """
 #include "codegen.h"
 #include <stdio.h>
 #include <math.h>
@@ -60,19 +60,17 @@ int main() {
   return result;
 }
 """
-main_template['C89'] = main_template['C']
-main_template['C99'] = main_template['C']
+main_template['C99'] = main_template['C89']
 # templates for the numerical tests
 
 numerical_test_template = {}
-numerical_test_template['C'] = """
+numerical_test_template['C89'] = """
   if (fabs(%(call)s)>%(threshold)s) {
     printf("Numerical validation failed: %(call)s=%%e threshold=%(threshold)s\\n", %(call)s);
     result = -1;
   }
 """
-numerical_test_template['C89'] = numerical_test_template['C']
-numerical_test_template['C99'] = numerical_test_template['C']
+numerical_test_template['C99'] = numerical_test_template['C89']
 
 numerical_test_template['F95'] = """
   if (abs(%(call)s)>%(threshold)s) then
@@ -109,7 +107,6 @@ compile_commands['ifort'] = [
 ]
 
 combinations_lang_compiler = [
-    ('C', 'cc'),
     ('C89', 'cc'),
     ('C99', 'cc'),
     ('F95', 'ifort'),
@@ -269,11 +266,6 @@ for lang, compiler in combinations_lang_compiler:
         invalid_lang_compilers.append((lang, compiler))
 
 # We test all language-compiler combinations, just to report what is skipped
-
-def test_C_cc():
-    if ("C", 'cc') in invalid_lang_compilers:
-        skip("`cc' command didn't work as expected (C)")
-
 
 def test_C89_cc():
     if ("C89", 'cc') in invalid_lang_compilers:

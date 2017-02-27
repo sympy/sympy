@@ -200,7 +200,9 @@ def test_autowrap_matrix_matrix_C_cython():
 
 def test_ufuncify_C_Cython():
     has_module('Cython')
-    runtest_ufuncify('C99', 'cython')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'cython')
 
 def test_issue_10274_C_cython():
     has_module('Cython')
@@ -212,4 +214,6 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    runtest_ufuncify('C99', 'numpy')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        runtest_ufuncify('C99', 'numpy')

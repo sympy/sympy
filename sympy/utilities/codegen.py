@@ -1683,17 +1683,18 @@ def codegen(name_expr, language, prefix=None, project="project",
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(
-    ...     ("f", x+y*z), "C", "test", header=False, empty=False)
+    ...     ("f", x+y*z), "C89", "test", header=False, empty=False)
     >>> print(c_name)
     test.c
     >>> print(c_code)
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
-      double f_result;
-      f_result = x + y*z;
-      return f_result;
+       double f_result;
+       f_result = x + y*z;
+       return f_result;
     }
+    <BLANKLINE>
     >>> print(h_name)
     test.h
     >>> print(c_header)
@@ -1701,6 +1702,7 @@ def codegen(name_expr, language, prefix=None, project="project",
     #define PROJECT__TEST__H
     double f(double x, double y, double z);
     #endif
+    <BLANKLINE>
 
     Another example using Equality objects to give named outputs.  Here the
     filename (prefix) is taken from the first (name, expr) pair.
@@ -1709,7 +1711,7 @@ def codegen(name_expr, language, prefix=None, project="project",
     >>> from sympy import Eq
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(
     ...      [("myfcn", x + y), ("fcn2", [Eq(f, 2*x), Eq(g, y)])],
-    ...      "C", header=False, empty=False)
+    ...      "C99", header=False, empty=False)
     >>> print(c_name)
     myfcn.c
     >>> print(c_code)
@@ -1724,6 +1726,7 @@ def codegen(name_expr, language, prefix=None, project="project",
        (*f) = 2*x;
        (*g) = y;
     }
+    <BLANKLINE>
 
     If the generated function(s) will be part of a larger project where various
     global variables have been defined, the 'global_vars' option can be used
@@ -1741,6 +1744,7 @@ def codegen(name_expr, language, prefix=None, project="project",
     REAL*8, intent(in) :: y
     f = x + y*z
     end function
+    <BLANKLINE>
 
     """
 
