@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 import sys
-from distutils.version import LooseVersion
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -155,10 +154,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
         modversion = getattr(mod, module_version_attr)
         if module_version_attr_call_args is not None:
             modversion = modversion(*module_version_attr_call_args)
-        if modversion < LooseVersion(min_module_version):
+        if modversion < min_module_version:
             if warn_old_version:
                 # Attempt to create a pretty string version of the version
-                if isinstance(min_module_version, str if sys.version_info[0] > 2 else basestring):
+                if isinstance(min_module_version, basestring):
                     verstr = min_module_version
                 elif isinstance(min_module_version, (tuple, list)):
                     verstr = '.'.join(map(str, min_module_version))
