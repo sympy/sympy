@@ -773,15 +773,24 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
+        from sympy.solvers.solveset import solveset
+
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
+
+        if a == b:
+            return 0;
 
         if a is None:
             A = 0
         else:
             A = self.subs(x, a)
             if A.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                A = limit(self, x, a)
+                if (a < b) != False:
+                    A = limit(self, x, a,"+")
+                else:
+                    A = limit(self, x, a,"-")
+
                 if A is S.NaN:
                     return A
                 if isinstance(A, Limit):
@@ -792,11 +801,28 @@ class Expr(Basic, EvalfMixin):
         else:
             B = self.subs(x, b)
             if B.has(S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                B = limit(self, x, b)
+                if (a < b) != False:
+                    B = limit(self, x, b,"-")
+                else:
+                    B = limit(self, x, b,"+")
+
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
-        return B - A
+        if (a and b) is None:
+            return B - A
+
+        value = B - A
+
+        if a.is_comparable and b.is_comparable:
+            singularities = list(solveset(self.cancel().as_numer_denom()[1], x))
+            for s in singularities:
+                if a < s < b:
+                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                elif b < s < a:
+                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+
+        return value
 
     def _eval_power(self, other):
         # subclass to compute self**other for cases when
@@ -1055,7 +1081,7 @@ class Expr(Basic, EvalfMixin):
         >>> (-2*x*A*B*y).args_cnc(split_1=False)
         [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
-        [set([-1, 2, x, y]), []]
+        [{-1, 2, x, y}, []]
 
         The arg is always treated as a Mul:
 
@@ -1094,11 +1120,12 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
-        When x is noncommutative, the coeff to the left (default) or right of x
-        can be returned. The keyword 'right' is ignored when x is commutative.
+        When ``x`` is noncommutative, the coefficient to the left (default) or
+        right of ``x`` can be returned. The keyword 'right' is ignored when
+        ``x`` is commutative.
 
         See Also
         ========

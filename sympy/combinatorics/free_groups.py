@@ -240,7 +240,7 @@ class FreeGroup(DefaultPrinting):
     def elements(self):
         if self.rank == 0:
             # A set containing Identity element of `FreeGroup` self is returned
-            return set([self.identity])
+            return {self.identity}
         else:
             raise ValueError("Group contains infinitely many elements"
                             ", hence can't be represented")
@@ -327,7 +327,7 @@ class FreeGroup(DefaultPrinting):
 
     def center(self):
         """Returns the center of the free group `self`."""
-        return set([self.identity])
+        return {self.identity}
 
 
 ############################################################################
@@ -900,9 +900,9 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y, z = free_group("x, y, z")
         >>> (x**2*y**-1).contains_generators()
-        set([x, y])
+        {x, y}
         >>> (x**3*z).contains_generators()
-        set([x, z])
+        {x, z}
 
         """
         group = self.group
@@ -941,13 +941,13 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> F, x, y = free_group("x, y")
         >>> w = x*y*x*y*x
         >>> w.cyclic_conjugates()
-        set([x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x])
+        {x*y*x**2*y, x**2*y*x*y, y*x*y*x**2, y*x**2*y*x, x*y*x*y*x}
         >>> s = x*y*x**2*y*x
         >>> s.cyclic_conjugates()
-        set([x**2*y*x**2*y, y*x**2*y*x**2, x*y*x**2*y*x])
+        {x**2*y*x**2*y, y*x**2*y*x**2, x*y*x**2*y*x}
 
         """
-        return set([self.cyclic_subword(i, i+len(self)) for i in range(len(self))])
+        return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
 
     def is_cyclic_conjugate(self, w):
         """

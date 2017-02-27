@@ -91,7 +91,7 @@ class LambdaPrinter(StrPrinter):
 class TensorflowPrinter(LambdaPrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
-    logical operators, etc.
+    logical operators, max/min, and relational operators.
     """
 
     def _print_And(self, expr):

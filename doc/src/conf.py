@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2016 SymPy Development Team'
+copyright = '2017 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -92,6 +92,8 @@ html_static_path = ['_static']
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
+
+html_theme = 'classic'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'

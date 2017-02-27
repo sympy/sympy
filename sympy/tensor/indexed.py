@@ -79,9 +79,9 @@ matrix element ``M[i, j]`` as in the following diagram::
 
     >>> from sympy.tensor import get_indices, get_contraction_structure
     >>> get_indices(A[i, j, j])
-    (set([i]), {})
+    ({i}, {})
     >>> get_contraction_structure(A[i, j, j])
-    {(j,): set([A[i, j, j]])}
+    {(j,): {A[i, j, j]}}
 
     See the appropriate docstrings for a detailed explanation of the output.
 
@@ -109,6 +109,7 @@ from __future__ import print_function, division
 
 import collections
 
+from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
@@ -177,6 +178,8 @@ class Indexed(Expr):
             from sympy.tensor.array import derive_by_array
             return Indexed(derive_by_array(self.base, wrt), *self.args[1:])
         else:
+            if Tuple(self.indices).has(wrt):
+                return S.NaN
             return S.Zero
 
     @property
@@ -366,7 +369,7 @@ class IndexedBase(Expr, NotIterable):
         elif isinstance(label, Symbol):
             pass
         else:
-            raise TypeError("Base label should be a string or Symbol.")
+            label = _sympify(label)
 
         if is_sequence(shape):
             shape = Tuple(*shape)

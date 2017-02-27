@@ -57,7 +57,8 @@ Code printers (sympy.printing)
 
 This is where the meat of code generation is; the translation of SymPy
 expressions to specific languages. Supported languages are C
-(:py:func:`sympy.printing.ccode.ccode`), Fortran 95
+(:py:func:`sympy.printing.ccode.ccode`), R 
+(:py:func:`sympy.printing.rcode.rcode`), Fortran 95
 (:py:func:`sympy.printing.fcode.fcode`), Javascript
 (:py:func:`sympy.printing.jscode.jscode`), Julia
 (:py:func:`sympy.printing.julia.julia_code`), Mathematica

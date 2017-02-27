@@ -318,7 +318,7 @@ def closest_points(*args):
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 0))])
+    {(Point2D(0, 0), Point2D(3, 0))}
 
     """
     from collections import deque
@@ -477,7 +477,6 @@ def convex_hull(*args, **kwargs):
         U.reverse()
         return (U, L)
 
-
 def farthest_points(*args):
     """Return the subset of points from a set of points that were
     the furthest apart from each other in the 2D plane.
@@ -509,7 +508,7 @@ def farthest_points(*args):
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)
-    set([(Point2D(0, 0), Point2D(3, 4))])
+    {(Point2D(0, 0), Point2D(3, 4))}
 
     """
     from math import hypot, sqrt as _sqrt

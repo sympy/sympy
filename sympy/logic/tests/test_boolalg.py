@@ -9,7 +9,7 @@ from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
-    POSform, SOPform, Xor, conjuncts, disjuncts,
+    POSform, SOPform, Xor, Xnor, conjuncts, disjuncts,
     distribute_or_over_and, distribute_and_over_or,
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
@@ -146,6 +146,24 @@ def test_Nor():
     assert Nor(True, True, True) is false
     assert Nor(True, True, A) is false
     assert Nor(True, False, A) is false
+
+def test_Xnor():
+
+    assert Xnor() is true
+    assert Xnor(A) == ~A
+    assert Xnor(A, A) is true
+    assert Xnor(True, A, A) is false
+    assert Xnor(A, A, A, A, A) == ~A
+    assert Xnor(True) is false
+    assert Xnor(False) is true
+    assert Xnor(True, True ) is true
+    assert Xnor(True, False) is false
+    assert Xnor(False, False) is true
+    assert Xnor(True, A) == A
+    assert Xnor(False, A) == ~A
+    assert Xnor(True, False, False) is false
+    assert Xnor(True, False, A) == A
+    assert Xnor(False, False, A) == ~A
 
 
 def test_Implies():

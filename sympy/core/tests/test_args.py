@@ -961,6 +961,10 @@ def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
 
+def test_sympy__stats__crv_types__GumbelDistribution():
+    from sympy.stats.crv_types import GumbelDistribution
+    assert _test_args(GumbelDistribution(1, 1))
+
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
     assert _test_args(GompertzDistribution(1, 1))
@@ -2104,6 +2108,10 @@ def test_sympy__logic__boolalg__Or():
 def test_sympy__logic__boolalg__Xor():
     from sympy.logic.boolalg import Xor
     assert _test_args(Xor(x, y, 2))
+
+def test_sympy__logic__boolalg__Xnor():
+    from sympy.logic.boolalg import Xnor
+    assert _test_args(Xnor(x, y, 2))
 
 
 def test_sympy__matrices__matrices__DeferredVector():

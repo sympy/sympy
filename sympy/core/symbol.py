@@ -355,8 +355,8 @@ def symbols(names, **args):
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
         [a, b, c]
-        >>> symbols(set(['a', 'b', 'c']))
-        set([a, b, c])
+        >>> symbols({'a', 'b', 'c'})
+        {a, b, c}
 
     If an iterable container is needed for a single symbol, set the ``seq``
     argument to ``True`` or terminate the symbol name with a comma::

@@ -6,7 +6,8 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
                    Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
                    simplify, together, collect, factorial, apart, combsimp, factor, refine,
                    cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr)
+                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
+                   integrate)
 from sympy.core.function import AppliedUndef
 from sympy.core.compatibility import range
 from sympy.physics.secondquant import FockState
@@ -1440,12 +1441,12 @@ def test_sort_key_atomic_expr():
 def test_issue_4199():
     # first subs and limit gives NaN
     a = x/y
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, oo, S(0)) is S.NaN
     # second subs and limit gives NaN
-    assert a._eval_interval(x, 0, oo)._eval_interval(y, 0, oo) is S.NaN
+    assert a._eval_interval(x, S(0), oo)._eval_interval(y, S(0), oo) is S.NaN
     # difference gives S.NaN
     a = x - y
-    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
+    assert a._eval_interval(x, S(1), oo)._eval_interval(y, oo, S(1)) is S.NaN
     raises(ValueError, lambda: x._eval_interval(x, None, None))
     a = -y*Heaviside(x - y)
     assert a._eval_interval(x, -oo, oo) == -y
@@ -1454,7 +1455,7 @@ def test_issue_4199():
 
 def test_eval_interval_zoo():
     # Test that limit is used when zoo is returned
-    assert Si(1/x)._eval_interval(x, 0, 1) == -pi/2 + Si(1)
+    assert Si(1/x)._eval_interval(x, S(0), S(1)) == -pi/2 + Si(1)
 
 
 def test_primitive():
@@ -1764,3 +1765,7 @@ def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
+
+def test_issue_11877():
+    x = symbols('x')
+    assert integrate(log(S(1)/2 - x), (x, 0, S(1)/2)) == -S(1)/2 -log(2)/2
