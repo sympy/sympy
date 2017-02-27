@@ -60,7 +60,8 @@ int main() {
   return result;
 }
 """
-
+main_template['C89'] = main_template['C']
+main_template['C99'] = main_template['C']
 # templates for the numerical tests
 
 numerical_test_template = {}
@@ -70,6 +71,8 @@ numerical_test_template['C'] = """
     result = -1;
   }
 """
+numerical_test_template['C89'] = numerical_test_template['C']
+numerical_test_template['C99'] = numerical_test_template['C']
 
 numerical_test_template['F95'] = """
   if (abs(%(call)s)>%(threshold)s) then
@@ -107,6 +110,8 @@ compile_commands['ifort'] = [
 
 combinations_lang_compiler = [
     ('C', 'cc'),
+    ('C89', 'cc'),
+    ('C99', 'cc'),
     ('F95', 'ifort'),
     ('F95', 'gfortran'),
     ('F95', 'g95')
@@ -175,7 +180,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
 
     if language == "F95":
         f_name = "main.f90"
-    elif language == "C":
+    elif language.startswith("C"):
         f_name = "main.c"
     else:
         raise NotImplementedError(
@@ -249,7 +254,7 @@ def is_feasible(language, commands):
     ]
     try:
         run_test("is_feasible", [routine], numerical_tests, language, commands,
-                friendly=False)
+                 friendly=False)
         return True
     except AssertionError:
         return False
@@ -265,10 +270,19 @@ for lang, compiler in combinations_lang_compiler:
 
 # We test all language-compiler combinations, just to report what is skipped
 
-
 def test_C_cc():
     if ("C", 'cc') in invalid_lang_compilers:
-        skip("`cc' command didn't work as expected")
+        skip("`cc' command didn't work as expected (C)")
+
+
+def test_C89_cc():
+    if ("C89", 'cc') in invalid_lang_compilers:
+        skip("`cc' command didn't work as expected (C89)")
+
+
+def test_C99_cc():
+    if ("C99", 'cc') in invalid_lang_compilers:
+        skip("`cc' command didn't work as expected (C99)")
 
 
 def test_F95_ifort():
@@ -323,7 +337,7 @@ def test_intrinsic_math1_codegen():
             expected = N(expr.subs(x, xval))
             numerical_tests.append((name, (xval,), expected, 1e-14))
     for lang, commands in valid_lang_commands:
-        if lang == "C":
+        if lang.startswith("C"):
             name_expr_C = [("test_floor", floor(x)), ("test_ceil", ceiling(x))]
         else:
             name_expr_C = []
