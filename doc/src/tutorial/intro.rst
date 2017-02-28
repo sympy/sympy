@@ -177,7 +177,6 @@ Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
   \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
-  
 
 Why SymPy?
 ==========
