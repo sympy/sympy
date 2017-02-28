@@ -9,6 +9,7 @@ from sympy.polys import factor, cancel
 from sympy.utilities.timeutils import timethis
 from sympy.utilities.iterables import sift
 from sympy.utilities.iterables import uniq
+from sympy.abc import n, k
 
 @timethis('combsimp')
 def combsimp(expr):
@@ -70,7 +71,6 @@ def combsimp(expr):
 
     if as_gamma:
         return gammasimp(expr)
-
 
     expr = expr.replace(binomial,
         lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
