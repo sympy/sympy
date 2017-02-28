@@ -1220,17 +1220,32 @@ class ComplexFloat(Number):
     is_ComplexFloat = True
 
     def __new__(cls, real, imag=None, prec=None):
-        # TODO: do something with prec
         if imag is None:
             if isinstance(real, (complex, mpmath.mpc)):
                 real, imag = real.real, real.imag
             else:
                 real, imag = real.as_real_imag()
-        obj = Expr.__new__(cls)
-        obj.real = Float(real, prec)
-        obj.imag = Float(imag, prec)
-        if obj.real is S.NaN or obj.imag is S.NaN:
+        if prec is None:
+            if isinstance(real, Float) and isinstance(imag, Float):
+                # no checks done; assume precisions are as desired by user
+                True
+            elif isinstance(real, Float):
+                prec = real._prec
+                imag = Float(imag, prec_to_dps(prec))
+            elif isinstance(imag, Float):
+                prec = imag._prec
+                real = Float(real, prec_to_dps(prec))
+            else:
+                real = Float(real)
+                imag = Float(imag)
+        else:
+            real = Float(real, prec)
+            imag = Float(imag, prec)
+        if real is S.NaN or imag is S.NaN:
             return S.NaN
+        obj = Expr.__new__(cls)
+        obj.real = real
+        obj.imag = imag
         return obj
 
     @classmethod
@@ -1314,14 +1329,21 @@ class ComplexFloat(Number):
         """
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
+                prec = self._prec
                 (x, y) = mlib.mpc_pow_int(self._mpc_, expt.p, self._prec)
+            elif expt.is_ComplexFloat:
+                prec = min(self._prec, expt._prec)
+                (x, y) = mlib.mpc_pow(self._mpc_, expt._mpc_, prec)
+            elif expt.is_Float:
+                prec = min(self._prec, expt._prec)
+                (x, y) = mlib.mpc_pow_mpf(self._mpc_, expt._mpf_, prec)
             else:
-                # TODO: hardcoded 15
-                (u, v) = expt.n(15).as_real_imag()
-                u = u._as_mpf_val(u._prec)
-                v = v._as_mpf_val(v._prec)
-                (x, y) = mlib.mpc_pow(self._mpc_, (u, v), self._prec)
-            return ComplexFloat._new((x, y), self._prec)
+                prec = self._prec
+                dps = prec_to_dps(prec)
+                (u, v) = expt.n(dps).as_real_imag()
+                expt_mpc = (u._as_mpf_val(u._prec), v._as_mpf_val(v._prec))
+                (x, y) = mlib.mpc_pow(self._mpc_, expt_mpc, prec)
+            return ComplexFloat._new((x, y), prec)
         return None
 
     def _eval_conjugate(self):

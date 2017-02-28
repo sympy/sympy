@@ -1,5 +1,5 @@
-from sympy import (ComplexFloat, Number, Rational, Symbol, Float, I,
-                   S, Pow, re, im)
+from sympy import (ComplexFloat, Abs, Number, Rational, Symbol, Float, I, S,
+                   Pow, re, im)
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
 
@@ -105,6 +105,109 @@ def test_ComplexFloat_arithmetic():
     assert isinstance(r/u, ComplexFloat)
 
 
+def test_ComplexFloat_powers():
+    a = ComplexFloat("1", "2", 32)
+    assert Abs(a**4 - ComplexFloat("-7", "-24", 32)) < 1e-31
+
+    maple_res = ComplexFloat("1.2558487700227965965590044279597",
+                             "0.64504200054796217546710585153161")
+    assert Abs(a**(S(3)/7) - maple_res) < 1e-31
+    assert Abs(a**Float(S(3)/7, 48) - maple_res) < 1e-31
+    assert Abs(a**ComplexFloat(S(3)/7, 0, 48) - maple_res) < 1e-31
+
+    b = ComplexFloat("3", "4", 32)
+    maple_res = ComplexFloat("0.12900959407446689407705233965245",
+                             "0.033924092905170126697617854622548")
+    assert Abs(a**b - maple_res) < 1e-31
+
+
+def test_ComplexFloat_highprec():
+    from sympy import sqrt
+    z = ComplexFloat("1.1", "2.2", 64)
+    v = sqrt(z)
+    w = v**2
+    assert isinstance(v, ComplexFloat)
+    assert isinstance(w, ComplexFloat)
+    assert Abs(w - z) < 1e-62
+
+    a = S.Pi.evalf(100)
+    b = a*I
+    assert a._prec == b._prec
+    b = 2*b
+    assert a._prec == b._prec
+    b = b + 1
+    assert a._prec == b._prec
+    b = 3 + b
+    assert a._prec == b._prec
+    b = b*2
+    assert a._prec == b._prec
+    b = 1 + a*I
+    assert a._prec == b._prec
+    b = S(1) + a*I
+    assert a._prec == b._prec
+    b = a*I + S(2)
+    assert a._prec == b._prec
+    b = a*I + Rational(2, 3)
+    assert a._prec == b._prec
+    b = a + I*Rational(2, 3)
+    assert a._prec == b._prec
+    b = I*Rational(2, 3) + a
+    assert a._prec == b._prec
+
+
+def test_ComplexFloat_minimum_precision():
+    # Note: this behaviour could change to match Float (?) see ComplexFloat docstring
+    b = S.Pi.evalf(64)
+    a = float(1.23)
+    z = a + b*I
+    a = Float(a)
+    assert z._prec != b._prec
+    assert z._prec == a._prec
+    assert z.real._prec == a._prec
+    assert z.imag._prec == a._prec
+    a = Float("1.23", 3)
+    z = a + b*I
+    assert z._prec != b._prec
+    assert z._prec == a._prec
+    assert z.real._prec == a._prec
+    assert z.imag._prec == a._prec
+    a = ComplexFloat("1", "2", 32)
+    b = ComplexFloat("3", "4", 8)
+    assert (a**b)._prec == b._prec
+    assert (b**a)._prec == b._prec
+    assert (a**(b.real))._prec == b._prec
+    assert (a**(S(3)/2))._prec == a._prec
+    assert (a**3)._prec == a._prec
+
+
+def test_ComplexFloat_highprec_trig():
+    from sympy import (sin, asin, cos, acos, tan, atan, cot, acot, csc, acsc,
+                       sec, asec, cosh, acosh, sinh, asinh, tanh, atanh, coth,
+                       acoth, csch, acsch, sech, asech)
+    f_finv = [(sin, asin), (cos, acos), (tan, atan), (cot, acot), (csc, acsc),
+              (sec, asec), (cosh, acosh), (sinh, asinh), (tanh, atanh),
+              (coth, acoth), (csch, acsch), (sech, asech)]
+    z = ComplexFloat("1.23", "-1.34", 64)
+    for (f, finv) in f_finv:
+        u = f(z)
+        assert u.is_ComplexFloat
+        w = finv(u)
+        assert Abs(w - z) < 1e-62
+
+
+@XFAIL
+def test_ComplexFloat_highprec_fails():
+    # TODO: log seems only double precision
+    from sympy import exp, log
+    f_finv = [(exp, log)]
+    z = ComplexFloat("1.23", "-1.34", 64)
+    for (f, finv) in f_finv:
+        u = f(z)
+        assert u.is_ComplexFloat
+        w = finv(u)
+        assert Abs(w - z) < 1e-62
+
+
 def test_ComplexFloat_Mul_I_NumberSymbol():
     x = Symbol('x')
     a = 0.15*I*S.Pi*x
@@ -114,11 +217,8 @@ def test_ComplexFloat_Mul_I_NumberSymbol():
 
 
 def test_ComplexFloat_ops():
-    from sympy import sqrt, conjugate, Abs
+    from sympy import conjugate
     u = S(2+3j)
-    v = sqrt(u)
-    assert isinstance(v, ComplexFloat)
-    # TODO: assert v**2 - u smaller than eps
     assert conjugate(u) == S(2 - 3j)
     assert u.adjoint() == conjugate(u)
     assert isinstance(Abs(u), Float)
