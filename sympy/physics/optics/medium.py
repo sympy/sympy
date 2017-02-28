@@ -9,7 +9,7 @@ from __future__ import division
 __all__ = ['Medium']
 
 from sympy import Symbol, sympify, sqrt
-from sympy.physics.units import c, u0, e0
+from sympy.physics.constants import c, u0, e0
 
 class Medium(Symbol):
 

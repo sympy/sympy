@@ -1,7 +1,8 @@
 from sympy import integrate, Rational, sqrt, Symbol
 from sympy.physics.units import (au, amu, charge, day, find_unit,
                                  foot, km, m, meter, minute, s,
-                                 speed_of_light, grams, quart, inch)
+                                 grams, inch, quart)
+from sympy.physics.constants import speed_of_light
 
 
 def test_units():

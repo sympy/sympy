@@ -71,16 +71,13 @@ quantity.)
     602214085700000000000000
     >>> u.avogadro_constant
     602214085700000000000000/mol
-
-Values of constants are recommended by Committee on Data for Science and
-Technology (CODATA) as of 2014. See more at http://arxiv.org/pdf/1507.07956.pdf
 """
 
 from __future__ import print_function, division
 
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
-
+from sympy.physics.constants import c, avogadro_number, dHg0
 
 class Unit(AtomicExpr):
     """
@@ -190,6 +187,8 @@ acceleration = m/s**2
 density = kg/m**3
 optical_power = dioptre = D = 1/m
 illuminance = lux = lx = sr*cd/m**2
+avogadro = avogadro_constant = avogadro_number / mol
+gee = gees = Rational('9.80665') * m/s**2
 
 # Common length units
 
@@ -243,36 +242,17 @@ year = years = tropical_year
 g = gram = grams = kilogram / kilo
 mg = milligram = milligrams = milli * g
 ug = microgram = micrograms = micro * g
-
-
-#----------------------------------------------------------------------------
-# Physical constants
-#
-c = speed_of_light = 299792458 * m/s
-G = gravitational_constant = Rational('6.67408') * ten**-11 * m**3 / kg / s**2
-u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2
-e0 = electric_constant = 1/(u0 * c**2)
-Z0 = vacuum_impedance = u0 * c
-
-planck = Rational('6.62607004') * ten**-34 * J*s
-hbar = planck / (2*pi)
-
-avogadro_number = Rational('6.022140857') * 10**23
-avogadro = avogadro_constant = avogadro_number / mol
-boltzmann = Rational('1.38064852') * ten**-23 * J / K
-atomic_mass_constant = Rational('1.660539040') * ten**-27 * kg
-
-gee = gees = Rational('9.80665') * m/s**2
-atmosphere = atmospheres = atm = 101325 * pascal
-
-kPa = kilo*Pa
-bar = bars = 100*kPa
-pound = pounds = 0.45359237 * kg * gee  # exact
-psi = pound / inch ** 2
-dHg0 = 13.5951  # approx value at 0 C
-mmHg = dHg0 * 9.80665 * Pa
 amu = amus = gram / avogadro / mol
 mmu = mmus = gram / mol
+pound = pounds = 0.45359237 * kg * gee  # exact
+
+# Common pressure units
+
+atmosphere = atmospheres = atm = 101325 * pascal
+kPa = kilo*Pa
+bar = bars = 100*kPa
+psi = pound / inch ** 2
+mmHg = dHg0 * 9.80665 * Pa
 quart = quarts = Rational(231, 4) * inch**3
 eV = Rational('1.6021766208') * ten**-19 * J
 

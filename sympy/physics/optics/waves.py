@@ -13,7 +13,7 @@ __all__ = ['TWave']
 from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
     symbols, Derivative, atan2)
 from sympy.core.expr import Expr
-from sympy.physics.units import c
+from sympy.physics.constants import c
 
 
 class TWave(Expr):
