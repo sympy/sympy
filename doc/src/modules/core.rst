@@ -49,6 +49,11 @@ S
 .. autoclass:: sympy.core.singleton.SingletonRegistry
    :members:
 
+UnevaluatedExpr
+---------------
+.. module:: sympy.core.expr.UnevaluatedExpr
+
+
 expr
 ----
 .. module:: sympy.core.expr
