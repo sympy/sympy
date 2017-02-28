@@ -1206,6 +1206,77 @@ RealNumber = Float
 
 class ComplexFloat(Number):
     """Represent a complex floating-point number of arbitrary precision.
+
+    Often ``ComplexFloat`` objects are created by arithmetic involving
+    ``Float`` objects (floating point numbers) that produces a complex
+    result.  For example:
+
+    >>> from sympy import S, Float, ComplexFloat, I
+    >>> z = S(11)/10 + Float("2.2")*I
+    >>> z
+    1.1+2.2j
+    >>> z.is_ComplexFloat
+    True
+
+    Note that result is printed in a way which resembles the Python native
+    ``complex`` type.  Contrast the result above with:
+
+    >>> z = 3 + 4*I
+    >>> z
+    3 + 4*I
+    >>> z.is_ComplexFloat
+    False
+    >>> z.evalf()
+    3.0+4.0j
+
+
+    Precision
+    =========
+
+    Complex calculations involving a high-precision ``Float`` and an exact
+    number such as an ``Integer`` or a ``Rational`` will result in a
+    ``ComplexFloat`` of similarly high precision.  For example:
+
+    >>> a = S.Pi.evalf(32)
+    >>> z = S(2)/3 + I*a
+    >>> z
+    0.66666666666666666666666666666667+3.1415926535897932384626433832795j
+
+    But be careful: when calculations involve multiple inexact floating point
+    numbers, the resulting ``ComplexFloat`` will typically inherit the
+    minimum precision of the inputs.  For example:
+
+    >>> Float(S(2)/3, 5) + I*a
+    0.66667+3.1416j
+    >>> 1.0/3 + I*a
+    0.3333333333333333+3.14159265358979j
+    >>> 1.1 + I*a
+    1.1+3.14159265358979j
+
+    *Warning* This behaviour is different from ``Float`` which currently
+    tries to convert everything to the higher precision, sometimes giving
+    results of misleading accuracy.
+
+    If you need careful control over the precision of a ``ComplexFloat``, you
+    can create one directly.  For example, the following results each have
+    precision equivalent to 24 significant digits:
+
+    >>> ComplexFloat("1.23", "3.45", prec=24)
+    1.23+3.45j
+    >>> ComplexFloat(S(1)/3, S(2)/3, prec=24)
+    0.333333333333333333333333+0.666666666666666666666667j
+    >>> ComplexFloat("1.23", S(2)/3, prec=24)
+    1.23+0.666666666666666666666667j
+
+    Directly passing Python-native ``float`` or ``complex`` inputs is
+    possible but is limited to about 16 digits of precision.  Combining these
+    with high-precision is not recommended:
+
+    >>> ComplexFloat(1.0/3, S(2)/3, prec=24)
+    0.333333333333333314829616+0.666666666666666666666667j
+    >>> ComplexFloat(((1.0+2.0j)/3), prec=24)
+    0.333333333333333314829616+0.666666666666666629659233j
+
     """
     __slots__ = ['real', 'imag']
 
