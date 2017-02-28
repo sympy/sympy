@@ -177,6 +177,53 @@ Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\LaTeX`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
   \int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx
+  
+
+``UnevaluatedExpr``
+===================
+
+``UnevaluatedExpr()`` is a method provided by Sympy which lets the user to keep an expression unevaluated. By Unevaluated, it is meant that the final value of the expression is not printed and also operations are also avoided with unevaluated expressions. Here are some examples
+
+    >>> from sympy import UnevaluatedExpr
+    >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
+    >>> uexpr
+    (5/7).(3/4)
+
+    >>> from sympy import UnevaluatedExpr
+    >>> from sympy.abc import a, b, x, y
+    >>> x*UnevaluatedExpr(1/x)
+    x.1/x
+
+`` A point to be noted is that ``UnevaluatedExpr()`` can evaluate an expression which is given as argument`` . Example
+
+    >>> from sympy import UnevaluatedExpr
+    >>> uexpr = UnevaluatedExpr((2+5)/(3-1) + ((2**3)*3)*4)
+    >>> uexpr
+    99
+
+`` Another point to be noted is that ``UnevaluatedExpr()`` gives different than what is given by ``Simpify(,evaluate=False)`` . Here are some examples
+
+    >>> from sympy import *
+    >>> x*sympify('1/x',evaluate=False)
+    1
+
+    >>> from sympy import *
+    >>> uexpr = UnevaluatedExpr((2+5)/(3-1) + ((2**3)*3)*4)
+    >>> simexpr = sympify('(2+5)/(3-1) + ((2**3)*3)*4', evaluate=False)
+    >>> uexpr
+    99
+    >>> simexpr
+       2+5        3
+      ──── + 3.4.2
+        -1+3
+
+``UnevalutedExpr()`` sre supported by Sympy printers and can be used for printing the result in different forms. Example
+
+    >>> from sympy import UnevaluatedExpr
+    >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
+    >>> print(latex(uexpr))
+    \frac{5}{7} \frac{3}{4}
+
 
 Why SymPy?
 ==========
