@@ -768,7 +768,11 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, prec=None):
+    def __new__(cls, num, dps=None, prec=None):
+        if dps and prec is not None:
+            raise ValueError('Both decimal and binary precision supplied.'
+                             'Supply only one.')
+
         if isinstance(num, string_types):
             num = num.replace(' ', '')
             if num.startswith('.') and len(num) > 1:
@@ -784,11 +788,14 @@ class Float(Number):
         elif num is S.NegativeInfinity:
             num = '-inf'
         elif isinstance(num, mpmath.mpf):
-            if prec == None:
-                prec = num.context.dps
+            if prec is None:
+                if dps is None:
+                    prec = num.context.prec
+            else:
+                prec = num.context.prec
             num = num._mpf_
 
-        if prec is None:
+        if dps is None and prec is None:
             dps = 15
             if isinstance(num, Float):
                 return num
@@ -803,7 +810,8 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-        elif prec == '':
+                    prec = mlib.libmpf.dps_to_prec(dps)
+        elif prec == '' and dps == None or prec == None and dps == '':
             if not isinstance(num, string_types):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
@@ -818,13 +826,14 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
+                        prec = mlib.libmpf.dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
-        else:
-            dps = prec
 
-        prec = mlib.libmpf.dps_to_prec(dps)
+        if prec is None:
+            prec = mlib.libmpf.dps_to_prec(dps)
+
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
         elif isinstance(num, string_types):
