@@ -2157,6 +2157,15 @@ class Expr(Basic, EvalfMixin):
                     return False
                 elif positive_args < negative_args:
                     return True
+            elif self.is_ComplexFloat:
+                # Treat same as Add
+                all_args = 2
+                negative_args = len([False for arg in self.as_real_imag() if arg.could_extract_minus_sign()])
+                positive_args = all_args - negative_args
+                if positive_args > negative_args:
+                    return False
+                elif positive_args < negative_args:
+                    return True
             elif self.is_Mul:
                 # We choose the one with an odd number of minus signs
                 num, den = self.as_numer_denom()

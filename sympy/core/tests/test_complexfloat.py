@@ -285,3 +285,11 @@ def test_ComplexFloat_conversions():
     assert floor(z) == I
     assert floor(z + 1) == 1 + I
     assert ceiling(z) == 1 + 2*I
+
+
+def test_ComplexFloat_extract_minus():
+    T = (S.One, S.NegativeOne, I, -I, 1+3*I, -1-3*I, 1-3*I, -1+3*I, 100+I,
+         -100-I, 100-I, -100+I)
+    for z in T:
+        assert (ComplexFloat(z).could_extract_minus_sign() ==
+                z.could_extract_minus_sign())

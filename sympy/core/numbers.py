@@ -1264,6 +1264,11 @@ class ComplexFloat(Number):
     def __hash__(self):
         return super(ComplexFloat, self).__hash__()
 
+    @cacheit
+    def sort_key(self, order=None):
+        # TODO: is this correct format?
+        return self.class_key(), (0, ()), (), self.real, self.imag
+
     @property
     def is_real(self):
         # TODO: see is_rational above

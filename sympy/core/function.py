@@ -446,7 +446,7 @@ class Function(Application, Expr):
         Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
         from sympy.core.symbol import Wild
-        if arg.is_Float:
+        if arg.is_Float or arg.is_ComplexFloat:
             return arg._prec
         if not arg.is_Add:
             return -1

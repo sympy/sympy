@@ -1433,6 +1433,9 @@ class EvalfMixin(object):
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
             return self.p
+        # TODO: just overwrite in ComplexFloat class?
+        if hasattr(self, '_mpc_'):
+            return make_mpc(self._mpc_)
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:
