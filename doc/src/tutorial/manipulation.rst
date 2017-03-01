@@ -524,6 +524,8 @@ To release it:
 
 Other examples:
 
+    >>> from sympy import *
+    >>> from sympy.abc import x, y, z
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> uexpr
     (5/7)*(3/4)
