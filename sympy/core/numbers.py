@@ -772,10 +772,6 @@ class Float(Number):
     is_Float = True
 
     def __new__(cls, num, dps=None, prec=None, precision=None):
-        if dps and precision or dps and prec or prec and precision is not None:
-            raise ValueError('Both decimal and binary precision supplied. '
-                             'Supply only one. ')
-
         if prec is not None:
             SymPyDeprecationWarning(
                             feature="Using 'prec=XX' to denote decimal precision",
@@ -784,6 +780,10 @@ class Float(Number):
                             value="This is an effort to improve functionality "\
                                        "of Float class. ").warn()
             dps = prec
+
+        if dps is not None and precision is not None:
+            raise ValueError('Both decimal and binary precision supplied. '
+                             'Supply only one. ')
 
         if isinstance(num, string_types):
             num = num.replace(' ', '')
@@ -803,7 +803,6 @@ class Float(Number):
             if precision is None:
                 if dps is None:
                     precision = num.context.prec
-
             num = num._mpf_
 
         if dps is None and precision is None:
@@ -842,7 +841,12 @@ class Float(Number):
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
 
-        if precision is None:
+        # decimal precision(dps) is set and maybe binary precision(precision)
+        # as well.From here on binary precision is used to compute the Float.
+        # Hence, if supplied use binary precision else translate to decimal
+        # precision.
+
+        if precision is None or precision == '':
             precision = mlib.libmpf.dps_to_prec(dps)
 
         if isinstance(num, float):

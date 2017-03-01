@@ -1,4 +1,5 @@
 import decimal
+
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
@@ -504,6 +505,13 @@ def test_Float():
     Float(S(1)/10, precision=53) == S(0.1)
     Float(S(1)/10, precision=53) == S(0.1)
     assert not Float(S(1)/10, precision=53) == Float(S(1)/10, precision=54)
+
+    # Precision specifying errors
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=10))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=10))
+    raises(ValueError, lambda: Float("1.23", dps=3, precision=""))
+    raises(ValueError, lambda: Float("1.23", dps="", precision=""))
+
 
 @conserve_mpmath_dps
 def test_float_mpf():
