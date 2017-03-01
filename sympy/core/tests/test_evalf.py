@@ -84,9 +84,8 @@ def test_evalf_complex_powers():
         '(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
 
 
-@XFAIL
 def test_evalf_complex_powers_bug():
-    assert NS('(pi + pi*I)**4') == '-389.63636413601 + 0.e-14*I'
+    assert NS('(pi + pi*I)**4') == '-389.636364136010'
 
 
 def test_evalf_exponentiation():
