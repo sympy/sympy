@@ -31,6 +31,33 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+def _next_pivot_down_right(matrix, pivot_row, pivot_col, iszerofunc):
+    """Locates the pivot position by testing if the element at (pivot_row, pivot_col) is zero,
+    and then incrementing the row index until a non-zero element is encountered, or the row index is out of range.
+    If a pivot is not found, then the column index is incremented, the row index is reset to the original value,
+    and the search is repeated.
+    Returns the row and column indices of the pivot position if a pivot is encountered, otherwise returns the
+    dimensions of the input matrix."""
+    for candidate_pivot_col in range(pivot_col, matrix.cols):
+        for candidate_pivot_row in range(pivot_row, matrix.rows):
+            if not iszerofunc(matrix[candidate_pivot_row, candidate_pivot_col]):
+                return candidate_pivot_row, candidate_pivot_col
+
+    return matrix.rows, matrix.cols
+
+def _next_pivot_down(matrix, pivot_row, pivot_col, iszerofunc):
+    """Locates the pivot position by testing if the element at (pivot_row, pivot_col) is zero,
+    and then incrementing the row index until a non-zero element is encountered, or the row index is out of range.
+    Returns the row and column indices of the pivot position if a pivot is encountered, otherwise raises a
+    ValueError."""
+    for candidate_pivot_row in range(pivot_row, matrix.rows):
+        if not iszerofunc(matrix[candidate_pivot_row, pivot_col]):
+            return candidate_pivot_row, pivot_col
+
+    # Did not find a non-zero pivot in the subcolumn whose first element is at (pivot_row, pivot_col).
+    # Raise a ValueError to mimic the behavior of previous versions of LUdecomposition_Simple() that
+    # did not compute the LU decomposition of a rank deficient matrix.
+    raise ValueError("No nonzero pivot found.")
 
 class MatrixError(Exception):
     pass
@@ -3860,7 +3887,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero):
+    def LUdecomposition(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down):
         """Returns the decomposition LU and the row swaps p.
 
         Examples
@@ -3889,7 +3916,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUsolve
         """
 
-        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
+        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc, nextpivotfunc=nextpivotfunc)
 
         L = self.zeros(combined.rows)
         U = self.zeros(combined.rows, combined.cols)
@@ -3920,7 +3947,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero):
+    def LUdecomposition_Simple(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down):
 
         """Compute an lu decomposition of m x n matrix A, where
         P*A = L*U
@@ -3929,12 +3956,16 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         P is an m x m permutation matrix
         Returns an m x n matrix lu, and m element list perm where each element of perm is a two element list of row
         exchange indices.
-        The factors L and U are encoded in lu.
+        The factors L and U are stored in lu as follows:
         The subdiagonal elements of L are stored in the subdiagonal elements of lu, that is lu[i, j] = L[i, j]
         whenever i > j.
-        The diagonal of L, which is the identity matrix, is not explicitly stored.
-        U is stored in the upper triangular portion of lu, that is lu[i ,j] = U[i, j] whenever i >= j.
+        The elements on the diagonal of L are all 1, and are not explicitly stored.
+        U is stored in the upper triangular portion of lu, that is lu[i ,j] = U[i, j] whenever i <= j.
         perm contains the integers in range(0, m), where each integer occurs exactly once.
+        iszerofunc is a callable that returns a boolean indicating if its input is zero.
+        nextpivotfunc is a callable that returns the row and column indices of the location of the next pivot.
+        The default of nextpivotfunc looks for a nonzero pivot only in the current  pivot position, and below the
+        current pivot position.
 
         See Also
         ========
@@ -3949,55 +3980,42 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             # entries.
             return self.zeros(self.rows, self.cols), []
 
+        def next_pivot_f(matrix, row, col):
+
+            return nextpivotfunc(matrix, row, col, iszerofunc)
+
         lu = self.as_mutable()
         row_swaps = []
 
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
 
-            if iszerofunc(lu[pivot_row, pivot_col]):
-                # Search for non-zero pivot.
-                pivot_row_cand = pivot_row
+            pivot_row_cand, pivot_col = next_pivot_f(lu, pivot_row, pivot_col)
+            if pivot_col == lu.cols:
+                return lu, row_swaps
 
-                while True:
-                    # Guarantee at top of loop: pivot_row_cand < lu.rows and pivot_col < lu.cols
-                    pivot_row_cand += 1
+            if pivot_row != pivot_row_cand:
+                # Row swap book keeping:
+                # Record which rows were swapped.
+                # Update stored portion of L factor by multiplying L on the left and right with the current
+                # permutation.
+                # Swap rows of U.
+                row_swaps.append([pivot_row, pivot_row_cand])
 
-                    if pivot_row_cand == lu.rows:
-                        # All candidate pivots in the pivot column are zero.
-                        # New pivot column is next column to the right.
-                        pivot_row_cand = pivot_row
-                        pivot_col += 1
+                # Update L.
+                for col in range(0, pivot_row):
+                    tmp = lu[pivot_row, col]
+                    lu[pivot_row, col] = lu[pivot_row_cand, col]
+                    lu[pivot_row_cand, col] = tmp
 
-                        if pivot_col == lu.cols:
-                            # All candidate pivots are zero implies that Gaussian elimination is complete.
-                            return lu, row_swaps
+                # Swap rows of U in the pivot column.
+                lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
+                lu[pivot_row_cand, pivot_col] = 0
 
-                    if not iszerofunc(lu[pivot_row_cand, pivot_col]):
-                        break
-
-                if pivot_row != pivot_row_cand:
-                    # Row swap book keeping:
-                    # Record which rows were swapped.
-                    # Update stored portion of L factor by multiplying L on the left and right with the current
-                    # permutation.
-                    # Swap rows of U.
-                    row_swaps.append([pivot_row, pivot_row_cand])
-
-                    # Update L.
-                    for col in range(0, pivot_row):
-                        tmp = lu[pivot_row, col]
-                        lu[pivot_row, col] = lu[pivot_row_cand, col]
-                        lu[pivot_row_cand, col] = tmp
-
-                    # Swap rows of U in the pivot column.
-                    lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
-                    lu[pivot_row_cand, pivot_col] = 0
-
-                    for col in range(pivot_col+1, lu.cols):
-                        tmp = lu[pivot_row, col]
-                        lu[pivot_row, col] = lu[pivot_row_cand, col]
-                        lu[pivot_row_cand, col] = tmp
+                for col in range(pivot_col+1, lu.cols):
+                    tmp = lu[pivot_row, col]
+                    lu[pivot_row, col] = lu[pivot_row_cand, col]
+                    lu[pivot_row_cand, col] = tmp
 
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below (pivot_row, pivot_row).
