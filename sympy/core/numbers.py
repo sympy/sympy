@@ -1300,7 +1300,18 @@ class ComplexFloat(Number):
             prec = mlib.libmpf.dps_to_prec(dps)
 
         if imag is None:
-            if isinstance(real, (complex, mpmath.mpc)):
+            if isinstance(real, string_types):
+                # Note: "1.2 + 3.4j" not supported
+                real = real.strip()
+                if real.endswith('j'):
+                    imag = Float(real[:-1])
+                    real = 0
+                else:
+                    real = Float(real)
+                    imag = 0
+            elif isinstance(real, tuple):  # TODO: quack quack
+                real, imag = real
+            elif isinstance(real, (complex, mpmath.mpc)):
                 real, imag = real.real, real.imag
             else:
                 real, imag = real.as_real_imag()

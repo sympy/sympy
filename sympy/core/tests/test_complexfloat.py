@@ -25,6 +25,18 @@ def test_ComplexFloat():
     assert isinstance(z, ComplexFloat)
 
 
+def test_more_ways_to_make_ComplexFloat():
+    CF = ComplexFloat
+    assert CF((1, 3)) == CF(1, 3)
+    assert CF(("1.1", "1.2")) == CF("1.1", "1.2")
+    assert CF("1.1") == CF("1.1", 0)
+    assert CF("1.1j") == CF(0, "1.1")
+    # native complex cannot parse, why should we?
+    #assert CF("1.1 + 2.3j") == CF("1.1", "2.3")
+    # but neither should it silently give garbage:
+    raises(ValueError, lambda: CF("1.1 + 2.3j"))
+
+
 def test_evalf_makes_ComplexFloat():
     from sympy import erf
     z = erf(S(1)+S(8)*I).n()
@@ -44,6 +56,8 @@ def test_ComplexFloat_from_mpc():
     assert isinstance(z, ComplexFloat)
     z = S(zmpc)
     assert isinstance(z, ComplexFloat)
+    # also from a tuple of mpf
+    assert ComplexFloat((a._mpf_, b._mpf_)) == z
 
 
 def test_ComplexFloat_re_im():
