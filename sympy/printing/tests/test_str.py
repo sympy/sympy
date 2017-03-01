@@ -489,7 +489,7 @@ def test_Rational():
 
 
 def test_Float():
-    # NOTE prec is the whole number of decimal digits
+    # NOTE dps is the whole number of decimal digits
     assert str(Float('1.23', dps=1 + 2)) == '1.23'
     assert str(Float('1.23456789', dps=1 + 8)) == '1.23456789'
     assert str(

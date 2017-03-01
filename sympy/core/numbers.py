@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import decimal
 import fractions
 import math
+import warnings
 import re as regex
 from collections import defaultdict
 
@@ -26,6 +27,8 @@ from mpmath.libmp.libmpf import (
     prec_to_dps)
 from sympy.utilities.misc import debug, filldedent
 from .evaluate import global_evaluate
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 rnd = mlib.round_nearest
 
@@ -768,10 +771,19 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, dps=None, prec=None):
-        if dps and prec is not None:
-            raise ValueError('Both decimal and binary precision supplied.'
-                             'Supply only one.')
+    def __new__(cls, num, dps=None, prec=None, precision=None):
+        if dps and precision or dps and prec or prec and precision is not None:
+            raise ValueError('Both decimal and binary precision supplied. '
+                             'Supply only one. ')
+
+        if prec is not None:
+            SymPyDeprecationWarning(
+                            feature="Using 'prec=XX' to denote decimal precision",
+                            useinstead="'dps=XX' to denote decimal and 'precision=XX' "\
+                                              "for binary precision",
+                            value="This is an effort to improve functionality "\
+                                       "of Float class. ").warn()
+            dps = prec
 
         if isinstance(num, string_types):
             num = num.replace(' ', '')
@@ -788,14 +800,13 @@ class Float(Number):
         elif num is S.NegativeInfinity:
             num = '-inf'
         elif isinstance(num, mpmath.mpf):
-            if prec is None:
+            if precision is None:
                 if dps is None:
-                    prec = num.context.prec
-            else:
-                prec = num.context.prec
+                    precision = num.context.prec
+
             num = num._mpf_
 
-        if dps is None and prec is None:
+        if dps is None and precision is None:
             dps = 15
             if isinstance(num, Float):
                 return num
@@ -810,11 +821,11 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-                    prec = mlib.libmpf.dps_to_prec(dps)
-        elif prec == '' and dps == None or prec == None and dps == '':
+                    precision = mlib.libmpf.dps_to_prec(dps)
+        elif precision == '' and dps == None or precision == None and dps == '':
             if not isinstance(num, string_types):
                 raise ValueError('The null string can only be used when '
-                'the number to Float is passed as a string or an integer.')
+                'the number to Float is passed as a string or an integer. ')
             ok = None
             if _literal_float(num):
                 try:
@@ -826,21 +837,21 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
-                        prec = mlib.libmpf.dps_to_prec(dps)
+                        precision = mlib.libmpf.dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
 
-        if prec is None:
-            prec = mlib.libmpf.dps_to_prec(dps)
+        if precision is None:
+            precision = mlib.libmpf.dps_to_prec(dps)
 
         if isinstance(num, float):
-            _mpf_ = mlib.from_float(num, prec, rnd)
+            _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, string_types):
-            _mpf_ = mlib.from_str(num, prec, rnd)
+            _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
-                _mpf_ = mlib.from_str(str(num), prec, rnd)
+                _mpf_ = mlib.from_str(str(num), precision, rnd)
             elif num.is_nan():
                 _mpf_ = _mpf_nan
             elif num.is_infinite():
@@ -851,7 +862,7 @@ class Float(Number):
             else:
                 raise ValueError("unexpected decimal value %s" % str(num))
         elif isinstance(num, Rational):
-            _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
+            _mpf_ = mlib.from_rational(num.p, num.q, precision, rnd)
         elif isinstance(num, tuple) and len(num) in (3, 4):
             if type(num[1]) is str:
                 # it's a hexadecimal (coming from a pickled object)
@@ -862,13 +873,13 @@ class Float(Number):
             else:
                 if len(num) == 4:
                     # handle normalization hack
-                    return Float._new(num, prec)
+                    return Float._new(num, precision)
                 else:
-                    return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(prec)
+                    return (S.NegativeOne**num[0]*num[1]*S(2)**num[2]).evalf(precision)
         elif isinstance(num, Float):
             _mpf_ = num._mpf_
-            if prec < num._prec:
-                _mpf_ = mpf_norm(_mpf_, prec)
+            if precision < num._prec:
+                _mpf_ = mpf_norm(_mpf_, precision)
         else:
             # XXX: We lose precision here.
             _mpf_ = mpmath.mpf(num)._mpf_
@@ -881,7 +892,7 @@ class Float(Number):
 
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
-        obj._prec = prec
+        obj._prec = precision
         return obj
 
     @classmethod

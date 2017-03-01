@@ -487,14 +487,23 @@ def test_Float():
     assert Float(decimal.Decimal('-Infinity')) == S.NegativeInfinity
 
     assert '{0:.3f}'.format(Float(4.236622)) == '4.237'
-    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == '3.14159265358979323846264338327950288'
+    assert '{0:.35f}'.format(Float(pi.n(40), 40)) == \
+        '3.14159265358979323846264338327950288'
 
     assert Float(oo) == Float('+inf')
     assert Float(-oo) == Float('-inf')
 
     # unicode
-    assert Float(u'0.73908513321516064100000000') == Float('0.73908513321516064100000000')
-    assert Float(u'0.73908513321516064100000000', 28) == Float('0.73908513321516064100000000', 28)
+    assert Float(u'0.73908513321516064100000000') == \
+        Float('0.73908513321516064100000000')
+    assert Float(u'0.73908513321516064100000000', 28) == \
+        Float('0.73908513321516064100000000', 28)
+
+    # binary precision
+    # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
+    Float(S(1)/10, precision=53) == S(0.1)
+    Float(S(1)/10, precision=53) == S(0.1)
+    assert not Float(S(1)/10, precision=53) == Float(S(1)/10, precision=54)
 
 @conserve_mpmath_dps
 def test_float_mpf():
