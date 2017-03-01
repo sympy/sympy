@@ -549,7 +549,7 @@ Combine both of the methods to prevent both inside and outside evaluations:
 ``UnevalutedExpr`` is supported SymPy printers and can be used to print the result
 in different output forms. For example
 
-    >>> from sympy import UnevaluatedExpr
+    >>> from sympy import latex
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> print(latex(uexpr))
     \frac{5}{7} \frac{3}{4}
