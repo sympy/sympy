@@ -50,9 +50,9 @@ MPMATH_TRANSLATIONS = {
     "E": "e",
     "I": "j",
     "ln": "log",
-    #"lowergamma":"lower_gamma",
+    "lowergamma":"gammainc",
     "oo": "inf",
-    #"uppergamma":"upper_gamma",
+    "uppergamma":"gammainc",
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
     "ImmutableMatrix": "matrix",
@@ -499,7 +499,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
     from sympy.matrices import DeferredVector
     from sympy import Dummy, sympify, Symbol, Function, flatten
 
-    if printer is not None:
+    if printer is None:
         if inspect.isfunction(printer):
             lambdarepr = printer
         else:

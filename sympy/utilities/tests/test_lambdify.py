@@ -14,6 +14,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import uppergamma, lowergamma
 import sympy
 
 
@@ -751,16 +752,18 @@ def test_issue_2790():
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
 
-
 def test_ITE():
     assert lambdify((x, y, z), ITE(x, y, z))(True, 5, 3) == 5
     assert lambdify((x, y, z), ITE(x, y, z))(False, 5, 3) == 3
-
 
 def test_Min_Max():
     # see gh-10375
     assert lambdify((x, y, z), Min(x, y, z))(1, 2, 3) == 1
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
+
+def test_issue_12173():
+    assert lambdify((x,y), uppergamma(x,y))(1,2)==exp(-2)
+    assert lambdify((x,y), lowergamma(x,y))(1,2)==(-exp(-2)+1)
 
 def test_Indexed():
     # Issue #10934
