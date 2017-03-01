@@ -546,7 +546,7 @@ Remember that ``expr2`` will be evaluated if included into another expression.
 Combine both of the methods to prevent both inside and outside evaluations:
 
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
-    x + x + y
+    y + x + x
 
 ``UnevalutedExpr`` is supported SymPy printers and can be used to print the result
 in different output forms. For example
