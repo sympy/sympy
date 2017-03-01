@@ -476,6 +476,8 @@ wrapping the expression with ``UnevaluatedExpr``.
 
 For example:
 
+    >>> from sympy import Add
+    >>> from sympy.abc import x, y, z
     >>> x + x
     2*x
     >>> Add(x, x)
@@ -487,6 +489,7 @@ If you don't remember the class corresponding to the expression you
 want to build (operator overloading usually assumes ``evaluate=True``),
 just use ``sympify`` and pass a string:
 
+    >>> from sympy import sympify
     >>> sympify("x + x", evaluate=False)
     x + x
 
@@ -516,7 +519,7 @@ For example:
 The `x` remaining alone is the `x` wrapped by ``UnevaluatedExpr``.
 To release it:
 
-    >>> expr.doit()
+    >>> (x + expr).doit()
     3*x
 
 Other examples:
@@ -524,46 +527,38 @@ Other examples:
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> uexpr
     (5/7)*(3/4)
-
-    >>> from sympy import UnevaluatedExpr
-    >>> from sympy.abc import a, b, x, y
     >>> x*UnevaluatedExpr(1/x)
     x*1/x
 
-A point to be noted is that  ``UnevaluatedExpr`` can evaluate an expression which is given as argument.
-For example:
+A point to be noted is that  ``UnevaluatedExpr`` cannot prevent the evaluation of an
+expression which is given as argument. For example:
 
-    >>> from sympy import UnevaluatedExpr
-    >>> uexpr = UnevaluatedExpr(x + x)
-    >>> uexpr
-    2*x
-
-`` Another point to be noted is that ``UnevaluatedExpr`` gives different than
-what is given by ``sympify(... , evaluate=False)`` . Here are some examples
-
-    >>> from sympy import *
-    >>> x*sympify('1/x', evaluate=False)
-    1
-
-    >>> from sympy import *
     >>> expr1 = UnevaluatedExpr(x + x)
-    >>> expr2 = sympify('x + x', evaluate=False)
     >>> expr1
     2*x
+    >>> expr2 = sympify('x + x', evaluate=False)
     >>> expr2
     x + x
 
-``UnevalutedExpr`` are supported by SymPy printers and can be used for printing the result in different forms. Example
+Remember that ``expr2`` will be evaluated if included into another expression.
+Combine both of the methods to prevent both inside and outside evaluations:
+
+    >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
+    x + x + y
+
+``UnevalutedExpr`` is supported SymPy printers and can be used to print the result
+in different output forms. For example
 
     >>> from sympy import UnevaluatedExpr
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> print(latex(uexpr))
     \frac{5}{7} \frac{3}{4}
 
-In order to release the expression and evaluate it, just use ``.doit()``:
+In order to release the expression and get the evaluated LaTeX form,
+just use ``.doit()``:
 
-    >>> uexpr.doit()
-    15/28
+    >>> print(latex(uexpr.doit()))
+    \frac{15}{28}
 
 
 .. rubric:: Footnotes
