@@ -1299,7 +1299,7 @@ class ComplexFloat(Number):
         if prec is None:
             if isinstance(real, Float) and isinstance(imag, Float):
                 # no checks done; assume precisions are as desired by user
-                True
+                pass
             elif isinstance(real, Float):
                 prec = real._prec
                 imag = Float(imag, prec_to_dps(prec))
@@ -1323,7 +1323,10 @@ class ComplexFloat(Number):
     def _new(cls, _mpc_, _prec):
         re, im = _mpc_
         if (re, im) == (_mpf_zero, _mpf_zero):
-            return S.Zero  # XXX this is different from ComplexFloat()
+            # Unlike the full ctor, return S.Zero instead of ComplexFloat(0,0)
+            # E.g., so "a = ComplexFloat(...); a - a" gives S.Zero not 0.0+0.0j
+            # (see also Float._new which also does this).
+            return S.Zero
         obj = Expr.__new__(cls)
         # TODO: be careful, gives S.Zero
         obj.real = Float._new(re, _prec)
