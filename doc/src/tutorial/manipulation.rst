@@ -467,7 +467,7 @@ traversals easy.  We could have also written our algorithm as
     y
 
 
-Prevent expression evaluation`
+Prevent expression evaluation
 =============================
 
 There are generally two ways to prevent the evaluation, either pass an ``evaluate=False``
