@@ -1662,7 +1662,7 @@ def test_round():
     # equal unless we use string or compare components (which will
     # then coerce the floats to the same precision) or re-create
     # the floats
-    assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
+    assert str((pi/10 + E*I).round(2)) == '0.31+2.72j'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
     from sympy import ComplexFloat
     assert (pi/10 + E*I).round(2) == ComplexFloat(Float(0.31, 2), Float(2.72, 3))
