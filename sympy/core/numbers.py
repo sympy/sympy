@@ -1258,23 +1258,25 @@ class ComplexFloat(Number):
     results of misleading accuracy.
 
     If you need careful control over the precision of a ``ComplexFloat``, you
-    can create one directly.  For example, the following results each have
-    precision equivalent to 24 significant digits:
+    can create one directly, specifying the number of significant digits
+    (using ``dps`` for decimal digits or ``prec`` for binary digits).  For
+    example, the following results each have precision equivalent to 24
+    significant digits:
 
-    >>> ComplexFloat("1.23", "3.45", prec=24)
+    >>> ComplexFloat("1.23", "3.45", dps=24)
     1.23+3.45j
-    >>> ComplexFloat(S(1)/3, S(2)/3, prec=24)
+    >>> ComplexFloat(S(1)/3, S(2)/3, dps=24)
     0.333333333333333333333333+0.666666666666666666666667j
-    >>> ComplexFloat("1.23", S(2)/3, prec=24)
+    >>> ComplexFloat("1.23", S(2)/3, dps=24)
     1.23+0.666666666666666666666667j
 
     Directly passing Python-native ``float`` or ``complex`` inputs is
     possible but is limited to about 16 digits of precision.  Combining these
     with high-precision is not recommended:
 
-    >>> ComplexFloat(1.0/3, S(2)/3, prec=24)
+    >>> ComplexFloat(1.0/3, S(2)/3, dps=24)
     0.333333333333333314829616+0.666666666666666666666667j
-    >>> ComplexFloat(((1.0+2.0j)/3), prec=24)
+    >>> ComplexFloat(((1.0+2.0j)/3), dps=24)
     0.333333333333333314829616+0.666666666666666629659233j
 
     """
@@ -1290,7 +1292,13 @@ class ComplexFloat(Number):
 
     is_ComplexFloat = True
 
-    def __new__(cls, real, imag=None, prec=None):
+    def __new__(cls, real, imag=None, dps=None, prec=None):
+        if dps is not None and prec is not None:
+                raise ValueError('Both decimal and binary precision supplied. '
+                                 'Can only pass one of them.')
+        if dps is not None:
+            prec = mlib.libmpf.dps_to_prec(dps)
+
         if imag is None:
             if isinstance(real, (complex, mpmath.mpc)):
                 real, imag = real.real, real.imag
@@ -1302,16 +1310,16 @@ class ComplexFloat(Number):
                 pass
             elif isinstance(real, Float):
                 prec = real._prec
-                imag = Float(imag, prec_to_dps(prec))
+                imag = Float(imag, prec=prec_to_dps(prec))  # TODO #12227
             elif isinstance(imag, Float):
                 prec = imag._prec
-                real = Float(real, prec_to_dps(prec))
+                real = Float(real, prec=prec_to_dps(prec))  # TODO #12227
             else:
                 real = Float(real)
                 imag = Float(imag)
         else:
-            real = Float(real, prec)
-            imag = Float(imag, prec)
+            real = Float(real, prec=prec_to_dps(prec))  # TODO #12227
+            imag = Float(imag, prec=prec_to_dps(prec))  # TODO #12227
         if real is S.NaN or imag is S.NaN:
             return S.NaN
         obj = Expr.__new__(cls)

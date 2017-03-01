@@ -105,6 +105,13 @@ def test_ComplexFloat_arithmetic():
     assert isinstance(r/u, ComplexFloat)
 
 
+def test_ComplexFloat_dps_and_prec():
+    from sympy import srepr
+    assert (srepr(ComplexFloat(S(2)/3, 0.0, dps=15)) ==
+            srepr(ComplexFloat(S(2)/3, 0.0, prec=53)))
+    raises(ValueError, lambda: ComplexFloat(1, 2, dps=15, prec=64))
+
+
 def test_ComplexFloat_powers():
     a = ComplexFloat("1", "2", 32)
     assert Abs(a**4 - ComplexFloat("-7", "-24", 32)) < 1e-31
