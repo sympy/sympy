@@ -1366,14 +1366,12 @@ class ComplexFloat(Number):
         # TODO: is this correct format?
         return self.class_key(), (0, ()), (), self.real, self.imag
 
-    @property
-    def is_real(self):
+    def _eval_is_real(self):
         # TODO: see is_rational above
         #return False if self.imag.is_nonzero else None
         return self.imag.is_zero
 
-    @property
-    def is_imaginary(self):
+    def _eval_is_imaginary(self):
         #return False if self.real.is_nonzero else None
         return self.real.is_zero and self.imag.is_nonzero
 
