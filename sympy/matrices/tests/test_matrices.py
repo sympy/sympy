@@ -6,7 +6,7 @@ from sympy import (
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector)
+    NonSquareMatrixError, DeferredVector, _next_pivot_down_right)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -608,7 +608,7 @@ def test_LUdecomp():
                       [4, 5, 6],
                       [7, 8, 9],
                       [10, 11, 12]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LUdecomposition(nextpivotfunc=_next_pivot_down_right)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permuteBkwd(p) - testmat == zeros(4, 3)
@@ -617,7 +617,7 @@ def test_LUdecomp():
     testmat = Matrix([[1, 2, 3],
                       [2, 4, 6],
                       [4, 5, 6]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LUdecomposition(nextpivotfunc=_next_pivot_down_right)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permuteBkwd(p) - testmat == zeros(3)
@@ -1779,6 +1779,35 @@ def test_has():
     A = A.subs(x, 2)
     assert not A.has(x)
 
+def test_LUdecomposition_Simple_iszerofunc():
+    # Test if callable passed to matrices.LUdecomposition_Simple() as iszerofunc keyword argument is used inside
+    # matrices.LUdecomposition_Simple()
+    magic_string = "I got passed in!"
+    def goofyiszero(value):
+        raise StandardError(magic_string)
+
+    try:
+        lu, p = Matrix([[1, 0], [0, 1]]).LUdecomposition_Simple(iszerofunc=goofyiszero)
+    except StandardError as err:
+        assert magic_string == err.message
+        return
+
+    assert False
+
+def test_LUdecomposition_iszerofunc():
+    # Test if callable passed to matrices.LUdecomposition() as iszerofunc keyword argument is used inside
+    # matrices.LUdecomposition_Simple()
+    magic_string = "I got passed in!"
+    def goofyiszero(value):
+        raise StandardError(magic_string)
+
+    try:
+        l, u, p = Matrix([[1, 0], [0, 1]]).LUdecomposition(iszerofunc=goofyiszero)
+    except StandardError as err:
+        assert magic_string == err.message
+        return
+
+    assert False
 
 def test_errors():
     raises(ValueError, lambda: Matrix([[1, 2], [1]]))
@@ -1831,9 +1860,6 @@ def test_errors():
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
     raises(ValueError, lambda: hessian(Symbol('x')**2, 'a'))
-    raises(ValueError,
-        lambda: Matrix([[5, 10, 7], [0, -1, 2], [8, 3, 4]]
-        ).LUdecomposition_Simple(iszerofunc=lambda x: abs(x) <= 4))
     raises(IndexError, lambda: eye(3)[5, 2])
     raises(IndexError, lambda: eye(3)[2, 5])
     M = Matrix(((1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16)))
