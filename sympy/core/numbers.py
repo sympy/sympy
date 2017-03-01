@@ -822,10 +822,10 @@ class Float(Number):
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
                     precision = mlib.libmpf.dps_to_prec(dps)
-        elif precision == '' and dps == None or precision == None and dps == '':
+        elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, string_types):
                 raise ValueError('The null string can only be used when '
-                'the number to Float is passed as a string or an integer. ')
+                'the number to Float is passed as a string or an integer.')
             ok = None
             if _literal_float(num):
                 try:

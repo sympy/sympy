@@ -102,9 +102,17 @@ def test_Rational():
 
 def test_Float():
     sT(Float('1.23', dps=3), "Float('1.23', precision=13)")
+    sT(Float('1.23456789', dps=9), "Float('1.23456789', precision=33)")
+    sT(Float('1.234567890123456789', dps=19),
+       "Float('1.234567890123456789', precision=66)")
+    sT(Float(
+        '0.600386179950497', dps=15), "Float('0.600386179950497', precision=53)")
+
+    sT(Float('1.23', precision=13), "Float('1.23', precision=13)")
     sT(Float('1.23456789', precision=33), "Float('1.23456789', precision=33)")
     sT(Float('1.234567890123456789', precision=66),
         "Float('1.234567890123456789', precision=66)")
+
     sT(Float('0.600386179950497', 15), "Float('0.600386179950497', precision=53)")
 
 
