@@ -523,12 +523,12 @@ Other examples:
 
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> uexpr
-    (5/7).(3/4)
+    (5/7)*(3/4)
 
     >>> from sympy import UnevaluatedExpr
     >>> from sympy.abc import a, b, x, y
     >>> x*UnevaluatedExpr(1/x)
-    x.1/x15
+    x*1/x
 
 A point to be noted is that  ``UnevaluatedExpr`` can evaluate an expression which is given as argument.
 For example:
@@ -536,7 +536,7 @@ For example:
     >>> from sympy import UnevaluatedExpr
     >>> uexpr = UnevaluatedExpr(x + x)
     >>> uexpr
-    2*X
+    2*x
 
 `` Another point to be noted is that ``UnevaluatedExpr`` gives different than
 what is given by ``sympify(... , evaluate=False)`` . Here are some examples
