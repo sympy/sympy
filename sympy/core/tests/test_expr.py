@@ -1664,7 +1664,8 @@ def test_round():
     # the floats
     assert str((pi/10 + E*I).round(2)) == '0.31 + 2.72*I'
     assert (pi/10 + E*I).round(2).as_real_imag() == (0.31, 2.72)
-    assert (pi/10 + E*I).round(2) == Float(0.31, 2) + I*Float(2.72, 3)
+    from sympy import ComplexFloat
+    assert (pi/10 + E*I).round(2) == ComplexFloat(Float(0.31, 2), Float(2.72, 3))
 
     # issue 6914
     assert (I**(I + 3)).round(3) == Float('-0.208', '')*I
