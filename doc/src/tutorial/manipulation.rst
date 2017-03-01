@@ -470,9 +470,9 @@ traversals easy.  We could have also written our algorithm as
 Prevent expression evaluation
 =============================
 
-There are generally two ways to prevent the evaluation, either pass an ``evaluate=False``
-parameter while constructing the expression, or create an evaluation stopper by
-wrapping the expression with ``UnevaluatedExpr``.
+There are generally two ways to prevent the evaluation, either pass an 
+``evaluate=False`` parameter while constructing the expression, or create
+an evaluation stopper by wrapping the expression with ``UnevaluatedExpr``.
 
 For example:
 
@@ -503,11 +503,10 @@ usages of the expression:
     3*x
 
 That's why the class ``UnevaluatedExpr`` comes handy.
-``UnevaluatedExpr`` is a method provided by SymPy which lets the user to keep an
-expression unevaluated. By _unevaluated_ it is meant that the value inside it
-will not interact with the expressions outside of it to give simplified
-outputs.
-For example:
+``UnevaluatedExpr`` is a method provided by SymPy which lets the user keep
+an expression unevaluated. By *unevaluated* it is meant that the value
+inside of it will not interact with the expressions outside of it to give
+simplified outputs. For example:
 
     >>> from sympy import UnevaluatedExpr
     >>> expr = x + UnevaluatedExpr(x)
@@ -532,8 +531,8 @@ Other examples:
     >>> x*UnevaluatedExpr(1/x)
     x*1/x
 
-A point to be noted is that  ``UnevaluatedExpr`` cannot prevent the evaluation of an
-expression which is given as argument. For example:
+A point to be noted is that  ``UnevaluatedExpr`` cannot prevent the
+evaluation of an expression which is given as argument. For example:
 
     >>> expr1 = UnevaluatedExpr(x + x)
     >>> expr1
@@ -542,14 +541,15 @@ expression which is given as argument. For example:
     >>> expr2
     x + x
 
-Remember that ``expr2`` will be evaluated if included into another expression.
-Combine both of the methods to prevent both inside and outside evaluations:
+Remember that ``expr2`` will be evaluated if included into another
+expression. Combine both of the methods to prevent both inside and outside
+evaluations:
 
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
     y + x + x
 
-``UnevalutedExpr`` is supported SymPy printers and can be used to print the result
-in different output forms. For example
+``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
+result in different output forms. For example
 
     >>> from sympy import latex
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
