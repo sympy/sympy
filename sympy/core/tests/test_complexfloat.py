@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sympy import (ComplexFloat, Abs, Number, Rational, Symbol, Float, I, S,
+from sympy import (ComplexFloat, comp, Number, Rational, Symbol, Float, I, S,
                    Pow, re, im)
 from sympy.utilities.pytest import XFAIL, raises
 import mpmath
@@ -129,18 +129,18 @@ def test_ComplexFloat_dps_and_prec():
 
 def test_ComplexFloat_powers():
     a = ComplexFloat("1", "2", 32)
-    assert Abs(a**4 - ComplexFloat("-7", "-24", 32)) < 1e-31
+    assert comp(a**4, ComplexFloat("-7", "-24", 32), 1e-31)
 
     maple_res = ComplexFloat("1.2558487700227965965590044279597",
                              "0.64504200054796217546710585153161")
-    assert Abs(a**(S(3)/7) - maple_res) < 1e-31
-    assert Abs(a**Float(S(3)/7, 48) - maple_res) < 1e-31
-    assert Abs(a**ComplexFloat(S(3)/7, 0, 48) - maple_res) < 1e-31
+    assert comp(a**(S(3)/7), maple_res, 1e-31)
+    assert comp(a**Float(S(3)/7, 48), maple_res, 1e-31)
+    assert comp(a**ComplexFloat(S(3)/7, 0, 48), maple_res, 1e-31)
 
     b = ComplexFloat("3", "4", 32)
     maple_res = ComplexFloat("0.12900959407446689407705233965245",
                              "0.033924092905170126697617854622548")
-    assert Abs(a**b - maple_res) < 1e-31
+    assert comp(a**b, maple_res, 1e-31)
 
 
 def test_ComplexFloat_highprec():
@@ -150,7 +150,7 @@ def test_ComplexFloat_highprec():
     w = v**2
     assert isinstance(v, ComplexFloat)
     assert isinstance(w, ComplexFloat)
-    assert Abs(w - z) < 1e-62
+    assert comp(w, z, 1e-63)
 
     a = S.Pi.evalf(100)
     b = a*I
@@ -214,7 +214,7 @@ def test_ComplexFloat_highprec_trig():
         u = f(z)
         assert u.is_ComplexFloat
         w = finv(u)
-        assert Abs(w - z) < 1e-62
+        assert comp(w, z, 1e-63)
 
 
 @XFAIL
@@ -227,7 +227,7 @@ def test_ComplexFloat_highprec_fails():
         u = f(z)
         assert u.is_ComplexFloat
         w = finv(u)
-        assert Abs(w - z) < 1e-62
+        assert comp(w, z, 1e-63)
 
 
 def test_ComplexFloat_Mul_I_NumberSymbol():
@@ -239,6 +239,7 @@ def test_ComplexFloat_Mul_I_NumberSymbol():
 
 
 def test_ComplexFloat_ops():
+    from sympy import Abs
     from sympy import conjugate
     u = S(2+3j)
     assert conjugate(u) == S(2 - 3j)
@@ -438,4 +439,4 @@ def test_ComplexFloat_extract_multiplicatively():
     z = ComplexFloat(2, 4, dps=32)
     a = z.extract_multiplicatively(3)
     b = ComplexFloat(S(2)/3, S(4)/3, dps=32)
-    assert (Abs(a - b) < 1e-31)
+    assert comp(a, b, 1e-31)
