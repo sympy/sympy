@@ -440,3 +440,10 @@ def test_ComplexFloat_extract_multiplicatively():
     a = z.extract_multiplicatively(3)
     b = ComplexFloat(S(2)/3, S(4)/3, dps=32)
     assert comp(a, b, 1e-31)
+
+
+def test_ComplexFloat_mod():
+    z = ComplexFloat('13.14', '17.15')
+    assert comp(z % 5, ComplexFloat('3.14', '17.15'), 1e-15)
+    assert comp(z % (3j), ComplexFloat('13.14', '2.15'), 1e-15)
+    assert comp(z % (5 + 3j), ComplexFloat('3.14', '2.15'), 1e-15)

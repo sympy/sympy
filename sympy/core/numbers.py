@@ -1532,6 +1532,16 @@ class ComplexFloat(Number):
 
     __truediv__ = __div__
 
+    @_sympifyit('other', NotImplemented)
+    def __mod__(self, other):
+        (u, v) = other.as_real_imag()
+        if v.is_zero:
+            return ComplexFloat(self.real % u, self.imag)
+        if u.is_zero:
+            return ComplexFloat(self.real, self.imag % v)
+        else:
+            return ComplexFloat(self.real % u, self.imag % v)
+
     def __le__(self, other):
         raise TypeError("Invalid comparison of complex %s" % self)
     __ge__ = __le__
