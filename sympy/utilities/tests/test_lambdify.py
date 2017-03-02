@@ -762,8 +762,7 @@ def test_Min_Max():
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
 
 def test_issue_12173():
-    assert lambdify((x,y), uppergamma(x,y))(1,2)==exp(-2)
-    assert lambdify((x,y), lowergamma(x,y))(1,2)==(-exp(-2)+1)
+    assert Float(lambdify((x,y), uppergamma(x,y))(1,2),50)==0.13533528323661270231781372785917483270168304443359
 
 def test_Indexed():
     # Issue #10934
