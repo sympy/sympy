@@ -1987,6 +1987,15 @@ class Expr(Basic, EvalfMixin):
                     return None
                 else:
                     return quotient
+            elif self.is_ComplexFloat:
+                if not quotient.is_ComplexFloat:
+                    return None
+                elif self.real.is_positive and quotient.real.is_negative:
+                    # TODO: prevents some stack crash/recursion but is this
+                    # arbitrary?  Must it match logic in "exact_minus"?
+                    return None
+                else:
+                    return quotient
         elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
             if quotient.is_Mul and len(quotient.args) == 2:
                 if quotient.args[0].is_Integer and quotient.args[0].is_positive and quotient.args[1] == self:

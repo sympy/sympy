@@ -414,3 +414,27 @@ def test_ComplexFloat_extract_minus():
     for z in T:
         assert (ComplexFloat(z).could_extract_minus_sign() ==
                 z.could_extract_minus_sign())
+
+
+def test_ComplexFloat_extract_multiplicatively():
+    assert S(2+4j).extract_multiplicatively(2) == S(1+2j)
+    assert S(2-4j).extract_multiplicatively(2) == S(1-2j)
+    assert S(-2-4j).extract_multiplicatively(2) == S(-1-2j)
+    assert S(-2-4j).extract_multiplicatively(-2) == S(1+2j)
+    assert S(-2+4j).extract_multiplicatively(2) == S(-1+2j)
+    assert S(-2+4j).extract_multiplicatively(-2) == S(1-2j)
+
+    assert S(2+4j).extract_multiplicatively(I) == S(4-2j)
+    assert S(2+4j).extract_multiplicatively(2*I) == S(2-1j)
+
+    # Note: do not make real positve to real negative, see comments in expr.py
+    assert S(2+4j).extract_multiplicatively(-2) is None
+    assert S(2-4j).extract_multiplicatively(-2) is None
+    assert S(2-4j).extract_multiplicatively(I) is None
+
+    assert S(2+4j).extract_multiplicatively(4) == S(0.5+1j)
+
+    z = ComplexFloat(2, 4, dps=32)
+    a = z.extract_multiplicatively(3)
+    b = ComplexFloat(S(2)/3, S(4)/3, dps=32)
+    assert (Abs(a - b) < 1e-31)
