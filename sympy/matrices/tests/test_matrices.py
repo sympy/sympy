@@ -1784,11 +1784,11 @@ def test_LUdecomposition_Simple_iszerofunc():
     # matrices.LUdecomposition_Simple()
     magic_string = "I got passed in!"
     def goofyiszero(value):
-        raise Exception(magic_string)
+        raise ValueError(magic_string)
 
     try:
         lu, p = Matrix([[1, 0], [0, 1]]).LUdecomposition_Simple(iszerofunc=goofyiszero)
-    except Exception as err:
+    except ValueError as err:
         assert magic_string == err.args[0]
         return
 
@@ -1799,11 +1799,11 @@ def test_LUdecomposition_iszerofunc():
     # matrices.LUdecomposition_Simple()
     magic_string = "I got passed in!"
     def goofyiszero(value):
-        raise Exception(magic_string)
+        raise ValueError(magic_string)
 
     try:
         l, u, p = Matrix([[1, 0], [0, 1]]).LUdecomposition(iszerofunc=goofyiszero)
-    except Exception as err:
+    except ValueError as err:
         assert magic_string == err.args[0]
         return
 
