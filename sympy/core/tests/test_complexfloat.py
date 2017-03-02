@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sympy import (ComplexFloat, Abs, Number, Rational, Symbol, Float, I, S,
                    Pow, re, im)
 from sympy.utilities.pytest import XFAIL, raises
@@ -267,8 +268,8 @@ def test_ComplexFloat_inf():
     assert str(v) == '-inf-infj'
     assert latex(u) == r'\infty + \infty i'
     assert latex(v) == r'- \infty - \infty i'
-    assert pretty(u) == 'inf + infⅈ'
-    assert pretty(v) == '-inf - infⅈ'
+    assert pretty(u) == u'inf + infⅈ'
+    assert pretty(v) == u'-inf - infⅈ'
 
 
 def test_ComplexFloat_zero_is_Zero():
@@ -308,11 +309,11 @@ def test_ComplexFloat_printing():
     assert srepr(z) == \
         "ComplexFloat(Float('1.25', prec=15), Float('2.5', prec=15))"
     assert str(z) == "1.25+2.5j"
-    assert pretty(z) == "1.25 + 2.5ⅈ"
+    assert pretty(z) == u'1.25 + 2.5ⅈ'
     assert latex(z) == "1.25 + 2.5 i"
     z = ComplexFloat('1.25', '-2.5')
     assert str(z) == "1.25-2.5j"
-    assert pretty(z) == "1.25 - 2.5ⅈ"
+    assert pretty(z) == u'1.25 - 2.5ⅈ'
     assert latex(z) == "1.25 - 2.5 i"
     assert str(Pow(z, 2, evaluate=False)) == '(1.25-2.5j)**2'
     assert latex(Pow(z, 2, evaluate=False)) == r'\left(1.25 - 2.5 i\right)^{2}'
@@ -324,7 +325,7 @@ def test_ComplexFloat_printing():
 def test_ComplexFloat_printing_FAILS():
     z = ComplexFloat('1.25', '-2.5')
     x = Symbol('x')
-    assert pretty(z*x) == '(1.25-2.5j)*x'
+    assert pretty(z*x) == u'(1.25 - 2.5ⅈ)⋅x'
 
 
 def test_Float_greedy_make_ComplexFloat():
