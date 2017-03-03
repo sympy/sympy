@@ -440,10 +440,10 @@ def test_factorrat():
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(S(1)/1, multiple=True) == []
-    assert factorrat(S(25)/14, multiple=True) == [1/2, 5, 5, 1/7]
+    assert factorrat(S(25)/14, multiple=True) == [1/7, 1/2, 5, 5]
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(S(-25)/14/9, multiple=True) == \
-        [-1, 1/2, 1/3, 1/3, 5, 5, 1/7]
+        [-1, 1/7, 1/3, 1/3, 1/2, 5, 5]
 
 
 def test_visual_io():
