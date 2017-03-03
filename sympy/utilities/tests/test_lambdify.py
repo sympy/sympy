@@ -14,6 +14,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import uppergamma
 import sympy
 
 
@@ -750,6 +751,12 @@ def test_issue_2790():
     assert lambdify((x, (y, z)), x + y)(1, (2, 4)) == 3
     assert lambdify((x, (y, (w, z))), w + x + y + z)(1, (2, (3, 4))) == 10
     assert lambdify(x, x + 1, dummify=False)(1) == 2
+
+
+def test_issue_12173():
+    exp= lambdify((x,y), uppergamma(x,y))(1,2)
+    ex=Float(exp,50)
+    assert ex==0.13533528323661270231781372785917483270168304443359
 
 
 def test_ITE():
