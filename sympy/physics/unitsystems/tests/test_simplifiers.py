@@ -32,8 +32,8 @@ def test_dim_simplify_rec():
 
 
 def test_dim_simplify_dimless():
-    assert dim_simplify(Mul(Pow(sin(Mul(L, Pow(L,-1))), 2),L)) == L
-    assert dim_simplify(sin(L * L**(-1))**2 * L) == L
+    assert dim_simplify(Mul(Pow(sin(Mul(L, Pow(L,-1))), 2),L)).pairs == L.pairs
+    assert dim_simplify(sin(L * L**(-1))**2 * L).pairs == L.pairs
 
 
 m, s = mks["m"], mks["s"]

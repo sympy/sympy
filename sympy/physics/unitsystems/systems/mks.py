@@ -14,20 +14,20 @@ from sympy.physics.unitsystems import (Dimension, DimensionSystem, Unit,
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 
 # base dimensions
-length = Dimension(name="length", symbol="L", length=1)
-mass = Dimension(name="mass", symbol="M", mass=1)
-time = Dimension(name="time", symbol="T", time=1)
+length = Dimension(name="length", symbol="L", pairs={"length": 1})
+mass = Dimension(name="mass", symbol="M", pairs={"mass": 1})
+time = Dimension(name="time", symbol="T", pairs={"time": 1})
 
 # derived dimensions
-velocity = Dimension(name="velocity", length=1, time=-1)
-acceleration = Dimension(name="acceleration", length=1, time=-2)
-momentum = Dimension(name="momentum", mass=1, length=1, time=-1)
-force = Dimension(name="force", symbol="F", mass=1, length=1, time=-2)
-energy = Dimension(name="energy", symbol="E", mass=1, length=2, time=-2)
-power = Dimension(name="power", length=2, mass=1, time=-3)
-pressure = Dimension(name="pressure", mass=1, length=-1, time=-2)
-frequency = Dimension(name="frequency", symbol="f", time=-1)
-action = Dimension(name="action", symbol="A", length=2, mass=1, time=-1)
+velocity = Dimension(name="velocity", pairs={"length": 1, "time": 1})
+acceleration = Dimension(name="acceleration", pairs={"length": 1, "time": 1})
+momentum = Dimension(name="momentum", pairs={"mass": 1, "length": 1, "time": 1})
+force = Dimension(name="force", symbol="F", pairs={"mass": 1, "length": 1, "time": 1})
+energy = Dimension(name="energy", symbol="E", pairs={"mass": 1, "length": 1, "time": 1})
+power = Dimension(name="power", pairs={"length": 1, "mass": 1, "time": 1})
+pressure = Dimension(name="pressure", pairs={"mass": 1, "length": 1, "time": 1})
+frequency = Dimension(name="frequency", symbol="f", pairs={"time": 1})
+action = Dimension(name="action", symbol="A", pairs={"length": 1, "mass": 1, "time": 1})
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)

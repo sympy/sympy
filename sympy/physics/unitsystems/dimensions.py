@@ -13,12 +13,12 @@ question of adding time to length has no meaning.
 """
 
 from __future__ import division
-from copy import copy
 import numbers
+from sympy.core.sympify import _sympify
 
 from sympy.core.compatibility import reduce
-from sympy.core.containers import Tuple, Dict
-from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr
+from sympy.core.containers import Dict, Tuple
+from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr, Rational
 
 
 class Dimension(Expr):
@@ -33,10 +33,10 @@ class Dimension(Expr):
     quantites).
 
         >>> from sympy.physics.unitsystems.dimensions import Dimension
-        >>> length = Dimension(length=1)
+        >>> length = Dimension({'length': 1})
         >>> length
-        {'length': 1}
-        >>> time = Dimension(time=1)
+        Dimension({length: 1})
+        >>> time = Dimension({'time': 1})
 
     Dimensions behave like a dictionary where the key is the name and the value
     corresponds to the exponent.
@@ -46,25 +46,21 @@ class Dimension(Expr):
     subtraction is defined only when the two objects are the same dimension.
 
         >>> velocity = length.div(time)
-        >>> velocity  #doctest: +SKIP
-        {'length': 1, 'time': -1}
+        >>> velocity
+        Dimension({length: 1, time: -1})
         >>> length.add(length)
-        {'length': 1}
+        Dimension({length: 1})
         >>> length.pow(2)
-        {'length': 2}
+        Dimension({length: 2})
 
     Defining addition-like operations will help when doing dimensional analysis.
 
-    Note that two dimensions are equal if they have the same powers, even if
-    their names and/or symbols differ.
-
-        >>> Dimension(length=1) == Dimension(length=1, name="length")
-        True
-        >>> Dimension(length=1) == Dimension(length=1, symbol="L")
-        True
-        >>> Dimension(length=1) == Dimension(length=1, name="length",
-        ...                                  symbol="L")
-        True
+        >>> Dimension({'length': 1}) == Dimension('length', {'length': 1})
+        False
+        >>> Dimension({'length': 1}) == Dimension({'length': 1}, symbol='L')
+        False
+        >>> Dimension({'length': 1}) == Dimension('length', {'length': 1}, symbol='L')
+        False
     """
 
     is_commutative = True
@@ -72,7 +68,7 @@ class Dimension(Expr):
     # make sqrt(M**2) --> M
     is_positive = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, name=None, pairs=None, symbol=None, **kwargs):
         """
         Create a new dimension.
 
@@ -80,105 +76,115 @@ class Dimension(Expr):
         tuple/list):
 
             >>> from sympy.physics.unitsystems.dimensions import Dimension
-            >>> Dimension(length=1)
-            {'length': 1}
             >>> Dimension({"length": 1})
-            {'length': 1}
-            >>> Dimension([("length", 1), ("time", -1)])  #doctest: +SKIP
-            {'length': 1, 'time': -1}
+            Dimension({length: 1})
+            >>> Dimension([("length", 1), ("time", -1)])
+            Dimension({length: 1, time: -1})
 
         """
 
         # before setting the dict, check if a name and/or a symbol are defined
         # if so, remove them from the dict
-        name = kwargs.pop('name', None)
-        symbol = kwargs.pop('symbol', None)
+        if isinstance(name, (dict, Dict, list, tuple, Tuple)):
+            if symbol is None:
+                symbol = sympify(pairs)
+            pairs = name
+            name = None
+        elif name is not None:
+            name = sympify(name)
+        if symbol is not None:
+            symbol = sympify(symbol)
 
         # pairs of (dimension, power)
-        pairs = []
+        if pairs is None:
+            pairs = {}
 
         # add first items from args to the pairs
-        for arg in args:
-            # construction with {"length": 1}
-            if isinstance(arg, dict):
-                arg = copy(arg)
-                pairs.extend(arg.items())
-            elif isinstance(arg, (Tuple, tuple, list)):
-                #TODO: add construction with ("length", 1); not trivial because
-                #      e.g. [("length", 1), ("time", -1)] has also length = 2
+        if isinstance(pairs, (tuple, list,)):
+            pairs = dict(pairs)
 
-                for p in arg:
-                    #TODO: check that p is a tuple
-                    if len(p) != 2:
-                        raise ValueError("Length of iterable has to be 2; "
-                                         "'%d' found" % len(p))
-
-                # construction with [("length", 1), ...]
-                pairs.extend(arg)
-            else:
-            # error if the arg is not of previous types
-                raise TypeError("Positional arguments can only be: "
-                                "dict, tuple, list; '%s' found" % type(arg))
-
-        pairs.extend(kwargs.items())
+        if not isinstance(pairs, (dict, Dict)):
+            raise TypeError("pairs type should be a dict")
 
         # check validity of dimension key and power
-        for pair in pairs:
-            #if not isinstance(p[0], str):
-            #    raise TypeError("key %s is not a string." % p[0])
-            if not isinstance(pair[1], (numbers.Real, Number)):
+        for key, value in pairs.items():
+            if not isinstance(value, (numbers.Real, Number, int, float, Rational)):
                 raise TypeError("Power corresponding to '%s' is not a number"
-                                % pair[0])
+                                % key)
 
         # filter dimensions set to zero; this avoid the following odd result:
-        # Dimension(length=1) == Dimension(length=1, mass=0) => False
+        # Dimension({"length": 1}) == Dimension({"length": 1, "mass": 0}) => False
         # also simplify to avoid powers such as 2.00000
-        pairs = [(pair[0], nsimplify(pair[1])) for pair in pairs
-                 if pair[1] != 0]
-        pairs.sort(key=str)
+        for key, value in pairs.items():
+            if value == 0:
+                del pairs[key]
+                continue
+            pairs[key] = nsimplify(value)
 
-        new = Expr.__new__(cls, Dict(*pairs))
-        new.name = name
-        new.symbol = symbol
+        pairs = Dict(pairs)
 
-        new._dict = dict(pairs)
+        if name is not None:
+            if symbol is not None:
+                obj = Expr.__new__(cls, name, pairs, symbol)
+            else:
+                obj = Expr.__new__(cls, name, pairs)
+        else:
+            if symbol is not None:
+                obj = Expr.__new__(cls, pairs, symbol)
+            else:
+                obj = Expr.__new__(cls, pairs)
 
-        return new
+        obj._name = name
+        obj._symbol = symbol
+        obj._pairs = pairs
+        return obj
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def symbol(self):
+        return self._symbol
+
+    @property
+    def pairs(self):
+        return self._pairs
 
     def __getitem__(self, key):
         """x.__getitem__(y) <==> x[y]"""
-        return self._dict[key]
+        return self.pairs[key]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("Dimension are Immutable")
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return self._dict.items()
+        return self.pairs.items()
 
     def keys(self):
         """D.keys() -> list of D's keys"""
-        return self._dict.keys()
+        return self.pairs.keys()
 
     def values(self):
         """D.values() -> list of D's values"""
-        return self._dict.values()
+        return self.pairs.values()
 
     def __iter__(self):
         """x.__iter__() <==> iter(x)"""
-        return iter(self._dict)
+        return iter(self.pairs)
 
     def __len__(self):
         """x.__len__() <==> len(x)"""
-        return self._dict.__len__()
+        return self.pairs.__len__()
 
     def get(self, key, default=None):
         """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
-        return self._dict.get(key, default)
+        return self.pairs.get(key, default)
 
     def __contains__(self, key):
         """D.__contains__(k) -> True if D has a key k, else False"""
-        return key in self._dict
+        return key in self.pairs
 
     def __lt__(self, other):
         return self.args < other.args
@@ -197,17 +203,20 @@ class Dimension(Expr):
         have a system, and then to design a specific function to take it into
         account.
         """
-
+        printlist = []
+        if self.name is not None:
+            printlist.append(self.name)
+        if len(self.pairs) > 0:
+            printlist.append(self.pairs)
         if self.symbol is not None:
-            return self.symbol
-        elif self.name is not None:
-            return self.name
-        else:
-            return repr(self)
+            printlist.append(self.symbol)
+
+        return "Dimension(%s)" % (
+            ", ".join(map(str, printlist))
+        )
 
     def __repr__(self):
-
-        return repr(self._dict)
+        return self.__str__()
 
     def __neg__(self):
         return self
@@ -411,16 +420,15 @@ class DimensionSystem(object):
 
         #TODO: use copy instead of direct assignment for found_dim?
         if isinstance(dim, str):
+            dim = sympify(dim)
             for d in self._dims:
                 if dim in (d.name, d.symbol):
                     found_dim = d
                     break
         elif isinstance(dim, Dimension):
-            try:
-                i = self._dims.index(dim)
-                found_dim = self._dims[i]
-            except ValueError:
-                pass
+            for i, idim in enumerate(self._dims):
+                if dim.pairs == idim.pairs:
+                    return idim
 
         return found_dim
 
@@ -531,9 +539,9 @@ class DimensionSystem(object):
             if p == 0:
                 continue
             elif p == 1:
-                res += "%s " % str(d)
+                res += "%s " % str(d.symbol)
             else:
-                res += "%s^%d " % (str(d), p)
+                res += "%s^%d " % (str(d.symbol), p)
 
         return res.strip()
 

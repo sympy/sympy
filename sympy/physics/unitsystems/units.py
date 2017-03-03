@@ -119,7 +119,7 @@ class Unit(Expr):
         Abbreviation which use only intrinsinc properties of the unit.
         """
 
-        return '(%g %s)' % (self.factor, self.dim)
+        return '(%g %s)' % (self.factor, self.dim.symbol)
 
     def __str__(self):
         if self.abbrev != "":
