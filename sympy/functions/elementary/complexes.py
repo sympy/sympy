@@ -54,6 +54,8 @@ class re(Function):
             return S.NaN
         elif arg is S.ComplexInfinity:
             return S.NaN
+        elif arg.is_ComplexFloat:
+            return arg.real
         elif arg.is_real:
             return arg
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -152,6 +154,8 @@ class im(Function):
             return S.NaN
         elif arg.is_real:
             return S.Zero
+        elif arg.is_ComplexFloat:
+            return arg.imag
         elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             return -S.ImaginaryUnit * arg
         elif arg.is_Matrix:

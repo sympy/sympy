@@ -447,3 +447,19 @@ def test_ComplexFloat_mod():
     assert comp(z % 5, ComplexFloat('3.14', '17.15'), 1e-15)
     assert comp(z % (3j), ComplexFloat('13.14', '2.15'), 1e-15)
     assert comp(z % (5 + 3j), ComplexFloat('3.14', '2.15'), 1e-15)
+
+
+def test_ComplexFloat_re_im_give_float():
+    a = re(S(2+0j))
+    assert a == Float(2) and isinstance(a, Float)
+    a = re(S(2+3j))
+    assert a == Float(2) and isinstance(a, Float)
+    a = im(S(0+2j))
+    assert a == Float(2) and isinstance(a, Float)
+    a = im(S(3+2j))
+    assert a == Float(2) and isinstance(a, Float)
+    from sympy import exp_polar, log, sqrt
+    a = exp_polar(log((1 + I)**2))
+    assert comp(a.n(), S(2j), 1e-15)
+    a = exp_polar(log((1 + I)**2/sqrt(-(1 + I)**4)))
+    assert comp(a.n(), S(1j), 1e-15)
