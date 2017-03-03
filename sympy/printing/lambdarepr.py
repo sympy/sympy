@@ -348,12 +348,11 @@ class MpmathPrinter(LambdaPrinter):
         args = str(tuple(map(int, e._mpf_)))
         return 'mpf(%s)' % args
 
-    def _print_Uppergamma(self,e):
-       return "gammainc({0}, {1}, inf)".format(e.args[0], e.args[1])
+    def _print_uppergamma(self,e): #printer for the uppergamma function
+        return "gammainc({0}, {1}, inf)".format(self._print(e.args[0]), self._print(e.args[1]))
 
-    def _print_Lowergamma(self,e):
-        return "gammainc({0}, 0,{1})".format(e.args[0], e.args[1])
-
+    def _print_lowergamma(self,e): #printer for the lowergamma functioin
+        return "gammainc({0}, 0, {1})".format(self._print(e.args[0]), self._print(e.args[1]))
 
 def lambdarepr(expr, **settings):
     """
