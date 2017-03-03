@@ -631,7 +631,6 @@ def _solveset(f, symbol, domain, _check=False):
     that has already been sympify'ed and is known to contain the
     given symbol."""
     # _check controls whether the answer is checked or not
-    from sympy import limit
     from sympy.simplify.simplify import signsimp
 
     orig_f = f
