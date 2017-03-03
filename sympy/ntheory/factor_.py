@@ -946,9 +946,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorint(n, limit=limit, use_trial=use_trial,
                            use_rho=use_rho, use_pm1=use_pm1,
                            verbose=verbose, visual=False, multiple=False)
-        factorlist = sum(([p] * fac[p]
-                         if fac[p] > 0 else [S(1)/p]*(-1 * fac[p])
-                         for p in sorted(fac)), [])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                               for p in sorted(fac)), [])
         return factorlist
 
     factordict = {}
@@ -1209,9 +1208,11 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose, visual=False,multiple=False)
-        factorlist = sum(([p] * fac[p]
-                         if fac[p] > 0 else [S(1)/p]*(-1 * fac[p])
-                         for p in sorted(fac)), [])
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                               for p, _ in sorted(fac.items(),
+                                                        key=lambda(p, m): p
+                                                        if m > 0
+                                                        else 1/p)), [])
         return factorlist
 
     f = factorint(rat.p, limit=limit, use_trial=use_trial,
