@@ -247,6 +247,27 @@ def test_ComplexFloat_ops():
     assert isinstance(Abs(u), Float)
     assert Abs(S(3 + 4j)) == Float(5)
 
+    u = Float('1.2', 32)**ComplexFloat('1.3', '1.4', 32)
+    assert u.is_ComplexFloat
+    maple = ComplexFloat('1.2263983309934933745533592507615',
+                         '0.32001879480325136711953997277836')
+    assert comp(u, maple, 1e-31)
+
+    v = ComplexFloat('2.1', '3.2', 32)
+    u = Float('2.0', 32)**v
+    maple = ComplexFloat('-2.5851799890763636051114621237298',
+                         '3.4199441668003430520753640212588')
+    assert comp(u, maple, 1e-31)
+    u = 2**v
+    assert u.is_ComplexFloat
+    assert comp(u, maple, 1e-31)
+
+    u = (S(4)/5)**ComplexFloat('1.3', '1.4', 32)
+    assert u.is_ComplexFloat
+    maple = ComplexFloat('0.71198473260075775317997750132471',
+                         '-0.22995460943931053262204219882005')
+    assert comp(u, maple, 1e-31)
+
 
 def test_ComplexFloat_nan():
     fnan = float('nan')

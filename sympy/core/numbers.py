@@ -1069,6 +1069,8 @@ class Float(Number):
                     expt.p == 1 and expt.q % 2 and self.is_negative:
                 return Pow(S.NegativeOne, expt, evaluate=False)*(
                     -self)._eval_power(expt)
+            if expt.is_ComplexFloat:
+                return ComplexFloat(self)**expt
             expt, prec = expt._as_mpf_op(self._prec)
             mpfself = self._mpf_
             try:
@@ -1846,7 +1848,7 @@ class Rational(Number):
 
     def _eval_power(self, expt):
         if isinstance(expt, Number):
-            if isinstance(expt, Float):
+            if isinstance(expt, (Float, ComplexFloat)):
                 return self._eval_evalf(expt._prec)**expt
             if expt.is_negative:
                 # (3/4)**-2 -> (4/3)**2
@@ -2387,7 +2389,7 @@ class Integer(Rational):
             # (-2)**k --> 2**k
             if self.is_negative and expt.is_even:
                 return (-self)**expt
-        if isinstance(expt, Float):
+        if isinstance(expt, (Float, ComplexFloat)):
             # Rational knows how to exponentiate by a Float
             return super(Integer, self)._eval_power(expt)
         if not isinstance(expt, Rational):
