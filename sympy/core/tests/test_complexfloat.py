@@ -268,6 +268,16 @@ def test_ComplexFloat_ops():
                          '-0.22995460943931053262204219882005')
     assert comp(u, maple, 1e-31)
 
+    u = Float('-2.1', 32)**Float('2.3', 32)
+    maple = ComplexFloat('3.2383446148483281418556827254120',
+                         '4.4571989801324246867897070902228')
+    assert comp(u, maple, 1e-31)
+
+    u = Float('-2.1', 32)**ComplexFloat('2.3', '1.1', 32)
+    maple = ComplexFloat('-0.032468243980920502168082780134822',
+                         '0.17083835295640083457733380073130')
+    assert comp(u, maple, 1e-31)
+
 
 def test_ComplexFloat_nan():
     fnan = float('nan')
