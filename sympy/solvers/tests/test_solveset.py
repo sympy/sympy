@@ -894,7 +894,7 @@ def test_solveset():
     assert solveset(exp(x) - 1, x) == imageset(Lambda(n, 2*I*pi*n), S.Integers)
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
-    
+
     assert solveset(f(1)**2 - 1, f(1), S.Reals) == FiniteSet(-1, 1)
     assert solveset(f(1)**2 + 1, f(1)) == FiniteSet(-I, I)
 

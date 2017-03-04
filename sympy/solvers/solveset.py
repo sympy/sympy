@@ -848,7 +848,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         for arg in f_tup:
             if arg.has(symbol) or arg.is_Number:
                 continue
-            else
+            else:
                 raise ValueError("%s is not a valid expression" % (f))
         var = Dummy('x')
         con = {symbol: var}
