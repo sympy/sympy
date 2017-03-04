@@ -1071,16 +1071,13 @@ class Float(Number):
                     -self)._eval_power(expt)
             if expt.is_ComplexFloat:
                 return ComplexFloat(self)**expt
-            expt, prec = expt._as_mpf_op(self._prec)
+            mpfexpt, prec = expt._as_mpf_op(self._prec)
             mpfself = self._mpf_
             try:
-                y = mpf_pow(mpfself, expt, prec, rnd)
+                y = mpf_pow(mpfself, mpfexpt, prec, rnd)
                 return Float._new(y, prec)
             except mlib.ComplexResult:
-                re, im = mlib.mpc_pow(
-                    (mpfself, _mpf_zero), (expt, _mpf_zero), prec, rnd)
-                return Float._new(re, prec) + \
-                    Float._new(im, prec)*S.ImaginaryUnit
+                return ComplexFloat(self)**expt
 
     def __abs__(self):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
