@@ -542,7 +542,7 @@ def _solve_abs(f, symbol, domain):
 
         domain = continuous_domain(f_q, symbol, domain)
         q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
-                                                 relational=False, domain=domain, cont_domain=True)
+                                                 relational=False, domain=domain, continuous=True)
         q_neg_cond = q_pos_cond.complement(domain)
 
         sols_q_pos = solveset_real(f_p*f_q + f_r,

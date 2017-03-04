@@ -379,7 +379,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont_domain=False):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
     """Solves a real univariate inequality.
 
     Parameters
@@ -393,7 +393,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         A Relational type output is expected or not
     domain : Set
         The domain over which the equation is solved
-    cont_domain: bool
+    continuous: bool
         True if expr is known to be continuous over the given domain
         (and so continuous_domain() doesn't need to be called on it)
 
@@ -484,7 +484,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             singularities = []
             for d in denoms(e):
                 singularities.extend(solvify(d, gen, domain))
-            if not cont_domain:
+            if not continuous:
                 domain = continuous_domain(e, gen, domain)
             solns = solvify(e, gen, domain)
 
