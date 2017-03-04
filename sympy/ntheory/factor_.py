@@ -850,6 +850,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     >>> factorint(3*101**7, limit=5)
     {3: 1, 101: 7}
 
+    List of Factors:
+
+    If ``multiple`` is set to ``True`` then a list containing the
+    prime factors including multiplicities is returned.
+
+    >>> factorint(24, multiple=True)
+    [2, 2, 2, 3]
+
     Visual Factorization:
 
     If ``visual`` is set to ``True``, then it will return a visual
@@ -1201,6 +1209,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``use_rho``: Toggle use of Pollard's rho method
         - ``use_pm1``: Toggle use of Pollard's p-1 method
         - ``verbose``: Toggle detailed printing of progress
+        - ``multiple``: Toggle returning a list of factors or dict
         - ``visual``: Toggle product form of output
     """
     from collections import defaultdict
