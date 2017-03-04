@@ -843,7 +843,7 @@ class Float(Number):
 
         # decimal precision(dps) is set and maybe binary precision(precision)
         # as well.From here on binary precision is used to compute the Float.
-        # Hence, if supplied use binary precision else translate to decimal
+        # Hence, if supplied use binary precision else translate from decimal
         # precision.
 
         if precision is None or precision == '':

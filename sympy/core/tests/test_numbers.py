@@ -503,7 +503,7 @@ def test_Float():
     # binary precision
     # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
     Float(S(1)/10, precision=53) == S(0.1)
-    Float(S(1)/10, precision=53) == S(0.1)
+    Float(S(1)/10, precision=54) == S(0.1)
     assert not Float(S(1)/10, precision=53) == Float(S(1)/10, precision=54)
 
     # Precision specifying errors
