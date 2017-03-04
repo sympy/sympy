@@ -264,11 +264,10 @@ def combsimp(expr):
     if expr != was:
         expr = factor(expr)
 
-    if not as_gamma:
-        if as_factorial:
-            expr = expr.rewrite(factorial)
-        elif as_binomial:
-            expr = expr.rewrite(binomial)
+    if as_factorial:
+        expr = expr.rewrite(factorial)
+    elif as_binomial:
+        expr = expr.rewrite(binomial)
 
     return expr
 
