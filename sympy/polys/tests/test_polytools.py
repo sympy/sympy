@@ -1700,6 +1700,14 @@ def test_div():
     q = f.exquo(g)
     assert q.get_domain().is_ZZ
 
+    f, g = Poly(x+y, x), Poly(2*x+y, x)
+    q, r = f.div(g)
+    assert q.get_domain().is_Frac and r.get_domain().is_Frac
+    r = f.rem(g)
+    assert r.get_domain().is_Frac
+    q = f.quo(g)
+    assert q.get_domain().is_Frac
+
 
 def test_gcdex():
     f, g = 2*x, x**2 - 16

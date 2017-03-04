@@ -78,7 +78,7 @@ def apart(f, x=None, full=False, **options):
         P, Q = f.as_numer_denom()
 
     _options = options.copy()
-    options = set_defaults(options, extension=True, field=True)
+    options = set_defaults(options, extension=True)
     try:
         (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
     except PolynomialError as msg:
