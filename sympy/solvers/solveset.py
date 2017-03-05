@@ -804,6 +804,9 @@ def solveset(f,symbol = None,domain = S.Complexes):
     {2*n*I*pi | n in Integers()}
     
     * If you want to solve the equatio for more than one variable
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> z = Symbol('z')
     >>> solveset(x*y*z,[x,y,z])
     [{x: {0}},{y: {0}},{z: {0}}
 
