@@ -625,7 +625,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def __solveset(f, symbol, domain, _check=False):
+def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -804,7 +804,7 @@ def solveset(f,symbol = None,domain = S.Complexes):
     {2*n*I*pi | n in Integers()}
     
     * If you want to solve the equatio for more than one variable
-    >>>solveset(x*y*z,[x,y,z])
+    >>> solveset(x*y*z,[x,y,z])
     [{x: {0}},{y: {0}},{z: {0}}
 
     * If you want to use `solveset` to solve the equation in the
@@ -840,17 +840,17 @@ def solveset(f,symbol = None,domain = S.Complexes):
 	if type( symbol ) == list :
 		solution_list = []
 		for i in symbol :
-			ans = {i: _solveset(f, i, domain)}
+			ans = {i: solve_set(f, i, domain)}
 			solution_list.append(ans)
 		solution = solution_list
 	else :
-		solution = _solveset(f, symbol, domain)
+		solution = solve_set(f, symbol, domain)
 	return solution
 
 		 
   
 
-def _solveset(f, symbol=None, domain=S.Complexes):
+def solve_set(f, symbol=None, domain=S.Complexes):
     
     f = sympify(f)
 
@@ -903,7 +903,7 @@ def _solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return __solveset(f, symbol, domain, _check=True)
+    return _solveset(f, symbol, domain, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):
