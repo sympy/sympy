@@ -1,7 +1,7 @@
 """
 This module contains functions to:
 
-    - solve a single equation for a single variable, in any domain either real or complex.
+    - solve a single equation for a more than one variable, in any domain either real or complex.
 
     - solve a system of linear equations with N variables and M equations.
 
@@ -733,7 +733,7 @@ def __solveset(f, symbol, domain, _check=False):
 
     return result
 
-def solveset(f,symbol=None,domain=S.Complexes):
+def solveset(f,symbol = None,domain = S.Complexes):
 	"""Solves a given inequality or equation for more than one symbol(variable) with set as output
 
     Parameters
@@ -835,15 +835,20 @@ def solveset(f,symbol=None,domain=S.Complexes):
     (0, oo)
 
     """
-	if type(symbol)==list:
-		solution_list=[]
-        for i in symbol:
-            ans={i: _solveset(f,i,domain)}
-            solution_list.append(ans)
-        return(solution_list)
-    else:
-        solution=_solveset(f,symbol,domain)
-		return(solution)
+
+
+	if type( symbol ) == list :
+		solution_list = []
+		for i in symbol :
+			ans = {i: _solveset(f, i, domain)}
+			solution_list.append(ans)
+		solution = solution_list
+	else :
+		solution = solveset(f, symbol, domain)
+	return solution
+
+		 
+  
 
 def _solveset(f, symbol=None, domain=S.Complexes):
     
