@@ -734,8 +734,20 @@ def _solveset(f, symbol, domain, _check=False):
     return result
 
 def solveset(f,symbol = None,domain = S.Complexes):
-	"""Solves a given inequality or equation for more than one symbol(variable) with set as output
+    
+    if type( symbol ) == list :
+        solution_list = []
+        for i in symbol :
+            ans = {i: solve_set(f, i, domain)}
+            solution_list.append(ans)
+        solution = solution_list
+    else :
+        solution = solve_set(f, symbol, domain)
+    return solution
 
+    '''
+    Solves a given inequality or equation for more than one symbol(variable) with set as output
+        
     Parameters
     ==========
 
@@ -837,21 +849,8 @@ def solveset(f,symbol = None,domain = S.Complexes):
     >>> solveset(exp(x) > 1, x, R)
     (0, oo)
 
-    """
+    '''
 
-
-	if type( symbol ) == list :
-		solution_list = []
-		for i in symbol :
-			ans = {i: solve_set(f, i, domain)}
-			solution_list.append(ans)
-		solution = solution_list
-	else :
-		solution = solve_set(f, symbol, domain)
-	return solution
-
-		 
-  
 
 def solve_set(f, symbol=None, domain=S.Complexes):
     
