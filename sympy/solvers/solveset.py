@@ -844,7 +844,7 @@ def solveset(f,symbol = None,domain = S.Complexes):
 			solution_list.append(ans)
 		solution = solution_list
 	else :
-		solution = solveset(f, symbol, domain)
+		solution = _solveset(f, symbol, domain)
 	return solution
 
 		 
