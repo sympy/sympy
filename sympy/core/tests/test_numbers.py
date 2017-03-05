@@ -502,9 +502,13 @@ def test_Float():
 
     # binary precision
     # Decimal value 0.1 cannot be expressed precisely as a base 2 fraction
-    Float(S(1)/10, precision=53) == S(0.1)
-    Float(S(1)/10, precision=54) == S(0.1)
-    assert not Float(S(1)/10, precision=53) == Float(S(1)/10, precision=54)
+    a = Float(S(1)/10, dps=15)
+    b = Float(S(1)/10, dps=16)
+    p = Float(S(1)/10, precision=53)
+    q = Float(S(1)/10, precision=54)
+    assert a._mpf_ == p._mpf_
+    assert not a._mpf_ == q._mpf_
+    assert not b._mpf_ == q._mpf_
 
     # Precision specifying errors
     raises(ValueError, lambda: Float("1.23", dps=3, precision=10))
