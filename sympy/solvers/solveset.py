@@ -742,7 +742,7 @@ def solveset(f,symbol=None,domain=S.Complexes):
     f : Expr or a relational.
         The target equation or inequality
     symbol : Symbol
-        The variable or List of variables for which the equation is to be solved
+        The variable or List of variables for which the equation is solved
     domain : Set
         The domain over which the equation is solved
 
@@ -835,8 +835,8 @@ def solveset(f,symbol=None,domain=S.Complexes):
     (0, oo)
 
     """
-    if type(symbol)==list:
-        solution_list=[]
+	if type(symbol)==list:
+		solution_list=[]
         for i in symbol:
             ans={i: _solveset(f,i,domain)}
             solution_list.append(ans)
@@ -844,7 +844,6 @@ def solveset(f,symbol=None,domain=S.Complexes):
     else:
         solution=_solveset(f,symbol,domain)
 		return(solution)
-
 
 def _solveset(f, symbol=None, domain=S.Complexes):
     
