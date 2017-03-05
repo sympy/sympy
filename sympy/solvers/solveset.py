@@ -808,7 +808,7 @@ def solveset(f,symbol = None,domain = S.Complexes):
     >>> y = Symbol('y')
     >>> z = Symbol('z')
     >>> solveset(x*y*z,[x,y,z])
-    [{x: {0}},{y: {0}},{z: {0}}
+    [{x: {0}}, {y: {0}}, {z: {0}}]
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
