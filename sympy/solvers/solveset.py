@@ -625,7 +625,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def _solveset(f, symbol, domain, _check=False):
+def __solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -733,9 +733,8 @@ def _solveset(f, symbol, domain, _check=False):
 
     return result
 
-
-def solveset(f, symbol=None, domain=S.Complexes):
-    """Solves a given inequality or equation with set as output
+def solveset(f,symbol=None,domain=S.Complexes):
+	"""Solves a given inequality or equation for more than one symbol(variable) with set as output
 
     Parameters
     ==========
@@ -743,7 +742,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     f : Expr or a relational.
         The target equation or inequality
     symbol : Symbol
-        The variable for which the equation is solved
+        The variable or List of variables for which the equation is to be solved
     domain : Set
         The domain over which the equation is solved
 
@@ -803,6 +802,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
+    
+    * If you want to solve the equatio for more than one variable
+    >>>solveset(x*y*z,[x,y,z])
+    [{x: {0}},{y: {0}},{z: {0}}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
@@ -832,6 +835,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
     (0, oo)
 
     """
+    if type(symbol)==list:
+        solution_list=[]
+        for i in symbol:
+            ans={i: _solveset(f,i,domain)}
+            solution_list.append(ans)
+        return(solution_list)
+    else:
+        solution=_solveset(f,symbol,domain)
+		return(solution)
+
+
+def _solveset(f, symbol=None, domain=S.Complexes):
+    
     f = sympify(f)
 
     if f is S.true:
@@ -883,7 +899,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    return __solveset(f, symbol, domain, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):
