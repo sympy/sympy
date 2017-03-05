@@ -773,6 +773,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.series import limit, Limit
+        from sympy.solvers.solveset import solveset
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -808,7 +809,20 @@ class Expr(Basic, EvalfMixin):
                 if isinstance(B, Limit):
                     raise NotImplementedError("Could not compute limit")
 
-        return B - A
+        if (a and b) is None:
+            return B - A
+
+        value = B - A
+
+        if a.is_comparable and b.is_comparable:
+            singularities = list(solveset(self.cancel().as_numer_denom()[1], x))
+            for s in singularities:
+                if a < s < b:
+                    value += -limit(self, x, s, "+") + limit(self, x, s, "-")
+                elif b < s < a:
+                    value += limit(self, x, s, "+") - limit(self, x, s, "-")
+
+        return value
 
     def _eval_power(self, other):
         # subclass to compute self**other for cases when
@@ -1106,11 +1120,12 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
-        When x is noncommutative, the coeff to the left (default) or right of x
-        can be returned. The keyword 'right' is ignored when x is commutative.
+        When ``x`` is noncommutative, the coefficient to the left (default) or
+        right of ``x`` can be returned. The keyword 'right' is ignored when
+        ``x`` is commutative.
 
         See Also
         ========

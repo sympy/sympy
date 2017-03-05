@@ -209,10 +209,18 @@ def complex_accuracy(result):
 
 def get_abs(expr, prec, options):
     re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
+
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
-        return libmp.mpc_abs((re, im), prec), None, re_acc, None
+        if expr.is_number:
+            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
+                                        prec + 2, options)
+            return abs_expr, None, acc, None
+        else:
+            if 'subs' in options:
+                return libmp.mpc_abs((re, im), prec), None, re_acc, None
+            return abs(expr), None, prec, None
     elif re:
         return mpf_abs(re), None, re_acc, None
     else:
@@ -815,7 +823,7 @@ def evalf_log(expr, prec, options):
 
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
-    if prec - size > workprec:
+    if prec - size > workprec and re != fzero:
         # We actually need to compute 1+x accurately, not x
         arg = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)

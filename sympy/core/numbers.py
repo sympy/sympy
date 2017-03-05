@@ -296,7 +296,7 @@ def mod_inverse(a, m):
     >>> mod_inverse(-3, 11)
     -4
 
-    When there is a commono factor between the numerators of
+    When there is a common factor between the numerators of
     ``a`` and ``m`` the inverse does not exist:
 
     >>> mod_inverse(2, 4)
@@ -434,6 +434,14 @@ class Number(AtomicExpr):
 
     def __float__(self):
         return mlib.to_float(self._as_mpf_val(53))
+
+    def floor(self):
+        raise NotImplementedError('%s needs .floor() method' %
+            (self.__class__.__name__))
+
+    def ceiling(self):
+        raise NotImplementedError('%s needs .ceiling() method' %
+            (self.__class__.__name__))
 
     def _eval_conjugate(self):
         return self
@@ -1519,6 +1527,12 @@ class Rational(Number):
 
     __long__ = __int__
 
+    def floor(self):
+        return Integer(self.p // self.q)
+
+    def ceiling(self):
+        return -Integer(-self.p // self.q)
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1791,6 +1805,12 @@ class Integer(Rational):
         return self.p
 
     __long__ = __int__
+
+    def floor(self):
+        return Integer(self.p)
+
+    def ceiling(self):
+        return Integer(self.p)
 
     def __neg__(self):
         return Integer(-self.p)
@@ -2681,6 +2701,12 @@ class Infinity(with_metaclass(Singleton, Number)):
 
     __rmod__ = __mod__
 
+    def floor(self):
+        return self
+
+    def ceiling(self):
+        return self
+
 oo = S.Infinity
 
 
@@ -2892,6 +2918,12 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     __rmod__ = __mod__
 
+    def floor(self):
+        return self
+
+    def ceiling(self):
+        return self
+
 
 class NaN(with_metaclass(Singleton, Number)):
     """
@@ -2978,6 +3010,12 @@ class NaN(with_metaclass(Singleton, Number)):
 
     __truediv__ = __div__
 
+    def floor(self):
+        return self
+
+    def ceiling(self):
+        return self
+
     def _as_mpf_val(self, prec):
         return _mpf_nan
 
@@ -3053,6 +3091,12 @@ class ComplexInfinity(with_metaclass(Singleton, AtomicExpr)):
     @staticmethod
     def __abs__():
         return S.Infinity
+
+    def floor(self):
+        return self
+
+    def ceiling(self):
+        return self
 
     @staticmethod
     def __neg__():
@@ -3578,6 +3622,10 @@ class ImaginaryUnit(with_metaclass(Singleton, AtomicExpr)):
     def _sage_(self):
         import sage.all as sage
         return sage.I
+
+    @property
+    def _mpc_(self):
+        return (Float(0)._mpf_, Float(1)._mpf_)
 
 I = S.ImaginaryUnit
 

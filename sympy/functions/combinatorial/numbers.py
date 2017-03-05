@@ -115,6 +115,9 @@ class fibonacci(Function):
     def _eval_rewrite_as_sqrt(self, n):
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
+    def _eval_rewrite_as_GoldenRatio(self,n):
+        return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
+
 
 class lucas(Function):
     """

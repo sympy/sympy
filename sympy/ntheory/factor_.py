@@ -803,7 +803,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None):
+              verbose=False, visual=None, multiple=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -849,6 +849,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     >>> factorint(3*101**7, limit=5)
     {3: 1, 101: 7}
+
+    List of Factors:
+
+    If ``multiple`` is set to ``True`` then a list containing the
+    prime factors including multiplicities is returned.
+
+    >>> factorint(24, multiple=True)
+    [2, 2, 2, 3]
 
     Visual Factorization:
 
@@ -942,6 +950,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if multiple:
+        fac = factorint(n, limit=limit, use_trial=use_trial,
+                           use_rho=use_rho, use_pm1=use_pm1,
+                           verbose=verbose, visual=False, multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                               for p in sorted(fac)), [])
+        return factorlist
+
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
@@ -1172,7 +1188,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None):
+              verbose=False, visual=None, multiple=False):
     r"""
     Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
     the prime factors of ``r`` as keys and their respective multiplicities
@@ -1193,9 +1209,21 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``use_rho``: Toggle use of Pollard's rho method
         - ``use_pm1``: Toggle use of Pollard's p-1 method
         - ``verbose``: Toggle detailed printing of progress
+        - ``multiple``: Toggle returning a list of factors or dict
         - ``visual``: Toggle product form of output
     """
     from collections import defaultdict
+    if multiple:
+        fac = factorrat(rat, limit=limit, use_trial=use_trial,
+                  use_rho=use_rho, use_pm1=use_pm1,
+                  verbose=verbose, visual=False,multiple=False)
+        factorlist = sum(([p] * fac[p] if fac[p] > 0 else [S(1)/p]*(-1*fac[p])
+                               for p, _ in sorted(fac.items(),
+                                                        key=lambda elem: elem[0]
+                                                        if elem[1] > 0
+                                                        else 1/elem[0])), [])
+        return factorlist
+
     f = factorint(rat.p, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
                   verbose=verbose).copy()

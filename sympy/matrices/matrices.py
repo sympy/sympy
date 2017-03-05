@@ -1547,6 +1547,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
+            if l == 0 and (n < N - 1) != False:
+                raise ValueError("Matrix det == 0; not invertible")
+            elif l == 0 and N > 1 and n % 1 != 0:
+                raise ValueError("Non-integer power cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -1581,7 +1585,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
     def __pow__(self, num):
         if not self.is_square:
             raise NonSquareMatrixError()
-        if isinstance(num, (int, Integer)):
+        num = sympify(num)
+        # Conditions to include Integers and Integer valued Floats (eg: 10.0, 26.0, etc.,).
+        # n = int(num) in _matrix_pow_by_recursion() can only work correctly
+        # with integer valued numbers.
+        # Other floats are thus handled by _matrix_pow_by_jordan_blocks().
+        if num.is_Number and num % 1 == 0:
             if (self.rows == 1):
                 return self._new([[self[0]**num]])
             # When certain conditions are met,
@@ -1590,10 +1599,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             elif self.rows == 2 and num > 100000:
                 try:
                     return self._matrix_pow_by_jordan_blocks(num)
-                except AttributeError:
-                    return self._matrix_pow_by_recursion(num)
+                except ValueError:
+                    pass
             return self._matrix_pow_by_recursion(num)
-        elif isinstance(num, (Expr, float)):
+        elif isinstance(num, Expr):
             return self._matrix_pow_by_jordan_blocks(num)
         else:
             raise TypeError(
@@ -3170,7 +3179,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [1, 0, 2, 0],
         [0, 1, 0, 2]])
         """
-        return reduce(cls.row_join, args)
+        kls = type(args[0])
+        return reduce(kls.row_join, args)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -5042,7 +5052,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         [2, 0],
         [0, 2]])
         """
-        return reduce(cls.col_join, args)
+        kls = type(args[0])
+        return reduce(kls.col_join, args)
 
     _eval_simplify = simplify
 
