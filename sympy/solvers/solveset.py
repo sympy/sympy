@@ -733,8 +733,110 @@ def _solveset(f, symbol, domain, _check=False):
 
     return result
 
-def solveset(f,symbol = None,domain = S.Complexes):
-    
+def solveset(f, symbol=None, domain=S.Complexes):
+    """Solves a given inequality or equation with set as output
+
+    Parameters
+    ==========
+
+    f : Expr or a relational.
+        The target equation or inequality
+    symbol : Symbol
+        The variable for which the equation is solved
+    domain : Set
+        The domain over which the equation is solved
+
+    Returns
+    =======
+
+    Set
+        A set of values for `symbol` for which `f` is True or is equal to
+        zero. An `EmptySet` is returned if `f` is False or nonzero.
+        A `ConditionSet` is returned as unsolved object if algorithms
+        to evaluate complete solution are not yet implemented.
+
+    `solveset` claims to be complete in the solution set that it returns.
+
+    Raises
+    ======
+
+    NotImplementedError
+        The algorithms to solve inequalities in complex domain  are
+        not yet implemented.
+    ValueError
+        The input is not valid.
+    RuntimeError
+        It is a bug, please report to the github issue tracker.
+
+
+    Notes
+    =====
+
+    Python interprets 0 and 1 as False and True, respectively, but
+    in this function they refer to solutions of an expression. So 0 and 1
+    return the Domain and EmptySet, respectively, while True and False
+    return the opposite (as they are assumed to be solutions of relational
+    expressions).
+
+
+    See Also
+    ========
+
+    solveset_real: solver for real domain
+    solveset_complex: solver for complex domain
+
+    Examples
+    ========
+
+    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy.solvers.solveset import solveset, solveset_real
+
+    * The default domain is complex. Not specifying a domain will lead
+      to the solving of the equation in the complex domain (and this
+      is not affected by the assumptions on the symbol):
+
+    >>> x = Symbol('x')
+    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    {2*n*I*pi | n in Integers()}
+
+    >>> x = Symbol('x', real=True)
+    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    {2*n*I*pi | n in Integers()}
+    * If you want to solve equation or inequatility for more than one variable
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> z = Symbol('z')
+    >>> solveset(x*y*z,[x,y,z])
+    [{x: {0}},{y: {0}},{z: {0}}]
+
+    * If you want to use `solveset` to solve the equation in the
+      real domain, provide a real domain. (Using `solveset\_real`
+      does this automatically.)
+
+    >>> R = S.Reals
+    >>> x = Symbol('x')
+    >>> solveset(exp(x) - 1, x, R)
+    {0}
+    >>> solveset_real(exp(x) - 1, x)
+    {0}
+
+    The solution is mostly unaffected by assumptions on the symbol,
+    but there may be some slight difference:
+
+    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
+    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
+
+    >>> p = Symbol('p', positive=True)
+    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
+    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+
+    * Inequalities can be solved over the real domain only. Use of a complex
+      domain leads to a NotImplementedError.
+
+    >>> solveset(exp(x) > 1, x, R)
+    (0, oo)
+
+    """
     if type( symbol ) == list :
         solution_list = []
         for i in symbol :
@@ -746,7 +848,6 @@ def solveset(f,symbol = None,domain = S.Complexes):
     return solution
 
 def solve_set(f, symbol=None, domain=S.Complexes):
-    
     f = sympify(f)
 
     if f is S.true:
@@ -774,9 +875,14 @@ def solve_set(f, symbol=None, domain=S.Complexes):
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
         else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
+            raise ValueError(filldedent('''Independant variable must be specified for multivariate equation'''))
+            #length = len(free_symbols)
+            #result = []
+            #for i in range (0, length):
+                #symbol = free_symbols.pop()
+                #ans = {symbol: solve_set(f, symbol, domain)}
+                #result.append(ans)
+            #return result
     elif not getattr(symbol, 'is_Symbol', False):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
