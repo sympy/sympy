@@ -196,6 +196,7 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, HyperbolicFunction)
+from sympy.functions.elementary.complexes import conjugate
 from sympy.core.compatibility import ordered, range
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -2134,3 +2135,28 @@ def hyper_as_trig(rv):
 
     return _osborne(masked, d), lambda x: collect(signsimp(
         _osbornei(x, d).xreplace(dict(reps))), S.ImaginaryUnit)
+
+def complex_as_trig(rv):
+    """Return an expression containing exponential functions with imaginary powers
+    in terms of trigonometric functions.
+
+    Identity : exp(ix) = cos(x) + i*sin(x)
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import complex_as_trig, fu
+    >>> x = Symbol("x", real = True)
+    >>> y = Symbol("y", real = True)
+    >>> complex_as_trig(trigsimp(sin(y).rewrite(exp)))
+    sin(y)
+    >>> complex_as_trig(exp(I*x+y))
+    (I*sin(x) + cos(x))*exp(y)
+    """
+    exponential = rv.atoms(exp)
+    for val in exponential:
+        if val.has(I):
+            imag = ((val.args[0] - conjugate(val.args[0]))*pow(I, 3))/S(2)
+            real = ((val.args[0] + conjugate(val.args[0])))/S(2)
+            rv =  rv.replace(val, (cos(imag) + I*sin(imag))*exp(real))
+    return rv
