@@ -121,3 +121,9 @@ def test_precision():
     result = construct_domain([f2])
     y = result[1][0]
     assert y-1 > 1e-50
+
+def test_precision2():
+    f = Float("1.0000000000000000000001")
+    assert f._prec == 80
+    g = Float(construct_domain([f])[1][0])
+    assert g._prec == 80
