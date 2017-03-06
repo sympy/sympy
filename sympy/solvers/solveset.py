@@ -877,13 +877,14 @@ def solve_set(f, symbol=None, domain=S.Complexes):
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
         else:
-            length = len(free_symbols)
-            result = []
-            for i in range (0, length):
-                symbol = free_symbols.pop()
-                ans = {symbol: solve_set(f, symbol, domain)}
-                result.append(ans)
-            return result
+            raise ValueError(filldedent('''Independant variable must be specified for multivariate equation'''))
+            #length = len(free_symbols)
+            #result = []
+            #for i in range (0, length):
+                #symbol = free_symbols.pop()
+                #ans = {symbol: solve_set(f, symbol, domain)}
+                #result.append(ans)
+            #return result
     elif not getattr(symbol, 'is_Symbol', False):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
