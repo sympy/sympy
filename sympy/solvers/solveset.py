@@ -799,15 +799,17 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
-    >>> x = Symbol('x', real=True)
-    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in Integers()}
-    * If you want to solve equation or inequatility for more than one variable
+    * If you want to solve equation or inequality for more than one variable
+
     >>> x = Symbol('x')
     >>> y = Symbol('y')
     >>> z = Symbol('z')
     >>> solveset(x*y*z,[x,y,z])
     [{x: {0}}, {y: {0}}, {z: {0}}]
+
+    >>> x = Symbol('x', real=True)
+    >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
+    {2*n*I*pi | n in Integers()}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
