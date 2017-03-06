@@ -214,6 +214,58 @@ def gradient(scalar, coord_sys):
 
     return coord_sys.delop(scalar).doit()
 
+def laplacian(scalar, coord_sys):
+    """
+    Returns the laplacian of the given scalar field computed wrt
+    the base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    scalar : SymPy Expr
+        The scalar field to compute the gradient of
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the gradient in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, laplacian
+    >>> R = CoordSysCartesian('R')
+    >>> f = R.x**2*R.y**5*R.z
+    >>> laplacian(f, R)
+    20*R.x**2*R.y**3*R.z + 2*R.y**5*R.z
+
+    """
+    return coord_sys.delop.dot(coord_sys.delop(scalar)).doit()
+
+def vector_laplacian(vect, coord_sys):
+    """
+    Returns the vector laplacian of a given vector field computed wrt
+    the base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    coord_sys : CoordSysCartesian
+        The cooordinate system to calculate the divergence in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, vector_laplacian
+    >>> R = CoordSysCartesian('R')
+    >>> v1 = R.x**2*R.i + R.y**3*R.j + R.z**4*R.k
+    >>> vector_laplacian(v1, R)
+    2*R.i + 6*R.y*R.j + 12*R.z**2*R.k
+
+    """
+    return (gradient(divergence(vect, coord_sys), coord_sys) -
+            curl(curl(vect, coord_sys), coord_sys)).doit()
 
 def is_conservative(field):
     """

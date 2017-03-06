@@ -7,6 +7,7 @@ from sympy.vector.deloperator import Del
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.functions import (express, matrix_to_vector,
                                     curl, divergence, gradient,
+                                    laplacian, vector_laplacian,
                                     is_conservative, is_solenoidal,
                                     scalar_potential,
                                     scalar_potential_difference)
