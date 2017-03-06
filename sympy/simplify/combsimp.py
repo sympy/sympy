@@ -72,6 +72,10 @@ def combsimp(expr):
     if as_gamma:
         return gammasimp(expr)
 
+    if expr.has("rewrite(factorial)") and as_binomial:
+        return expr
+
+
     expr = expr.replace(binomial,
         lambda n, k: _rf((n - k + 1).expand(), k.expand())/_rf(1, k.expand()))
     expr = expr.replace(factorial,

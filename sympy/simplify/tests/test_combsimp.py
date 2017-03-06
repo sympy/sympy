@@ -10,6 +10,8 @@ def test_combsimp():
     from sympy.abc import n, k
     assert combsimp(factorial(n)) == factorial(n)
     assert combsimp(binomial(n, k)) == binomial(n, k)
+    assert combsimp(binomial(n, k).rewrite(factorial)) == binomial(n, k).rewrite(factorial)
+    assert combsimp(binomial(n, k).rewrite(factorial)) == factorial(n)/(factorial(k)*factorial(-k + n))
     assert combsimp(factorial(n)/factorial(n - 3)) == n*(-1 + n)*(-2 + n)
     assert combsimp(binomial(n + 1, k + 1)/binomial(n, k)) == (1 + n)/(1 + k)
 

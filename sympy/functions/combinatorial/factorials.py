@@ -852,7 +852,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
     def _eval_rewrite_as_factorial(self, n, k):
-        return "binomial(n,k)"
+        return factorial(n)/(factorial(k)*factorial(n - k))
 
     def _eval_rewrite_as_gamma(self, n, k):
         from sympy import gamma
