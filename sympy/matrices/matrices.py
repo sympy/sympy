@@ -3887,7 +3887,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down):
+    def LUdecomposition(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
         """Returns the decomposition LU and the row swaps p.
 
         Examples
@@ -3947,8 +3947,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down):
-
+    def LUdecomposition_Simple(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
         """Compute an lu decomposition of m x n matrix A, where
         P*A = L*U
         L is m x m lower triangular with unit diagonal
@@ -3981,7 +3980,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             return self.zeros(self.rows, self.cols), []
 
         def next_pivot_f(matrix, row, col):
-
             return nextpivotfunc(matrix, row, col, iszerofunc)
 
         lu = self.as_mutable()
@@ -4004,9 +4002,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
                 # Update L.
                 for col in range(0, pivot_row):
-                    tmp = lu[pivot_row, col]
-                    lu[pivot_row, col] = lu[pivot_row_cand, col]
-                    lu[pivot_row_cand, col] = tmp
+                    lu[pivot_row, col], lu[pivot_row_cand, col] = lu[pivot_row_cand, col], lu[pivot_row, col]
 
                 # Swap rows of U in the pivot column.
                 lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
