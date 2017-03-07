@@ -2146,10 +2146,12 @@ def complex_as_trig(rv):
     ========
 
     >>> from sympy.simplify.fu import complex_as_trig, fu
+    >>> from sympy import Symbol, exp
+    >>> from sympy import sin, cos
     >>> x = Symbol("x", real = True)
     >>> y = Symbol("y", real = True)
-    >>> complex_as_trig(trigsimp(sin(y).rewrite(exp)))
-    sin(y)
+    >>> complex_as_trig(sin(x).rewrite(exp))
+    sin(x)
     >>> complex_as_trig(exp(I*x+y))
     (I*sin(x) + cos(x))*exp(y)
     """
