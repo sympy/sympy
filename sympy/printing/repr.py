@@ -135,7 +135,7 @@ class ReprPrinter(Printer):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 
     def _print_Float(self, expr):
-        r = mlib.to_str(expr._mpf_, prec_to_dps(expr._prec))
+        r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', precision=%i)" % (expr.__class__.__name__, r, expr._prec)
 
     def _print_Sum2(self, expr):
