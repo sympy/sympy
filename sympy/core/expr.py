@@ -1916,7 +1916,7 @@ class Expr(Basic, EvalfMixin):
         if d is S.One:
             return n
         return n/d
-        
+
     def extract_multiplicatively(self, c):
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
@@ -1940,26 +1940,25 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        if type(c) == int:
-            d=abs(c)
-            correct_ans=None
-            ans=Expr._extract_multiplicatively(self, d)
-            if int(d/c) == 1:
-                correct_ans=ans
-            else:
-                correct_ans=-1*ans
-            return correct_ans
+        if (type(c) == int) :
+            return Expr.extract_multiplicatively(self, c*S.ImaginaryUnit*-S.ImaginaryUnit)
+        elif (type(c) == Integer) :
+            return Expr._extract_multiplicatively(self, c)
         elif (type(c) == Add) or (type(c) == Mul) :
-            correct_ans=None
-            correct_ans=Expr._extract_multiplicatively(self, c)
-            if correct_ans == None:
-                correct_ans=Expr._extract_multiplicatively(self, -1*c)
+            try :
+                correct_ans=Expr._extract_multiplicatively(self, c)
                 if correct_ans != None:
-                    return -1*correct_ans
+                    return correct_ans
                 else :
-                	return None
-            else :
-                return correct_ans     
+                    ans=Expr._extract_multiplicatively(self, -1*c)
+                    if ans != None:
+                        correct_ans=ans
+                        return -1*correct_ans
+                    else :
+                        return None
+            except :
+                return Expr._extract_multiplicatively(self, c)
+
         else :
             return Expr._extract_multiplicatively(self, c)
 
