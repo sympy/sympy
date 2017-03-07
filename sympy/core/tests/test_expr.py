@@ -1012,6 +1012,10 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
+    assert Float(6.0).extract_multiplicatively(2) == Float(3.0)
+    assert Float(-6.0).extract_multiplicatively(-2) == Float(3.0)
+    assert Float(6.0).extract_multiplicatively(-2) is None
+    assert Float(0.0).extract_multiplicatively(2) == Float(0.0)
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1

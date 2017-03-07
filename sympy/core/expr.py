@@ -1981,6 +1981,9 @@ class Expr(Basic, EvalfMixin):
                 else:
                     return quotient
             elif self.is_Float:
+                if quotient is S.Zero and self.is_zero:
+                    # Float(0.0)/c gives S.Zero not 0.0
+                    return quotient
                 if not quotient.is_Float:
                     return None
                 elif self.is_positive and quotient.is_negative:
