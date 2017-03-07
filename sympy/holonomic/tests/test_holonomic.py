@@ -2,7 +2,8 @@ from sympy.holonomic import (DifferentialOperator, HolonomicFunction,
     DifferentialOperators, from_hyper, from_meijerg, expr_to_holonomic)
 from sympy.holonomic.recurrence import RecurrenceOperators, HolonomicSequence
 from sympy import (symbols, hyper, S, sqrt, pi, exp, erf, erfc, sstr, Symbol,
-    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma, Si, asinh)
+    O, I, meijerg, sin, cos, log, cosh, besselj, hyperexpand, Ci, EulerGamma,
+    Si, asinh, comp)
 from sympy import ZZ, QQ, RR
 
 
@@ -387,10 +388,13 @@ def test_evalf_rk4():
     for i in range(10):
         r.append(r[-1]+0.1-0.1*I)
 
-    # close to the exact solution 1.09861228866811
+    # close to the exact solution of:
+    exact = S('1.09861228866811')
     # imaginary part also close to zero
-    s = '1.09861574485151 + 1.36082967699958e-7*I'
-    assert sstr(p.evalf(r)[-1]) == s
+    expected = S('1.09861574485151+1.36082967699958e-7j')
+    computed = p.evalf(r)[-1]
+    assert comp(computed, expected, 3e-16)
+    assert comp(computed, exact, 4e-6)
 
     # sin(x)
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
