@@ -452,25 +452,46 @@ def test_ComplexFloat_extract_minus():
 def test_ComplexFloat_extract_multiplicatively():
     assert S(2+4j).extract_multiplicatively(2) == S(1+2j)
     assert S(2-4j).extract_multiplicatively(2) == S(1-2j)
-    assert S(-2-4j).extract_multiplicatively(2) == S(-1-2j)
-    assert S(-2-4j).extract_multiplicatively(-2) == S(1+2j)
     assert S(-2+4j).extract_multiplicatively(2) == S(-1+2j)
-    assert S(-2+4j).extract_multiplicatively(-2) == S(1-2j)
+    assert S(-2-4j).extract_multiplicatively(2) == S(-1-2j)
 
-    assert S(2+4j).extract_multiplicatively(I) == S(4-2j)
-    assert S(2+4j).extract_multiplicatively(2*I) == S(2-1j)
+    # 0 real/imag component
+    assert S(0+6j).extract_multiplicatively(2) == S(0+3j)
+    assert S(6+0j).extract_multiplicatively(2) == S(3+0j)
+    assert S(0-6j).extract_multiplicatively(-2) == S(0+3j)
+    assert S(-6+0j).extract_multiplicatively(-2) == S(3+0j)
 
-    # Note: do not make real positve to real negative, see comments in expr.py
+    # Can't factor -2 out unless both are negative
+    assert S(-2-4j).extract_multiplicatively(-2) == S(1+2j)
     assert S(2+4j).extract_multiplicatively(-2) is None
     assert S(2-4j).extract_multiplicatively(-2) is None
+    assert S(-2+4j).extract_multiplicatively(-2) is None
+    assert S(0+4j).extract_multiplicatively(-2) is None
+    assert S(4+0j).extract_multiplicatively(-2) is None
+
+    # can't extract I
+    assert S(2+4j).extract_multiplicatively(I) is None
+    assert S(2+4j).extract_multiplicatively(2*I) is None
     assert S(2-4j).extract_multiplicatively(I) is None
+    assert S(2+0j).extract_multiplicatively(I) is None
 
+    # ... unless its pure imag
+    assert S(0+4j).extract_multiplicatively(I) == Float(4)
+    assert S(0+1j).extract_multiplicatively(I) == Float(1)
+    assert S(0+6j).extract_multiplicatively(2*I) == Float(3)
+
+    # like Float, can take out arbitrary factor
     assert S(2+4j).extract_multiplicatively(4) == S(0.5+1j)
+    assert S(-2-4j).extract_multiplicatively(-4) == S(0.5+1j)
+    z = ComplexFloat(2, 4, dps=32).extract_multiplicatively(3)
+    w = ComplexFloat(S(2)/3, S(4)/3, dps=32)
+    assert comp(z, w, 1e-31)
 
-    z = ComplexFloat(2, 4, dps=32)
-    a = z.extract_multiplicatively(3)
-    b = ComplexFloat(S(2)/3, S(4)/3, dps=32)
-    assert comp(a, b, 1e-31)
+    # TODO: some things we could either support or test give None?
+    #assert S(3+6j).extract_multiplicatively(S(1+2j)) == Float(3.0)
+    #assert S(3+7j).extract_multiplicatively(S(1+2j)) == Float(3.0)
+    #assert S(0+4j).extract_multiplicatively(S(2+0j)) == S(0+2j)
+    #assert S(0+4j).extract_multiplicatively(S(0+1j)) == Float(4.0)
 
 
 def test_ComplexFloat_mod():
@@ -494,3 +515,16 @@ def test_ComplexFloat_re_im_give_float():
     assert comp(a.n(), S(2j), 1e-15)
     a = exp_polar(log((1 + I)**2/sqrt(-(1 + I)**4)))
     assert comp(a.n(), S(1j), 1e-15)
+
+
+def test_ComplexFloat_mul_x_trig():
+    from sympy import sin, cos, sinh, cosh
+    fcns = (sin, cos, sinh, cosh)
+    x = Symbol('x')
+    for f in fcns:
+        # don't rewrite for general complex
+        w = f(S(1+2j)*x)
+        assert w.func == f
+    # pure real/imag should not cause recursion:
+    sin(S(1+0j)*x)
+    sin(S(0+1j)*x)
