@@ -1442,7 +1442,7 @@ class ComplexFloat(Number):
     _eval_adjoint = _eval_conjugate
 
     def _eval_Abs(self):
-        return Float(mlib.mpc_abs(self._mpc_, self._prec))
+        return Float._new(mlib.mpc_abs(self._mpc_, self._prec), self._prec)
 
     def __neg__(self):
         return ComplexFloat(-self.real, -self.imag)

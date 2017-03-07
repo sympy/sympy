@@ -202,13 +202,13 @@ def test_ComplexFloat_minimum_precision():
     assert (a**3)._prec == a._prec
 
 
-def test_ComplexFloat_highprec_trig():
+def test_ComplexFloat_highprec_functions():
     from sympy import (sin, asin, cos, acos, tan, atan, cot, acot, csc, acsc,
                        sec, asec, cosh, acosh, sinh, asinh, tanh, atanh, coth,
-                       acoth, csch, acsch, sech, asech)
+                       acoth, csch, acsch, sech, asech, exp, log)
     f_finv = [(sin, asin), (cos, acos), (tan, atan), (cot, acot), (csc, acsc),
               (sec, asec), (cosh, acosh), (sinh, asinh), (tanh, atanh),
-              (coth, acoth), (csch, acsch), (sech, asech)]
+              (coth, acoth), (csch, acsch), (sech, asech), (exp, log)]
     for (f, finv) in f_finv:
         z = ComplexFloat("1.23", "-1.34", 64)
         u = f(z)
@@ -229,19 +229,6 @@ def test_ComplexFloat_highprec_trig():
         assert comp(w, z, 1e-31)
 
 
-@XFAIL
-def test_ComplexFloat_highprec_fails():
-    # TODO: log seems only double precision
-    from sympy import exp, log
-    f_finv = [(exp, log)]
-    z = ComplexFloat("1.23", "-1.34", 64)
-    for (f, finv) in f_finv:
-        u = f(z)
-        assert u.is_ComplexFloat
-        w = finv(u)
-        assert comp(w, z, 1e-63)
-
-
 def test_ComplexFloat_Mul_I_NumberSymbol():
     x = Symbol('x')
     a = 0.15*I*S.Pi*x
@@ -258,6 +245,7 @@ def test_ComplexFloat_ops():
     assert u.adjoint() == conjugate(u)
     assert isinstance(Abs(u), Float)
     assert Abs(S(3 + 4j)) == Float(5)
+    assert comp(Abs(ComplexFloat(S(3)/7, S(4)/7, 32)), Float(S(5)/7, 32), 1e-31)
 
     u = Float('1.2', 32)**ComplexFloat('1.3', '1.4', 32)
     assert u.is_ComplexFloat
