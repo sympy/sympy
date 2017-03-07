@@ -1795,6 +1795,7 @@ def test_issue_2840_8155():
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
 
+@slow
 def test_issue_12114():
     a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
     terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
@@ -1820,3 +1821,7 @@ def test_issue_12114():
                   b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
                   d: -f/2 + sqrt(-3*f**2 + 6)/2,
                   e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+
+def test_issue_12258():
+    M, N, x, y = symbols('M N x y',commutative=False)
+    assert solve(M*x+N*y,x) == [-M**(-1)*N*y]

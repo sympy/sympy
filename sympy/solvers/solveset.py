@@ -640,7 +640,7 @@ def _solveset(f, symbol, domain, _check=False):
     if f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
-        f = a/m + h  # XXX condition `m != 0` should be added to soln
+        f = 1/m*a + h  # XXX condition `m != 0` should be added to soln
     f = piecewise_fold(f)
 
     # assign the solvers to use
