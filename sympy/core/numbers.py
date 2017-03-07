@@ -1373,8 +1373,13 @@ class ComplexFloat(Number):
 
     @cacheit
     def sort_key(self, order=None):
-        # TODO: is this correct format?
-        return self.class_key(), (0, ()), (), self.real, self.imag
+        # TODO: how should these be sorted?
+        # after other Numbers, by real and then imag
+        return self.class_key(), (1, ()), (), self.real, self.imag
+        # mixed with other Numbers, by magnitude and argument?
+        #from sympy import arg
+        #return self.class_key(), (0, ()), (), abs(self), arg(self)
+
 
     def _eval_is_real(self):
         # TODO: see is_rational above
