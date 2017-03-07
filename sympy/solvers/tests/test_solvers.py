@@ -1820,3 +1820,7 @@ def test_issue_12114():
                   b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
                   d: -f/2 + sqrt(-3*f**2 + 6)/2,
                   e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+
+def test_issue_12258():
+    M, N, x, y = symbols('M N x y',commutative=False)
+    assert solve(M*x+N*y,x) == [-M**(-1)*N*y]
