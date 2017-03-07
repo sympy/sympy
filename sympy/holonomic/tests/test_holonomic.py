@@ -312,12 +312,12 @@ def test_evalf_euler():
 
     # close to the exact solution 1.09861228866811
     # imaginary part also close to zero
-    s = '1.07530466271334 - 0.0251200594793912*I'
+    s = '1.07530466271334-0.0251200594793912j'
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
     # sin(x)
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
-    s = '0.905546532085401 - 6.93889390390723e-18*I'
+    s = '0.905546532085401-6.93889390390723e-18j'
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
     # computing sin(pi/2) using this method
@@ -341,7 +341,7 @@ def test_evalf_euler():
         r.append(r[-1]-0.1*I)
 
     # close to 1.0
-    s = '0.976882381836257 - 1.65557671738537e-16*I'
+    s = '0.976882381836257-1.65557671738537e-16j'
     assert sstr(p.evalf(r, method='Euler')[-1]) == s
 
     # cos(x)
@@ -365,7 +365,7 @@ def test_evalf_euler():
         r.append(r[-1]-0.1*I)
 
     p = HolonomicFunction(Dx**2 + 1, x, 0, [1,1]).evalf(r, method='Euler')
-    s = '0.501421652861245 - 3.88578058618805e-16*I'
+    s = '0.501421652861245-3.88578058618805e-16j'
     assert sstr(p[-1]) == s
 
 def test_evalf_rk4():
@@ -394,7 +394,7 @@ def test_evalf_rk4():
 
     # sin(x)
     p = HolonomicFunction(Dx**2 + 1, x, 0, [0, 1])
-    s = '0.90929463522785 + 1.52655665885959e-16*I'
+    s = '0.90929463522785+1.52655665885959e-16j'
     assert sstr(p.evalf(r)[-1]) == s
 
     # computing sin(pi/2) using this method
@@ -418,7 +418,7 @@ def test_evalf_rk4():
         r.append(r[-1]-0.1*I)
 
     # close to 1.0
-    s = '1.00000003415141 + 6.11940487991086e-16*I'
+    s = '1.00000003415141+6.11940487991086e-16j'
     assert sstr(p.evalf(r)[-1]) == s
 
     # cos(x)
@@ -442,7 +442,7 @@ def test_evalf_rk4():
         r.append(r[-1]-0.1*I)
 
     p = HolonomicFunction(Dx**2 + 1, x, 0, [1,1]).evalf(r)
-    s = '0.493152791638442 - 1.41553435639707e-15*I'
+    s = '0.493152791638442-1.41553435639707e-15j'
     assert sstr(p[-1]) == s
 
 def test_expr_to_holonomic():
