@@ -209,12 +209,24 @@ def test_ComplexFloat_highprec_trig():
     f_finv = [(sin, asin), (cos, acos), (tan, atan), (cot, acot), (csc, acsc),
               (sec, asec), (cosh, acosh), (sinh, asinh), (tanh, atanh),
               (coth, acoth), (csch, acsch), (sech, asech)]
-    z = ComplexFloat("1.23", "-1.34", 64)
     for (f, finv) in f_finv:
+        z = ComplexFloat("1.23", "-1.34", 64)
         u = f(z)
         assert u.is_ComplexFloat
         w = finv(u)
         assert comp(w, z, 1e-63)
+
+        z = ComplexFloat(S(11)/17, 0, 32)
+        u = f(z)
+        assert u.is_ComplexFloat or u.is_Float
+        w = finv(u)
+        assert comp(w, z, 1e-31)
+
+        z = ComplexFloat(0, S(7)/13, 32)
+        u = f(z)
+        assert u.is_ComplexFloat or u.is_Float
+        w = finv(u)
+        assert comp(w, z, 1e-31)
 
 
 @XFAIL
@@ -443,7 +455,7 @@ def test_ComplexFloat_conversions():
 
 def test_ComplexFloat_extract_minus():
     T = (S.One, S.NegativeOne, I, -I, 1+3*I, -1-3*I, 1-3*I, -1+3*I, 100+I,
-         -100-I, 100-I, -100+I)
+         -100-I, 100-I, -100+I, S.Zero)
     for z in T:
         assert (ComplexFloat(z).could_extract_minus_sign() ==
                 z.could_extract_minus_sign())
