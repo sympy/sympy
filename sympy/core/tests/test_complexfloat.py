@@ -353,6 +353,27 @@ def test_ComplexFloat_printing():
     assert str(z*x) == '(1.25-2.5j)*x'
 
 
+def test_ComplexFloat_printing_low_prec_str():
+    # TODO: do we want printing to depend on "depth" like Float?
+    x = Symbol('x')
+    w = ComplexFloat('66.6', '-77.7')
+    z = ComplexFloat(w, dps=4)
+    assert str(z) == '66.6-77.7j'
+    #assert str(z) == '66.60-77.70j'
+    assert str(z*x) == '(66.6-77.7j)*x'
+    z = ComplexFloat(w, dps=3)
+    assert str(z) == '66.6-77.7j'
+    assert str(z*x) == '(66.6-77.7j)*x'
+    z = ComplexFloat(w, dps=2)
+    assert str(z) == '67.0-78.0j'
+    #assert str(z) == '67.-78.j'
+    assert str(z*x) == '(67.0-78.0j)*x'
+    z = ComplexFloat(w, dps=1)
+    assert str(z) == '7.0e+1-8.0e+1j'
+    #assert str(z) == '7.e+1-8.e+1j'
+    assert str(z*x) == '(7.0e+1-8.0e+1j)*x'
+
+
 @XFAIL
 def test_ComplexFloat_printing_FAILS():
     from sympy import pretty

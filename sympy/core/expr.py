@@ -3161,32 +3161,32 @@ class Expr(Basic, EvalfMixin):
         >>> pi.round(2)
         3.14
         >>> (2*pi + E*I).round()
-        6. + 3.*I
+        6.0+3.0j
 
         The round method has a chopping effect:
 
         >>> (2*pi + I/10).round()
-        6.
+        6.0+0.0j
         >>> (pi/10 + 2*I).round()
-        2.*I
+        0.0+2.0j
         >>> (pi/10 + E*I).round(2)
-        0.31 + 2.72*I
+        0.31+2.72j
 
         Notes
         =====
 
         Do not confuse the Python builtin function, round, with the
-        SymPy method of the same name. The former always returns a float
+        SymPy method of the same name. The former returns a float
         (or raises an error if applied to a complex value) while the
-        latter returns either a Number or a complex number:
+        latter always returns a Number (Float or ComplexFloat):
 
         >>> isinstance(round(S(123), -2), Number)
         False
         >>> isinstance(S(123).round(-2), Number)
         True
-        >>> isinstance((3*I).round(), Mul)
+        >>> isinstance((3*I).round(), Number)
         True
-        >>> isinstance((1 + 3*I).round(), Add)
+        >>> isinstance((1 + 3*I).round(), Number)
         True
 
         """
