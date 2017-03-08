@@ -1956,6 +1956,11 @@ class Expr(Basic, EvalfMixin):
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+
+        from sympy.core.function import _coeff_isneg as f
+        if c.is_Number and c.is_negative and all(f(t) for t in Add.make_args(self)):
+            return (-1*self).extract_multiplicatively(-1*c)
+
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
