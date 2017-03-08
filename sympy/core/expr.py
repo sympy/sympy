@@ -375,11 +375,11 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy import sqrt
         >>> from sympy.abc import x, y
         >>> x._random()                         # doctest: +SKIP
-        0.0392918155679172 + 0.916050214307199*I
+        0.0392918155679172+0.916050214307199j
         >>> x._random(2)                        # doctest: +SKIP
-        -0.77 - 0.87*I
+        -0.77-0.87j
         >>> (x + y/2)._random(2)                # doctest: +SKIP
-        -0.57 + 0.16*I
+        -0.57+0.16j
         >>> sqrt(2)._random(2)
         1.4
 

@@ -484,10 +484,10 @@ class BeamParameter(Expr):
     >>> from sympy.physics.optics import BeamParameter
     >>> p = BeamParameter(530e-9, 1, w=1e-3)
     >>> p.q
-    1 + 1.88679245283019*I*pi
+    1 + (0.0+1.88679245283019j)*pi
 
     >>> p.q.n()
-    1.0 + 5.92753330865999*I
+    1.0+5.92753330865999j
     >>> p.w_0.n()
     0.00100000000000000
     >>> p.z_r.n()
@@ -544,7 +544,7 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.q
-        1 + 1.88679245283019*I*pi
+        1 + (0.0+1.88679245283019j)*pi
         """
         return self.z + I*self.z_r
 
