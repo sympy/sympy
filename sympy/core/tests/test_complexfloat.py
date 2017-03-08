@@ -355,6 +355,7 @@ def test_ComplexFloat_printing():
 
 @XFAIL
 def test_ComplexFloat_printing_FAILS():
+    from sympy import pretty
     z = ComplexFloat('1.25', '-2.5')
     x = Symbol('x')
     assert pretty(z*x) == u'(1.25 - 2.5ⅈ)⋅x'
