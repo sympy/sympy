@@ -12,7 +12,7 @@ from __future__ import print_function
 import sys
 import os
 from optparse import OptionParser
-import re,random
+import re
 
 from get_sympy import path_hack
 path_hack()
