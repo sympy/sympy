@@ -1940,25 +1940,18 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
-        if (type(c) == int) :
+        if (type(c) == int and c < 0):
             return Expr.extract_multiplicatively(self, c*S.ImaginaryUnit*-S.ImaginaryUnit)
-        elif (type(c) == Integer) :
-            return Expr._extract_multiplicatively(self, c)
-        elif (type(c) == Add) or (type(c) == Mul) :
-            try :
-                correct_ans=Expr._extract_multiplicatively(self, c)
-                if correct_ans != None:
-                    return correct_ans
+        elif type(c)== Mul or type(c) == Add or type(c) == Integer:
+            correct_ans=Expr._extract_multiplicatively(self, c)
+            if correct_ans != None:
+                return correct_ans
+            else :
+                ans=Expr._extract_multiplicatively(self, -c*S.ImaginaryUnit*-S.ImaginaryUnit)
+                if ans == None :
+                    return None
                 else :
-                    ans=Expr._extract_multiplicatively(self, -1*c)
-                    if ans != None:
-                        correct_ans=ans
-                        return -1*correct_ans
-                    else :
-                        return None
-            except :
-                return Expr._extract_multiplicatively(self, c)
-
+                    return -ans
         else :
             return Expr._extract_multiplicatively(self, c)
 
