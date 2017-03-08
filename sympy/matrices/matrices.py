@@ -3887,8 +3887,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
-        """Returns the decomposition LU and the row swaps p.
+    def LUdecomposition(self, iszerofunc=_iszero, decomposerankdeficient=False):
+        """Returns the decomposition LU and the row swaps p as L, U, p.
+        See documentation for LUCombined for details about the keyword argument iszerofunc.
 
         Examples
         ========
@@ -3916,7 +3917,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUsolve
         """
 
-        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc, nextpivotfunc=nextpivotfunc)
+        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc, decomposerankdeficient=decomposerankdeficient)
 
         L = self.zeros(combined.rows)
         U = self.zeros(combined.rows, combined.cols)
@@ -3947,13 +3948,35 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
+    def LUdecomposition_Simple(self, iszerofunc=_iszero, decomposerankdeficient=False):
+        """Driver function for computing the LU decomposition of a matrix, where the output is a single matrix containing the
+        L and U factors, and a list of row permutations. See the documentaion for LUCombined for more detail about how the
+        outputs of this function, and the a description of the iszerofunc keyword argument.
+        The default behavior is to raise a ValueError if this function is passed a matrix whose number of columns or rows
+        exceeds its rank. Pass the keywordargument decomposerankdeficient=True to compute the LU decomposition of any input
+        matrix.
+        """
+
+        # Compute the LU decomposition regardless of the value of decomposerankdeficient,
+        # and check if its rank deficient instead of exiting the computation as soon as rank deficiency is detected.
+        lu, row_permutations = self.LUCombined(iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right)
+        final_pivot_i = min(self.rows, self.cols)-1
+
+        if not decomposerankdeficient and final_pivot_i != -1 and iszerofunc(lu[final_pivot_i, final_pivot_i]):
+            # Caller specifed that we should not return the factors if the input matrix is rank deficient,
+            # and the input matrix has at least one entry.
+            # The rank of the input matrix is strictly less than min(num rows, num cols) if the last entry on
+            # U's diagonal is zero.
+            raise ValueError("Input matrix is rank deficient. Pass decomposerankdeficient=True to compute LU decomposition.")
+        return lu, row_permutations
+
+    def LUCombined(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
         """Compute an lu decomposition of m x n matrix A, where
         P*A = L*U
         L is m x m lower triangular with unit diagonal
         U is m x n upper triangular
         P is an m x m permutation matrix
-        Returns an m x n matrix lu, and m element list perm where each element of perm is a two element list of row
+        Returns an m x n matrix lu, and an m element list perm where each element of perm is a two element list of row
         exchange indices.
         The factors L and U are stored in lu as follows:
         The subdiagonal elements of L are stored in the subdiagonal elements of lu, that is lu[i, j] = L[i, j]
@@ -3963,13 +3986,15 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         perm contains the integers in range(0, m), where each integer occurs exactly once.
         iszerofunc is a callable that returns a boolean indicating if its input is zero.
         nextpivotfunc is a callable that returns the row and column indices of the location of the next pivot.
-        The default of nextpivotfunc looks for a nonzero pivot only in the current  pivot position, and below the
-        current pivot position.
+        The default of nextpivotfunc looks for a nonzero pivot in the current pivot position.
+        If this entry is zero, then it looks in the subcolumn below the current position, and then in subcolumns
+        to the right of the current pivot position until all candidates have been exhausted.
 
         See Also
         ========
 
         LUdecomposition
+        LUdecomposition_Simple
         LUdecompositionFF
         LUsolve
         """
