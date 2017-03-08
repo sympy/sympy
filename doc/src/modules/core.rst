@@ -58,6 +58,11 @@ Expr
 .. autoclass:: Expr
    :members:
 
+UnevaluatedExpr
+---------------
+.. autoclass:: UnevaluatedExpr
+   :members:
+
 AtomicExpr
 ----------
 .. autoclass:: AtomicExpr

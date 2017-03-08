@@ -1792,9 +1792,9 @@ def test_issue_2840_8155():
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
 
+
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
-
 
 def test_solve_inequality_list():
     sol = And(S(0) < x, x < oo)
@@ -1828,3 +1828,9 @@ def test_issue_12114():
                   b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
                   d: -f/2 + sqrt(-3*f**2 + 6)/2,
                   e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+
+
+def test_inf():
+    assert solve(1 - oo*x) == []
+    assert solve(oo*x, x) == []
+    assert solve(oo*x - oo, x) == []
