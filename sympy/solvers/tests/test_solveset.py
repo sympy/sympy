@@ -874,7 +874,6 @@ def test_solve_lambert():
 
 def test_solveset():
     x = Symbol('x')
-    raises(ValueError, lambda: solveset(x + y))
     raises(ValueError, lambda: solveset(x, 1))
 
     assert solveset(0, domain=S.Reals) == S.Reals

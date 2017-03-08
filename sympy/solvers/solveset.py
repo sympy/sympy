@@ -1,7 +1,7 @@
 """
 This module contains functions to:
 
-    - solve a single equation for a single variable, in any domain either real or complex.
+    - solve a single equation for a more than one variable, in any domain either real or complex.
 
     - solve a system of linear equations with N variables and M equations.
 
@@ -625,7 +625,7 @@ def solve_decomposition(f, symbol, domain):
     return y_s
 
 
-def __solveset(f, symbol, domain, _check=False):
+def _solveset(f, symbol, domain, _check=False):
     """Helper for solveset to return a result from an expression
     that has already been sympify'ed and is known to contain the
     given symbol."""
@@ -734,7 +734,10 @@ def __solveset(f, symbol, domain, _check=False):
     return result
 
 def solveset(f,symbol=None,domain=S.Complexes):
-	"""Solves a given inequality or equation for more than one symbol(variable) with set as output
+
+    """Solves a given inequality or equation for more than one symbol(variable) with set as output
+
+    Solves a given inequality or equation with set as output
 
     Parameters
     ==========
@@ -799,13 +802,17 @@ def solveset(f,symbol=None,domain=S.Complexes):
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
 
+    * If you want to solve equation or inequality for more than one variable
+
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> z = Symbol('z')
+    >>> solveset(x*y*z,[x,y,z])
+    [{x: {0}}, {y: {0}}, {z: {0}}]
+
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers()}
-    
-    * If you want to solve the equatio for more than one variable
-    >>>solveset(x*y*z,[x,y,z])
-    [{x: {0}},{y: {0}},{z: {0}}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
@@ -838,16 +845,14 @@ def solveset(f,symbol=None,domain=S.Complexes):
     if type(symbol)==list:
         solution_list=[]
         for i in symbol:
-            ans={i: _solveset(f,i,domain)}
+            ans={i: solve_set(f,i,domain)}
             solution_list.append(ans)
         return(solution_list)
     else:
-        solution=_solveset(f,symbol,domain)
-		return(solution)
+        solution=solve_set(f,symbol,domain)
+        return(solution)
 
-
-def _solveset(f, symbol=None, domain=S.Complexes):
-    
+def solve_set(f, symbol=None, domain=S.Complexes):
     f = sympify(f)
 
     if f is S.true:
@@ -875,9 +880,13 @@ def _solveset(f, symbol=None, domain=S.Complexes):
         if len(free_symbols) == 1:
             symbol = free_symbols.pop()
         else:
-            raise ValueError(filldedent('''
-                The independent variable must be specified for a
-                multivariate equation.'''))
+            length = len(free_symbols)
+            result = []
+            for i in range (0, length):
+                symbol = free_symbols.pop()
+                ans = {symbol: solve_set(f, symbol, domain)}
+                result.append(ans)
+            return result
     elif not getattr(symbol, 'is_Symbol', False):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
@@ -899,7 +908,7 @@ def _solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return __solveset(f, symbol, domain, _check=True)
+    return _solveset(f, symbol, domain, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):
