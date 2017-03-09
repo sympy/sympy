@@ -587,7 +587,7 @@ def _condsimp(cond):
     >>> from sympy import Or, Eq, unbranched_argument as arg, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
-    Or(x <= y, z)
+    z | (x <= y)
     >>> simp(Or(x <= y, And(x < y, z)))
     x <= y
     """

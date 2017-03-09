@@ -450,7 +450,7 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(-oo < x, x < 3)
+        (-oo < x) & (x < 3)
 
 
     * to always get a list of solution mappings, use flag dict=True
@@ -1337,6 +1337,9 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
+            if m in set([S.NegativeInfinity, S.ComplexInfinity, S.Infinity]):
+                result = set()
+                break
             soln = _solve(m, symbol, **flags)
             result.update(set(soln))
         result = list(result)
@@ -1391,7 +1394,7 @@ def _solve(f, *symbols, **flags):
         # first see if it really depends on symbol and whether there
         # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
-        if f_num is S.Zero:
+        if f_num is S.Zero or sol is S.NaN:
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
@@ -2690,6 +2693,13 @@ def nsolve(*args, **kwargs):
     0.73908513321516064165531208767387340401341175890076
     >>> cos(_)
     0.73908513321516064165531208767387340401341175890076
+
+    To solve for complex roots of real functions, a nonreal initial point
+    must be specified:
+
+    >>> from sympy import I
+    >>> nsolve(x**2 + 2, I)
+    1.4142135623731*I
 
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and
