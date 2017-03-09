@@ -84,7 +84,7 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              SingletonRegistry, SingletonRegistry()):
+              SingletonRegistry, S):
         check(c)
 
 
