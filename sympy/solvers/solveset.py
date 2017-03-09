@@ -871,7 +871,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = []
             for i in range (0, length):
                 symbol = free_symbols.pop()
-                ans = {symbol: solve_set(f, symbol, domain)}
+                ans = {symbol: solveset(f, symbol, domain)}
                 result.append(ans)
             return result
     elif not getattr(symbol, 'is_Symbol', False):
