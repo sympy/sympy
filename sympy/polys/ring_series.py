@@ -1010,10 +1010,11 @@ def rs_log(p, x, prec):
     R = p.ring
     if p == 1:
         return R.zero
-    if _has_constant_term(p, x):
+    c = _get_constant_term(p, x)
+    if c:
         const = 0
-        zm = R.zero_monom
-        c = p[zm]
+        """zm = R.zero_monom
+        c = p[zm]"""
         if c == 1:
             pass
         else:
@@ -1024,15 +1025,17 @@ def rs_log(p, x, prec):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
-                        "this domain.")
+                    R = R.add_gens([log(c_expr)])
+                    p = p.set_ring(R)
+                    x = x.set_ring(R)
+                    c = c.set_ring(R)
+                    const = R(log(c_expr))
             else:
                 try:
                     const = R(log(c))
                 except ValueError:
                     raise DomainError("The given series can't be expanded in "
                         "this domain.")
-
         dlog = p.diff(x)
         dlog = rs_mul(dlog, _series_inversion1(p, x, prec), x, prec - 1)
         return rs_integrate(dlog, x) + const
@@ -1840,7 +1843,8 @@ _convert_func = {
         'sin': 'rs_sin',
         'cos': 'rs_cos',
         'exp': 'rs_exp',
-        'tan': 'rs_tan'
+        'tan': 'rs_tan',
+        'log': 'rs_log'
         }
 
 def rs_min_pow(expr, series_rs, a):
