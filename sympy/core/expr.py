@@ -1940,6 +1940,21 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        if (type(c) == int and c < 0):
+            return Expr.extract_multiplicatively(self, c*S.ImaginaryUnit*-S.ImaginaryUnit)
+        elif type(c)== Mul or type(c) == Add or type(c) == Integer:
+            correct_ans=Expr._extract_multiplicatively(self, c)
+            if correct_ans != None:
+                return correct_ans
+            else :
+                ans=Expr._extract_multiplicatively(self, -c)
+                if ans == None :
+                    return None
+                else :
+                    return -ans
+        else :
+            return Expr._extract_multiplicatively(self, c)
+    def _extract_multiplicatively(self, c):
         c = sympify(c)
         if self is S.NaN:
             return None
