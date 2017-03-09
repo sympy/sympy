@@ -365,7 +365,10 @@ def _solve_as_rational(f, symbol, domain):
     f = together(f, deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
-        return _solve_as_poly(g, symbol, domain)
+        try:
+            return _solve_as_poly(g, symbol, domain)
+        except NotImplementedError:
+            return ConditionSet(f, symbol, domain)
     else:
         valid_solns = _solveset(g, symbol, domain)
         invalid_solns = _solveset(h, symbol, domain)
