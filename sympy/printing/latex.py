@@ -1360,7 +1360,7 @@ class LatexPrinter(Printer):
     _print_Matrix = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
+        return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '_{%s, %s}' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
