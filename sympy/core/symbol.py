@@ -206,8 +206,8 @@ class Dummy(Symbol):
     # small chance that `d2` will be equal to a previously-created Dummy.
 
     _count = 0
-    _dummyorder = {}
     _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
 
     __slots__ = ['dummy_index']
 
@@ -220,19 +220,12 @@ class Dummy(Symbol):
         if name is None:
             name = "Dummy_" + str(Dummy._count)
 
+        if dummy_index is None:
+            dummy_index = Dummy._base_dummy_index + Dummy._count
+
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
-        while dummy_index is None:
-            # The dummy_index that *we* generate will be a smallish positive
-            # integers (at least Codeprinter assumes this).  But we do not
-            # impose this if dummy_index was passed in.
-            dummy_index = Dummy._prng.randint(10**6, 10**7-1)
-            if dummy_index in Dummy._dummyorder:
-                dummy_index = None
-
-        # Store count but don't update it if we already made this Dummy
-        Dummy._dummyorder.setdefault(dummy_index, Dummy._count)
         obj.dummy_index = dummy_index
 
         Dummy._count += 1
@@ -243,9 +236,8 @@ class Dummy(Symbol):
 
     @cacheit
     def sort_key(self, order=None):
-        # some tests depend on order of creation of Dummys
         return self.class_key(), (
-            2, (str(self), Dummy._dummyorder[self.dummy_index])), S.One.sort_key(), S.One
+            2, (str(self), self.dummy_index)), S.One.sort_key(), S.One
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
