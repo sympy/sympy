@@ -32,6 +32,7 @@ rnd = mlib.round_nearest
 _LOG2 = math.log(2)
 
 
+
 def comp(z1, z2, tol=None):
     """Return a bool indicating whether the error between z1 and z2 is <= tol.
 
@@ -881,7 +882,8 @@ class Float(Number):
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = prec
-        return obj
+        ans = (decimal.Decimal(repr(obj)))
+        return ans
 
     @classmethod
     def _new(cls, _mpf_, _prec):
