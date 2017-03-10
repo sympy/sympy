@@ -1823,7 +1823,6 @@ def test_issue_12114():
                   d: -f/2 + sqrt(-3*f**2 + 6)/2,
                   e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
 
-
 def test_inf():
     assert solve(1 - oo*x) == []
     assert solve(oo*x, x) == []
