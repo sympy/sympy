@@ -10,7 +10,7 @@ class Body(RigidBody, Particle):
     """
     Body is a common representation of either a RigidBody or a Particle SymPy
     object depending on what is passed in during initialization. If a mass is
-    passed in and central_inertia is left as None, the a Particle object is
+    passed in and central_inertia is left as None, the Particle object is
     created. Otherwise a RigidBody object will be created.
 
     The attributes that Body possesses will be the same as a Particle instance

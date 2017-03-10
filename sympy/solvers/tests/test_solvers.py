@@ -1792,6 +1792,7 @@ def test_issue_2840_8155():
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
 
+
 def test_issue_9567():
     assert solve(1 + 1/(x - 1)) == [0]
 

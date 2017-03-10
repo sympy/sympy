@@ -1339,7 +1339,7 @@ class ReduceOrder(Operator):
         n = ai - bj
         if not n.is_Integer or n < 0:
             return None
-        if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
+        if bj.is_integer and bj <= 0:
             return None
 
         expr = Operator.__new__(cls)
@@ -1688,7 +1688,7 @@ def try_polynomial(func, z):
     al0 = [x for x in a0 if x <= 0]
     bl0 = [x for x in b0 if x <= 0]
 
-    if bl0:
+    if bl0 and all(a < bl0[-1] for a in al0):
         return oo
     if not al0:
         return None

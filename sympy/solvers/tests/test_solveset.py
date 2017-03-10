@@ -496,6 +496,9 @@ def test_solveset_real_gen_is_pow():
 
 
 def test_no_sol():
+    assert solveset(1 - oo*x) == EmptySet()
+    assert solveset(oo*x, x) == EmptySet()
+    assert solveset(oo*x - oo, x) == EmptySet()
     assert solveset_real(4, x) == EmptySet()
     assert solveset_real(exp(x), x) == EmptySet()
     assert solveset_real(x**2 + 1, x) == EmptySet()
