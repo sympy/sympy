@@ -522,7 +522,7 @@ def _solve_radical(f, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement):
+    if isinstance(result, Complement) or isinstance(result,ConditionSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -732,8 +732,9 @@ def _solveset(f, symbol, domain, _check=False):
         num, den = f.as_numer_denom()
         if den.has(symbol):
             _result = _solveset(num, symbol, domain)
-            singularities = _solveset(den, symbol, domain)
-            result = _result - singularities
+            if not isinstance(_result, ConditionSet):
+                singularities = _solveset(den, symbol, domain)
+                result = _result - singularities
 
     if _check:
         if isinstance(result, ConditionSet):
