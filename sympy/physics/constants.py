@@ -6,7 +6,17 @@ Technology (CODATA) as of 2014 (to be updated in 2018).
 See more at http://physics.nist.gov/cuu/Constants/Table/allascii.txt
 """
 
-from sympy.physics.units import *
+from sympy import Rational, pi
+import sympy.physics.units
+
+m = sympy.physics.units.m
+s = sympy.physics.units.s
+ten = sympy.physics.units.ten
+kg = sympy.physics.units.kg
+N = sympy.physics.units.N
+A = sympy.physics.units.A
+K = sympy.physics.units.K
+J = sympy.physics.units.J
 
 c = speed_of_light = 299792458 * m/s
 G = gravitational_constant = Rational('6.67408') * ten**-11 * m**3 / kg / s**2
@@ -23,3 +33,6 @@ avogadro_number = Rational('6.022140857') * 10**23
 boltzmann = Rational('1.38064852') * ten**-23 * J / K
 atomic_mass_constant = Rational('1.660539040') * ten**-27 * kg
 dHg0 = 13.5951  # approx value at 0 C
+
+# Delete this so it doesn't pollute the namespace
+del m, s, ten, kg, N, A, K, J, Rational, pi

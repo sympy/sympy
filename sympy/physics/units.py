@@ -77,7 +77,7 @@ from __future__ import print_function, division
 
 from sympy import Rational, pi
 from sympy.core import AtomicExpr
-from sympy.physics.constants import c, avogadro_number, dHg0
+import sympy.physics.constants
 
 class Unit(AtomicExpr):
     """
@@ -187,7 +187,7 @@ acceleration = m/s**2
 density = kg/m**3
 optical_power = dioptre = D = 1/m
 illuminance = lux = lx = sr*cd/m**2
-avogadro = avogadro_constant = avogadro_number / mol
+avogadro = avogadro_constant = sympy.physics.constants.avogadro_number / mol
 gee = gees = Rational('9.80665') * m/s**2
 
 # Common length units
@@ -252,13 +252,13 @@ atmosphere = atmospheres = atm = 101325 * pascal
 kPa = kilo*Pa
 bar = bars = 100*kPa
 psi = pound / inch ** 2
-mmHg = dHg0 * 9.80665 * Pa
+mmHg = sympy.physics.constants.dHg0 * 9.80665 * Pa
 quart = quarts = Rational(231, 4) * inch**3
 eV = Rational('1.6021766208') * ten**-19 * J
 
 # Other convenient units and magnitudes
 
-ly = lightyear = lightyears = c*julian_year
+ly = lightyear = lightyears = sympy.physics.constants.c*julian_year
 au = astronomical_unit = astronomical_units = 149597870691*m
 
 
