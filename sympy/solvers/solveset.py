@@ -368,6 +368,9 @@ def _solve_as_rational(f, symbol, domain):
         try:
             return _solve_as_poly(g, symbol, domain)
         except NotImplementedError:
+			# The polynomial formed from g could end up having
+			# coefficients in a ring over which finding roots
+			# isn't implemented yet, e.g. ZZ[a] for some symbol a
             return ConditionSet(f, symbol, domain)
     else:
         valid_solns = _solveset(g, symbol, domain)
