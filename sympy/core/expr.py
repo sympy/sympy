@@ -11,7 +11,6 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
-
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -1940,6 +1939,8 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .function import _coeff_isneg
+
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -1957,9 +1958,8 @@ class Expr(Basic, EvalfMixin):
             if x is not None:
                 return x.extract_multiplicatively(b)
 
-        from sympy.core.function import _coeff_isneg as f
-        if c.is_Number and c.is_negative and all(f(t) for t in Add.make_args(self)):
-            return (-1*self).extract_multiplicatively(-1*c)
+        if c.is_Number and c.is_negative and all(_coeff_isneg(t) for t in Add.make_args(self)):
+            return (-self).extract_multiplicatively(-c)
 
         quotient = self / c
         if self.is_Number:
