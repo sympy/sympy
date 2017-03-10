@@ -1948,18 +1948,17 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
+
         if c.is_Add:
             cc, pc = c.primitive()
             if cc is not S.One:
                 c = Mul(cc, pc, evaluate=False)
+
         if c.is_Mul:
             a, b = c.as_two_terms()
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
-
-        if c.is_Number and c.is_negative and all(_coeff_isneg(t) for t in Add.make_args(self)):
-            return (-self).extract_multiplicatively(-c)
 
         quotient = self / c
         if self.is_Number:
@@ -2003,16 +2002,31 @@ class Expr(Basic, EvalfMixin):
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()
-            if cs is not S.One:
-                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
+            # assert cs >= 1
+            if c.is_Number and c is not S.NegativeOne:
+                # assert c != 1 (handled at top)
+                if cs is not S.One:
+                    if c.is_negative:
+                        xc = -(cs.extract_multiplicatively(-c))
+                    else:
+                        xc = cs.extract_multiplicatively(c)
+                    if xc is not None:
+                        return xc*ps  # rely on 2-arg Mul to restore Add
+                return  # |c| != 1 can only be extracted from cs
+            if c == ps:
+                return cs
+            # check args of ps
             newargs = []
-            for arg in self.args:
+            for arg in ps.args:
                 newarg = arg.extract_multiplicatively(c)
-                if newarg is not None:
-                    newargs.append(newarg)
-                else:
-                    return None
-            return Add(*newargs)
+                if newarg is None:
+                    return  # all or nothing
+                newargs.append(newarg)
+            # args should be in same order so use unevaluated return
+            if cs is not S.One:
+                return Add._from_args([cs*t for t in newargs])
+            else:
+                return Add._from_args(newargs)
         elif self.is_Mul:
             args = list(self.args)
             for i, arg in enumerate(args):

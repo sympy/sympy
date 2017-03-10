@@ -1012,11 +1012,12 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
-    assert (-2-4*I).extract_multiplicatively(-2) == 1 + 2*I
+    assert (-2 - 4*I).extract_multiplicatively(-2) == 1 + 2*I
+    assert (-2 - 4*I).extract_multiplicatively(3) is None
     assert (-2*x - 4*y - 8).extract_multiplicatively(-2) == x + 2*y + 4
     assert (-2*x*y - 4*x**2*y).extract_multiplicatively(-2*y) == 2*x**2 + x
     assert (2*x*y + 4*x**2*y).extract_multiplicatively(2*y) == 2*x**2 + x
-    assert (-4*y**2*x).extract_multiplicatively(-3*y) == None
+    assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
