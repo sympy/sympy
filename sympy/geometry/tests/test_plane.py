@@ -167,6 +167,7 @@ def test_plane():
     assert pl8.intersection(Line3D(p1, (1, 12, 0)))[0].equals(Line((0, 0, 0), (0.1, 1.2, 0)))
     assert pl8.intersection(Ray3D(p1, (1, 12, 0)))[0].equals(Ray((0, 0, 0), (1, 12, 0)))
     assert pl8.intersection(Segment3D(p1, (21, 1, 0)))[0].equals(Segment3D(p1, (21, 1, 0)))
+    assert pl8.intersection(Plane(p1, normal_vector=(0, 0, 112)))[0].equals(pl8)
     assert pl8.intersection(Plane(p1, normal_vector=(0, 12, 0)))[0].equals(
         Line3D(p1, direction_ratio=(112 * pi, 0, 0)))
     assert pl8.intersection(Plane(p1, normal_vector=(11, 0, 1)))[0].equals(

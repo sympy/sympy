@@ -392,7 +392,7 @@ class Plane(GeometryEntity):
                         return []  # e.g. a segment might not intersect a plane
                     return [p]
         if isinstance(o, Plane):
-            if o == self:
+            if self.equals(o):
                 return [self]
             if self.is_parallel(o):
                 return []
