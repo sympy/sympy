@@ -182,7 +182,7 @@ class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:
 
     >>> from sympy import Dummy
-    >>> bool(Dummy("x") == Dummy("x")) == True
+    >>> Dummy("x") == Dummy("x")
     False
 
     If a name is not supplied then a string value of an internal count will be
