@@ -1940,6 +1940,29 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        if (type(c) == int) :
+            return Expr.extract_multiplicatively(self, c*S.ImaginaryUnit*-S.ImaginaryUnit)
+        elif (type(c) == Integer) :
+            return Expr._extract_multiplicatively(self, c)
+        elif (type(c) == Add) or (type(c) == Mul) :
+            try :
+                correct_ans=Expr._extract_multiplicatively(self, c)
+                if correct_ans != None:
+                    return correct_ans
+                else :
+                    ans=Expr._extract_multiplicatively(self, -1*c)
+                    if ans != None:
+                        correct_ans=ans
+                        return -1*correct_ans
+                    else :
+                        return None
+            except :
+                return Expr._extract_multiplicatively(self, c)
+
+        else :
+            return Expr._extract_multiplicatively(self, c)
+
+    def _extract_multiplicatively(self, c):
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -1953,9 +1976,9 @@ class Expr(Basic, EvalfMixin):
                 c = Mul(cc, pc, evaluate=False)
         if c.is_Mul:
             a, b = c.as_two_terms()
-            x = self.extract_multiplicatively(a)
+            x = Expr._extract_multiplicatively(self, a)
             if x is not None:
-                return x.extract_multiplicatively(b)
+                return Expr._extract_multiplicatively(x, b)
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1999,10 +2022,11 @@ class Expr(Basic, EvalfMixin):
         elif self.is_Add:
             cs, ps = self.primitive()
             if cs is not S.One:
-                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
+                multi=Mul(cs, ps, evaluate=False)
+                return Expr._extract_multiplicatively(multi, c)
             newargs = []
             for arg in self.args:
-                newarg = arg.extract_multiplicatively(c)
+                newarg = Expr._extract_multiplicatively(arg, c)
                 if newarg is not None:
                     newargs.append(newarg)
                 else:
@@ -2011,7 +2035,7 @@ class Expr(Basic, EvalfMixin):
         elif self.is_Mul:
             args = list(self.args)
             for i, arg in enumerate(args):
-                newarg = arg.extract_multiplicatively(c)
+                newarg = Expr._extract_multiplicatively(arg, c)
                 if newarg is not None:
                     args[i] = newarg
                     return Mul(*args)
