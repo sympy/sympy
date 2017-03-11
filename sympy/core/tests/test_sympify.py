@@ -4,6 +4,7 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
+from sympy.core.relational import Rel
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
@@ -471,6 +472,18 @@ def test_kernS():
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
     assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
         -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
+
+
+def test_relationals():
+    from sympy.parsing.sympy_parser import parse_relationals
+    pr = parse_relationals
+    assert S(pr('sin(x)*x <= y')) == Rel(sin(x) * x, y, '<=')
+    assert S(pr('sin(x)*x != y')) == Rel(sin(x) * x, y, '!=')
+    assert S(pr('sin(x)*x <> y')) == Rel(sin(x) * x, y, '<>')
+    assert S(pr('sin(x)*x == y')) == Rel(sin(x) * x, y, '==')
+    assert S(pr('sin(x)*x >= y')) == Rel(sin(x) * x, y, '>=')
+    assert S(pr('sin(x)*x > y')) == Rel(sin(x) * x, y, '>')
+    assert S(pr('sin(x)*x < y')) == Rel(sin(x) * x, y, '<')
 
 
 def test_issue_6540_6552():
