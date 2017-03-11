@@ -222,13 +222,13 @@ class Dummy(Symbol):
 
         if dummy_index is None:
             dummy_index = Dummy._base_dummy_index + Dummy._count
+            Dummy._count += 1
 
         cls._sanitize(assumptions, cls)
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         obj.dummy_index = dummy_index
 
-        Dummy._count += 1
         return obj
 
     def __getstate__(self):
