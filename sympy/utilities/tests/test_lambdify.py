@@ -361,13 +361,15 @@ def test_numpy_old_matrix():
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
 def test_python_div_zero_issue_11306():
-    numpy.seterr(all='raise')
     if not numpy:
         skip("numpy not installed.")
-    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    try:
-        f = lambdify([x, y], p, modules='numpy')(0, 1)
-    except ZeroDivisionError:
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(all='raise')
+    try: g = f(0,1)
+    except FloatingPointError:
+        numpy.seterr(all='ignore')
+        assert str(float(f(0,1))) == 'inf'
         pass
 
 def test_issue9474():
