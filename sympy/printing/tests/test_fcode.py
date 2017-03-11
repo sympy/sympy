@@ -38,7 +38,11 @@ def test_fcode_Pow():
     assert fcode(x**-1.0) == '      1.0/x'
     assert fcode(x**-2.0, 'y', source_format='free') == 'y = x**(-2.0d0)'  # 2823
     assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
-
+def test_sign():
+    x=symbols('x')
+    y=symbols('y', integer=True)
+    assert fcode(sign(x), source_format='free') == "merge(0d0, dsign(1d0, x), x == 0d0)"
+    assert fcode(sign(y), source_format='free') == "merge(0, isign(1, x), x == 0)"
 
 def test_fcode_Rational():
     x = symbols('x')
