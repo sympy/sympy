@@ -264,12 +264,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 return sympify(np.asscalar(a))
             else:
                 try:
-                    from sympy.core import N
-                    from mpmath.libmp.libmpf import repr_dps
+                    from sympy.core.numbers import Float
                     prec = np.finfo(a).nmant
                     a = str(list(np.reshape(np.asarray(a),
                                             (1, np.size(a)))[0]))[1:-1]
-                    return N(a, repr_dps(prec)-1)
+                    return Float(a, precision=prec)
                 except NotImplementedError:
                     raise SympifyError('Translation for numpy float : %s '
                                        'is not implemented' % a)
