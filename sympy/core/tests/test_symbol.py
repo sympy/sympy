@@ -38,7 +38,6 @@ def test_Dummy_force_dummy_index():
     assert Dummy('d1', dummy_index=2) != Dummy('d2', dummy_index=2)
     d1 = Dummy('d', dummy_index=3)
     d2 = Dummy('d')
-    # not only unlikely, in fact impossible (b/c we keep a list of dummy_index)
     assert d1 != d2
     d3 = Dummy('d', dummy_index=3)
     assert d1 == d3
