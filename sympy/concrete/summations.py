@@ -285,7 +285,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 for subterm in subterms:
                     # go through each term
                     if isinstance(subterm, Sum):
-                        # if it's a sum, simpify it
+                        # if it's a sum, simplify it
                         out_terms.append(subterm._eval_simplify())
                     else:
                         # otherwise, add it as is
