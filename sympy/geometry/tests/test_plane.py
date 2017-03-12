@@ -71,7 +71,6 @@ def test_plane():
                Ray3D(Point3D(14/3, 11/3, 11/3), Point3D(13/3, 13/3, 10/3))
     assert pl3.perpendicular_line(r.args) == pl3.perpendicular_line(r)
 
-
     assert pl3.is_parallel(pl6) is False
     assert pl4.is_parallel(pl6)
     assert pl6.is_parallel(l1) is False
