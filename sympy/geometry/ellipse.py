@@ -171,16 +171,13 @@ class Ellipse(GeometrySet):
         Private helper method for `intersection`.
 
         """
-
         x = Dummy('x', real=True)
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
-
-        # TODO: Replace solve with solveset, when this line is tested
-        result = solve([seq, oeq], [x, y])
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
+        result = solve([seq, oeq], x, y)
         return [Point(*r) for r in list(uniq(result))]
-
 
     def _do_line_intersection(self, o):
         """
@@ -696,10 +693,7 @@ class Ellipse(GeometrySet):
             # of intersection for coincidence first
             return self._do_line_intersection(o)
 
-        elif isinstance(o, Circle):
-            return self._do_ellipse_intersection(o)
-
-        elif isinstance(o, Ellipse):
+        elif isinstance(o, Circle) or isinstance(o, Ellipse):
             if o == self:
                 return self
             else:
@@ -1433,36 +1427,6 @@ class Circle(Ellipse):
         []
 
         """
-        if isinstance(o, Circle):
-            if o.center == self.center:
-                if o.radius == self.radius:
-                    return o
-                return []
-            dx, dy = (o.center - self.center).args
-            d = sqrt(simplify(dy**2 + dx**2))
-            R = o.radius + self.radius
-            if d > R or d < abs(self.radius - o.radius):
-                return []
-
-            a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
-
-            x2 = self.center.x + (dx * a/d)
-            y2 = self.center.y + (dy * a/d)
-
-            h = sqrt(simplify(self.radius**2 - a**2))
-            rx = -dy * (h/d)
-            ry = dx * (h/d)
-
-            xi_1 = simplify(x2 + rx)
-            xi_2 = simplify(x2 - rx)
-            yi_1 = simplify(y2 + ry)
-            yi_2 = simplify(y2 - ry)
-
-            ret = [Point(xi_1, yi_1)]
-            if xi_1 != xi_2 or yi_1 != yi_2:
-                ret.append(Point(xi_2, yi_2))
-            return ret
-
         return Ellipse.intersection(self, o)
 
     @property
