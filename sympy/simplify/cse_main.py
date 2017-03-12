@@ -313,7 +313,11 @@ def opt_cse(exprs, order='canonical', verbose=False):
                 com_func_take = Mul(take, from_dict(com_dict), evaluate=False)
             else:
                 take = igcd(*[func_dicts[k][i] for i in com_dict])
-                com_func_take = Pow(from_dict(com_dict), take, evaluate=False)
+                base = from_dict(com_dict)
+                if take == 1:
+                    com_func_take = base
+                else:
+                    com_func_take = Pow(base, take, evaluate=False)
             for di in com_dict:
                 func_dicts[k][di] -= take*com_dict[di]
             # compute the remaining expression
@@ -546,23 +550,12 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     #     R = [(x0, d + f), (x1, b + d)]
     #     C = [e + x0 + x1, g + x0 + x1, a + c + d + f + g]
     # but the args of C[-1] should not be `(a + c, d + f + g)`
-    nested = [[i for i in f.args if isinstance(i, f.func)] for f in exprs]
     for i in range(len(exprs)):
         F = reduced_exprs[i].func
         if not (F is Mul or F is Add):
             continue
-        nested = [a for a in exprs[i].args if isinstance(a, F)]
-        args = []
-        for a in reduced_exprs[i].args:
-            if isinstance(a, F):
-                for ai in a.args:
-                    if isinstance(ai, F) and ai not in nested:
-                        args.extend(ai.args)
-                    else:
-                        args.append(ai)
-            else:
-                args.append(a)
-        reduced_exprs[i] = F(*args)
+        if any(isinstance(a, F) for a in reduced_exprs[i].args):
+            reduced_exprs[i] = F(*reduced_exprs[i].args)
 
     return replacements, reduced_exprs
 

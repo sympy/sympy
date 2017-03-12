@@ -422,6 +422,13 @@ def test_issue_8891():
 
 
 def test_issue_11230():
+    # a specific test that always failed
+    a, b, f, k, l, i = symbols('a b f k l i')
+    p = [a*b*f*k*l, a*i*k**2*l, f*i*k**2*l]
+    R, C = cse(p)
+    assert not any(i.is_Mul for a in C for i in a.args)
+
+    # random tests for the issue
     from random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
