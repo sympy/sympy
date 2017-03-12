@@ -27,7 +27,7 @@ from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf)
-from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens
+from sympy.solvers.solvers import checksol, denoms, unrad, _simple_dens, nc_solve
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
@@ -866,6 +866,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
         raise ValueError('A Symbol must be given, not type %s: %s' %
             (type(symbol), symbol))
 
+    # check if f has noncommutative symbols
+    ncs = [_ for _ in f.atoms() if not _.is_commutative]
+
     if isinstance(f, Eq):
         from sympy.core import Add
         f = Add(f.lhs, - f.rhs, evaluate=False)
@@ -875,6 +878,10 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 Inequalities in the complex domain are
                 not supported. Try the real domain by
                 setting domain=S.Reals'''))
+        if ncs:
+            raise NotImplementedError(filldedent('''
+                Inequalities with noncommutative variables
+                are not supported'''))
         try:
             result = solve_univariate_inequality(
             f, symbol, relational=False) - _invalid_solutions(
@@ -883,7 +890,16 @@ def solveset(f, symbol=None, domain=S.Complexes):
             result = ConditionSet(symbol, f, domain)
         return result
 
-    return _solveset(f, symbol, domain, _check=True)
+    if ncs:
+        result = nc_solve(f, symbol)
+        if result:
+            return FiniteSet(*result)
+        else:
+            # this gives a complex domain by default which is not appropriate
+            # if symbol is noncommutative and no domain is specified
+            return ConditionSet(symbol, Eq(f, 0), domain)
+    else:
+        return _solveset(f, symbol, domain, _check=True)
 
 
 def _invalid_solutions(f, symbol, domain):

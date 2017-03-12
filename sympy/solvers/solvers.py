@@ -1390,14 +1390,21 @@ def _solve(f, *symbols, **flags):
     else:
         # first see if it really depends on symbol and whether there
         # is only a linear solution
-        f_num, sol = solve_linear(f, symbols=symbols)
-        if f_num is S.Zero:
-            return []
-        elif f_num.is_Symbol:
-            # no need to check but simplify if desired
-            if flags.get('simplify', True):
-                sol = simplify(sol)
-            return [sol]
+
+        # check if f has noncommutative symbols and let nc_solve
+        # handle it if it does
+        ncs = [_ for _ in f.atoms() if not _.is_commutative]
+        if ncs:
+            return nc_solve(f, symbol)
+        else:
+            f_num, sol = solve_linear(f, symbols=symbols)
+            if f_num is S.Zero:
+                return []
+            elif f_num.is_Symbol:
+                # no need to check but simplify if desired
+                if flags.get('simplify', True):
+                    sol = simplify(sol)
+                return [sol]
 
         result = False  # no solution was obtained
         msg = ''  # there is no failure message
@@ -1657,6 +1664,15 @@ def _solve_system(exprs, symbols, **flags):
     manual = flags.get('manual', False)
     checkdens = check = flags.get('check', True)
 
+    # check if f has noncommutative symbols
+    for f in exprs:
+        ncs = [_ for _ in f.atoms() if not _.is_commutative]
+    if ncs:
+        raise NotImplementedError(filldedent('''
+            Systems of equations with noncommutative
+            variables are not supported''')
+            )
+
     for j, g in enumerate(exprs):
         dens.update(_simple_dens(g, symbols))
         i, d = _invert(g, *symbols)
@@ -1844,6 +1860,57 @@ def _solve_system(exprs, symbols, **flags):
     if linear and result:
         result = result[0]
     return result
+
+
+def nc_solve(expr, symbol):
+    def linear(expr, symbol):
+        expr = simplify(expr)
+        if expr.is_Add:
+            return all(linear(arg, symbol) for arg in expr.args)
+        if expr.is_Mul:
+            s = [arg for arg in expr.args if arg.has(symbol)]
+            if len(s) > 1:
+                return False
+            elif s:
+                return linear(s[0], symbol)
+            else:
+                return True
+
+        if (not expr.has(symbol)) or (expr == symbol):
+            return True
+        else:
+            return False
+
+    if not linear(expr, symbol):
+        raise NotImplementedError(filldedent('''
+            Non-linear equations in noncommutative variables
+            are not supported''')
+            )
+    ind = 0
+    if expr.is_Add:
+        ind, expr = expr.as_independent(symbol)
+    if not (expr.is_Add):
+        left, expr = expr.as_independent(symbol, as_Add=False)
+        right = 1/symbol*expr
+        return [-1/left*ind*1/right]
+    else:
+        parts = expr.args
+        lefts = []
+        rights = []
+        for i,part in enumerate(parts):
+            l, r = part.as_independent(symbol, as_Add=False)
+            lefts.append(l)
+            rights.append(1/symbol*r)
+        if all(map(lambda x: x == rights[0],rights)):
+            left = sum(lefts)
+            right = rights[0]
+            return [-1/left*ind*1/right]
+        elif all(map(lambda x: x == lefts[0],lefts)):
+            left = lefts[0]
+            right = sum(rights)
+            return [-1/left*ind*1/right]
+        else:
+            return []
 
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
