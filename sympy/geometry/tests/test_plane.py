@@ -160,7 +160,7 @@ def test_plane():
 
     assert pl3.random_point() in pl3
 
-    #test geometrical entity using equals
+    # test geometrical entity using equals
     assert pl4.intersection(pl4.p1)[0].equals(pl4.p1)
     assert pl3.intersection(pl6)[0].equals(Line3D(Point3D(8, 4, 0), Point3D(2, 4, 6)))
     pl8 = Plane((1, 2, 0), normal_vector=(0, 0, 1))

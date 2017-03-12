@@ -418,7 +418,6 @@ class Plane(GeometryEntity):
                 if len(h) == 2:
                     return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
 
-
     def is_coplanar(self, o):
         """ Returns True if `o` is coplanar with self, else False.
 
