@@ -4,7 +4,7 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo, floor)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
@@ -25,6 +25,12 @@ from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
+def test_floor():
+    assert solve(floor(x)) == [0, 1]
+    assert solve(floor(x+1)) == [-1, 0]
+    assert solve(x*floor(x+1)) == [-1, 0]
+    assert solve(floor(floor(x)-5)-15) == [20, 21]
+    assert solve(floor(2*x-3)-5) == [4, 5]
 
 def test_swap_back():
     f, g = map(Function, 'fg')
