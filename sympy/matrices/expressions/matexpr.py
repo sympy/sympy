@@ -420,7 +420,9 @@ class MatrixSymbol(MatrixExpr):
         raise TypeError( "%s object is not callable" % self.__class__ )
 
     def _entry(self, i, j):
-        return MatrixElement(self, i, j)
+        if(i < self.rows and j < self.cols):
+            return MatrixElement(self, i, j)
+        raise IndexError("Index out of bounds.")
 
     @property
     def free_symbols(self):
@@ -476,10 +478,12 @@ class Identity(MatrixExpr):
         return self
 
     def _entry(self, i, j):
-        if i == j:
-            return S.One
-        else:
-            return S.Zero
+        if(i < self.rows and j < self.cols):
+            if i == j:
+                return S.One
+            else:
+                return S.Zero
+        raise IndexError("Index out of bounds.")
 
     def _eval_determinant(self):
         return S.One
@@ -530,7 +534,9 @@ class ZeroMatrix(MatrixExpr):
         return self
 
     def _entry(self, i, j):
-        return S.Zero
+        if(i < self.rows and j < self.cols):
+            return S.Zero
+        raise IndexError("Index out of bounds.")
 
     def __nonzero__(self):
         return False
