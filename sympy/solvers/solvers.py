@@ -1401,7 +1401,7 @@ def _solve(f, *symbols, **flags):
             return nc_solve(f, symbol)
         else:
             f_num, sol = solve_linear(f, symbols=symbols)
-            if f_num is S.Zero:
+            if f_num is S.Zero or sol is S.NaN:
                 return []
             elif f_num.is_Symbol:
                 # no need to check but simplify if desired
