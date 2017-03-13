@@ -1831,5 +1831,6 @@ def test_inf():
 
 
 def test_issue_12258():
-    M, N, x, y = symbols('M N x y',commutative=False)
-    assert solve(M*x+N*y,x) == [-M**(-1)*N*y]
+    M, N, x, y = symbols('M N x y', commutative=False)
+    assert solve(M*x+N*y, x) == [-M**(-1)*N*y]
+    assert solve(x*M+N*y, x) == [-N*y*M**(-1)]

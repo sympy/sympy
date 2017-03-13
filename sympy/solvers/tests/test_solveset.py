@@ -1530,5 +1530,6 @@ def test_issue_11534():
     assert solveset(eq2, x, S.Reals) == soln
 
 def test_issue_12258():
-    M, N, x, y = symbols('M N x y',commutative=False)
-    assert solveset(M*x+N*y,x) == {-M**(-1)*N*y}
+    M, N, x, y = symbols('M N x y', commutative=False)
+    assert solveset(M*x+N*y, x) == {-M**(-1)*N*y}
+    assert solveset(x*M+N*y, x) == {-N*y*M**(-1)}

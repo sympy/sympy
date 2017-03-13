@@ -1895,7 +1895,7 @@ def nc_solve(expr, symbol):
     if not (expr.is_Add):
         left, expr = expr.as_independent(symbol, as_Add=False)
         right = 1/symbol*expr
-        return [-1/left*ind*1/right]
+        return [-left**(-1)*ind*right**(-1)]
     else:
         parts = expr.args
         lefts = []
@@ -1911,7 +1911,7 @@ def nc_solve(expr, symbol):
         elif all(map(lambda x: x == lefts[0],lefts)):
             left = lefts[0]
             right = sum(rights)
-            return [-1/left*ind*1/right]
+            return [-left**(-1)*ind*right**(-1)]
         else:
             return []
 
