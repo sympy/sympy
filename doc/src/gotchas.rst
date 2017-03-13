@@ -156,7 +156,7 @@ If you define a circular relationship, you will get a
     >>> def b():
     ...     return a()
     ...
-    >>> a() #doctest: +SKIP
+    >>> a()
     Traceback (most recent call last):
       File "...", line ..., in ...
         compileflags, 1) in test.globs
@@ -210,7 +210,7 @@ You can also import common symbol names from :mod:`sympy.abc`.
     >>> w
     w
     >>> import sympy
-    >>> dir(sympy.abc)  #doctest: +SKIP
+    >>> dir(sympy.abc)
     ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
     'P', 'Q', 'R', 'S', 'Symbol', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     '__builtins__', '__doc__', '__file__', '__name__', '__package__', '_greek',
@@ -254,7 +254,7 @@ careful.
 To get a full list of all default names in SymPy do:
 
     >>> import sympy
-    >>> dir(sympy)  #doctest: +SKIP
+    >>> dir(sympy)
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
