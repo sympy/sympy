@@ -310,7 +310,11 @@ def opt_cse(exprs, order='canonical', verbose=False):
             # remove it
             if Func is Add:
                 take = min(func_dicts[k][i] for i in com_dict)
-                com_func_take = Mul(take, from_dict(com_dict), evaluate=False)
+                _sum = from_dict(com_dict)
+                if take == 1:
+                    com_func_take = _sum
+                else:
+                    com_func_take = Mul(take, _sum, evaluate=False)
             else:
                 take = igcd(*[func_dicts[k][i] for i in com_dict])
                 base = from_dict(com_dict)
