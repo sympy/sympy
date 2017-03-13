@@ -92,12 +92,12 @@ matrix:
       env:
         - TEST_SLOW="true"
         - SPLIT="3/3"
+    # Everything here and below is in the allow_failures. They need to be
+    # duplicated here and in that section below.
     - python: 3.5
       env:
         - TEST_SYMENGINE="true"
 
-    # Everything here and below is in the allow_failures. The need to be
-    # duplicated here and in that section below.
     - python: 3.5 # Dummy value
       env:
         - TEST_SAGE="true"
@@ -163,6 +163,9 @@ matrix:
             - pypy
 
   allow_failures:
+    - python: 3.5
+      env:
+        - TEST_SYMENGINE="true"
     # The apt installation of sage fails sometimes
     - python: 3.5 # Dummy value
       env:
