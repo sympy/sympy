@@ -225,6 +225,7 @@ ps = picosecond = picoseconds = pico*s
 minute = minutes = 60*s
 h = hour = hours = 60*minute
 day = days = 24*hour
+week = weeks = 7*day
 
 anomalistic_year = anomalistic_years = Rational('365.259636')*day
 sidereal_year = sidereal_years = Rational('31558149.540')*s
