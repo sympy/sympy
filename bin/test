@@ -2,6 +2,7 @@
 
 """
 Program to execute tests using the py.test like interface.
+
 The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.test?" for documentation.
 """
@@ -13,7 +14,6 @@ import os
 from optparse import OptionParser
 import re
 import random
-
 from get_sympy import path_hack
 path_hack()
 
@@ -72,7 +72,7 @@ parser.add_option("--timeout", action="store", dest="timeout",
         default=False, help="Set a timeout for the all functions, in seconds. By default there is no timeout.", type='int')
 parser.add_option("--slow", action="store_true", dest="slow",
         default=False, help="Run only the slow functions.")
-parser.add_option("--no-subprocess", action="store_true", dest="subprocess",
+parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
 parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_asserts",
@@ -101,7 +101,9 @@ if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
-
+hash_seed = os.getenv("PYTHONHASHSEED")
+if not hash_seed:
+    os.environ["PYTHONHASHSEED"] = str(random.randint(1,2**32))
 import sympy
 
 ok = sympy.test(*args, verbose=options.verbose, kw=options.kw,

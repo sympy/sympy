@@ -1,12 +1,15 @@
 """
 This is our testing framework.
+
 Goals:
+
 * it should be compatible with py.test and operate very similarly
   (or identically)
 * doesn't require any external dependencies
 * preferably all the functionality should be in this file only
 * no magic, just import the test file and execute the test functions, that's it
 * portable
+
 """
 
 from __future__ import print_function, division
@@ -136,10 +139,12 @@ def run_in_subprocess_with_hash_randomization(
         module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
+
     If hash randomization is not supported by the version of Python given, it
     returns False.  Otherwise, it returns the exit value of the command.  The
     function is passed to sys.exit(), so the return value of the function will
     be the return value.
+
     The environment variable PYTHONHASHSEED is used to seed Python's hash
     randomization.  If it is set, this function will return False, because
     starting a new subprocess is unnecessary in that case.  If it is not set,
@@ -149,20 +154,25 @@ def run_in_subprocess_with_hash_randomization(
     PYTHONHASHSEED is set, pass ``force=True``.  This flag will not force a
     subprocess in Python versions that do not support hash randomization (see
     below), because those versions of Python do not support the ``-R`` flag.
+
     ``function`` should be a string name of a function that is importable from
     the module ``module``, like "_test".  The default for ``module`` is
     "sympy.utilities.runtests".  ``function_args`` and ``function_kwargs``
     should be a repr-able tuple and dict, respectively.  The default Python
     command is sys.executable, which is the currently running Python command.
+
     This function is necessary because the seed for hash randomization must be
     set by the environment variable before Python starts.  Hence, in order to
     use a predetermined seed for tests, we must start Python in a separate
     subprocess.
+
     Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
     3.1.5, and 3.2.3, and is enabled by default in all Python versions after
     and including 3.3.0.
+
     Examples
     ========
+
     >>> from sympy.utilities.runtests import (
     ... run_in_subprocess_with_hash_randomization)
     >>> # run the core tests in verbose mode
@@ -172,6 +182,7 @@ def run_in_subprocess_with_hash_randomization(
     # Will return 0 if sys.executable supports hash randomization and tests
     # pass, 1 if they fail, and False if it does not support hash
     # randomization.
+
     """
     # Note, we must return False everywhere, not None, as subprocess.call will
     # sometimes return None.
@@ -186,7 +197,7 @@ def run_in_subprocess_with_hash_randomization(
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
-        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
+        os.environ["PYTHONHASHSEED"] = str(random.randint(1,2**32))
     else:
         if not force:
             return False
@@ -218,17 +229,23 @@ def run_all_tests(test_args=(), test_kwargs=None,
                   examples_args=(), examples_kwargs=None):
     """
     Run all tests.
+
     Right now, this runs the regular tests (bin/test), the doctests
     (bin/doctest), the examples (examples/all.py), and the sage tests (see
     sympy/external/tests/test_sage.py).
+
     This is what ``setup.py test`` uses.
+
     You can pass arguments and keyword arguments to the test functions that
     support them (for now, test,  doctest, and the examples). See the
     docstrings of those functions for a description of the available options.
+
     For example, to run the solvers tests with colors turned off:
+
     >>> from sympy.utilities.runtests import run_all_tests
     >>> run_all_tests(test_args=("solvers",),
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
+
     """
     tests_successful = True
 
@@ -283,16 +300,21 @@ def run_all_tests(test_args=(), test_kwargs=None,
 def test(*paths, **kwargs):
     """
     Run tests in the specified test_*.py files.
+
     Tests in a particular test_*.py file are run if any of the given strings
     in ``paths`` matches a part of the test file's path. If ``paths=[]``,
     tests in all test_*.py files are run.
+
     Notes:
+
     - If sort=False, tests are run in random order (not default).
     - Paths can be entered in native system format or in unix,
       forward-slash format.
     - Files that are on the blacklist can be tested by providing
       their path; they are only excluded if no paths are given.
+
     **Explanation of test results**
+
     ======  ===============================================================
     Output  Meaning
     ======  ===============================================================
@@ -306,45 +328,76 @@ def test(*paths, **kwargs):
     K       KeyboardInterrupt (when running the slow tests with ``--slow``,
             you can interrupt one of them without killing the test runner)
     ======  ===============================================================
+
+
     Colors have no additional meaning and are used just to facilitate
     interpreting the output.
+
     Examples
     ========
+
     >>> import sympy
+
     Run all tests:
+
     >>> sympy.test()    # doctest: +SKIP
+
     Run one file:
+
     >>> sympy.test("sympy/core/tests/test_basic.py")    # doctest: +SKIP
     >>> sympy.test("_basic")    # doctest: +SKIP
+
     Run all tests in sympy/functions/ and some particular file:
+
     >>> sympy.test("sympy/core/tests/test_basic.py",
     ...        "sympy/functions")    # doctest: +SKIP
+
     Run all tests in sympy/core and sympy/utilities:
+
     >>> sympy.test("/core", "/util")    # doctest: +SKIP
+
     Run specific test from a file:
+
     >>> sympy.test("sympy/core/tests/test_basic.py",
     ...        kw="test_equality")    # doctest: +SKIP
+
     Run specific test from any file:
+
     >>> sympy.test(kw="subs")    # doctest: +SKIP
+
     Run the tests with verbose mode on:
+
     >>> sympy.test(verbose=True)    # doctest: +SKIP
+
     Don't sort the test output:
+
     >>> sympy.test(sort=False)    # doctest: +SKIP
+
     Turn on post-mortem pdb:
+
     >>> sympy.test(pdb=True)    # doctest: +SKIP
+
     Turn off colors:
+
     >>> sympy.test(colors=False)    # doctest: +SKIP
+
     Force colors, even when the output is not to a terminal (this is useful,
     e.g., if you are piping to ``less -r`` and you still want colors)
+
     >>> sympy.test(force_colors=False)    # doctest: +SKIP
+
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
+
     >>> sympy.test(tb='no')    # doctest: +SKIP
+
     The ``split`` option can be passed to split the test run into parts. The
     split currently only splits the test files, though this may change in the
     future. ``split`` should be a string of the form 'a/b', which will run
     part ``a`` of ``b``. For instance, to run the first half of the test suite:
+
     >>> sympy.test(split='1/2')  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -352,22 +405,32 @@ def test(*paths, **kwargs):
     whether it has been enabled or not in the calling Python process.
     However, even if it is enabled, the seed cannot be printed unless it is
     called from a new Python process.
+
     Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
     3.1.5, and 3.2.3, and is enabled by default in all Python versions after
     and including 3.3.0.
+
     If hash randomization is not supported ``subprocess=False`` is used
     automatically.
+
     >>> sympy.test(subprocess=False)     # doctest: +SKIP
+
     To set the hash randomization seed, set the environment variable
     ``PYTHONHASHSEED`` before running the tests.  This can be done from within
     Python using
+
     >>> import os
     >>> os.environ['PYTHONHASHSEED'] = '42' # doctest: +SKIP
+
     Or from the command line using
+
     $ PYTHONHASHSEED=42 ./bin/test
+
     If the seed is not set, a random seed will be chosen.
+
     Note that to reproduce the same hash values, you must use both the same seed
     as well as the same architecture (32-bit vs. 64-bit).
+
     """
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
@@ -399,8 +462,10 @@ def test(*paths, **kwargs):
 def _test(*paths, **kwargs):
     """
     Internal function that actually runs the tests.
+
     All keyword arguments from ``test()`` are passed to this function except for
     ``subprocess``.
+
     Returns 0 if tests passed and 1 if they failed.  See the docstring of
     ``test()`` for more information.
     """
@@ -476,33 +541,49 @@ def doctest(*paths, **kwargs):
     """
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
+
     Notes:
+
     - Paths can be entered in native system format or in unix,
       forward-slash format.
     - Files that are on the blacklist can be tested by providing
       their path; they are only excluded if no paths are given.
+
     Examples
     ========
+
     >>> import sympy
+
     Run all tests:
+
     >>> sympy.doctest() # doctest: +SKIP
+
     Run one file:
+
     >>> sympy.doctest("sympy/core/basic.py") # doctest: +SKIP
     >>> sympy.doctest("polynomial.rst") # doctest: +SKIP
+
     Run all tests in sympy/functions/ and some particular file:
+
     >>> sympy.doctest("/functions", "basic.py") # doctest: +SKIP
+
     Run any file having polynomial in its name, doc/src/modules/polynomial.rst,
     sympy/functions/special/polynomials.py, and sympy/polys/polynomial.py:
+
     >>> sympy.doctest("polynomial") # doctest: +SKIP
+
     The ``split`` option can be passed to split the test run into parts. The
     split currently only splits the test files, though this may change in the
     future. ``split`` should be a string of the form 'a/b', which will run
     part ``a`` of ``b``. Note that the regular doctests and the Sphinx
     doctests are split independently. For instance, to run the first half of
     the test suite:
+
     >>> sympy.doctest(split='1/2')  # doctest: +SKIP
+
     The ``subprocess`` and ``verbose`` options are the same as with the function
     ``test()``.  See the docstring of that function for more information.
+
     """
     subprocess = kwargs.pop("subprocess", True)
     rerun = kwargs.pop("rerun", 0)
@@ -534,8 +615,10 @@ def doctest(*paths, **kwargs):
 def _doctest(*paths, **kwargs):
     """
     Internal function that actually runs the doctests.
+
     All keyword arguments from ``doctest()`` are passed to this function
     except for ``subprocess``.
+
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
@@ -727,10 +810,13 @@ sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 def split_list(l, split):
     """
     Splits a list into part a of b
+
     split should be a string of the form 'a/b'. For instance, '1/3' would give
     the split one of three.
+
     If the length of the list is not divisible by the number of splits, the
     last split will have more items.
+
     >>> from sympy.utilities.runtests import split_list
     >>> a = list(range(10))
     >>> split_list(a, '1/3')
@@ -758,8 +844,10 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     """
     Test examples in the given file.  Return (#failures, #tests).
+
     Optional keyword arg ``module_relative`` specifies how filenames
     should be interpreted:
+
     - If ``module_relative`` is True (the default), then ``filename``
       specifies a module-relative path.  By default, this path is
       relative to the calling module's directory; but if the
@@ -767,31 +855,40 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
       package.  To ensure os-independence, ``filename`` should use
       "/" characters to separate path segments, and should not
       be an absolute path (i.e., it may not begin with "/").
+
     - If ``module_relative`` is False, then ``filename`` specifies an
       os-specific path.  The path may be absolute or relative (to
       the current working directory).
+
     Optional keyword arg ``name`` gives the name of the test; by default
     use the file's basename.
+
     Optional keyword argument ``package`` is a Python package or the
     name of a Python package whose directory should be used as the
     base directory for a module relative filename.  If no package is
     specified, then the calling module's directory is used as the base
     directory for module relative filenames.  It is an error to
     specify ``package`` if ``module_relative`` is False.
+
     Optional keyword arg ``globs`` gives a dict to be used as the globals
     when executing examples; by default, use {}.  A copy of this dict
     is actually used for each docstring, so that each docstring's
     examples start with a clean slate.
+
     Optional keyword arg ``extraglobs`` gives a dictionary that should be
     merged into the globals that are used to execute examples.  By
     default, no extra globals are used.
+
     Optional keyword arg ``verbose`` prints lots of stuff if true, prints
     only failures if false; by default, it's true iff "-v" is in sys.argv.
+
     Optional keyword arg ``report`` prints a summary at the end when true,
     else prints nothing at the end.  In verbose mode, the summary is
     detailed, else very brief (in fact, empty if all tests passed).
+
     Optional keyword arg ``optionflags`` or's together module constants,
     and defaults to 0.  Possible values (see the docs for details):
+
     - DONT_ACCEPT_TRUE_FOR_1
     - DONT_ACCEPT_BLANKLINE
     - NORMALIZE_WHITESPACE
@@ -802,13 +899,17 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     - REPORT_CDIFF
     - REPORT_NDIFF
     - REPORT_ONLY_FIRST_FAILURE
+
     Optional keyword arg ``raise_on_error`` raises an exception on the
     first unexpected exception or failure. This allows failures to be
     post-mortem debugged.
+
     Optional keyword arg ``parser`` specifies a DocTestParser (or
     subclass) that should be used to extract tests from the files.
+
     Optional keyword arg ``encoding`` specifies an encoding that should
     be used to convert the file to unicode.
+
     Advanced tomfoolery:  testmod runs methods of a local instance of
     class doctest.Tester, then merges the results into (or creates)
     global Tester instance doctest.master.  Methods of doctest.master
@@ -896,6 +997,7 @@ class SymPyTests(object):
     def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
+
         If sort=False run tests in random order.
         """
         if sort:
@@ -1089,6 +1191,7 @@ class SymPyTests(object):
     def matches(self, x):
         """
         Does the keyword expression self._kw match "x"? Returns True/False.
+
         Always returns True if self._kw is "".
         """
         if not self._kw:
@@ -1232,7 +1335,9 @@ class SymPyDocTests(object):
             """
             Checks if given pathname x is an importable module by checking for
             __init__.py file.
+
             Returns True/False.
+
             Currently we only test if the __init__.py file exists in the
             directory with the file "x" (in theory we should also test all the
             parent dirs).
@@ -1346,6 +1451,7 @@ class SymPyDocTestFinder(DocTestFinder):
     objects.  Doctests can currently be extracted from the following
     object types: modules, functions, classes, methods, staticmethods,
     classmethods, and properties.
+
     Modified from doctest's version by looking harder for code in the
     case that it looks like the the code comes from a different module.
     In the case of decorated functions (e.g. @vectorize) they appear
@@ -1533,8 +1639,10 @@ class SymPyDocTestRunner(DocTestRunner):
     The ``run`` method is used to process a single DocTest case.  It
     returns a tuple ``(f, t)``, where ``t`` is the number of test cases
     tried, and ``f`` is the number of test cases that failed.
+
     Modified from the doctest version to not reset the sys.displayhook (see
     issue 5140).
+
     See the docstring of the original DocTestRunner for more information.
     """
 
@@ -1542,15 +1650,18 @@ class SymPyDocTestRunner(DocTestRunner):
         """
         Run the examples in ``test``, and display the results using the
         writer function ``out``.
+
         The examples are run in the namespace ``test.globs``.  If
         ``clear_globs`` is true (the default), then this namespace will
         be cleared after the test runs, to help with garbage
         collection.  If you would like to examine the namespace after
         the test completes, then use ``clear_globs=False``.
+
         ``compileflags`` gives the set of flags that should be used by
         the Python compiler when running the examples.  If not
         specified, then it will default to the set of future-import
         flags that apply to ``globs``.
+
         The output of each example is checked using
         ``SymPyDocTestRunner.check_output``, and the results are
         formatted by the ``SymPyDocTestRunner.report_*`` methods.
@@ -1810,14 +1921,18 @@ class PyTestReporter(Reporter):
               force_colors=False):
         """
         Prints a text on the screen.
+
         It uses sys.stdout.write(), so no readline library is necessary.
+
         Parameters
         ==========
+
         color : choose from the colors below, "" means default color
         align : "left"/"right", "left" is a normal print, "right" is aligned on
                 the right-hand side of the screen, filled with spaces if
                 necessary
         width : the screen width
+
         """
         color_templates = (
             ("Black", "0;30"),
