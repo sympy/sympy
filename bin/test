@@ -12,6 +12,7 @@ import sys
 import os
 from optparse import OptionParser
 import re
+import random
 
 from get_sympy import path_hack
 path_hack()
@@ -70,7 +71,7 @@ parser.add_option("--timeout", action="store", dest="timeout",
         default=False, help="Set a timeout for the all functions, in seconds. By default there is no timeout.", type='int')
 parser.add_option("--slow", action="store_true", dest="slow",
         default=False, help="Run only the slow functions.")
-parser.add_option("--no-subprocess", action="store_true", dest="subprocess",
+parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
 parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_asserts",
@@ -85,6 +86,13 @@ parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
 tests to run. If no test arguments are given, all tests will be run.\
 """
+
+hash_seed = os.getenv("PYTHONHASHSEED")
+    
+if not hash_seed:
+        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
+
+
 
 options, args = parser.parse_args()
 
