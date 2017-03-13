@@ -650,14 +650,11 @@ def _solveset(f, symbol, domain, _check=False):
     if f.is_Add:
         a, h = f.as_independent(symbol)
         m, h = h.as_independent(symbol, as_Add=False)
-<<<<<<< HEAD
-        f = 1/m*a + h  # XXX condition `m != 0` should be added to soln
-=======
+
         if m not in set([S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity]):
             f = a/m + h  # XXX condition `m != 0` should be added to soln
 
->>>>>>> master
     f = piecewise_fold(f)
 
     # assign the solvers to use
