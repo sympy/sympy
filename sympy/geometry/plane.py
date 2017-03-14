@@ -376,7 +376,9 @@ class Plane(GeometryEntity):
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
-                return [Line3D(Point3D(linsolve([d, e, z], x, y, z).args[0]), direction_ratio=c)]
+                result = list(linsolve([d, e], x, y, z))[0]
+                for i in (x, y, z): result = result.subs(i, 0)
+                return [Line3D(Point3D(result), direction_ratio=c)]
 
     def is_coplanar(self, o):
         """ Returns True if `o` is coplanar with self, else False.
