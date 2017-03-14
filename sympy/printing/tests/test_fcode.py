@@ -21,6 +21,7 @@ def test_printmethod():
             return "nint(%s)" % printer._print(self.args[0])
     assert fcode(nint(x)) == "      nint(x)"
 
+#issue 12267 reg.
 def test_fcode_sign():
     x=symbols('x')
     y=symbols('y', integer=True)
