@@ -24,9 +24,7 @@ import string
 from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
-from sympy.sets import Range
-from sympy.codegen.ast import Assignment
-from sympy.printing.codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter, Assignment
 from sympy.printing.precedence import precedence
 
 known_functions = {
@@ -93,7 +91,7 @@ class FCodePrinter(CodePrinter):
         else:
             raise ValueError("Unknown source format: %s" % self._settings[
                              'source_format'])
-        standards = {66, 77, 90, 95, 2003, 2008}
+        standards = set([66, 77, 90, 95, 2003, 2008])
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
@@ -113,6 +111,15 @@ class FCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
 
+    #issue 12267 reg.
+    def _print_sign(self,func):
+        if func.args[0].is_integer:
+            return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
+        elif func.args[0].is_complex:
+            return "merge( cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
+        else:
+            return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
+
     def _traverse_matrix_indices(self, mat):
         rows, cols = mat.shape
         return ((i, j) for j in range(cols) for i in range(rows))
@@ -127,6 +134,8 @@ class FCodePrinter(CodePrinter):
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
+
+     
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -228,7 +237,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_int(self, expr):
         return str(expr)
-
     def _print_Mul(self, expr):
         # purpose: print complex numbers nicely in Fortran.
         if expr.is_number and expr.is_imaginary:
@@ -272,18 +280,6 @@ class FCodePrinter(CodePrinter):
     def _print_Idx(self, expr):
         return self._print(expr.label)
 
-    def _print_For(self, expr):
-        target = self._print(expr.target)
-        if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
-        else:
-            raise NotImplementedError("Only iterable currently supported is Range")
-        body = self._print(expr.body)
-        return ('do {target} = {start}, {stop}, {step}\n'
-                '{body}\n'
-                'end do').format(target=target, start=start, stop=stop,
-                        step=step, body=body)
-
     def _pad_leading_columns(self, lines):
         result = []
         for line in lines:
@@ -320,7 +316,7 @@ class FCodePrinter(CodePrinter):
                 if pos == 0:
                     return endpos
             return pos
-        # split line by line and add the splitted lines to result
+                # split line by line and add the splitted lines to result
         result = []
         if self._settings['source_format'] == 'free':
             trailing = ' &'
@@ -525,7 +521,7 @@ def fcode(expr, assign_to=None, **settings):
              end if
           A(3, 1) = sin(x)
     """
-
+    
     return FCodePrinter(settings).doprint(expr, assign_to)
 
 
