@@ -106,7 +106,7 @@ class FCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "! {0}".format(text)
-    #issue 12267
+#issue 12267
     def _print_sign(self,func):
         if func.args[0].is_integer:
             return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
