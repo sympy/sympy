@@ -106,6 +106,15 @@ class FCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "! {0}".format(text)
+    
+    #issue 12267
+    def _print_sign(self,func):
+        if func.args[0].is_integer:
+            return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
+        elif func.args[0].is_complex:
+            return "merge( cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
+        else:
+            return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
