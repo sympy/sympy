@@ -19,7 +19,16 @@ def test_printmethod():
     class nint(Function):
         def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])
-    assert fcode(nint(x)) == "      nint(x)"
+    assert fcode(nint(x)) == "      nint(x)
+#issue 12267
+def test_fcode_sign():
+    x=symbols('x')
+    y=symbols('y', integer=True)
+    z=symbols('z', complex=True)
+    assert fcode(sign(x), source_format='free') == "merge(0d0, dsign(1d0, x), x == 0d0)"
+    assert fcode(sign(y), source_format='free') == "merge(0, isign(1, y), y == 0)"
+    assert fcode(sign(z), source_format='free') == "merge( cmplx(0d0, 0d0), z/abs(z), abs(z) == 0d0)"
+    
 
 
 def test_fcode_Pow():
