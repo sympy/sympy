@@ -111,7 +111,7 @@ class FCodePrinter(CodePrinter):
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
 
-    #issue 12267
+    #issue 12267 reg.
     def _print_sign(self,func):
         if func.args[0].is_integer:
             return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
