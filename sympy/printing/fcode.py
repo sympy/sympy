@@ -112,7 +112,7 @@ class FCodePrinter(CodePrinter):
         if func.args[0].is_integer:
             return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
         elif func.args[0].is_complex:
-            return "merge( cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
+            return "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
         else:
             return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
 
