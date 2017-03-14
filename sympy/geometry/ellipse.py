@@ -693,7 +693,7 @@ class Ellipse(GeometrySet):
             # of intersection for coincidence first
             return self._do_line_intersection(o)
 
-        elif isinstance(o, Circle) or isinstance(o, Ellipse):
+        elif isinstance(o, Ellipse):
             if o == self:
                 return self
             else:
