@@ -97,9 +97,6 @@ if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
-hash_seed = os.getenv("PYTHONHASHSEED")
-if not hash_seed:
-    os.environ["PYTHONHASHSEED"] = str(random.randint(1,2**32))
 import sympy
 
 ok = sympy.test(*args, verbose=options.verbose, kw=options.kw,
