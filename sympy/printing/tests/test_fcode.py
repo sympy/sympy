@@ -1,6 +1,6 @@
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
     factorial, Integral, Piecewise, Add, diff, symbols, S, Float, Dummy, Eq,
-    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda)
+    Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
 
 from sympy.codegen import For, Assignment
 from sympy.core.relational import Relational
