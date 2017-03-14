@@ -19,7 +19,7 @@ def test_printmethod():
     class nint(Function):
         def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])
-    assert fcode(nint(x)) == "      nint(x)
+    assert fcode(nint(x)) == "      nint(x)"
 #issue 12267
 def test_fcode_sign():
     x=symbols('x')
