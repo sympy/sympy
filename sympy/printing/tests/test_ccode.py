@@ -24,130 +24,96 @@ def test_printmethod():
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(fabs(x)) == "fabs(x)"
+    assert ccode(fabs(x)) == "fabs(x)"
 
 
 def test_ccode_sqrt():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(sqrt(x)) == "sqrt(x)"
-        assert ccode(x**0.5) == "sqrt(x)"
-        assert ccode(sqrt(x)) == "sqrt(x)"
+    assert ccode(sqrt(x)) == "sqrt(x)"
+    assert ccode(x**0.5) == "sqrt(x)"
+    assert ccode(sqrt(x)) == "sqrt(x)"
 
 
 def test_ccode_Pow():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(x**3) == "pow(x, 3)"
-        assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
-        g = implemented_function('g', Lambda(x, 2*x))
-        assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-            "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
-        assert ccode(x**-1.0) == '1.0/x'
-        assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
-        _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
-                       (lambda base, exp: not exp.is_integer, "pow")]
-        assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
-        assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
-        _cond_cfunc2 = [(lambda base, exp: base == 2, lambda base, exp: 'exp2(%s)' % exp),
-                        (lambda base, exp: base != 2, 'pow')]
-        # Related to gh-11353
-        assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
-        assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
+    assert ccode(x**3) == "pow(x, 3)"
+    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    g = implemented_function('g', Lambda(x, 2*x))
+    assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
+        "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
+    assert ccode(x**-1.0) == '1.0/x'
+    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
+                   (lambda base, exp: not exp.is_integer, "pow")]
+    assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
+    assert ccode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
+    _cond_cfunc2 = [(lambda base, exp: base == 2, lambda base, exp: 'exp2(%s)' % exp),
+                    (lambda base, exp: base != 2, 'pow')]
+    # Related to gh-11353
+    assert ccode(2**x, user_functions={'Pow': _cond_cfunc2}) == 'exp2(x)'
+    assert ccode(x**2, user_functions={'Pow': _cond_cfunc2}) == 'pow(x, 2)'
 
 
 def test_ccode_Max():
     # Test for gh-11926
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+    assert ccode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
 
 
 def test_ccode_constants_mathh():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(exp(1)) == "M_E"
-        assert ccode(pi) == "M_PI"
-        assert ccode(oo) == "HUGE_VAL"
-        assert ccode(-oo) == "-HUGE_VAL"
-        assert ccode(oo, standard='c99') == "INFINITY"
-        assert ccode(-oo, standard='c99') == "-INFINITY"
-
+    assert ccode(exp(1)) == "M_E"
+    assert ccode(pi) == "M_PI"
+    assert ccode(oo, standard='c89') == "HUGE_VAL"
+    assert ccode(-oo, standard='c89') == "-HUGE_VAL"
+    assert ccode(oo) == "INFINITY"
+    assert ccode(-oo, standard='c99') == "-INFINITY"
 
 
 def test_ccode_constants_other():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
-        assert ccode(
-            2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-        assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert ccode(
+        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
+    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
 
 
 def test_ccode_Rational():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(Rational(3, 7)) == "3.0L/7.0L"
-        assert ccode(Rational(18, 9)) == "2"
-        assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
-        assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
-        assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
-        assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
+    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
+    assert ccode(Rational(18, 9)) == "2"
+    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
+    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
+    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
+    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(Integer(67)) == "67"
-        assert ccode(Integer(-1)) == "-1"
+    assert ccode(Integer(67)) == "67"
+    assert ccode(Integer(-1)) == "-1"
 
 
 def test_ccode_functions():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+    assert ccode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
 
 
 def test_ccode_inline_function():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        x = symbols('x')
-        g = implemented_function('g', Lambda(x, 2*x))
-        assert ccode(g(x)) == "2*x"
-        g = implemented_function('g', Lambda(x, 2*x/Catalan))
-        assert ccode(
-            g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
-        A = IndexedBase('A')
-        i = Idx('i', symbols('n', integer=True))
-        g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
-        assert ccode(g(A[i]), assign_to=A[i]) == (
-            "for (int i=0; i<n; i++){\n"
-            "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
-            "}"
-        )
+    x = symbols('x')
+    g = implemented_function('g', Lambda(x, 2*x))
+    assert ccode(g(x)) == "2*x"
+    g = implemented_function('g', Lambda(x, 2*x/Catalan))
+    assert ccode(
+        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
+    A = IndexedBase('A')
+    i = Idx('i', symbols('n', integer=True))
+    g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
+    assert ccode(g(A[i]), assign_to=A[i]) == (
+        "for (int i=0; i<n; i++){\n"
+        "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
+        "}"
+    )
 
 
 def test_ccode_exceptions():
     assert ccode(gamma(x), standard='C99') == "tgamma(x)"
     assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(ceiling(x)) == "ceil(x)"
-        assert ccode(Abs(x)) == "fabs(x)"
-        assert ccode(gamma(x)) == "tgamma(x)"
+    assert ccode(ceiling(x)) == "ceil(x)"
+    assert ccode(Abs(x)) == "fabs(x)"
+    assert ccode(gamma(x)) == "tgamma(x)"
 
 
 def test_ccode_user_functions():
@@ -157,153 +123,127 @@ def test_ccode_user_functions():
         "ceiling": "ceil",
         "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
     }
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
-        assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
-        assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+    assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
+    assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
+    assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
 
 
 def test_ccode_boolean():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(x & y) == "x && y"
-        assert ccode(x | y) == "x || y"
-        assert ccode(~x) == "!x"
-        assert ccode(x & y & z) == "x && y && z"
-        assert ccode(x | y | z) == "x || y || z"
-        assert ccode((x & y) | z) == "z || x && y"
-        assert ccode((x | y) & z) == "z && (x || y)"
+    assert ccode(x & y) == "x && y"
+    assert ccode(x | y) == "x || y"
+    assert ccode(~x) == "!x"
+    assert ccode(x & y & z) == "x && y && z"
+    assert ccode(x | y | z) == "x || y || z"
+    assert ccode((x & y) | z) == "z || x && y"
+    assert ccode((x | y) & z) == "z && (x || y)"
 
 
 def test_ccode_Relational():
     from sympy import Eq, Ne, Le, Lt, Gt, Ge
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(Eq(x, y)) == "x == y"
-        assert ccode(Ne(x, y)) == "x != y"
-        assert ccode(Le(x, y)) == "x <= y"
-        assert ccode(Lt(x, y)) == "x < y"
-        assert ccode(Gt(x, y)) == "x > y"
-        assert ccode(Ge(x, y)) == "x >= y"
+    assert ccode(Eq(x, y)) == "x == y"
+    assert ccode(Ne(x, y)) == "x != y"
+    assert ccode(Le(x, y)) == "x <= y"
+    assert ccode(Lt(x, y)) == "x < y"
+    assert ccode(Gt(x, y)) == "x > y"
+    assert ccode(Ge(x, y)) == "x >= y"
 
 
 def test_ccode_Piecewise():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        expr = Piecewise((x, x < 1), (x**2, True))
-        assert ccode(expr) == (
-                "((x < 1) ? (\n"
-                "   x\n"
-                ")\n"
-                ": (\n"
-                "   pow(x, 2)\n"
-                "))")
-        assert ccode(expr, assign_to="c") == (
-                "if (x < 1) {\n"
-                "   c = x;\n"
-                "}\n"
-                "else {\n"
-                "   c = pow(x, 2);\n"
-                "}")
-        expr = Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True))
-        assert ccode(expr) == (
-                "((x < 1) ? (\n"
-                "   x\n"
-                ")\n"
-                ": ((x < 2) ? (\n"
-                "   x + 1\n"
-                ")\n"
-                ": (\n"
-                "   pow(x, 2)\n"
-                ")))")
-        assert ccode(expr, assign_to='c') == (
-                "if (x < 1) {\n"
-                "   c = x;\n"
-                "}\n"
-                "else if (x < 2) {\n"
-                "   c = x + 1;\n"
-                "}\n"
-                "else {\n"
-                "   c = pow(x, 2);\n"
-                "}")
-        # Check that Piecewise without a True (default) condition error
-        expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
-        raises(ValueError, lambda: ccode(expr))
+    expr = Piecewise((x, x < 1), (x**2, True))
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            "))")
+    assert ccode(expr, assign_to="c") == (
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 2);\n"
+            "}")
+    expr = Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True))
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            ")))")
+    assert ccode(expr, assign_to='c') == (
+            "if (x < 1) {\n"
+            "   c = x;\n"
+            "}\n"
+            "else if (x < 2) {\n"
+            "   c = x + 1;\n"
+            "}\n"
+            "else {\n"
+            "   c = pow(x, 2);\n"
+            "}")
+    # Check that Piecewise without a True (default) condition error
+    expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
+    raises(ValueError, lambda: ccode(expr))
 
 
 def test_ccode_sinc():
     from sympy import sinc
     expr = sinc(x)
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(expr) == (
-                "((x != 0) ? (\n"
-                "   sin(x)/x\n"
-                ")\n"
-                ": (\n"
-                "   1\n"
-                "))")
+    assert ccode(expr) == (
+            "((x != 0) ? (\n"
+            "   sin(x)/x\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            "))")
 
 
 def test_ccode_Piecewise_deep():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
-        assert p == (
-                "2*((x < 1) ? (\n"
-                "   x\n"
-                ")\n"
-                ": ((x < 2) ? (\n"
-                "   x + 1\n"
-                ")\n"
-                ": (\n"
-                "   pow(x, 2)\n"
-                ")))")
-        expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
-        assert ccode(expr) == (
-                "pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
-                "   0\n"
-                ")\n"
-                ": (\n"
-                "   1\n"
-                ")) + cos(z) - 1")
-        assert ccode(expr, assign_to='c') == (
-                "c = pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
-                "   0\n"
-                ")\n"
-                ": (\n"
-                "   1\n"
-                ")) + cos(z) - 1;")
+    p = ccode(2*Piecewise((x, x < 1), (x + 1, x < 2), (x**2, True)))
+    assert p == (
+            "2*((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": ((x < 2) ? (\n"
+            "   x + 1\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            ")))")
+    expr = x*y*z + x**2 + y**2 + Piecewise((0, x < 0.5), (1, True)) + cos(z) - 1
+    assert ccode(expr) == (
+            "pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1")
+    assert ccode(expr, assign_to='c') == (
+            "c = pow(x, 2) + x*y*z + pow(y, 2) + ((x < 0.5) ? (\n"
+            "   0\n"
+            ")\n"
+            ": (\n"
+            "   1\n"
+            ")) + cos(z) - 1;")
 
 
 def test_ccode_ITE():
     expr = ITE(x < 1, x, x**2)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(expr) == (
-                "((x < 1) ? (\n"
-                "   x\n"
-                ")\n"
-                ": (\n"
-                "   pow(x, 2)\n"
-                "))")
+    assert ccode(expr) == (
+            "((x < 1) ? (\n"
+            "   x\n"
+            ")\n"
+            ": (\n"
+            "   pow(x, 2)\n"
+            "))")
 
 
 def test_ccode_settings():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        raises(TypeError, lambda: ccode(sin(x), method="garbage"))
+    raises(TypeError, lambda: ccode(sin(x), method="garbage"))
 
 
 def test_ccode_Indexed():
@@ -335,10 +275,8 @@ def test_ccode_Indexed_without_looking_for_contraction():
     Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
     e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
-        assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
+    code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
 
 
 def test_ccode_loops_matrix_vector():
@@ -359,10 +297,7 @@ def test_ccode_loops_matrix_vector():
         '   }\n'
         '}'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(A[i, j]*x[j], assign_to=y[i]) == s
+    assert ccode(A[i, j]*x[j], assign_to=y[i]) == s
 
 
 def test_dummy_loops():
@@ -377,9 +312,7 @@ def test_dummy_loops():
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(x[i], assign_to=y[i]) == expected
+    assert ccode(x[i], assign_to=y[i]) == expected
 
 
 def test_ccode_loops_add():
@@ -403,9 +336,7 @@ def test_ccode_loops_add():
         '   }\n'
         '}'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i]) == s
+    assert ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_contractions():
@@ -434,9 +365,7 @@ def test_ccode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i]) == s
+    assert ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_addfactor():
@@ -466,9 +395,7 @@ def test_ccode_loops_addfactor():
         '   }\n'
         '}'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i]) == s
+    assert ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_terms():
@@ -511,16 +438,13 @@ def test_ccode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
-        assert (c == s0 + s1 + s2 + s3[:-1] or
-                c == s0 + s1 + s3 + s2[:-1] or
-                c == s0 + s2 + s1 + s3[:-1] or
-                c == s0 + s2 + s3 + s1[:-1] or
-                c == s0 + s3 + s1 + s2[:-1] or
-                c == s0 + s3 + s2 + s1[:-1])
+    c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    assert (c == s0 + s1 + s2 + s3[:-1] or
+            c == s0 + s1 + s3 + s2[:-1] or
+            c == s0 + s2 + s1 + s3[:-1] or
+            c == s0 + s2 + s3 + s1[:-1] or
+            c == s0 + s3 + s1 + s2[:-1] or
+            c == s0 + s3 + s2 + s1[:-1])
 
 
 def test_dereference_printing():
@@ -532,93 +456,79 @@ def test_dereference_printing():
 
 def test_Matrix_printing():
     # Test returning a Matrix
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
-        A = MatrixSymbol('A', 3, 1)
-        assert ccode(mat, A) == (
-            "A[0] = x*y;\n"
-            "if (y > 0) {\n"
-            "   A[1] = x + 2;\n"
-            "}\n"
-            "else {\n"
-            "   A[1] = y;\n"
-            "}\n"
-            "A[2] = sin(z);")
-        # Test using MatrixElements in expressions
-        expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
-        assert ccode(expr) == (
-            "((x > 0) ? (\n"
-            "   2*A[2]\n"
-            ")\n"
-            ": (\n"
-            "   A[2]\n"
-            ")) + sin(A[1]) + A[0]")
-        # Test using MatrixElements in a Matrix
-        q = MatrixSymbol('q', 5, 1)
-        M = MatrixSymbol('M', 3, 3)
-        m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
-            [q[1,0] + q[2,0], q[3, 0], 5],
-            [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
-        assert ccode(m, M) == (
-            "M[0] = sin(q[1]);\n"
-            "M[1] = 0;\n"
-            "M[2] = cos(q[2]);\n"
-            "M[3] = q[1] + q[2];\n"
-            "M[4] = q[3];\n"
-            "M[5] = 5;\n"
-            "M[6] = 2*q[4]/q[1];\n"
-            "M[7] = sqrt(q[0]) + 4;\n"
-            "M[8] = 0;")
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert ccode(mat, A) == (
+        "A[0] = x*y;\n"
+        "if (y > 0) {\n"
+        "   A[1] = x + 2;\n"
+        "}\n"
+        "else {\n"
+        "   A[1] = y;\n"
+        "}\n"
+        "A[2] = sin(z);")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert ccode(expr) == (
+        "((x > 0) ? (\n"
+        "   2*A[2]\n"
+        ")\n"
+        ": (\n"
+        "   A[2]\n"
+        ")) + sin(A[1]) + A[0]")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert ccode(m, M) == (
+        "M[0] = sin(q[1]);\n"
+        "M[1] = 0;\n"
+        "M[2] = cos(q[2]);\n"
+        "M[3] = q[1] + q[2];\n"
+        "M[4] = q[3];\n"
+        "M[5] = 5;\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = sqrt(q[0]) + 4;\n"
+        "M[8] = 0;")
 
 
 def test_ccode_reserved_words():
     x, y = symbols('x, if')
     with raises(ValueError):
         ccode(y**2, error_on_reserved=True, standard='C99')
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(y**2) == 'pow(if_, 2)'
-        assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
-        assert ccode(y**2, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 2)'
+    assert ccode(y**2) == 'pow(if_, 2)'
+    assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
+    assert ccode(y**2, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 2)'
 
 
 def test_ccode_sign():
     expr1, ref1 = sign(x) * y, 'y*(((x) > 0) - ((x) < 0))'
     expr2, ref2 = sign(cos(x)), '(((cos(x)) > 0) - ((cos(x)) < 0))'
     expr3, ref3 = sign(2 * x + x**2) * x + x**2, 'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(expr1) == ref1
-        assert ccode(expr1, 'z') == 'z = %s;' % ref1
-        assert ccode(expr2) == ref2
-        assert ccode(expr3) == ref3
+    assert ccode(expr1) == ref1
+    assert ccode(expr1, 'z') == 'z = %s;' % ref1
+    assert ccode(expr2) == ref2
+    assert ccode(expr3) == ref3
 
 def test_ccode_Assignment():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-
-        assert ccode(Assignment(x, y + z)) == 'x = y + z;'
-        assert ccode(aug_assign(x, '+', y + z)) == 'x += y + z;'
+    assert ccode(Assignment(x, y + z)) == 'x = y + z;'
+    assert ccode(aug_assign(x, '+', y + z)) == 'x += y + z;'
 
 
 def test_ccode_For():
     f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(f) == ("for (x = 0; x < 10; x += 2) {\n"
-                            "   y *= x;\n"
-                            "}")
+    assert ccode(f) == ("for (x = 0; x < 10; x += 2) {\n"
+                        "   y *= x;\n"
+                        "}")
 
 def test_ccode_Max_Min():
     assert ccode(Max(x, 0), standard='C89') == '((0 > x) ? 0 : x)'
     assert ccode(Max(x, 0), standard='C99') == 'fmax(0, x)'
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(Min(x, 0, sqrt(x))) == (
-            '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
-        )
+    assert ccode(Min(x, 0, sqrt(x)), standard='c89') == (
+        '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
+    )
 
 def test_ccode_standard():
     assert ccode(expm1(x), standard='c99') == 'expm1(x)'

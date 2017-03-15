@@ -123,6 +123,6 @@ cxx_code_printers = {
     'c++17': CXX17CodePrinter
 }
 
-def cxxcode(expr, assign_to=None, standard='c++98', **settings):
+def cxxcode(expr, assign_to=None, standard='c++11', **settings):
     """ C++ equivalent of :func:`sympy.ccode`. """
     return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)

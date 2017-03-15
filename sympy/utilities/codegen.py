@@ -760,7 +760,7 @@ class CCodeGen(CodeGen):
 
     code_extension = "c"
     interface_extension = "h"
-    standard = 'nochoice'
+    standard = 'c99'
 
     def _ccode(self, *args, **kwargs):
         kwargs['standard'] = kwargs.get('standard', self.standard)
@@ -865,7 +865,7 @@ class CCodeGen(CodeGen):
         return code_lines
 
     def _indent_code(self, codelines):
-        p = c_code_printers[(self.standard or 'nochoice').lower()]()
+        p = c_code_printers[self.standard.lower()]()
         return p.indent_code(codelines)
 
     def _get_routine_ending(self, routine):

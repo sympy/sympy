@@ -415,13 +415,12 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
 
 
 c_code_printers = {
-    'nochoice': CCodePrinter,
     'c89': C89CodePrinter,
     'c99': C99CodePrinter,
 }
 
 
-def ccode(expr, assign_to=None, standard=None, **settings):
+def ccode(expr, assign_to=None, standard='c99', **settings):
     """Converts an expr to a string of c code
 
     Parameters
@@ -545,7 +544,7 @@ def ccode(expr, assign_to=None, standard=None, **settings):
     }
     A[2] = sin(x);
     """
-    return c_code_printers[(standard or 'nochoice').lower()](settings).doprint(expr, assign_to)
+    return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
 
 
 def print_ccode(expr, **settings):
