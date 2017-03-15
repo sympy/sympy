@@ -2873,3 +2873,39 @@ def test_issue_11238():
     assert m1.rank(simplify=True) == 1
     assert m2.rank(simplify=True) == 1
     assert m3.rank(simplify=True) == 1
+
+
+def test_rref_aug():
+    A1a = Matrix([[1, 2, 3, 0], [3, 4, 7, 2], [6, 5, 9, 11]])
+    R1a, pivots1a = A1a.rref(cols=3)
+    assert R1a[:, :-1] == eye(3) and pivots1a == [0, 1, 2] and R1a[:, -1] == Matrix([[4], [1], [-2]])
+
+    A1b = Matrix([[1, 2, 3, x], [3, 4, 7, y], [6, 5, 9, z]])
+    R1b, pivots1b = A1b.rref(cols=3)
+    delta1b = R1b[:, -1] - Matrix([
+        [(x - 3*y + 2*z)/4],
+        [(15*x - 9*y + 2*z)/4],
+        [(7*y - 2*z - 9*x)/4]
+    ])
+    delta1b.simplify()
+    assert R1b[:, :-1] == eye(3) and pivots1b == [0, 1, 2] and delta1b == Matrix([[0], [0], [0]])
+
+    A2 = Matrix([[0, 1, -1, x], [2, 1, 1, y], [1, 0, 1, z]])
+    R2, pivots2 = A2.rref(cols=3)
+    assert R2[:, :-1] == Matrix([[1, 0, 1], [0, 1, -1], [0, 0, 0]]) and pivots2 == [0, 1]
+    delta2 = (R2[:2, -1] - Matrix([
+        [(y - x)/2],
+        [x]
+    ]))
+    delta2.simplify()
+    assert delta2 == Matrix([[0], [0]])
+
+    A3 = Matrix([[-1, 0, 1, x], [1, 2, 1, y], [1, 1, 0, z]])
+    R3, pivots3 = A3.rref(cols=3)
+    assert R3[:, :-1] == Matrix([[1, 0, -1], [0, 1, 1], [0, 0, 0]]) and pivots3 == [0, 1]
+    delta3 = (R3[:2, -1] - Matrix([
+        [-x],
+        [(x + y)/2]
+    ]))
+    delta3.simplify()
+    assert delta3 == Matrix([[0], [0]])
