@@ -122,15 +122,26 @@ class from SymPy.  For example ``Add(Symbol("a"), Symbol("b"))`` gives an
 instance of the ``Add`` class.  You can call all methods, which the particular
 class supports.
 
-For easier use, there is a syntactic sugar for expressions like:
+For easier use, there is a syntactic sugar for expressions.
 
-``cos(x) + 1`` is equal to ``cos(x).__add__(1)`` is equal to
+For example, ``cos(x) + 1`` is equal to ``cos(x).__add__(1)`` is equal to
 ``Add(cos(x), Integer(1))``
 
-or
+This works becauses Python allows you to override the behavior of built-in
+operations ``+, *, -, /`` etc. by defining methods with names ``__add__``,
+``__mul__`` etc, so ``cos(x) + 1`` is reduced to ``cos(x).__add__(1)``.
 
-``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
+Then, in the ``__add__``, ``__mul__`` methods defined for SymPy objects, new
+Add or Mul objects are constructed. Python types are also converted to
+SymPy types through the ``sympify()`` function. Thus, ``cos(x).__add__(1)``
+returns  ``Add(cos(x), Integer(1))``.
+
+Similarly, ``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
 ``Mul(Rational(2), Pow(cos(x), Rational(-1)))``.
+
+Note that ``2/cos(x)`` calls ``cos(x).__rdiv__(2)`` instead of
+``2.__div__cos(x)`` because ``2`` (type ``int``) does not know how to divide
+``cos(x)``.
 
 So, you can write normal expressions using python arithmetics like this::
 
