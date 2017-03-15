@@ -208,9 +208,9 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Eq(x, 0)
 
     >>> reduce_rational_inequalities([[x + 2 > 0]], x)
-    And(-2 < x, x < oo)
+    (-2 < x) & (x < oo)
     >>> reduce_rational_inequalities([[(x + 2, ">")]], x)
-    And(-2 < x, x < oo)
+    (-2 < x) & (x < oo)
     >>> reduce_rational_inequalities([[x + 2]], x)
     Eq(x, -2)
     """
@@ -282,10 +282,10 @@ def reduce_abs_inequality(expr, rel, gen):
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
-    And(2 < x, x < 8)
+    (2 < x) & (x < 8)
 
     >>> reduce_abs_inequality(Abs(x + 2)*3 - 13, '<', x)
-    And(-19/3 < x, x < 7/3)
+    (-19/3 < x) & (x < 7/3)
 
     See Also
     ========
@@ -365,10 +365,10 @@ def reduce_abs_inequalities(exprs, gen):
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
     ... (Abs(x + 25) - 13, '>')], x)
-    And(-2/3 < x, Or(And(-12 < x, x < oo), And(-oo < x, x < -38)), x < 4)
+    (-2/3 < x) & (x < 4) & (((-oo < x) & (x < -38)) | ((-12 < x) & (x < oo)))
 
     >>> reduce_abs_inequalities([(Abs(x - 4) + Abs(3*x - 5) - 7, '<')], x)
-    And(1/2 < x, x < 4)
+    (1/2 < x) & (x < 4)
 
     See Also
     ========
@@ -379,7 +379,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
     """Solves a real univariate inequality.
 
     Parameters
@@ -393,6 +393,9 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
         A Relational type output is expected or not
     domain : Set
         The domain over which the equation is solved
+    continuous: bool
+        True if expr is known to be continuous over the given domain
+        (and so continuous_domain() doesn't need to be called on it)
 
     Raises
     ======
@@ -421,7 +424,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    Or(And(-oo < x, x <= -2), And(2 <= x, x < oo))
+    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     (-oo, -2] U [2, oo)
@@ -481,8 +484,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals):
             singularities = []
             for d in denoms(e):
                 singularities.extend(solvify(d, gen, domain))
-
-            domain = continuous_domain(e, gen, domain)
+            if not continuous:
+                domain = continuous_domain(e, gen, domain)
             solns = solvify(e, gen, domain)
 
             if solns is None:
@@ -648,7 +651,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     >>> from sympy.solvers.inequalities import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
-    And(-3 <= x, x < oo)
+    (-3 <= x) & (x < oo)
 
     >>> reduce_inequalities(0 <= x + y*2 - 1, [x])
     x >= -2*y + 1

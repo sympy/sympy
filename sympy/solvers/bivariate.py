@@ -27,7 +27,7 @@ def _filtered_gens(poly, symbol):
     >>> from sympy import Poly, exp
     >>> from sympy.abc import x
     >>> _filtered_gens(Poly(x + 1/x + exp(x)), x)
-    set([x, exp(x)])
+    {x, exp(x)}
 
     """
     gens = {g for g in poly.gens if symbol in g.free_symbols}
@@ -47,6 +47,9 @@ def _mostfunc(lhs, func, X=None):
     ``func`` can be a function (exp, log, etc...) or any other SymPy object,
     like Pow.
 
+    If ``X`` is not ``None``, then the function returns the term composed with the
+    most ``func`` having the specified variable.
+
     Examples
     ========
 
@@ -56,8 +59,8 @@ def _mostfunc(lhs, func, X=None):
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
-    >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp, x)
-    exp(x)
+    >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp)
+    exp(exp(y) + 2)
     >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp, x)
     exp(x)
     >>> _mostfunc(x, exp, x) is None

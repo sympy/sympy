@@ -124,8 +124,8 @@ def reshape(seq, how):
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
 
-    >>> reshape(list(range(12)), [2, [3], set([2]), (1, (3,), 1)])
-    [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+    >>> reshape(list(range(12)), [2, [3], {2}, (1, (3,), 1)])
+    [[0, 1, [2, 3, 4], {5, 6}, (7, (8, 9, 10), 11)]]
 
     """
     m = sum(flatten(how))
@@ -1929,7 +1929,7 @@ def necklaces(n, k, free=False):
     >>> B = [show('ABC', i) for i in bracelets(3, 3)]
     >>> N = [show('ABC', i) for i in necklaces(3, 3)]
     >>> set(N) - set(B)
-    set(['ACB'])
+    {'ACB'}
 
     >>> list(necklaces(4, 2))
     [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),

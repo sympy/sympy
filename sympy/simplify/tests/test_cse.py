@@ -422,6 +422,13 @@ def test_issue_8891():
 
 
 def test_issue_11230():
+    # a specific test that always failed
+    a, b, f, k, l, i = symbols('a b f k l i')
+    p = [a*b*f*k*l, a*i*k**2*l, f*i*k**2*l]
+    R, C = cse(p)
+    assert not any(i.is_Mul for a in C for i in a.args)
+
+    # random tests for the issue
     from random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
@@ -477,3 +484,13 @@ def test_issue_11577():
 def test_hollow_rejection():
     eq = [x + 3, x + 4]
     assert cse(eq) == ([], eq)
+
+
+def test_cse_ignore():
+    exprs = [exp(y)*(3*y + 3*sqrt(x+1)), exp(y)*(5*y + 5*sqrt(x+1))]
+    subst1, red1 = cse(exprs)
+    assert any(y in sub.free_symbols for _, sub in subst1), "cse failed to identify any term with y"
+
+    subst2, red2 = cse(exprs, ignore=(y,))  # y is not allowed in substitutions
+    assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
+    assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"

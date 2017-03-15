@@ -79,7 +79,7 @@ from .calculus import *
 from .plotting import plot, textplot, plot_backends, plot_implicit
 from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree, pager_print, TableForm
-from .printing import ccode, fcode, jscode, julia_code, mathematica_code, \
+from .printing import rcode, ccode, fcode, jscode, julia_code, mathematica_code, \
     octave_code, latex, preview
 from .printing import python, print_python, srepr, sstr, sstrrepr
 from .interactive import init_session, init_printing
