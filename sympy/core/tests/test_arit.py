@@ -1093,6 +1093,45 @@ def test_Pow_is_even_odd():
 
     assert (k**x).is_odd is None
     assert (n**x).is_odd is None
+    
+    assert (2**m/2).is_even is None
+    assert (2**p/2).is_even is None
+
+    assert (k**2/2).is_even is True
+    assert (n**2/2).is_even is False
+    assert (2**k/2).is_even is True
+    assert (x**2/2).is_even is None
+
+    assert (k**m/2).is_even is None
+    assert (n**m/2).is_even is False
+
+    assert (k**p/2).is_even is None
+    assert (n**p/2).is_even is False
+
+    assert (m**k/2).is_even is None
+    assert (p**k/2).is_even is None
+
+    assert (m**n/2).is_even is None
+    assert (p**n/2).is_even is None
+
+    assert (k**x/2).is_even is None
+    assert (n**x/2).is_even is None
+#When checking .is_odd, do not need to address base n, as an odd number 
+#raised to a power divided by 2 will always be a fraction.
+    assert (k**2/2).is_odd is False
+    assert (3**k/2).is_odd is None
+
+    assert (k**m/2).is_odd is None
+
+    assert (k**p/2).is_odd is False
+
+    assert (m**k/2).is_odd is None
+    assert (p**k/2).is_odd is None
+
+    assert (m**n/2).is_odd is None
+    assert (p**n/2).is_odd is None
+
+    assert (k**x/2).is_odd is None
 
 
 def test_Pow_is_negative_positive():
