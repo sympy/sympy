@@ -777,8 +777,13 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
         return (result[0], result[1].subs(x, rep2 + rep2b),
                 result[2].subs(x, rep2 + rep2b))
 
+    k = Dummy('k')
     if f.is_polynomial(x):
-        return None
+        c=Symbol('c')
+        ind=f.coeff(x,0)
+        xk=sequence(x**k, (k, 0, oo))
+        ak=sequence((c),(k, 0, oo))
+        return (ak,xk,ind)
 
     #  Break instances of Add
     #  this allows application of different
@@ -812,7 +817,6 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     result = None
 
     # from here on it's x0=0 and dir=1 handling
-    k = Dummy('k')
     if rational:
         result = rational_algorithm(f, x, k, order, full)
 
@@ -1015,6 +1019,9 @@ class FormalPowerSeries(SeriesBase):
         return self.polynomial(n) + Order(pt_xk, (x, x0))
 
     def _eval_term(self, pt):
+
+        if (self.args[0].is_polynomial()):
+            return (self.args[0].coeff(self.x, pt))*(self.x)**pt
         try:
             pt_xk = self.xk.coeff(pt)
             pt_ak = self.ak.coeff(pt).simplify()  # Simplify the coefficients
@@ -1083,7 +1090,6 @@ class FormalPowerSeries(SeriesBase):
         -cos(1) + 1
         """
         from sympy.integrals import integrate
-
         if x is None:
             x = self.x
         elif iterable(x):

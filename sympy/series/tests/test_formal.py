@@ -10,6 +10,17 @@ x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)
 f, r = Function('f'), Function('r')
 
+    
+def issue_12310():
+    x,c=Symbol('x')
+    k=Dummy('k')
+    f=fps(x**2+x**3/3+x**8/12)
+    assert f[0] == 0
+    assert f[3] == x**3/3
+    assert f[8] == x**8/12
+    assert f.truncate(4) == x**2 + x**3/3 + O(x**4)
+    assert f.polynomial() == x**2 + x**3/3
+    assert f.infinte == Sum(c*x**k, (k, 0, oo))
 
 def test_rational_algorithm():
     f = 1 / ((x - 1)**2 * (x - 2))
@@ -59,7 +70,6 @@ def test_rational_algorithm():
           Rational(1, 2)) / k, 0, 1)
 
     assert rational_algorithm(cos(x), x, k) is None
-
 
 def test_rational_independent():
     ri = rational_independent
@@ -145,7 +155,6 @@ def test_fps():
     assert fps(2, x) == 2
     assert fps(2, x, dir='+') == 2
     assert fps(2, x, dir='-') == 2
-    assert fps(x**2 + x + 1) == x**2 + x + 1
     assert fps(1/x + 1/x**2) == 1/x + 1/x**2
     assert fps(log(1 + x), hyper=False, rational=False) == log(1 + x)
 
