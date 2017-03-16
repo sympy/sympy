@@ -18,6 +18,7 @@ def test_point_v1pt_theorys():
     assert P.v1pt_theory(O, N, B) == N.x + qd * B.y
     P.set_vel(B, B.z)
     assert P.v1pt_theory(O, N, B) == B.z + N.x + qd * B.y
+    assert O.vel(B) == 0
 
 
 def test_point_a1pt_theorys():
@@ -52,7 +53,7 @@ def test_point_v2pt_theorys():
     assert P.v2pt_theory(O, N, B) == (qd * B.z ^ B.x)
     O.set_vel(N, N.x)
     assert P.v2pt_theory(O, N, B) == N.x + qd * B.y
-
+    assert O.vel(B) == 0
 
 def test_point_a2pt_theorys():
     q = dynamicsymbols('q')
