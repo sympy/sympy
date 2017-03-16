@@ -10,8 +10,7 @@ x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)
 f, r = Function('f'), Function('r')
 
-    
-def issue_12310():
+def test_issue_12310():
     x,c=Symbol('x')
     k=Dummy('k')
     f=fps(x**2+x**3/3+x**8/12)
