@@ -2570,11 +2570,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
 
-
-        Note that this method fails if the LU decomposition itself
-        fails. In particular, if the matrix has no inverse this method
-        will fail.
-
         TODO: Implement algorithm for sparse matrices (SFF),
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
 
@@ -2586,21 +2581,29 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         det_bareis
         berkowitz_det
         """
+        # Suppose A is square, and P*A = L*U, where P is a permutation matrix,
+        # L is lower triangular with unit diagonal, and U is upper triangular.
+        # If the number of row exchanges represented by P is even, then the
+        # determinant of A is the product of the diagonal entries of U.
+        # If the number of row exchanged is odd, then the determinant of A
+        # is -1 times the product of U's diagonal entries.
         if not self.is_square:
             raise NonSquareMatrixError()
         if not self:
             return S.One
 
-        M, n = self.copy(), self.rows
-        p, prod = [], 1
-        l, u, p = M.LUdecomposition()
-        if len(p) % 2:
-            prod = -1
+        try:
+            lu, p = self.LUdecomposition_Simple()
+        except ValueError:
+            # Relies on LUdecomposition_Simple() raising a ValueError when
+            # its input is a singular matrix.
+            return S.Zero
 
-        for k in range(n):
-            prod = prod * u[k, k] * l[k, k]
+        prod = lu[0, 0]
+        for k in range(1, lu.cols):
+            prod = prod * lu[k, k]
 
-        return prod.expand()
+        return -prod.expand() if len(p) % 2 else prod.expand()
 
     def det(self, method="bareis"):
         """Computes the matrix determinant using the method "method".
