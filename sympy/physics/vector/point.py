@@ -426,6 +426,7 @@ class Point(object):
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         self.set_vel(outframe, v + (omega ^ dist))
+        self.set_vel(fixedframe, 0)
         return self.vel(outframe)
 
     def vel(self, frame):
