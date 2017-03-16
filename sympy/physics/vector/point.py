@@ -380,7 +380,7 @@ class Point(object):
         v1 = self.vel(interframe)
         v2 = otherpoint.vel(outframe)
         omega = interframe.ang_vel_in(outframe)
-        otherpoint.set_vel(fixedframe, 0)
+        otherpoint.set_vel(interframe, 0)
         self.set_vel(outframe, v1 + v2 + (omega ^ dist))
         return self.vel(outframe)
 
