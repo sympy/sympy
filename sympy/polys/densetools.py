@@ -135,7 +135,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("0 <= j <= u expected, got %s" % (u, j))
+        raise IndexError("0 <= j <= u expected, got u = %d, j = %d" % (u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
