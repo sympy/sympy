@@ -1,6 +1,6 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul)
+                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul, Dummy)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  rational_independent, simpleDE, exp_re,
                                  hyper_re)
@@ -11,15 +11,15 @@ n, m, k = symbols('n m k', integer=True)
 f, r = Function('f'), Function('r')
 
 def test_issue_12310():
-    x,c=Symbol('x')
-    k=Dummy('k')
+    x,c=symbols('x c')
     f=fps(x**2+x**3/3+x**8/12)
+    k = f.ak.variables[0]
     assert f[0] == 0
     assert f[3] == x**3/3
     assert f[8] == x**8/12
     assert f.truncate(4) == x**2 + x**3/3 + O(x**4)
     assert f.polynomial() == x**2 + x**3/3
-    assert f.infinte == Sum(c*x**k, (k, 0, oo))
+    assert f.infinite == Sum(c*x**k, (k, 0, oo))
 
 def test_rational_algorithm():
     f = 1 / ((x - 1)**2 * (x - 2))
