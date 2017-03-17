@@ -449,9 +449,7 @@ def test_ccode_loops_multiple_terms():
 
 def test_dereference_printing():
     expr = x + y + sin(z) + z
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        assert ccode(expr, dereference=[z]) == "x + y + (*z) + sin((*z))"
+    assert ccode(expr, dereference=[z]) == "x + y + (*z) + sin((*z))"
 
 
 def test_Matrix_printing():
