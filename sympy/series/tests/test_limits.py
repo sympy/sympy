@@ -233,6 +233,7 @@ def test_AccumBounds():
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
     assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
+    # Possible improvement: AccumBounds(0, 1)
 
 
 @XFAIL
