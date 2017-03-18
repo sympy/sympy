@@ -33,14 +33,6 @@ class DenseMatrix(MatrixBase):
     _op_priority = 10.01
     _class_priority = 4
 
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return super(DenseMatrix, self).__add__(_force_mutable(other))
-
-    @call_highest_priority('__div__')
-    def __div__(self, other):
-        return super(DenseMatrix, self).__div__(_force_mutable(other))
-
     def __eq__(self, other):
         try:
             other = sympify(other)
@@ -52,6 +44,9 @@ class DenseMatrix(MatrixBase):
                 return self._mat == Matrix(other)._mat
         except AttributeError:
             return False
+
+    def __ne__(self, other):
+        return not self == other
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -123,51 +118,8 @@ class DenseMatrix(MatrixBase):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
-    @call_highest_priority('__rmul__')
-    def __matmul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    def __ne__(self, other):
-        return not self == other
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        return super(DenseMatrix, self).__pow__(other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return super(DenseMatrix, self).__radd__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmatmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        raise NotImplementedError("Matrix Power not defined")
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return super(DenseMatrix, self).__rsub__(_force_mutable(other))
-
     def __setitem__(self, key, value):
         raise NotImplementedError()
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        return super(DenseMatrix, self).__sub__(_force_mutable(other))
-
-    @call_highest_priority('__truediv__')
-    def __truediv__(self, other):
-        return super(DenseMatrix, self).__truediv__(_force_mutable(other))
 
     def _cholesky(self):
         """Helper function of cholesky.

@@ -1,13 +1,16 @@
+import warnings
 from sympy.core import (pi, oo, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, sign, Max)
+                             gamma, loggamma, sign, Max, Min)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
-from sympy.printing.ccode import CCodePrinter
+from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
@@ -20,6 +23,7 @@ def test_printmethod():
     class fabs(Abs):
         def _ccode(self, printer):
             return "fabs(%s)" % printer._print(self.args[0])
+
     assert ccode(fabs(x)) == "fabs(x)"
 
 
@@ -56,8 +60,10 @@ def test_ccode_Max():
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
     assert ccode(pi) == "M_PI"
-    assert ccode(oo) == "HUGE_VAL"
-    assert ccode(-oo) == "-HUGE_VAL"
+    assert ccode(oo, standard='c89') == "HUGE_VAL"
+    assert ccode(-oo, standard='c89') == "-HUGE_VAL"
+    assert ccode(oo) == "INFINITY"
+    assert ccode(-oo, standard='c99') == "-INFINITY"
 
 
 def test_ccode_constants_other():
@@ -103,6 +109,8 @@ def test_ccode_inline_function():
 
 
 def test_ccode_exceptions():
+    assert ccode(gamma(x), standard='C99') == "tgamma(x)"
+    assert 'not supported in c' in ccode(gamma(x), standard='C89').lower()
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
@@ -243,17 +251,21 @@ def test_ccode_Indexed():
     from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
-    p = CCodePrinter()
-    p._not_c = set()
 
     x = IndexedBase('x')[j]
-    assert p._print_Indexed(x) == 'x[j]'
     A = IndexedBase('A')[i, j]
-    assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
     B = IndexedBase('B')[i, j, k]
-    assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
 
-    assert p._not_c == set()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        p = CCodePrinter()
+        p._not_c = set()
+
+        assert p._print_Indexed(x) == 'x[j]'
+        assert p._print_Indexed(A) == 'A[%s]' % (m*i+j)
+        assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
+        assert p._not_c == set()
+
 
 
 def test_ccode_Indexed_without_looking_for_contraction():
@@ -285,8 +297,7 @@ def test_ccode_loops_matrix_vector():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j], assign_to=y[i])
-    assert c == s
+    assert ccode(A[i, j]*x[j], assign_to=y[i]) == s
 
 
 def test_dummy_loops():
@@ -300,8 +311,8 @@ def test_dummy_loops():
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    code = ccode(x[i], assign_to=y[i])
-    assert code == expected
+
+    assert ccode(x[i], assign_to=y[i]) == expected
 
 
 def test_ccode_loops_add():
@@ -325,8 +336,7 @@ def test_ccode_loops_add():
         '   }\n'
         '}'
     )
-    c = ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
-    assert c == s
+    assert ccode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_contractions():
@@ -355,8 +365,7 @@ def test_ccode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    c = ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
-    assert c == s
+    assert ccode(b[j, k, l]*a[i, j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_addfactor():
@@ -386,8 +395,7 @@ def test_ccode_loops_addfactor():
         '   }\n'
         '}'
     )
-    c = ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
-    assert c == s
+    assert ccode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i]) == s
 
 
 def test_ccode_loops_multiple_terms():
@@ -430,8 +438,7 @@ def test_ccode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    c = ccode(
-        b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
+    c = ccode(b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
             c == s0 + s2 + s1 + s3[:-1] or
@@ -486,30 +493,22 @@ def test_Matrix_printing():
 
 
 def test_ccode_reserved_words():
-
     x, y = symbols('x, if')
-
+    with raises(ValueError):
+        ccode(y**2, error_on_reserved=True, standard='C99')
     assert ccode(y**2) == 'pow(if_, 2)'
     assert ccode(x * y**2, dereference=[y]) == 'pow((*if_), 2)*x'
-
-    expected = 'pow(if_unreserved, 2)'
-    assert ccode(y**2, reserved_word_suffix='_unreserved') == expected
-
-    with raises(ValueError):
-        ccode(y**2, error_on_reserved=True)
+    assert ccode(y**2, reserved_word_suffix='_unreserved') == 'pow(if_unreserved, 2)'
 
 
 def test_ccode_sign():
-
-    expr = sign(x) * y
-    assert ccode(expr) == 'y*(((x) > 0) - ((x) < 0))'
-    assert ccode(expr, 'z') == 'z = y*(((x) > 0) - ((x) < 0));'
-
-    assert ccode(sign(2 * x + x**2) * x + x**2) == \
-        'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
-
-    expr = sign(cos(x))
-    assert ccode(expr) == '(((cos(x)) > 0) - ((cos(x)) < 0))'
+    expr1, ref1 = sign(x) * y, 'y*(((x) > 0) - ((x) < 0))'
+    expr2, ref2 = sign(cos(x)), '(((cos(x)) > 0) - ((cos(x)) < 0))'
+    expr3, ref3 = sign(2 * x + x**2) * x + x**2, 'pow(x, 2) + x*(((pow(x, 2) + 2*x) > 0) - ((pow(x, 2) + 2*x) < 0))'
+    assert ccode(expr1) == ref1
+    assert ccode(expr1, 'z') == 'z = %s;' % ref1
+    assert ccode(expr2) == ref2
+    assert ccode(expr3) == ref3
 
 def test_ccode_Assignment():
     assert ccode(Assignment(x, y + z)) == 'x = y + z;'
@@ -518,7 +517,61 @@ def test_ccode_Assignment():
 
 def test_ccode_For():
     f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
-    sol = ccode(f)
-    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
-                   "   y *= x;\n"
-                   "}")
+    assert ccode(f) == ("for (x = 0; x < 10; x += 2) {\n"
+                        "   y *= x;\n"
+                        "}")
+
+def test_ccode_Max_Min():
+    assert ccode(Max(x, 0), standard='C89') == '((0 > x) ? 0 : x)'
+    assert ccode(Max(x, 0), standard='C99') == 'fmax(0, x)'
+    assert ccode(Min(x, 0, sqrt(x)), standard='c89') == (
+        '((0 < ((x < sqrt(x)) ? x : sqrt(x))) ? 0 : ((x < sqrt(x)) ? x : sqrt(x)))'
+    )
+
+def test_ccode_standard():
+    assert ccode(expm1(x), standard='c99') == 'expm1(x)'
+    assert ccode(nan, standard='c99') == 'NAN'
+    assert ccode(float('nan'), standard='c99') == 'NAN'
+
+
+def test_CCodePrinter():
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", category=SymPyDeprecationWarning)
+        with raises(SymPyDeprecationWarning):
+            CCodePrinter()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        assert CCodePrinter().language == 'C'
+
+
+def test_C89CodePrinter():
+    c89printer = C89CodePrinter()
+    assert c89printer.language == 'C'
+    assert c89printer.standard == 'C89'
+    assert 'void' in c89printer.reserved_words
+    assert 'template' not in c89printer.reserved_words
+
+
+def test_C99CodePrinter():
+    assert C99CodePrinter().doprint(expm1(x)) == 'expm1(x)'
+    assert C99CodePrinter().doprint(log1p(x)) == 'log1p(x)'
+    assert C99CodePrinter().doprint(exp2(x)) == 'exp2(x)'
+    assert C99CodePrinter().doprint(log2(x)) == 'log2(x)'
+    assert C99CodePrinter().doprint(fma(x, y, -z)) == 'fma(x, y, -z)'
+    assert C99CodePrinter().doprint(log10(x)) == 'log10(x)'
+    assert C99CodePrinter().doprint(Cbrt(x)) == 'cbrt(x)'  # note Cbrt due to cbrt already taken.
+    assert C99CodePrinter().doprint(hypot(x, y)) == 'hypot(x, y)'
+    assert C99CodePrinter().doprint(loggamma(x)) == 'lgamma(x)'
+    assert C99CodePrinter().doprint(Max(x, 3, x**2)) == 'fmax(3, fmax(x, pow(x, 2)))'
+    assert C99CodePrinter().doprint(Min(x, 3)) == 'fmin(3, x)'
+    c99printer = C99CodePrinter()
+    assert c99printer.language == 'C'
+    assert c99printer.standard == 'C99'
+    assert 'restrict' in c99printer.reserved_words
+    assert 'using' not in c99printer.reserved_words
+
+
+def test_get_math_macros():
+    macros = get_math_macros()
+    assert macros[exp(1)] == 'M_E'
+    assert macros[1/Sqrt(2)] == 'M_SQRT1_2'

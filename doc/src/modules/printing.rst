@@ -49,37 +49,77 @@ when possible.
 .. autofunction:: pretty
 .. autofunction:: pretty_print
 
-CCodePrinter
-------------
+C code printers
+---------------
 
 .. module:: sympy.printing.ccode
 
-This class implements C code printing (i.e. it converts Python expressions
-to strings of C code).
+This class implements C code printing, i.e. it converts Python expressions
+to strings of C code (see also ``C89CodePrinter``).
 
 Usage::
 
     >>> from sympy.printing import print_ccode
-    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.functions import sin, cos, Abs, gamma
     >>> from sympy.abc import x
-    >>> print_ccode(sin(x)**2 + cos(x)**2)
+    >>> print_ccode(sin(x)**2 + cos(x)**2, standard='C89')
     pow(sin(x), 2) + pow(cos(x), 2)
-    >>> print_ccode(2*x + cos(x), assign_to="result")
+    >>> print_ccode(2*x + cos(x), assign_to="result", standard='C89')
     result = 2*x + cos(x);
-    >>> print_ccode(Abs(x**2))
+    >>> print_ccode(Abs(x**2), standard='C89')
     fabs(pow(x, 2))
+    >>> print_ccode(gamma(x**2), standard='C99')
+    tgamma(pow(x, 2))
 
-.. autodata:: sympy.printing.ccode.known_functions
+.. autodata:: sympy.printing.ccode.known_functions_C89
+.. autodata:: sympy.printing.ccode.known_functions_C99
 
-.. autoclass:: sympy.printing.ccode.CCodePrinter
+.. autoclass:: sympy.printing.ccode.C89CodePrinter
    :members:
 
-   .. autoattribute:: CCodePrinter.printmethod
+   .. autoattribute:: C89CodePrinter.printmethod
+
+.. autoclass:: sympy.printing.ccode.C99CodePrinter
+   :members:
+
+   .. autoattribute:: C99CodePrinter.printmethod
 
 
 .. autofunction:: sympy.printing.ccode.ccode
 
 .. autofunction:: sympy.printing.ccode.print_ccode
+
+C++ code printers
+-----------------
+
+.. module:: sympy.printing.cxxcode
+
+This module contains printers for C++ code, i.e. functions to convert
+SymPy expressions to strings of C++ code.
+
+Usage::
+
+    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.functions import Min, gamma
+    >>> from sympy.abc import x
+    >>> print(cxxcode(Min(gamma(x) - 1, x), standard='C++11'))
+    std::min(x, std::tgamma(x) - 1)
+
+.. autoclass:: sympy.printing.cxxcode.CXX98CodePrinter
+   :members:
+
+   .. autoattribute:: CXX98CodePrinter.printmethod
+
+
+.. autoclass:: sympy.printing.cxxcode.CXX11CodePrinter
+   :members:
+
+   .. autoattribute:: CXX11CodePrinter.printmethod
+
+
+.. autofunction:: sympy.printing.cxxcode.cxxcode
+
+
 
 RCodePrinter
 ------------
