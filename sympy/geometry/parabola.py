@@ -301,7 +301,6 @@ class Parabola(GeometrySet):
 
         x, y = symbols('x y', real=True)
         parabola_eq = self.equation()
-
         if isinstance(o, Parabola):
             if o in self:
                 return [o]
@@ -312,16 +311,11 @@ class Parabola(GeometrySet):
                 return [o]
             else:
                 return []
-        elif isinstance(o, LinearEntity2D):
-            if isinstance(o, (Segment2D, Ray2D)):
-                line_from_other = Line2D(o.points[0], o.points[1])
-                result = solve([parabola_eq, line_from_other.equation()], [x, y])
-                return [Point2D(i) for i in result if i in o]
-            elif isinstance(o, Line2D):
-                return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
-        elif isinstance(o, Ellipse):
-            result = solve([parabola_eq, o.equation()], [x, y])
-            return [Point(i) for i in result]
+        elif isinstance(o, (Segment2D, Ray2D)):
+            result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
+            return [Point2D(i) for i in result if i in o]
+        elif isinstance(o, (Line2D, Ellipse)):
+            return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
