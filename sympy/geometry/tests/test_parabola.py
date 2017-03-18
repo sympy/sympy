@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Rational, oo
-from sympy import Line, Point, Point2D, Parabola
+from sympy import Line, Point, Point2D, Parabola, Segment2D
 from sympy.utilities.pytest import raises
 
 
@@ -63,3 +63,23 @@ def test_parabola_geom():
     assert pa8.p_parameter == pa9.p_parameter
     assert pa8.vertex == pa9.vertex
     assert pa8.equation() == pa9.equation()
+
+
+def test_parabola_intersection():
+    l1 = Line(Point(1, -2), Point(-1,-2))
+    l2 = Line(Point(1, 2), Point(-1,2))
+    p1 = Point(0,0)
+    segment1 = Segment2D((-12, 5), (14, 8))
+    parabola1 = Parabola(p1, l1)
+    # parabola with point
+    assert parabola1.intersection(p1) == []
+    assert parabola1.intersection(Point2D(0, -1)) == [Point2D(0, -1)]
+    assert parabola1.intersection(Point2D(4, 3)) == [Point2D(4, 3)]
+    # parabola with line
+    assert parabola1.intersection(Line(Point2D(-7, 3), Point(12, 3))) == [Point2D(-4, 3), Point2D(4, 3)]
+    #parabola with segment
+    #print(parabola1.intersection(segment1))
+
+    print(parabola1.intersection(Segment2D((-12, -65), (14, -68))))
+
+test_parabola_intersection()

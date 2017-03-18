@@ -9,10 +9,10 @@ from __future__ import division, print_function
 
 from sympy.core import S
 from sympy.core.numbers import oo
-
+from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet
-from sympy.geometry.point import Point
-from sympy.geometry.line import Line
+from sympy.geometry.point import Point, Point2D
+from sympy.geometry.line import Line, Line2D
 from sympy.geometry.util import _symbol
 
 
@@ -77,6 +77,28 @@ class Parabola(GeometrySet):
             raise ValueError('The focus must not be a point of directrix')
 
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
+
+    def intersection(self, o):
+        from sympy.geometry.line import LinearEntity2D, Ray2D, Segment2D
+        x, y = symbols('x y', real=True)
+        parabola_eq = self.equation()
+        if isinstance(o, Point2D):
+            if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
+                return [o]
+            else:
+                return []
+        if isinstance(o, LinearEntity2D):
+            if isinstance(o, Ray2D):
+                raise NotImplementedError
+            elif isinstance(o, Segment2D):
+                line = Line2D(o.points[0], o.points[1])
+                result = solve([parabola_eq, line.equation()], [x, y])
+                return [Point2D(i) for i in result]
+            elif isinstance(o, Line2D):
+                return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
+            else:
+                raise NotImplementedError
+
 
     @property
     def ambient_dimension(self):
