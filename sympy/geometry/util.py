@@ -12,9 +12,11 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, S
 from sympy.core.compatibility import (
     is_sequence, range, string_types)
+from sympy.core.evalf import pure_complex
+from sympy.functions.elementary.complexes import im
 from .point import Point, Point2D
 
 
@@ -704,3 +706,40 @@ def intersection(*entities):
             newres.extend(x.intersection(entity))
         res = newres
     return res
+
+
+def number_isnonzero(n):
+    n = S(n)
+    if n.is_number:
+        ri = pure_complex(n, or_real=True)
+        if ri is None:
+            ri = pure_complex(n.n(2), or_real=True)
+            if ri is None:
+                return  # undefined function with numerical args
+        r, i = ri
+        R = r._prec != 1
+        I = i._prec != 1
+        if R and r:
+            return True
+        if I and i:
+            return True
+        if R and not r:
+            if I and not i:
+                return False
+
+
+def number_hasimaginary(n):
+    n = S(n)
+    if n.is_number:
+        ri = pure_complex(n, or_real=True)
+        if ri is None:
+            ri = pure_complex(n.n(2), or_real=True)
+            if ri is None:
+                return  # undefined function with numerical args
+        r, i = ri
+        I = i._prec != 1
+        if I and i:
+            return True
+        if not I:
+            return number_isnonzero(im(n))
+        return False

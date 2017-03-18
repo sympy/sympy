@@ -1,8 +1,10 @@
 from __future__ import division
 
-from sympy import Symbol, sqrt, Derivative
+from sympy import Symbol, sqrt, Derivative, S
 from sympy.geometry import Point, Point2D, Polygon, Segment, convex_hull, intersection, centroid
-from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points
+from sympy.geometry.util import (idiff, closest_points,
+    farthest_points, _ordered_points, number_hasimaginary, number_isnonzero)
+from sympy.core.numbers import I
 from sympy.solvers.solvers import solve
 from sympy.utilities.pytest import raises
 
@@ -111,3 +113,33 @@ def test_farthest_points_closest_points():
     assert farthest_points((1, 1), (0, 0)) == set(
         [(Point2D(0, 0), Point2D(1, 1))])
     raises(ValueError, lambda: farthest_points((1, 1)))
+
+
+def test_number_hasimaginary():
+    assert number_hasimaginary(3) is False  # no evalf needed
+    assert number_hasimaginary(sqrt(3)) is False  # needs evalf
+    assert number_hasimaginary(3 + I) is True
+    assert number_hasimaginary(-11759/7200 - I*sqrt(54*sqrt(151089) +
+        44273)/60 + 551*(6 + 40*I*sqrt(54*sqrt(151089) +
+        44273)/551)**2/28800) is False  # uses im()
+    x = Symbol('x', imaginary=True)
+    assert number_hasimaginary(x) is None
+    assert number_hasimaginary(x(0)) is None
+
+
+def test_number_isnonzero():
+    n = (-11759/7200 - I*sqrt(54*sqrt(151089) +
+        44273)/60 + 551*(6 + 40*I*sqrt(54*sqrt(151089) +
+        44273)/551)**2/28800)  # fake imaginary
+    assert number_isnonzero(n) is True
+    assert number_isnonzero(n*I) is True
+    assert number_isnonzero(3*I) is True
+    assert number_isnonzero(0) is False
+    n = (-S(9424)/5929 + 320*sqrt(141)/5929 + (-S(3633)/160 -
+        7*sqrt(5)*sqrt(-699 + 64*sqrt(141))/40 +
+        77*(2*sqrt(5)*sqrt(-699 + 64*sqrt(141))/77 + 7)**2/160)**2
+        )  # fake zero
+    assert number_isnonzero(n) is not True
+    x = Symbol('x', imaginary=True)
+    assert number_isnonzero(x) is None
+    assert number_isnonzero(x(0)) is None
