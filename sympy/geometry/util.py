@@ -721,11 +721,11 @@ def gsolve(ge1, ge2, x=None, y=None, check=True):
         # return given expression or GeometryEntity's equation
         # which must be in terms of x and y
         if isinstance(ge1, Expr):
-            return ge1, True
+            return ge1
         else:
             assert isinstance(ge1, GeometryEntity), "expecting Expr or GeometryEntity"
             try:
-                return ge1.equation(x, y), False
+                return ge1.equation(x, y)
             except AttributeError:
                 raise AttributeError('Only objects with `equation` method are supported.')
     def verify(i):
@@ -748,11 +748,8 @@ def gsolve(ge1, ge2, x=None, y=None, check=True):
         x, y = Dummy('x'), Dummy('y')
     else:
         assert x and y, "When providing expressions, also give x and y."
-    e1, c1 = what(ge1)
-    e1 = e1.expand()
-    e2, c2 = what(ge2)
-    e2 = e2.expand()
-    real_check = c1 or c2  # arbitrary expressions might give imag x
+    e1 = what(ge1).expand()
+    e2 = what(ge2).expand()
     verify(e1)
     verify(e2)
     free1 = e1.free_symbols
@@ -805,13 +802,11 @@ def gsolve(ge1, ge2, x=None, y=None, check=True):
     # the solutions below are *potential* solutions; they must
     # be checked to see that they satisfy BOTH e1 and e2
     sols = set([(xi.subs(y, yi), yi) for xi in x1 for yi in y2])
-    if real_check:
-        # A real y will produce a real x for a physical object.
-        # Will `is_real` every return None for one of these roots?
-        sols = list(sols)
-        real = [xy[0].is_real for xy in sols]
-        assert None not in real, "some results have not been proven to be real"
-        sols = set([s for s, r in zip(sols, real) if r is not False])
+    # A real y may produce an imaginary x
+    sols = list(sols)
+    real = [xy[0].is_real for xy in sols]
+    assert None not in real, "some results have not been proven to be real"
+    sols = set([s for s, r in zip(sols, real) if r is not False])
     if check:
         ok = []
         for s in sols:

@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy import Symbol, sqrt, Derivative, symbols, S, Mul
 from sympy.geometry import (Line, Point, Point2D, Polygon,
-    Segment, convex_hull, intersection, centroid, Circle)
+    Segment, convex_hull, intersection, centroid, Circle, Ellipse)
 from sympy.geometry.util import (idiff, closest_points,
     farthest_points, _ordered_points, gsolve)
 from sympy.solvers.solvers import solve
@@ -116,7 +116,7 @@ def test_farthest_points_closest_points():
     raises(ValueError, lambda: farthest_points((1, 1)))
 
 
-#@slow
+@slow
 def test_gsolve():
     a, x, y = symbols('a x y')
     raises(AssertionError, lambda: gsolve(1, 2, x, y))
@@ -170,3 +170,4 @@ def test_gsolve():
         7*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1)**2, evaluate=False)/(6 +
         8*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1)),
         CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1))])
+    assert gsolve(Circle(Point2D(4, -8), 2), Ellipse(Point2D(4, 5), 5, 7)) == set()
