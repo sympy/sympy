@@ -80,8 +80,15 @@ class Parabola(GeometrySet):
 
     def intersection(self, o):
         from sympy.geometry.line import LinearEntity2D, Ray2D, Segment2D
+        from sympy.geometry.ellipse import Ellipse
+
         x, y = symbols('x y', real=True)
         parabola_eq = self.equation()
+        if isinstance(o, Parabola):
+            if o in self:
+                return [o]
+            else:
+                return [Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]
         if isinstance(o, Point2D):
             if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
                 return [o]
@@ -91,13 +98,15 @@ class Parabola(GeometrySet):
             if isinstance(o, Ray2D):
                 raise NotImplementedError
             elif isinstance(o, Segment2D):
-                line = Line2D(o.points[0], o.points[1])
-                result = solve([parabola_eq, line.equation()], [x, y])
-                return [Point2D(i) for i in result]
+                line_from_segment = Line2D(o.points[0], o.points[1])
+                result = solve([parabola_eq, line_from_segment.equation()], [x, y])
+                return [Point2D(i) for i in result if i in o]
             elif isinstance(o, Line2D):
                 return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
             else:
                 raise NotImplementedError
+        if isinstance(o, Ellipse):
+            return [Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]
 
 
     @property

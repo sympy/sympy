@@ -78,8 +78,9 @@ def test_parabola_intersection():
     # parabola with line
     assert parabola1.intersection(Line(Point2D(-7, 3), Point(12, 3))) == [Point2D(-4, 3), Point2D(4, 3)]
     #parabola with segment
-    #print(parabola1.intersection(segment1))
+    assert parabola1.intersection(Segment2D((-4, -5), (4, 3))) == [Point2D(0, -1), Point2D(4, 3)]
+    assert parabola1.intersection(Segment2D((0, -5), (0, 6))) == [Point2D(0, -1)]
+    assert parabola1.intersection(Segment2D((-12, -65), (14, -68))) == []
 
-    print(parabola1.intersection(Segment2D((-12, -65), (14, -68))))
 
 test_parabola_intersection()
