@@ -1375,11 +1375,13 @@ def classify_sysode(eq, funcs=None, **kwargs):
     for func in funcs:
         if not order.get(func, False):
             max_order = 0
+            eq_no = 0
             for i, eqs_ in enumerate(eq):
                 order_ = ode_order(eqs_,func)
                 if max_order < order_:
                     max_order = order_
                     eq_no = i
+
             if eq_no in func_dict:
                 list_func = []
                 list_func.append(func_dict[eq_no])
@@ -1393,7 +1395,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     for func in funcs:
         if isinstance(func, list):
             for func_elem in func:
-                if len(func_elem.args) != 1:
+                if len([func_elem]) != 1:
                     raise ValueError("dsolve() and classify_sysode() work with "
                     "functions of one variable only, not %s" % func)
         else:
