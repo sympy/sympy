@@ -2153,3 +2153,34 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
+
+
+def nonlinsolve_real(eqs, *syms):
+    """Return a set of solutions to the equations where
+    no result is a number with a non-zero imaginary part.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import nonlinsolve, nonlinsolve_real
+    >>> from sympy.abc import x, y
+
+    >>> nonlinsolve((x**2-y, x**2-y**2+4), (x, y))
+    {(-sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (-sqrt(-sqrt(17)/2 + 1/2), -sqrt(17)/2 + 1/2),
+    (sqrt(-sqrt(17)/2 + 1/2), -sqrt(17)/2 + 1/2)}
+
+    >>> nonlinsolve_real((x**2 - y, x**2 - y**2 + 4), (x, y))
+    {(-sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2)}
+    >>>
+    """
+    from sympy.geometry.util import number_hasimaginary
+    sol = nonlinsolve(eqs, *syms)
+    ok = []
+    for i in sol:
+        if any(number_hasimaginary(i) for i in i):
+            continue
+        ok.append(i)
+    return set(ok)

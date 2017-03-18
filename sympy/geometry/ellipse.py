@@ -21,7 +21,7 @@ from sympy.geometry.util import number_isnonzero
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.simplify.sqrtdenest import sqrtdenest
-from sympy.solvers.solveset import nonlinsolve, solveset_real
+from sympy.solvers.solveset import nonlinsolve_real, solveset_real
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, Undecidable
 from sympy.utilities.decorator import doctest_depends_on
@@ -188,15 +188,8 @@ class Ellipse(GeometrySet):
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
-        result = nonlinsolve([seq, oeq], (x, y))
-        ok = []
-        for r in list(uniq(result)):
-            try:
-                r = Point([sqrtdenest(i) for i in r])
-            except ValueError:
-                continue  # there was an imaginary coord: invalid soln
-            ok.append(r)
-        return list(ordered(ok))
+        result = list(ordered(nonlinsolve_real([seq, oeq], (x, y))))
+        return [Point([sqrtdenest(i) for i in r]) for r in result]
 
     def _do_line_intersection(self, o):
         """
@@ -1259,16 +1252,7 @@ class Ellipse(GeometrySet):
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
 
-            tangent_points = list(ordered(nonlinsolve([slope - dydx, eq], [x, y])))
-            # remove any imaginary solutions
-            ok = []
-            for r in tangent_points:
-                try:
-                    r = Point(r)
-                    ok.append(r)
-                except ValueError:
-                    continue  # there was an imaginary coord: invalid soln
-            tangent_points = ok
+            tangent_points = list(ordered(nonlinsolve_real([slope - dydx, eq], [x, y])))
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
