@@ -6,5 +6,4 @@ x , t = symbols ("x , t" , positive = True)
 # a is any arbitary constant
 # By the above property
 # integral (t/sqrt(x - t) , (t,0,x)) = integral ((x - t)/sqrt(t) , (t,0,x)) 
-a = integrate ((x-t)/sqrt(t) , (t,0,x))
-print(a)
+print(integrate ((x-t)/sqrt(t) , (t,0,x)))
