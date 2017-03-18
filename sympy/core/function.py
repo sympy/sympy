@@ -1769,6 +1769,40 @@ class Subs(Expr):
         # The variable is independent of the substitution:
         return self.expr.as_leading_term(x)
 
+    def fsubs(self, both):
+        """this function is used to Solve the floor and ceiling derivatives
+         both = True if the expression contain both floor and ceiling
+         both = False if the expression contain only floor or ceiling expressions"""
+
+        from sympy.printing import StrPrinter
+        from sympy import floor
+        from sympy import ceiling
+        from sympy import sympify
+        total = 0
+        m = str(self).replace(" + ", "!")
+        y = m.split("!")
+        loop = 1
+        if not both:
+            loop = 0
+        for i in range(loop):
+            x = y[0].split(" ")
+            r = x[0].replace(",", "").replace(")", "").replace("*", "").split("(")
+            t = r[0].split("S")
+            p = x[3].strip("(").replace(",", "").replace(")", "").replace("*", "")
+            if r[2] == "floor":
+                h = floor(p)
+            if r[2] == "ceiling":
+                h = ceiling(p)
+            c = str(h)
+            add = 0
+            add = sympify(t[0] + "*" + "Subs" + "(" + r[1] + "(" + c + ", " + x[1] + x[2] + x[3]).doit()
+            total += add
+        try:
+            total += sympify(y[loop + 1])
+            return total
+        except IndexError:
+            return total
+
 
 def diff(f, *symbols, **kwargs):
     """
