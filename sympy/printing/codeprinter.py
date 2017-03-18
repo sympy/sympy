@@ -259,6 +259,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Assignment(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.functions.elementary.complexes import sign
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
@@ -283,6 +284,16 @@ class CodePrinter(StrPrinter):
                 code0 = self._print(temp)
                 lines.append(code0)
             return "\n".join(lines)
+        elif isinstance(rhs,sign):
+            if rhs.args[0].is_integer:
+                temp=sign((Assignment(lhs,0),Assignment(lhs,S('isign')),rhs.args[0]))#sympifies isign as symbol and assigns to assign_to and returns as string
+                return self._print(temp)
+            elif rhs.args[0].is_complex:
+                temp=sign((Assignment(lhs,S('cmplx')),Assignment(lhs,S('%s/abs(%s)'%(self._print(rhs.args[0]),self._print(rhs.args[0])))),rhs.args[0]))#sympifies cmplx as symbol and assigns to assign_to and returns as string
+                return self._print(temp)
+            else:
+                temp=sign((Assignment(lhs,S('te')),Assignment(lhs,S('dsign')),rhs.args[0]))#sympifies dsign as symbol and assigns to assign_to and returns as string and te is a random symbol by me for assigning to assign_to
+                return self._print(temp)
         elif self._settings["contract"] and (lhs.has(IndexedBase) or
                 rhs.has(IndexedBase)):
             # Here we check if there is looping to be done, and if so
