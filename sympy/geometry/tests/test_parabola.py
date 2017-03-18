@@ -75,6 +75,7 @@ def test_parabola_intersection():
     p2 = Point(0, -2)
     p3 = Point(120, -12)
     parabola1 = Parabola(p1, l1)
+
     # parabola with parabola
     assert parabola1.intersection(parabola1) == [parabola1]
     assert parabola1.intersection(Parabola(p1, l2)) == [Point2D(-2, 0), Point2D(2, 0)]
