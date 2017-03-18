@@ -12,7 +12,10 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve
+from sympy import Function, Symbol, solve, Dummy, Expr, Mul
+from sympy.solvers.solvers import unrad
+from sympy.polys.polytools import real_roots
+from sympy.solvers.solveset import solveset_real
 from sympy.core.compatibility import (
     is_sequence, range, string_types)
 from .point import Point, Point2D
@@ -103,9 +106,10 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line import LinearEntity3D
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
+    from .line import LinearEntity3D
+    from .point import Point3D
+    from .plane import Plane
+    from .entity import GeometryEntity
     # XXX update tests for coverage
 
     e = set(e)
@@ -704,3 +708,115 @@ def intersection(*entities):
             newres.extend(x.intersection(entity))
         res = newres
     return res
+
+
+def gsolve(ge1, ge2, x=None, y=None, check=True):
+    """Return the set of solution to 2 equations in the form of
+    A*x**2 + B*y**2 + C*x*y + D*x + E*y + F == 0 where A - F are
+    numerical constants. 
+    """
+    from sympy.geometry.entity import GeometryEntity
+    # ------- helpers ----------
+    def what(ge1):
+        # return given expression or GeometryEntity's equation
+        # which must be in terms of x and y
+        if isinstance(ge1, Expr):
+            return ge1, True
+        else:
+            assert isinstance(ge1, GeometryEntity), "expecting Expr or GeometryEntity"
+            try:
+                return ge1.equation(x, y), False
+            except AttributeError:
+                raise AttributeError('Only objects with `equation` method are supported.')
+    def verify(i):
+        # verify that `i` is in the form
+        # a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
+        con = []
+        for p in (x**2, y**2, x*y, x, y):
+            i, d = i.as_independent(p, as_Add=True)
+            if d:
+                if d == p:
+                    continue
+                assert d.is_Mul, "expected Mul not %s" % d
+                # we already know that the non-p part doesn't have
+                # any variables b/c we checked in `what`
+                _p = Mul(*[a for a in d.args if not a.is_number])
+                assert _p == p, "unexpected expression: %s" % _p
+        assert i.is_number, "expected a number for f in a*x**2+b*y**2+c*x*y+d*x+e*y+f but got %s" % i
+    # ------- end of helpers ----------
+    if all(isinstance(g, GeometryEntity) for g in (ge1, ge2)):
+        x, y = Dummy('x'), Dummy('y')
+    else:
+        assert x and y, "When providing expressions, also give x and y."
+    e1, c1 = what(ge1)
+    e1 = e1.expand()
+    e2, c2 = what(ge2)
+    e2 = e2.expand()
+    real_check = c1 or c2  # arbitrary expressions might give imag x
+    verify(e1)
+    verify(e2)
+    free1 = e1.free_symbols
+    free2 = e2.free_symbols
+    if len(free2) == 1 and not (len(free1) == 1 and y in free1):
+        e1, e2 = e2, e1
+        free1, free2 = free2, free1
+    if x not in free1:
+        y1 = solveset_real(e1, y)
+        if x not in free2:
+            y2 = solveset_real(e2, y)
+            return set(
+                [(x, i) for i in y1.intersection(y2)])  # f(y), g(y)
+        elif y not in free2:
+            x2 = solveset_real(e2, x)
+            return set(
+                [(i, j) for i in x2 for j in y1])       # f(y), g(x)
+        rv = set()
+        for i in y1:
+            for j in solveset_real(e2.subs(y, i), x):
+                rv.add((j, i))
+        return rv                                       # f(y), g(x, y)
+    elif y not in free1:
+        x1 = solveset_real(e1, x)
+        if y not in free2:
+            x2 = solveset_real(e2, x)
+            return set(
+                [(i, y) for i in x1.intersection(x2)])  # f(x), g(x)
+        rv = set()
+        for i in x1:
+            for j in solveset_real(e2.subs(x, i), y):
+                rv.add((i, j))
+        return rv                                       # f(x), g(x, y)
+    # f(x, y), g(x, y)
+    x1 = solve(e1, x)
+    u = e2.subs(x, x1[0])  # it doesn't matter which one you pick
+    uu = unrad(u)
+    exclude = set()
+    if uu:
+        assert not uu[1], "not expecting a change of variables"
+        u = uu[0]
+    else:
+        u, den = u.as_numer_denom()
+        if den.free_symbols:
+            exclude = solveset_real(den, y)
+    if u.is_number:
+        assert u.equals(0) is False, "think about this..."
+        return set()  # no solution possible
+    y2 = [i for i in real_roots(u) if i not in exclude]
+    # the solutions below are *potential* solutions; they must
+    # be checked to see that they satisfy BOTH e1 and e2
+    sols = set([(xi.subs(y, yi), yi) for xi in x1 for yi in y2])
+    if real_check:
+        # A real y will produce a real x for a physical object.
+        # Will `is_real` every return None for one of these roots?
+        sols = list(sols)
+        real = [xy[0].is_real for xy in sols]
+        assert None not in real, "some results have not been proven to be real"
+        sols = set([s for s, r in zip(sols, real) if r is not False])
+    if check:
+        ok = []
+        for s in sols:
+            reps = dict(zip((x, y), s))
+            if e1.subs(reps).equals(0) and e2.subs(reps).equals(0):
+                ok.append(s)
+        sols = set(ok)
+    return sols  # let user use sqrdenest if so desired

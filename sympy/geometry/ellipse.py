@@ -13,6 +13,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
+from sympy.core.compatibility import ordered
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -171,13 +172,20 @@ class Ellipse(GeometrySet):
         Private helper method for `intersection`.
 
         """
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
-        seq = self.equation(x, y)
-        oeq = o.equation(x, y)
-        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        result = solve([seq, oeq], x, y)
-        return [Point(*r) for r in list(uniq(result))]
+        try:
+            from sympy.geometry.util import gsolve
+            from sympy.simplify.sqrtdenest import sqrtdenest
+            result = gsolve(self, o)
+            return list(ordered([Point(*[sqrtdenest(i) for i in s]) for s in result]))
+        except (NotImplementedError, AssertionError):
+            # TODO: Replace solve with nonlinsolve, when
+            # nonlinsolve will be able to solve in real domain
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
+            seq = self.equation(x, y)
+            oeq = o.equation(x, y)
+            result = solve([seq, oeq], x, y)
+            return [Point(*r) for r in list(uniq(result))]
 
     def _do_line_intersection(self, o):
         """
@@ -188,6 +196,15 @@ class Ellipse(GeometrySet):
 
         """
 
+        try:
+            from sympy.geometry.util import gsolve
+            from sympy.simplify.sqrtdenest import sqrtdenest
+            line = Line(o)
+            sol = gsolve(self, line)
+            return list(ordered([Point(*[sqrtdenest(i) for i in s]) for s in sol if
+                    isinstance(o, Line) or s in o]))
+        except (NotImplementedError, AssertionError):
+            pass
         hr_sq = self.hradius ** 2
         vr_sq = self.vradius ** 2
         lp = o.points
