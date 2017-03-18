@@ -79,35 +79,38 @@ class Parabola(GeometrySet):
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
 
     def intersection(self, o):
-        from sympy.geometry.line import LinearEntity2D, Ray2D, Segment2D
+        from sympy.geometry.line import LinearEntity2D, Ray2D, Segment2D, LinearEntity3D
         from sympy.geometry.ellipse import Ellipse
 
         x, y = symbols('x y', real=True)
         parabola_eq = self.equation()
+
         if isinstance(o, Parabola):
             if o in self:
                 return [o]
             else:
                 return [Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]
-        if isinstance(o, Point2D):
+        elif isinstance(o, Point2D):
             if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
                 return [o]
             else:
                 return []
-        if isinstance(o, LinearEntity2D):
-            if isinstance(o, Ray2D):
-                raise NotImplementedError
-            elif isinstance(o, Segment2D):
-                line_from_segment = Line2D(o.points[0], o.points[1])
-                result = solve([parabola_eq, line_from_segment.equation()], [x, y])
+        elif isinstance(o, LinearEntity2D):
+            if isinstance(o, (Segment2D, Ray2D)):
+                line_from_other = Line2D(o.points[0], o.points[1])
+                result = solve([parabola_eq, line_from_other.equation()], [x, y])
                 return [Point2D(i) for i in result if i in o]
             elif isinstance(o, Line2D):
                 return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
             else:
                 raise NotImplementedError
-        if isinstance(o, Ellipse):
-            return [Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]
-
+        elif isinstance(o, Ellipse):
+            result = solve([parabola_eq, o.equation()], [x, y])
+            return [Point(i) for i in result if Point(i)]
+        elif isinstance(o, LinearEntity3D):
+            raise ValueError
+        else:
+            raise NotImplementedError
 
     @property
     def ambient_dimension(self):
