@@ -142,6 +142,8 @@ Similarly, ``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
 Note that ``2/cos(x)`` calls ``cos(x).__rdiv__(2)`` instead of
 ``(2).__div__(cos(x))`` because ``2`` (type ``int``) does not know how to
 divide ``cos(x)``.
+(Note: In Python 3, ``__div__`` is replaced by ``__truediv__``
+and ``__rdiv__`` is replaced by ``__rtruediv__``.)
 
 So, you can write normal expressions using python arithmetics like this::
 
