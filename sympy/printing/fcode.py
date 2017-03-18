@@ -142,7 +142,6 @@ class FCodePrinter(CodePrinter):
                 return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
         else:
             return "Wrong Syntax Used.\nfcode(sign(x),assign_to='var'):- FORTRAN VERSION LESS THAN 95.\nfcode(sign(x),standard=95):- FORTRAN VERSION MORE THAN 95"
-                
     #for printing isign() function used in FORTRAN
     def _print_isign(self,func):
         return "isign(1,%s)"%self._print(func.args[1])
