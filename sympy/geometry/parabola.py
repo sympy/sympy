@@ -6,9 +6,9 @@ Contains
 """
 
 from __future__ import division, print_function
-
 from sympy.core import S
 from sympy.core.numbers import oo
+from sympy.core.compatibility import ordered
 from sympy import symbols, simplify, solve
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
@@ -270,8 +270,7 @@ class Parabola(GeometrySet):
         return self.args[0]
 
     def intersection(self, o):
-        """
-        The intersection of the parabola and another geometrical entity `o`.
+        """The intersection of the parabola and another geometrical entity `o`.
 
         Parameters
         ==========
@@ -286,26 +285,25 @@ class Parabola(GeometrySet):
         Examples
         ========
 
-        >>>from sympy import Parabola, Point, Ellipse, Line, Segment2D
-        >>>p1 = Point(0,0)
-        >>>l1 = Line(Point(1, -2), Point(-1,-2))
-        >>>
-        >>>parabola1 = Parabola(p1, l1)
-        >>>parabola1.intersection(Ellipse(Point(0, 0), 2, 5))
+        >>> from sympy import Parabola, Point2D, Ellipse, Line, Segment2D
+        >>> p1 = Point2D(0,0)
+        >>> l1 = Line(Point2D(1, -2), Point2D(-1,-2))
+        >>> parabola1 = Parabola(p1, l1)
+        >>> parabola1.intersection(Ellipse(Point2D(0, 0), 2, 5))
         [Point2D(-2, 0), Point2D(2, 0)]
-        >>>parabola1.intersection(Line(Point2D(-7, 3), Point(12, 3)))
+        >>> parabola1.intersection(Line(Point2D(-7, 3), Point2D(12, 3)))
         [Point2D(-4, 3), Point2D(4, 3)]
-        >>>parabola1.intersection(Segment2D((-12, -65), (14, -68)))
+        >>> parabola1.intersection(Segment2D((-12, -65), (14, -68)))
         []
-        """
 
+        """
         x, y = symbols('x y', real=True)
         parabola_eq = self.equation()
         if isinstance(o, Parabola):
             if o in self:
                 return [o]
             else:
-                return [Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]
+                return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, Point2D):
             if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
                 return [o]
@@ -313,9 +311,9 @@ class Parabola(GeometrySet):
                 return []
         elif isinstance(o, (Segment2D, Ray2D)):
             result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
-            return [Point2D(i) for i in result if i in o]
+            return list(ordered([Point2D(i) for i in result if i in o]))
         elif isinstance(o, (Line2D, Ellipse)):
-            return [Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]
+            return list(ordered([Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
