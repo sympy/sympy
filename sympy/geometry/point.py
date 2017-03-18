@@ -109,6 +109,8 @@ class Point(GeometryEntity):
     is_Point = True
 
     def __new__(cls, *args, **kwargs):
+        from sympy.geometry.util import number_hasimaginary
+
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         on_morph = kwargs.get('on_morph', 'ignore')
 
@@ -155,9 +157,9 @@ class Point(GeometryEntity):
                         'warn' or 'ignore'.'''))
         if any(i for i in coords[dim:]):
             raise ValueError('Nonzero coordinates cannot be removed.')
-        if any(a.is_number and im(a) for a in coords):
+        if any(number_hasimaginary(i) for i in coords):
             raise ValueError('Imaginary coordinates are not permitted.')
-        if not all(isinstance(a, Expr) for a in coords):
+        if not all(isinstance(i, Expr) for i in coords):
             raise TypeError('Coordinates must be valid SymPy expressions.')
 
         # pad with zeros appropriately

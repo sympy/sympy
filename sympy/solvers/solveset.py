@@ -1399,7 +1399,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
     {(-3, 4), (2, -1)}
 
-    * Returns both real and complex solution
+    * Returns both real and complex solutions
 
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
@@ -1947,8 +1947,8 @@ def nonlinsolve(system, *symbols):
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
     be dependent on at least one symbol. Returns both real solution
-    and complex solution(If system have). The possible number of solutions
-    is zero, one or infinite.
+    and complex solutions. There will be zero, one or an infinite number of
+    solutions.
 
     Parameters
     ==========

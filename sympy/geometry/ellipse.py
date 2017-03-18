@@ -11,17 +11,19 @@ from __future__ import division, print_function
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.util import number_isnonzero
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
-from sympy.solvers import solve
+from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.solvers.solveset import nonlinsolve, solveset_real
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, Undecidable
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
@@ -171,13 +173,30 @@ class Ellipse(GeometrySet):
         Private helper method for `intersection`.
 
         """
+        from sympy.geometry.polygon import Polygon
+        # do a quick check
+        def box(o):
+            x1, y1, x2, y2 = o.bounds
+            return Polygon((x1, y1), (x2, y1), (x2, y2), (x1, y2))
+        try:
+            if not box(o).intersection(box(self)):
+                return []
+        except Undecidable:
+            pass
+        # there is a potential intersection so proceed
         x = Dummy('x', real=True)
         y = Dummy('y', real=True)
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
-        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        result = solve([seq, oeq], x, y)
-        return [Point(*r) for r in list(uniq(result))]
+        result = nonlinsolve([seq, oeq], (x, y))
+        ok = []
+        for r in list(uniq(result)):
+            try:
+                r = Point([sqrtdenest(i) for i in r])
+            except ValueError:
+                continue  # there was an imaginary coord: invalid soln
+            ok.append(r)
+        return list(ordered(ok))
 
     def _do_line_intersection(self, o):
         """
@@ -677,7 +696,7 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175), Point2D(3, 0)]
+        [Point2D(3, 0), Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175)]
 
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
@@ -885,7 +904,7 @@ class Ellipse(GeometrySet):
 
         >>> e.normal_lines((3, 3), prec=2)
         [Line2D(Point2D(-0.81, -2.7), Point2D(0.19, -1.2)),
-        Line2D(Point2D(1.5, -2.0), Point2D(2.5, -2.7))]
+        Line2D(Point2D(1.5, 2.0), Point2D(2.5, 2.7))]
 
         Whereas the above solution has an operation count of 12, the exact
         solution has an operation count of 2020.
@@ -915,17 +934,19 @@ class Ellipse(GeometrySet):
         slope = Line(p, (x, y)).slope
         seq = slope - norm
 
-        # TODO: Replace solve with solveset, when this line is tested
-        yis = solve(seq, y)[0]
+        yis = list(solveset_real(seq, y))[0]
         xeq = eq.subs(y, yis).as_numer_denom()[0].expand()
         if len(xeq.free_symbols) == 1:
             try:
                 # this is so much faster, it's worth a try
                 xsol = Poly(xeq, x).real_roots()
             except (DomainError, PolynomialError, NotImplementedError):
-                # TODO: Replace solve with solveset, when these lines are tested
-                xsol = _nsort(solve(xeq, x), separated=True)[0]
-            points = [Point(i, solve(eq.subs(x, i), y)[0]) for i in xsol]
+                xsol = _nsort(solveset_real(xeq, x), separated=True)[0]
+            points = [Point(i, j) for i in xsol
+                for j in solveset_real(eq.subs(x, i), y)]
+            # make sure that they satisfy seq
+            points = [pt for pt in points
+                if not number_isnonzero(seq.subs(zip((x,y),pt)))]
         else:
             raise NotImplementedError(
                 'intersections for the general ellipse are not supported')
@@ -933,7 +954,7 @@ class Ellipse(GeometrySet):
         if prec is not None:
             points = [pt.n(prec) for pt in points]
             slopes = [i if _not_a_coeff(i) else i.n(prec) for i in slopes]
-        return [Line(pt, slope=s) for pt,s in zip(points, slopes)]
+        return list(ordered([Line(pt, slope=s) for pt,s in zip(points, slopes)]))
 
 
     @property
@@ -1238,8 +1259,16 @@ class Ellipse(GeometrySet):
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
 
-            # TODO: Replace solve with solveset, when this line is tested
-            tangent_points = solve([slope - dydx, eq], [x, y])
+            tangent_points = list(ordered(nonlinsolve([slope - dydx, eq], [x, y])))
+            # remove any imaginary solutions
+            ok = []
+            for r in tangent_points:
+                try:
+                    r = Point(r)
+                    ok.append(r)
+                except ValueError:
+                    continue  # there was an imaginary coord: invalid soln
+            tangent_points = ok
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
