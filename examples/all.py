@@ -84,6 +84,10 @@ WINDOWED_EXAMPLES = [
     "advanced.pyglet_plotting",
 ]
 
+# intermediate.sample and beginner.plot_examples have not been included above
+# The reason being that these files depend on numpy that has not 
+# necessarily been installed in all systems. 
+
 EXAMPLE_DIR = os.path.dirname(__file__)
 
 
