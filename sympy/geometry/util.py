@@ -12,7 +12,8 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve, Dummy, Expr, Mul
+from sympy import Function, Symbol, solve, Dummy, Expr, Mul, S
+from sympy.core.evalf import pure_complex
 from sympy.solvers.solvers import unrad
 from sympy.polys.polytools import real_roots
 from sympy.solvers.solveset import solveset_real
@@ -802,16 +803,42 @@ def gsolve(ge1, ge2, x=None, y=None, check=True):
     # the solutions below are *potential* solutions; they must
     # be checked to see that they satisfy BOTH e1 and e2
     sols = set([(xi.subs(y, yi), yi) for xi in x1 for yi in y2])
-    # A real y may produce an imaginary x
-    sols = list(sols)
-    real = [xy[0].is_real for xy in sols]
-    assert None not in real, "some results have not been proven to be real"
-    sols = set([s for s, r in zip(sols, real) if r is not False])
+    if 0:
+        # A real y may produce an imaginary x
+        sols = list(sols)
+        real = [xy[0].is_real for xy in sols]
+        assert None not in real, "some results have not been proven to be real"
+        sols = set([s for s, r in zip(sols, real) if r is not False])
     if check:
         ok = []
         for s in sols:
             reps = dict(zip((x, y), s))
-            if e1.subs(reps).equals(0) and e2.subs(reps).equals(0):
-                ok.append(s)
+            # check for False since those that *do* satisfy might
+            # not give a 0 with precision
+            z1 = iszero(e1.subs(reps))
+            z2 = iszero(e2.subs(reps))
+            if z1 is False or z2 is False:
+                continue
+            if not z1:
+                print(s, 'could not be verified in', e1)
+            if not z2:
+                print(s, 'could not be verified in', e2)
+            ok.append(s)
         sols = set(ok)
     return sols  # let user use sqrdenest if so desired
+
+
+def iszero(n):
+  n = S(n)
+  if n.is_number:
+      ri = pure_complex(n, or_real=True)
+      if ri is None:
+          r, i = pure_complex(n.n(2), or_real=True)
+      else:
+          r, i = ri
+      R = r._prec != 1
+      I = i._prec != 1
+      if R and r or I and i:
+          return False
+      if R and not r and I and not i:
+          return True
