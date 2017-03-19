@@ -1286,12 +1286,13 @@ class Mul(Expr, AssocOp):
                 r = False
             if count_num < count_denom:
                 r = None
+
+        # !integer -> !odd
+        elif is_integer is False:
+            r = False
             
         return r
     
-        # !integer -> !odd
-        elif is_integer is False:
-            return False
     def _eval_is_even(self):
         is_integer = self.is_integer
 
