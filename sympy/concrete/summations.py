@@ -409,7 +409,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
             return S.true
 
-        ###  -------- Divergence test ----------- ###
+        # Checking for special cases  where limit with abs fails
+        pos_term_l = sequence_term.subs(sym, lower_limit)
+        pos_term_u = sequence_term.subs(sym, upper_limit)
+        if pos_term_l is S.NaN:
+            pos_term_l = S.Infinity
+        if pos_term_u is S.NaN:
+            pos_term_u = S.Infinity
+
+        ###  -------- Divergence Test ----------- ###
         try:
             lim_val = limit(sequence_term, sym, upper_limit)
             if lim_val.is_number and lim_val is not S.Zero:
@@ -426,7 +434,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         order = O(sequence_term, (sym, S.Infinity))
 
-        ### --------- p-series test (1/n**p) ---------- ###
+        ### --------- P-Series Test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
         if p1_series_test is not None:
             if p1_series_test[p] < -1:
@@ -441,7 +449,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if p2_series_test[p] < 1:
                 return S.false
 
-        ### ----------- cauchy root test ---------------- ###
+        ### ----------- Cauchy's Root Test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         lim_evaluated = lim.doit()
         if lim_evaluated.is_number:
@@ -450,12 +458,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if lim_evaluated > 1:
                 return S.false
 
-        ### ------------- alternating series test ----------- ###
+        ### ------------- Alternating Series Test ----------- ###
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
-        ### ------------- comparison test ------------- ###
+        ### ------------- Comparison Test ------------- ###
         # (1/log(n)**p) comparison
         log_test = order.expr.match(1/(log(sym)**p))
         if log_test is not None:
@@ -482,7 +490,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.true
             return S.false
 
-        ### ------------- integral test -------------- ###
+        ### ------------- Integral Test -------------- ###
         if is_decreasing(sequence_term, interval):
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             try:
@@ -492,17 +500,18 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             except NotImplementedError:
                 pass
 
-        ### ----------- raabe test ---------------- ###
-        lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1))
-                    - S(1), sym, S.Infinity)
-        val = lim_val.doit()
-        if val.is_number:
-            if val > 1:
-                return S.true
-            if val < 1:
-                return S.false
+        ### ----------- Raabe's Test ---------------- ###
+        if pos_term_l >= 0 and pos_term_u >= 0:
+            lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1))
+                            - S(1), sym, S.Infinity)
+            val = lim_val.doit()
+            if val.is_number:
+                if val > 1:
+                    return S.true
+                if val < 1:
+                    return S.false
 
-        ### -------------- Dirichlet tests -------------- ###
+        ### -------------- Dirichlet Tests -------------- ###
         if order.expr.is_Mul:
             a_n, b_n = order.expr.args[0], order.expr.args[1]
             m = Dummy('m', integer=True)
