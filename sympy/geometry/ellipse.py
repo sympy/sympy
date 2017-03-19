@@ -174,9 +174,8 @@ class Ellipse(GeometrySet):
         """
         try:
             from sympy.geometry.util import gsolve
-            from sympy.simplify.sqrtdenest import sqrtdenest
             result = gsolve(self, o)
-            return list(ordered([Point(*[sqrtdenest(i) for i in s]) for s in result]))
+            return list(ordered([Point(*s) for s in result]))
         except (NotImplementedError, AssertionError):
             # TODO: Replace solve with nonlinsolve, when
             # nonlinsolve will be able to solve in real domain
@@ -185,7 +184,7 @@ class Ellipse(GeometrySet):
             seq = self.equation(x, y)
             oeq = o.equation(x, y)
             result = solve([seq, oeq], x, y)
-            return [Point(*r) for r in list(uniq(result))]
+            return list(ordered([Point(*r) for r in list(uniq(result))]))
 
     def _do_line_intersection(self, o):
         """
@@ -198,10 +197,9 @@ class Ellipse(GeometrySet):
 
         try:
             from sympy.geometry.util import gsolve
-            from sympy.simplify.sqrtdenest import sqrtdenest
             line = Line(o)
             sol = gsolve(self, line)
-            return list(ordered([Point(*[sqrtdenest(i) for i in s]) for s in sol if
+            return list(ordered([Point(*s) for s in sol if
                     isinstance(o, Line) or s in o]))
         except (NotImplementedError, AssertionError):
             pass
@@ -694,7 +692,7 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175), Point2D(3, 0)]
+        [Point2D(3, 0), Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175)]
 
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]

@@ -116,13 +116,12 @@ def test_farthest_points_closest_points():
     raises(ValueError, lambda: farthest_points((1, 1)))
 
 
-@slow
 def test_gsolve():
     a, x, y = symbols('a x y')
-    raises(AssertionError, lambda: gsolve(1, 2, x, y))
+    # raises(AssertionError, lambda: gsolve(1, 2, x, y))
     raises(AssertionError, lambda: gsolve(a + x, a - y, x, y))
     raises(AssertionError, lambda: gsolve(x + 1/x, x - 2, x, y))
-    raises(AssertionError, lambda: gsolve(x - 2, y - 2))
+    #raises(AssertionError, lambda: gsolve(x - 2, y - 2))
     raises(AttributeError, lambda: gsolve(Segment((0, 1), (1, 2)), x - 2, x, y))
     assert gsolve(Line((0, 1), slope=1), Line((0, 1), slope=-2)
         ) == set([(0, 1)])
@@ -142,7 +141,7 @@ def test_gsolve():
     assert gsolve(x**2 + y - 2, y - 1, x, y) == set([(-1, 1), (1, 1)])
     assert gsolve(y - 1, x**2 + y - 2, x, y) == set([(-1, 1), (1, 1)])
     assert gsolve(
-        x**2 + 3*x*y + 3*x + y**2 + 3*y + 1, 
+        x**2 + 3*x*y + 3*x + y**2 + 3*y + 1,
         x**2 + 2*x*y + x + y**2 + 2*y + 1, x, y) == set([(1, -1)])
     eqs = (x-2)**2-x*y*3-y**2,x**2-3*x*y-y**2
     assert gsolve(eqs[0], eqs[1], x, y, check=False) == set([
@@ -153,6 +152,8 @@ def test_gsolve():
         sqrt(13)/2)/2 - 3*sqrt(13)/4 - S(1)/4, -sqrt(13)/2 - S(3)/2),
         (-3*sqrt(13)/4 - S(1)/4 + sqrt(-S(9)/2 + 13*sqrt(13)/2)*sqrt(S(3)/2 +
         sqrt(13)/2)/2, -sqrt(13)/2 - S(3)/2)])
+    # this is a case where a potential y solution satisfies e2y but
+    # x and y do not satisfy e2
     assert gsolve(eqs[0], eqs[1], x, y) == set([
         (-sqrt(-S(3)/2 + sqrt(13)/2)*sqrt(S(9)/2 + 13*sqrt(13)/2)/2 - S(1)/4 +
         3*sqrt(13)/4, -S(3)/2 + sqrt(13)/2), (-3*sqrt(13)/4 - S(1)/4 + sqrt(-S(9)/2 +
@@ -171,3 +172,7 @@ def test_gsolve():
         8*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1)),
         CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1))])
     assert gsolve(Circle(Point2D(4, -8), 2), Ellipse(Point2D(4, 5), 5, 7)) == set()
+    # ycond is always false (first equation is never real for real coef
+    assert gsolve(9*x**2 + 2*x*y - 7*x + 5*y**2 + 8*y + 6,
+        2*x**2 - 10*x*y - 6*x - 2*y**2 + 6*y + 3, x, y) == set()
+    assert gsolve(-2*x**2 + x*y + 2*x - 2*y**2 - 1, x**2 + y) == set()
