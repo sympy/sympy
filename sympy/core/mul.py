@@ -1263,7 +1263,7 @@ class Mul(Expr, AssocOp):
     def _eval_is_odd(self):
         is_integer = self.is_integer
 
-           if is_integer:
+        if is_integer:
             r = True
             count_denom = 0
             count_num = 0
