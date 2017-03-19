@@ -3798,6 +3798,26 @@ def test_sympy__codegen__cfunctions__hypot():
     assert _test_args(hypot(x, y))
 
 
+def test_sympy__codegen__ffunctions__isign():
+    from sympy.codegen.ffunctions import isign
+    assert _test_args(isign(1, x))
+
+
+def test_sympy__codegen__ffunctions__dsign():
+    from sympy.codegen.ffunctions import dsign
+    assert _test_args(dsign(1, x))
+
+
+def test_sympy__codegen__ffunctions__cmplx():
+    from sympy.codegen.ffunctions import cmplx
+    assert _test_args(cmplx(x, y))
+
+
+def test_sympy__codegen__ffunctions__kind():
+    from sympy.codegen.ffunctions import kind
+    assert _test_args(kind(x))
+
+
 def test_sympy__vector__coordsysrect__CoordSysCartesian():
     from sympy.vector.coordsysrect import CoordSysCartesian
     assert _test_args(CoordSysCartesian('C'))

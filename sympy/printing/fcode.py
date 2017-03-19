@@ -45,10 +45,20 @@ known_functions = {
     "log": "log",
     "exp": "exp",
     "erf": "erf",
-    "Abs": "Abs",
+    "Abs": "abs",
     "sign": "sign",
     "conjugate": "conjg"
 }
+
+def _sign_as_Piecewise_args(arg):
+    from sympy import Abs
+    if arg.is_integer:
+        return (0, Eq(arg, 0)), (isign(1, arg), True)
+    elif arg.is_complex:
+        return (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
+    else:
+        return (0, Eq(arg, 0)), (dsign(1, arg), True)
+
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -175,28 +185,16 @@ class FCodePrinter(CodePrinter):
     def _print_Assignment(self, expr):
         from sympy.functions import sign
         if isinstance(expr.rhs, sign) and self._settings["standard"] < 95:
-            from sympy import Piecewise, Abs
-            arg, = expr.rhs.args
-            if arg.is_integer:
-                args = (0, Eq(arg, 0)), (isign(1, arg), True)
-            elif arg.is_complex:
-                args = (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
-            else:
-                args = (0, Eq(arg, 0)), (dsign(1, arg), True)
-            return self._print(Piecewise(*[(Assignment(expr.lhs, e), c) for e, c in args]))
+            from sympy import Piecewise
+            pw_args = _sign_as_Piecewise_args(expr.rhs.args[0])
+            return self._print(Piecewise(*[(Assignment(expr.lhs, e), c) for e, c in pw_args]))
         return super(FCodePrinter, self)._print_Assignment(expr)
 
     def _print_sign(self, expr):
         if self._settings["standard"] < 95:
             raise NotImplementedError("`sign` with inline operators requires Fortran95.")
-        arg, = expr.args
-        if arg.is_integer:
-            fmtstr = "merge(0, isign(1, {0}), {0} == 0)"
-        elif arg.is_complex:
-            fmtstr = "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)"
-        else:
-            fmtstr = "merge(0d0, dsign(1d0, {0}), {0} == 0d0)"
-        return fmtstr.format(self._print(arg))
+        from sympy import Piecewise
+        return self._print(Piecewise(*_sign_as_Piecewise_args(expr.args[0])))
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
