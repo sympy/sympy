@@ -24,8 +24,10 @@ import string
 from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
+from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import Assignment
+from sympy.codegen.ffunctions import isign, dsign, cmplx
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -106,14 +108,6 @@ class FCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "! {0}".format(text)
-#issue 12267
-    def _print_sign(self,func):
-        if func.args[0].is_integer:
-            return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
-        elif func.args[0].is_complex:
-            return "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
-        else:
-            return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
@@ -177,6 +171,32 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError("Using Piecewise as an expression using "
                                       "inline operators is not supported in "
                                       "standards earlier than Fortran95.")
+
+    def _print_Assignment(self, expr):
+        from sympy.functions import sign
+        if isinstance(expr.rhs, sign) and self._settings["standard"] < 95:
+            from sympy import Piecewise, Abs
+            arg, = expr.rhs.args
+            if arg.is_integer:
+                args = (0, Eq(arg, 0)), (isign(1, arg), True)
+            elif arg.is_complex:
+                args = (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
+            else:
+                args = (0, Eq(arg, 0)), (dsign(1, arg), True)
+            return self._print(Piecewise(*[(Assignment(expr.lhs, e), c) for e, c in args]))
+        return super(FCodePrinter, self)._print_Assignment(expr)
+
+    def _print_sign(self, expr):
+        if self._settings["standard"] < 95:
+            raise NotImplementedError("`sign` with inline operators requires Fortran95.")
+        arg, = expr.args
+        if arg.is_integer:
+            fmtstr = "merge(0, isign(1, {0}), {0} == 0)"
+        elif arg.is_complex:
+            fmtstr = "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)"
+        else:
+            fmtstr = "merge(0d0, dsign(1d0, {0}), {0} == 0d0)"
+        return fmtstr.format(self._print(arg))
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
@@ -291,6 +311,26 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
+
+    def _print_Equality(self, expr):
+        lhs, rhs = expr.args
+        return ' == '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Unequality(self, expr):
+        lhs, rhs = expr.args
+        return ' /= '.join(map(self._print, (lhs, rhs)))
+
+    def _print_isign(self, expr):
+        return 'isign(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_dsign(self, expr):
+        return 'dsign(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_cmplx(self, expr):
+        return 'cmplx(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_kind(self, expr):
+        return 'kind(%s)' % ', '.join(map(self._print, expr.args))
 
     def _pad_leading_columns(self, lines):
         result = []
