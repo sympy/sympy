@@ -2264,7 +2264,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         for expv, coeff in f.iterterms():
             if expv[i]:
                 e = ring.monomial_ldiv(expv, m)
-                g[e] = coeff*expv[i]
+                g[e] = ring.domain_new(coeff*expv[i])
         return g
 
     def __call__(f, *values):
