@@ -500,19 +500,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             except NotImplementedError:
                 pass
 
-        ### --------- D'Alembert's ratio test ---------- ###
+        # Checking condition of Raabe's test
         if pos_term_l >= 0 and pos_term_u >= 0 :
             lim = Limit(sequence_term.subs(sym, sym+1)/sequence_term,
                         sym, S.Infinity)
             lim_evaluated = lim.doit()
             raabe = False
-            if lim_evaluated.is_number:
-                if lim_evaluated < 1:
-                    return S.true
-                if lim_evaluated > 1:
-                    return S.false
-                if lim_evaluated == 1:
-                    raabe = True
+            if lim_evaluated == 1:
+                raabe = True
 
         ### ----------- Raabe's test ---------------- ###
         if raabe:
