@@ -1274,12 +1274,6 @@ class Mul(Expr, AssocOp):
                 elif t.is_integer:
                     if t.is_even:
                         count_num += 1
-                    if r is False:
-                        pass
-                    elif acc != 1 and acc.is_even and (acc + t).is_odd:
-                        r = True
-                    elif acc != 1 and acc.is_odd and (acc + t).is_odd:
-                        r = False
                     elif t.is_odd is None:
                         r = None
                 acc = t
