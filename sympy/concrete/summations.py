@@ -502,7 +502,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### --------- D'Alembert's ratio test ---------- ###
         if pos_term_l >= 0 and pos_term_u >= 0 :
-            lim = Limit(sequence_term/sequence_term.subs(sym, sym+1),
+            lim = Limit(sequence_term.subs(sym, sym+1)/sequence_term,
                         sym, S.Infinity)
             lim_evaluated = lim.doit()
             raabe = False
