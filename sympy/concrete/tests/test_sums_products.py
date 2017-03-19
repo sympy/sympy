@@ -976,7 +976,7 @@ def test_is_absolutely_convergent():
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
 
-    # dirichlet tests
+    # Dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
 
