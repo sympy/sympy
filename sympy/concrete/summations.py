@@ -441,7 +441,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if p2_series_test[p] < 1:
                 return S.false
 
-        ### ----------- root test ---------------- ###
+        ### ----------- cauchy root test ---------------- ###
         lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
         lim_evaluated = lim.doit()
         if lim_evaluated.is_number:
@@ -491,6 +491,16 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return S(integral_val_evaluated.is_finite)
             except NotImplementedError:
                 pass
+
+        ### ----------- raabe test ---------------- ###
+        lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1))
+                    - S(1), sym, S.Infinity)
+        val = lim_val.doit()
+        if val.is_number:
+            if val > 1:
+                return S.true
+            if val < 1:
+                return S.false
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
