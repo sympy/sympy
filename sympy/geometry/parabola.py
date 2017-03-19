@@ -285,15 +285,15 @@ class Parabola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Parabola, Point2D, Ellipse, Line, Segment2D
-        >>> p1 = Point2D(0,0)
-        >>> l1 = Line(Point2D(1, -2), Point2D(-1,-2))
+        >>> from sympy import Parabola, Point, Ellipse, Line, Segment
+        >>> p1 = Point(0,0)
+        >>> l1 = Line(Point(1, -2), Point(-1,-2))
         >>> parabola1 = Parabola(p1, l1)
-        >>> parabola1.intersection(Ellipse(Point2D(0, 0), 2, 5))
+        >>> parabola1.intersection(Ellipse(Point(0, 0), 2, 5))
         [Point2D(-2, 0), Point2D(2, 0)]
-        >>> parabola1.intersection(Line(Point2D(-7, 3), Point2D(12, 3)))
+        >>> parabola1.intersection(Line(Point(-7, 3), Point(12, 3)))
         [Point2D(-4, 3), Point2D(4, 3)]
-        >>> parabola1.intersection(Segment2D((-12, -65), (14, -68)))
+        >>> parabola1.intersection(Segment((-12, -65), (14, -68)))
         []
 
         """
