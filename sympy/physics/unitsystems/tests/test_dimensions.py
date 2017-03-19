@@ -1,43 +1,24 @@
 # -*- coding: utf-8 -*-
 
-from sympy import sympify, Symbol
+from sympy import sympify, Symbol, S, sqrt
 from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.unitsystems.dimensions import length, time
 from sympy.utilities.pytest import raises
 
 
 def test_definition():
-
-    length = Dimension(name="length", symbol="L", pairs={"length": 1})
-
-    assert length.get('length') == 1
-    assert length.get('time') is None
+    assert length.get_dimensional_dependencies() == {"length": 1}
     assert length.name == Symbol("length")
     assert length.symbol == Symbol("L")
 
-    halflength = Dimension(name="length", pairs={"length": 0.5})
-    assert halflength.get('length') == sympify("1/2")
-
-
-def test_dict_properties():
-    dic = {"length": sympify(1), "time": sympify(2)}
-    d = Dimension(dic)
-
-    assert d["length"] == 1
-    assert set(d.items()) == set([(sympify(k), sympify(v)) for k, v in dic.items()])
-
-    assert len(d) == 2
-
-    assert d.get("length") == 1
-    assert d.get("mass") is None
-
-    assert ("length" in d) is True
-    assert ("mass" in d) is False
+    halflength = sqrt(length)
+    assert halflength.get_dimensional_dependencies() == {'length': S.Half}
 
 
 def test_error_definition():
     # tuple with more or less than two entries
-    raises(ValueError, lambda: Dimension(("length", 1, 2)))
-    raises(ValueError, lambda: Dimension(["length"]))
+    raises(TypeError, lambda: Dimension(("length", 1, 2)))
+    raises(TypeError, lambda: Dimension(["length"]))
 
     # non-number power
     raises(TypeError, lambda: Dimension({"length": "a"}))
@@ -47,43 +28,46 @@ def test_error_definition():
 
 
 def test_str():
-    assert str(Dimension({ "length": 1})) == "Dimension({length: 1})"
-    assert str(Dimension({"length": 1}, symbol="L")) == "Dimension({length: 1}, L)"
-    assert Dimension({"length": 1}, symbol="L") == Dimension({"length": 1}, 'L')
+    assert str(Dimension("length")) == "Dimension(length)"
+    assert str(Dimension("length", "L")) == "Dimension(length, L)"
 
 
 def test_properties():
-    assert Dimension({ "length": 1}).is_dimensionless is False
-    assert Dimension().is_dimensionless is True
-    assert Dimension({"length": 0}).is_dimensionless is True
+    assert length.is_dimensionless is False
+    assert (length/length).is_dimensionless is True
+    assert Dimension("undefined").is_dimensionless is True
 
-    assert Dimension({ "length": 1}).has_integer_powers is True
-    assert Dimension({"length": -1}).has_integer_powers is True
-    assert Dimension({"length": 1.5}).has_integer_powers is False
+    assert length.has_integer_powers is True
+    assert (length**(-1)).has_integer_powers is True
+    assert (length**1.5).has_integer_powers is False
 
 
 def test_add_sub():
-    length = Dimension({ "length": 1})
-
-    assert length.add(length) == length
-    assert length.sub(length) == length
+    assert length + length == length
+    assert length - length == length
     assert -length == length
 
-    raises(TypeError, lambda: length.add(1))
-    raises(TypeError, lambda: length.sub(1))
-    raises(ValueError, lambda: length.add(Dimension({"time": 1})))
-    raises(ValueError, lambda: length.sub(Dimension({"time": 1})))
+    raises(TypeError, lambda: length + 1)
+    raises(TypeError, lambda: length - 1)
+    raises(ValueError, lambda: length + time)
+    raises(ValueError, lambda: length - time)
 
 
 def test_mul_div_exp():
-    length = Dimension({ "length": 1})
-    time = Dimension({"time": 1})
-    velocity = length.div(time)
+    velo = length / time
 
-    assert length.pow(2) == Dimension({"length": 2})
-    assert length.mul(length) == length.pow(2)
-    assert length.mul(time) == Dimension({ "length": 1, "time": 1})
-    assert velocity == Dimension({ "length": 1, "time": -1})
-    assert velocity.pow(2) == Dimension({"length": 2, "time": -2})
+    assert (length * length) == length ** 2
 
-    raises(TypeError, lambda: length.pow("a"))
+    assert (length * length).get_dimensional_dependencies() == {"length": 2}
+    assert (length ** 2).get_dimensional_dependencies() == {"length": 2}
+    assert (length * time).get_dimensional_dependencies() == { "length": 1, "time": 1}
+    assert velo.get_dimensional_dependencies() == { "length": 1, "time": -1}
+    assert (velo ** 2).get_dimensional_dependencies() == {"length": 2, "time": -2}
+
+    assert (length / length).get_dimensional_dependencies() == {}
+    assert (velo / length * time).get_dimensional_dependencies() == {}
+    assert (length ** -1).get_dimensional_dependencies() == {"length": -1}
+    assert (velo ** -1.5).get_dimensional_dependencies() == {"length": -1.5, "time": 1.5}
+
+    length_a = length**"a"
+    assert length_a.get_dimensional_dependencies() == {"length": Symbol("a")}

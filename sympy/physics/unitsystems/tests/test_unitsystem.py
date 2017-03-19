@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
+from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
+    action
 from sympy.physics.unitsystems.units import Unit, UnitSystem
 from sympy.physics.unitsystems.quantities import Quantity
 from sympy.utilities.pytest import raises
 
-length = Dimension(name="length", symbol="L", pairs={"length": 1})
-mass = Dimension(name="mass", symbol="M", pairs={"mass": 1})
-time = Dimension(name="time", symbol="T", pairs={"time": 1})
-current = Dimension(name="current", symbol="I", pairs={"current": 1})
-velocity = Dimension(name="velocity", symbol="V", pairs={"length": 1, "time": -1})
-action = Dimension(name="action", symbol="A", pairs={"length": 2, "mass": 1, "time": -2})
 
 m = Unit(length, abbrev="m")
 s = Unit(time, abbrev="s")

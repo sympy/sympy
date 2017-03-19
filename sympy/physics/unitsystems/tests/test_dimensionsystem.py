@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Matrix, eye
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
+from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, velocity, mass, current, \
+    action
 from sympy.utilities.pytest import raises
-
-length = Dimension(name="length", symbol="L", pairs={"length": 1})
-mass = Dimension(name="mass", symbol="M", pairs={"mass": 1})
-time = Dimension(name="time", symbol="T", pairs={"time": 1})
-velocity = Dimension(name="velocity", symbol="V", pairs={"length": 1, "time": -1})
-action = Dimension(name="action", symbol="A", pairs={"length": 2, "mass": 1, "time": -2})
 
 
 def test_definition():
@@ -20,8 +15,6 @@ def test_definition():
     assert set(ms._dims) == set(base + (velocity,))
     assert ms.name == "MS"
     assert ms.descr == "MS system"
-
-    assert ms._can_transf_matrix is None
 
 
 def test_error_definition():
@@ -48,7 +41,6 @@ def test_str_repr():
 
 
 def test_call():
-    current = Dimension(name="current", symbol="I", pairs={"current": 1})
     mksa = DimensionSystem((length, time, mass, current), (action,))
     assert mksa(action) == mksa.print_dim_base(action)
 
@@ -90,13 +82,13 @@ def test_list_dims():
 def test_dim_can_vector():
     dimsys = DimensionSystem((length, mass, time), (velocity, action))
 
-    assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
-    assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
+    assert dimsys.dim_can_vector(length) == [1, 0, 0]
+    assert dimsys.dim_can_vector(velocity) == [1, 0, -1]
 
     dimsys = DimensionSystem((length, velocity, action), (mass, time))
 
-    assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
-    assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
+    assert dimsys.dim_can_vector(length) == [1, 0, 0]
+    assert dimsys.dim_can_vector(velocity) == [1, 0, -1]
 
 
 def test_dim_vector():
@@ -125,9 +117,7 @@ def test_inv_can_transf_matrix():
 def test_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
 
-    assert dimsys._can_transf_matrix is None
     assert dimsys.can_transf_matrix == eye(3)
-    assert dimsys._can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
     assert dimsys.can_transf_matrix == Matrix(((0, 1, 0), (1, 0, 1),
@@ -140,7 +130,6 @@ def test_is_consistent():
 
 
 def test_print_dim_base():
-    current = Dimension("current", {'current':1}, symbol="I")
     mksa = DimensionSystem((length, time, mass, current), (action,))
     assert mksa.print_dim_base(action) == "L^2 M T^-2"
 

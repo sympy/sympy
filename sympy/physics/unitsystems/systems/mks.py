@@ -8,26 +8,13 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
+from sympy.physics.unitsystems.dimensions import (velocity, acceleration, momentum, force, energy, power, pressure,
+                                                  frequency, action, length, mass, time)
+
 from sympy.physics.unitsystems.simplifiers import qsimplify
-from sympy.physics.unitsystems import (Dimension, DimensionSystem, Unit,
+from sympy.physics.unitsystems import (DimensionSystem, Unit,
                                        Constant, UnitSystem)
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
-
-# base dimensions
-length = Dimension(name="length", symbol="L", pairs={"length": 1})
-mass = Dimension(name="mass", symbol="M", pairs={"mass": 1})
-time = Dimension(name="time", symbol="T", pairs={"time": 1})
-
-# derived dimensions
-velocity = Dimension(name="velocity", pairs={"length": 1, "time": -1})
-acceleration = Dimension(name="acceleration", pairs={"length": 1, "time": -2})
-momentum = Dimension(name="momentum", pairs={"mass": 1, "length": 1, "time": -1})
-force = Dimension(name="force", symbol="F", pairs={"mass": 1, "length": 1, "time": -2})
-energy = Dimension(name="energy", symbol="E", pairs={"mass": 1, "length": 2, "time": -2})
-power = Dimension(name="power", pairs={"length": 2, "mass": 1, "time": -3})
-pressure = Dimension(name="pressure", pairs={"mass": 1, "length": -1, "time": -2})
-frequency = Dimension(name="frequency", symbol="f", pairs={"time": -1})
-action = Dimension(name="action", symbol="A", pairs={"length": 2, "mass": 1, "time": -1})
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)

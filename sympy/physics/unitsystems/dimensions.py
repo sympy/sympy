@@ -13,12 +13,14 @@ question of adding time to length has no meaning.
 """
 
 from __future__ import division
+
+import collections
 import numbers
 from sympy.core.sympify import _sympify
 
 from sympy.core.compatibility import reduce
 from sympy.core.containers import Dict, Tuple
-from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr, Rational
+from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr, Rational, Symbol, S, Mul
 
 
 class Dimension(Expr):
@@ -33,13 +35,17 @@ class Dimension(Expr):
     quantites).
 
         >>> from sympy.physics.unitsystems.dimensions import Dimension
-        >>> length = Dimension({'length': 1})
+        >>> length = Dimension('length')
         >>> length
-        Dimension({length: 1})
-        >>> time = Dimension({'time': 1})
+        Dimension(length)
+        >>> time = Dimension('time')
+        >>> time
+        Dimension(time)
 
-    Dimensions behave like a dictionary where the key is the name and the value
-    corresponds to the exponent.
+    Base dimensions need to be registered in the dependency dictionary:
+
+        >>> length.register_as_base_dim()
+        >>> time.register_as_base_dim()
 
     Dimensions can be composed using multiplication, division and
     exponentiation (by a number) to give new dimensions. Addition and
@@ -47,96 +53,53 @@ class Dimension(Expr):
 
         >>> velocity = length.div(time)
         >>> velocity
-        Dimension({length: 1, time: -1})
+        Dimension(length/time)
+        >>> velocity.get_dimensional_dependencies()
+        {length: 1, time: -1}
         >>> length.add(length)
-        Dimension({length: 1})
-        >>> length.pow(2)
-        Dimension({length: 2})
+        Dimension(length)
+        >>> l2 = length.pow(2)
+        >>> l2
+        Dimension(length**2)
+        >>> l2.get_dimensional_dependencies()
+        {length: 2}
 
-    Defining addition-like operations will help when doing dimensional analysis.
-
-        >>> Dimension({'length': 1}) == Dimension('length', {'length': 1})
-        False
-        >>> Dimension({'length': 1}) == Dimension({'length': 1}, symbol='L')
-        False
-        >>> Dimension({'length': 1}) == Dimension('length', {'length': 1}, symbol='L')
-        False
     """
+
+    _op_priority = 13.0
+
+    _dimensional_dependencies = dict()
 
     is_commutative = True
     is_number = False
     # make sqrt(M**2) --> M
     is_positive = True
 
-    def __new__(cls, name=None, pairs=None, symbol=None, **kwargs):
+    def __new__(cls, name, symbol=None):
         """
         Create a new dimension.
 
-        Possibilities are (examples given with list/tuple work also with
-        tuple/list):
-
             >>> from sympy.physics.unitsystems.dimensions import Dimension
-            >>> Dimension({"length": 1})
-            Dimension({length: 1})
-            >>> Dimension([("length", 1), ("time", -1)])
-            Dimension({length: 1, time: -1})
+            >>> Dimension("length")
+            Dimension(length)
+            >>> Dimension("velocity", "v")
+            Dimension(velocity, v)
 
         """
+        name = sympify(name)
+        if not isinstance(name, Expr):
+            raise TypeError("Dimension name needs to be a valid math expression")
 
-        # before setting the dict, check if a name and/or a symbol are defined
-        # if so, remove them from the dict
-        if isinstance(name, (dict, Dict, list, tuple, Tuple)):
-            if symbol is None:
-                symbol = sympify(pairs)
-            pairs = name
-            name = None
-        elif name is not None:
-            name = sympify(name)
         if symbol is not None:
             symbol = sympify(symbol)
 
-        # pairs of (dimension, power)
-        if pairs is None:
-            pairs = {}
-
-        # add first items from args to the pairs
-        if isinstance(pairs, (tuple, list,)):
-            pairs = dict(pairs)
-
-        if not isinstance(pairs, (dict, Dict)):
-            raise TypeError("pairs type should be a dict")
-
-        # check validity of dimension key and power
-        for key, value in pairs.items():
-            if not isinstance(value, (numbers.Real, Number, int, float, Rational)):
-                raise TypeError("Power corresponding to '%s' is not a number"
-                                % key)
-
-        # filter dimensions set to zero; this avoid the following odd result:
-        # Dimension({"length": 1}) == Dimension({"length": 1, "mass": 0}) => False
-        # also simplify to avoid powers such as 2.00000
-        for key, value in pairs.items():
-            if value == 0:
-                del pairs[key]
-                continue
-            pairs[key] = nsimplify(value)
-
-        pairs = Dict(pairs)
-
-        if name is not None:
-            if symbol is not None:
-                obj = Expr.__new__(cls, name, pairs, symbol)
-            else:
-                obj = Expr.__new__(cls, name, pairs)
+        if symbol is not None:
+            obj = Expr.__new__(cls, name, symbol)
         else:
-            if symbol is not None:
-                obj = Expr.__new__(cls, pairs, symbol)
-            else:
-                obj = Expr.__new__(cls, pairs)
+            obj = Expr.__new__(cls, name)
 
         obj._name = name
         obj._symbol = symbol
-        obj._pairs = pairs
         return obj
 
     @property
@@ -147,73 +110,17 @@ class Dimension(Expr):
     def symbol(self):
         return self._symbol
 
-    @property
-    def pairs(self):
-        return self._pairs
-
-    def __getitem__(self, key):
-        """x.__getitem__(y) <==> x[y]"""
-        return self.pairs[key]
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError("Dimension are Immutable")
-
-    def items(self):
-        """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return self.pairs.items()
-
-    def keys(self):
-        """D.keys() -> list of D's keys"""
-        return self.pairs.keys()
-
-    def values(self):
-        """D.values() -> list of D's values"""
-        return self.pairs.values()
-
-    def __iter__(self):
-        """x.__iter__() <==> iter(x)"""
-        return iter(self.pairs)
-
-    def __len__(self):
-        """x.__len__() <==> len(x)"""
-        return self.pairs.__len__()
-
-    def get(self, key, default=None):
-        """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
-        return self.pairs.get(key, default)
-
-    def __contains__(self, key):
-        """D.__contains__(k) -> True if D has a key k, else False"""
-        return key in self.pairs
-
     def __lt__(self, other):
         return self.args < other.args
 
     def __str__(self):
         """
         Display the string representation of the dimension.
-
-        Usually one will always use a symbol to denote the dimension. If no
-        symbol is defined then it uses the name or, if there is no name, the
-        default dict representation.
-
-        We do *not* want to use the dimension system to find the string
-        representation of a dimension because it would imply some magic in
-        order to guess the "best" form. It is better to do as if we do not
-        have a system, and then to design a specific function to take it into
-        account.
         """
-        printlist = []
-        if self.name is not None:
-            printlist.append(self.name)
-        if len(self.pairs) > 0:
-            printlist.append(self.pairs)
-        if self.symbol is not None:
-            printlist.append(self.symbol)
-
-        return "Dimension(%s)" % (
-            ", ".join(map(str, printlist))
-        )
+        if self.symbol is None:
+            return "Dimension(%s)" % (self.name)
+        else:
+            return "Dimension(%s, %s)" % (self.name, self.symbol)
 
     def __repr__(self):
         return self.__str__()
@@ -221,7 +128,14 @@ class Dimension(Expr):
     def __neg__(self):
         return self
 
-    def add(self, other):
+    def register_as_base_dim(self):
+        if self.name in self._dimensional_dependencies:
+            raise IndexError("already in dependecies dict")
+        if not self.name.is_Symbol:
+            raise TypeError("Base dimensions need to have symbolic name")
+        self._dimensional_dependencies[self.name] = {self.name: 1}
+
+    def __add__(self, other):
         """
         Define the addition for Dimension.
 
@@ -238,61 +152,60 @@ class Dimension(Expr):
 
         return self
 
-    def sub(self, other):
+    def __sub__(self, other):
         # there is no notion of ordering (or magnitude) among dimension,
         # subtraction is equivalent to addition when the operation is legal
-        return self.add(other)
+        return self + other
 
-    def pow(self, other):
-        #TODO: be sure that it works with rational numbers (e.g. when dealing
-        #      with dimension under a fraction)
+    def __pow__(self, other):
+        return self._eval_power(other)
 
-        #TODO: allow exponentiation by an abstract symbol x
-        #      (if x.is_number is True)
-        #      this would be a step toward using solve and absract powers
-
+    def _eval_power(self, other):
         other = sympify(other)
-        if isinstance(other, (numbers.Real, Number)):
-            return Dimension([(x, y*other) for x, y in self.items()])
-        else:
-            raise TypeError("Dimensions can be exponentiated only with "
-                            "numbers; '%s' is not valid" % type(other))
+        return Dimension(self.name**other)
 
-    def mul(self, other):
+    def __mul__(self, other):
         if not isinstance(other, Dimension):
-            #TODO: improve to not raise error: 2*L could be a legal operation
-            #      (the same comment apply for __div__)
-            raise TypeError("Only dimension can be multiplied; '%s' is not "
-                            "valid" % type(other))
+            return self
 
-        d = dict(self)
-        for key in other:
-            try:
-                d[key] += other[key]
-            except KeyError:
-                d[key] = other[key]
-        d = Dimension(d)
+        return Dimension(self.name*other.name)
 
-
-        return d
-
-    def div(self, other):
+    def __div__(self, other):
         if not isinstance(other, Dimension):
-            raise TypeError("Only dimension can be divided; '%s' is not valid"
-                            % type(other))
+            return self
 
-        d = dict(self)
-        for key in other:
-            try:
-                d[key] -= other[key]
-            except KeyError:
-                d[key] = -other[key]
-        d = Dimension(d)
+        return Dimension(self.name/other.name)
 
-        return d
-
-    def rdiv(self, other):
+    def __rdiv__(self, other):
         return other * pow(self, -1)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def get_dimensional_dependencies(self):
+        name = self.name
+        return self._get_dimensional_dependencies_for_name(name)
+
+    @staticmethod
+    def _get_dimensional_dependencies_for_name(name):
+
+        if name in Dimension._dimensional_dependencies:
+            return Dimension._dimensional_dependencies[name]
+
+        if name.is_Symbol or name.is_Number:
+            return {}
+
+        if name.is_Mul:
+            ret = collections.defaultdict(int)
+            dicts = [Dimension._get_dimensional_dependencies_for_name(i) for i in name.args]
+            for d in dicts:
+                for k, v in d.items():
+                    ret[k] += v
+            return dict(ret)
+
+        if name.is_Pow:
+            dim = Dimension._get_dimensional_dependencies_for_name(name.base)
+            return {k: v*name.exp for (k, v) in dim.items()}
 
     @property
     def is_dimensionless(self):
@@ -301,12 +214,8 @@ class Dimension(Expr):
 
         A dimension should have at least one component with non-zero power.
         """
-
-        for key in self:
-            if self[key] != 0:
-                return False
-        else:
-            return True
+        dimensional_dependencies = self.get_dimensional_dependencies()
+        return dimensional_dependencies == {}
 
     @property
     def has_integer_powers(self):
@@ -318,11 +227,74 @@ class Dimension(Expr):
         final result is well-defined.
         """
 
-        for key in self:
-            if not isinstance(self[key], Integer):
+        for dpow in self.get_dimensional_dependencies().values():
+            if not isinstance(dpow, (int, Integer)):
                 return False
         else:
             return True
+
+
+# base dimensions (MKS)
+length = Dimension(name="length", symbol="L")
+mass = Dimension(name="mass", symbol="M")
+time = Dimension(name="time", symbol="T")
+
+# derived dimensions (MKS)
+velocity = Dimension(name="velocity")
+acceleration = Dimension(name="acceleration")
+momentum = Dimension(name="momentum")
+force = Dimension(name="force", symbol="F")
+energy = Dimension(name="energy", symbol="E")
+power = Dimension(name="power")
+pressure = Dimension(name="pressure")
+frequency = Dimension(name="frequency", symbol="f")
+action = Dimension(name="action", symbol="A")
+
+# base dimensions (MKSA not in MKS)
+current = Dimension(name='current', symbol='I')
+
+# derived dimensions (MKSA not in MKS)
+voltage = Dimension(name='voltage', symbol='U')
+impedance = Dimension(name='impedance', symbol='Z')
+conductance = Dimension(name='conductance', symbol='G')
+capacitance = Dimension(name='capacitance')
+inductance = Dimension(name='inductance')
+charge = Dimension(name='charge', symbol='Q')
+magnetic_density = Dimension(name='charge', symbol='B')
+magnetic_flux = Dimension(name='charge')
+
+## Create dimensions according the the base units in MKSA.
+## For other unit systems, they can be derived by transforming the base
+## dimensional dependency dictionary.
+
+# Dimensional dependencies for base dimensions
+Dimension._dimensional_dependencies[Symbol("length")] = dict(length=1)
+Dimension._dimensional_dependencies[Symbol("mass")] = dict(mass=1)
+Dimension._dimensional_dependencies[Symbol("time")] = dict(time=1)
+
+# Dimensional dependencies for derived dimensions
+Dimension._dimensional_dependencies[Symbol("velocity")] = dict(length=1, time=-1)
+Dimension._dimensional_dependencies[Symbol("acceleration")] = dict(length=1, time=-2)
+Dimension._dimensional_dependencies[Symbol("momentum")] = dict(mass=1, length=1, time=-1)
+Dimension._dimensional_dependencies[Symbol("force")] = dict(mass=1, length=1, time=-2)
+Dimension._dimensional_dependencies[Symbol("energy")] = dict(mass=1, length=2, time=-2)
+Dimension._dimensional_dependencies[Symbol("power")] = dict(length=2, mass=1, time=-3)
+Dimension._dimensional_dependencies[Symbol("pressure")] = dict(mass=1, length=-1, time=-2)
+Dimension._dimensional_dependencies[Symbol("frequency")] = dict(time=-1)
+Dimension._dimensional_dependencies[Symbol("action")] = dict(length=2, mass=1, time=-1)
+
+# Dimensional dependencies for  base dimensions
+Dimension._dimensional_dependencies[Symbol("current")] = dict(current=1)
+
+# Dimensional dependencies for derived dimensions
+Dimension._dimensional_dependencies[Symbol("voltage")] = dict(mass=1, length=2, current=-1, time=-3)
+Dimension._dimensional_dependencies[Symbol("impedance")] = dict(mass=1, length=2, current=-2, time=-3)
+Dimension._dimensional_dependencies[Symbol("conductance")] = dict(mass=-1, length=-2, current=2, time=3)
+Dimension._dimensional_dependencies[Symbol("capacitance")] = dict(mass=-1, length=-2, current=2, time=4)
+Dimension._dimensional_dependencies[Symbol("inductance")] = dict(mass=1, length=2, current=-2, time=-2)
+Dimension._dimensional_dependencies[Symbol("charge")] = dict(current=1, time=1)
+Dimension._dimensional_dependencies[Symbol("magnetic_density")] = dict(mass=1, current=-1, time=-2)
+Dimension._dimensional_dependencies[Symbol("magnetic_flux")] = dict(length=2, mass=1, current=-1, time=-2)
 
 
 class DimensionSystem(object):
@@ -362,9 +334,6 @@ class DimensionSystem(object):
         self._base_dims = self.sort_dims(base)
         # base is first such that named dimension are keeped
         self._dims = tuple(set(base) | set(dims))
-
-        self._can_transf_matrix = None
-        self._list_can_dims = None
 
         if self.is_consistent is False:
             raise ValueError("The system with basis '%s' is not consistent"
@@ -462,12 +431,10 @@ class DimensionSystem(object):
         """
         List all canonical dimension names.
         """
-
-        if self._list_can_dims is None:
-            gen = reduce(lambda x, y: x.mul(y), self._base_dims)
-            self._list_can_dims = tuple(sorted(map(str, gen.keys())))
-
-        return self._list_can_dims
+        dimset = set([])
+        for i in self._base_dims:
+            dimset.update(set(i.get_dimensional_dependencies().keys()))
+        return sorted(dimset)
 
     @property
     def inv_can_transf_matrix(self):
@@ -483,16 +450,14 @@ class DimensionSystem(object):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-
-        matrix = reduce(lambda x, y: x.row_join(y),
-                        [self.dim_can_vector(d) for d in self._base_dims])
-
+        matrix = Matrix([self.dim_can_vector(d) for d in self._base_dims])
         return matrix
 
+    #@cacheit
     @property
     def can_transf_matrix(self):
         """
-        Compute the canonical transformation matrix from the canonical to the
+        Return the canonical transformation matrix from the canonical to the
         base dimension basis.
 
         It is the inverse of the matrix computed with inv_can_transf_matrix().
@@ -500,50 +465,37 @@ class DimensionSystem(object):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
-        if self._can_transf_matrix is None:
-            self._can_transf_matrix = reduce(lambda x, y: x.row_join(y),
-                                             [self.dim_can_vector(d)
-                                              for d in self._base_dims]).inv()
-
-        return self._can_transf_matrix
+        return reduce(lambda x, y: x.row_join(y),
+                      [self.dim_can_vector(d) for d in self._base_dims]
+                      ).inv()
 
     def dim_can_vector(self, dim):
         """
-        Vector representation in terms of the canonical base dimensions.
+        Dimensional representation in terms of the canonical base dimensions.
         """
 
         vec = []
         for d in self.list_can_dims:
-            vec.append(dim.get(d, 0))
+            vec.append(dim.get_dimensional_dependencies().get(d, 0))
 
-        return Matrix(vec)
+        return Matrix(vec).T
 
     def dim_vector(self, dim):
         """
         Vector representation in terms of the base dimensions.
         """
-
-        return self.can_transf_matrix * self.dim_can_vector(dim)
+        return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
     def print_dim_base(self, dim):
         """
-        Give the string expression of a dimension in term of the basis.
-
-        Dimensions are displayed by decreasing power.
+        Give the string expression of a dimension in term of the basis symbols.
         """
-
-        res = ""
-
-        for (d, p) in sorted(zip(self._base_dims, self.dim_vector(dim)),
-                             key=lambda x: x[1], reverse=True):
-            if p == 0:
-                continue
-            elif p == 1:
-                res += "%s " % str(d.symbol)
-            else:
-                res += "%s^%d " % (str(d.symbol), p)
-
-        return res.strip()
+        dims = self.dim_vector(dim)
+        symbols = [i.symbol if i.symbol is not None else i.name for i in self._base_dims]
+        res = S.Zero
+        for (s, p) in zip(symbols, dims):
+            res += s*p
+        return res
 
     @property
     def dim(self):
