@@ -1277,7 +1277,7 @@ class Mul(Expr, AssocOp):
                     elif t.is_odd is None:
                         r = None
                 acc = t
-            if count_num = count_denom:
+            if count_num == count_denom:
                 r = None
             if count_num > count_denom:
                 r = False
