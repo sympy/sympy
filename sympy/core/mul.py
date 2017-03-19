@@ -1260,7 +1260,7 @@ class Mul(Expr, AssocOp):
             return (-self).is_positive  # remove -1
         return self._eval_pos_neg(-1)
 
-        def _eval_is_odd(self):
+    def _eval_is_odd(self):
         is_integer = self.is_integer
 
         if is_integer:
