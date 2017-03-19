@@ -151,7 +151,6 @@ class FCodePrinter(CodePrinter):
     #for printing abs() function used in FORTRAN
     def _print_abs(self,func):
         return "abs(%s)"%(self._print(func.args[0]))
-    
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
