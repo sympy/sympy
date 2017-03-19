@@ -511,7 +511,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if val < 1:
                     return S.false
 
-        ### -------------- dirichlet tests -------------- ###
+        ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
             a_n, b_n = order.expr.args[0], order.expr.args[1]
             m = Dummy('m', integer=True)
