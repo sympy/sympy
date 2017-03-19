@@ -1265,11 +1265,14 @@ class Mul(Expr, AssocOp):
 
         if is_integer:
             r, acc = True, 1
+            count_denom = 0
+            count_num = 0
             for t in self.args:
+                if t.is_even:
+                    count_num += 1
                 if not t.is_integer:
-                    return None
-                elif t.is_even:
-                    r = False
+                    if t == S.Half:
+                        count_denom += 1
                 elif t.is_integer:
                     if r is False:
                         pass
@@ -1278,12 +1281,17 @@ class Mul(Expr, AssocOp):
                     elif t.is_odd is None:
                         r = None
                 acc = t
-            return r
 
+            if count_num > count_denom:
+                r = False
+            if count_num < count_denom:
+                r = None
+            
+        return r
+    
         # !integer -> !odd
         elif is_integer is False:
             return False
-
     def _eval_is_even(self):
         is_integer = self.is_integer
 
