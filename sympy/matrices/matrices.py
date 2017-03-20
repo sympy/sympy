@@ -3859,9 +3859,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero, decomposerankdeficient=False):
+    def LUdecomposition(self,
+                        iszerofunc=_iszero,
+                        decomposerankdeficient=True):
         """Returns the decomposition LU and the row swaps p as L, U, p.
-        See documentation for LUCombined for details about the keyword argument iszerofunc.
+        See documentation for LUCombined for details about the keyword
+        argument iszerofunc and decomposerankdeficient.
 
         Examples
         ========
@@ -3889,20 +3892,26 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUsolve
         """
 
-        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc, decomposerankdeficient=decomposerankdeficient)
+        combined, p = self.LUdecomposition_Simple(iszerofunc=
+                                                  iszerofunc,
+                                                  decomposerankdeficient=
+                                                  decomposerankdeficient)
 
         L = self.zeros(combined.rows)
         U = self.zeros(combined.rows, combined.cols)
 
         # L is lower triangular self.rows x self.rows
         # U is upper triangular self.rows x self.cols
-        # L has unit diagonal. For each column in combined, the subcolumn below the diagonal of combined is shared by L.
-        # If L has more columns than combined, then the remaining subcolumns below the diagonal of L are zero.
+        # L has unit diagonal. For each column in combined, the subcolumn
+        # below the diagonal of combined is shared by L.
+        # If L has more columns than combined, then the remaining subcolumns
+        # below the diagonal of L are zero.
         # The upper triangular portion of L and combined are equal.
 
         max_index = min(self.rows, self.cols)
 
-        # Set diagonal entry to 1, and subdiagonal entries of L to subdiagonal entries of combined
+        # Set diagonal entry to 1, and subdiagonal entries of L to
+        # subdiagonal entries of combined
         for col_i in range(max_index):
             L[col_i, col_i] = 1
             for row_i in range(col_i + 1, L.rows):
@@ -3913,32 +3922,41 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         for col_i in range(max_index, L.cols):
             L[col_i, col_i] = 1
 
-        # Set upper triangular portion of U to upper triangular portion of combined
+        # Set upper triangular portion of U to upper triangular portion of
+        # combined
         for row_i in range(max_index):
             for col_i in range(row_i, U.cols):
                 U[row_i, col_i] = combined[row_i, col_i]
 
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero, decomposerankdeficient=False):
-        """Compute an lu decomposition of m x n matrix A, where
-        P*A = L*U
+    def LUdecomposition_Simple(self,
+                               iszerofunc=_iszero,
+                               decomposerankdeficient=True):
+        """Compute an lu decomposition of m x n matrix A, where P*A = L*U
         L is m x m lower triangular with unit diagonal
         U is m x n upper triangular
         P is an m x m permutation matrix
-        Returns an m x n matrix lu, and an m element list perm where each element of perm is a two element list of row
-        exchange indices.
+        Returns an m x n matrix lu, and an m element list perm where each
+        element of perm is a two element list of row exchange indices.
         The factors L and U are stored in lu as follows:
-        The subdiagonal elements of L are stored in the subdiagonal elements of lu, that is lu[i, j] = L[i, j]
-        whenever i > j.
-        The elements on the diagonal of L are all 1, and are not explicitly stored.
-        U is stored in the upper triangular portion of lu, that is lu[i ,j] = U[i, j] whenever i <= j.
-        perm contains the integers in range(0, m), where each integer occurs exactly once.
-        iszerofunc is a callable that returns a boolean indicating if its input is zero.
-        If iszerofunc may return None if it cannot determine if its input is zero.
-        decomposerankdeficient is a keyword argument that determines if this function raises a ValueError when passed
-        a matrix whose rank is strictly less than min(num rows, num cols).
-        The default is raise a ValueError.
+        The subdiagonal elements of L are stored in the subdiagonal elements
+        of lu, that is lu[i, j] = L[i, j] whenever i > j.
+        The elements on the diagonal of L are all 1, and are not explicitly
+        stored.
+        U is stored in the upper triangular portion of lu, that is
+        lu[i ,j] = U[i, j] whenever i <= j.
+        perm contains the integers in range(0, m), where each integer occurs
+        exactly once.
+        iszerofunc is a callable that returns a boolean indicating if its input
+        is zero.
+        If iszerofunc may return None if it cannot determine if its input is
+        zero.
+        decomposerankdeficient determines if this function raises a ValueError
+        when passed a matrix whose rank is strictly less than
+        min(num rows, num cols). The default behavior is to decompose a rank
+        deficient matrix. Pass decomposerankdeficient=False to raise a
+        ValueError instead. (This mimics the previous behavior of this function).
 
         See Also
         ========
@@ -3950,8 +3968,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         """
 
         if self.rows == 0 or self.cols == 0:
-            # Define LU decomposition of a matrix with no entries as a matrix of the same dimensions with all zero
-            # entries.
+            # Define LU decomposition of a matrix with no entries as a matrix
+            # of the same dimensions with all zero entries.
             return self.zeros(self.rows, self.cols), []
 
         lu = self.as_mutable()
@@ -3962,7 +3980,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
             for candidate_pivot_col in range(pivot_col, self.cols):
                 for candidate_pivot_row in range(pivot_row, self.rows):
-                    iszeropivot = iszerofunc(lu[candidate_pivot_row, candidate_pivot_col])
+                    iszeropivot = iszerofunc(lu[candidate_pivot_row,
+                                                candidate_pivot_col])
                     if iszeropivot is None:
                         iszeropivot = False
                         break
@@ -3973,29 +3992,35 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             pivot_col = candidate_pivot_col
 
             if not decomposerankdeficient and pivot_col != pivot_row:
-                # All entries including and below the pivot position are zero, which indicates that the
-                # rank of the matrix is strictly less than min(num rows, num cols)
-                # Mimic behavior of previous implementation, by throwing a ValueError.
-                raise ValueError("Rank of matrix is strictly less than number of rows or columns. "
-                                 "Pass keyword argument decomposerankdeficient=True to compute LU decomposition "
-                                 "of this matrix.")
+                # All entries including and below the pivot position are
+                # zero, which indicates that the rank of the matrix is
+                # strictly less than min(num rows, num cols)
+                # Mimic behavior of previous implementation, by throwing a
+                # ValueError.
+                raise ValueError("Rank of matrix is strictly less than"
+                                 " number of rows or columns."
+                                 " Pass keyword argument"
+                                 " decomposerankdeficient=True to compute"
+                                 " the LU decomposition of this matrix.")
 
             elif iszeropivot:
-                # iszeropivot is True after pivot search has completed indicates that there are no more entries to zero,
+                # iszeropivot is True after pivot search has completed
+                # indicates that there are no more entries to zero,
                 # so Gaussian elimination is complete.
                 return lu, row_swaps
 
             if pivot_row != candidate_pivot_row:
                 # Row swap book keeping:
                 # Record which rows were swapped.
-                # Update stored portion of L factor by multiplying L on the left and right with the current
-                # permutation.
+                # Update stored portion of L factor by multiplying L on the
+                # left and right with the current permutation.
                 # Swap rows of U.
                 row_swaps.append([pivot_row, candidate_pivot_row])
 
                 # Update L.
                 for col in range(0, pivot_row):
-                    lu[pivot_row, col], lu[candidate_pivot_row, col] = lu[candidate_pivot_row, col], lu[pivot_row, col]
+                    lu[pivot_row, col], lu[candidate_pivot_row, col] =\
+                        lu[candidate_pivot_row, col], lu[pivot_row, col]
 
                 # Swap rows of U in the pivot column.
                 lu[pivot_row, pivot_col] = lu[candidate_pivot_row, pivot_col]
@@ -4007,18 +4032,22 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     lu[candidate_pivot_row, col] = tmp
 
             for row in range(pivot_row + 1, lu.rows):
-                # Store factors of L in the subcolumn below (pivot_row, pivot_row).
-                lu[row, pivot_row] = lu[row, pivot_col]/lu[pivot_row, pivot_col]
+                # Store factors of L in the subcolumn below
+                # (pivot_row, pivot_row).
+                lu[row, pivot_row] =\
+                    lu[row, pivot_col]/lu[pivot_row, pivot_col]
 
                 # Add multiple of pivot row to row below it.
                 # Two loops to handle case where pivot_col > pivot_row
 
-                for col in range(pivot_row + 1 if pivot_row == pivot_col else pivot_col, lu.cols):
+                for col in range(pivot_row + 1 if pivot_row == pivot_col
+                                 else pivot_col, lu.cols):
                     lu[row, col] -= lu[row, pivot_row] * lu[pivot_row, col]
 
             pivot_col += 1
             if pivot_col == lu.cols:
-                # All candidate pivots are zero implies that Gaussian elimination is complete.
+                # All candidate pivots are zero implies that Gaussian
+                # elimination is complete.
                 return lu, row_swaps
 
         return lu, row_swaps
