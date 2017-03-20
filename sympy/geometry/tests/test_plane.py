@@ -14,16 +14,16 @@ def test_plane():
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
-    p4 = Point3D(x, x, x)
-    p5 = Point3D(y, y, y)
-
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
     pl4b = Plane(p1, p2)
     pl5 = Plane(p3, normal_vector=(1, 2, 3))
     pl6 = Plane(Point3D(2, 3, 7), normal_vector=(2, 2, 2))
     pl7 = Plane(Point3D(1, -5, -6), normal_vector=(1, -2, 1))
-
+    pl8 = Plane(p1, normal_vector=(0, 0, 1))
+    pl9 = Plane(p1, normal_vector=(0, 12, 0))
+    pl10 = Plane(p1, normal_vector=(-2, 0, 0))
+    pl11 = Plane(p2, normal_vector=(0, 0, 1))
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
@@ -156,7 +156,12 @@ def test_plane():
     r = Ray(Point(2, 3), Point(4, 2))
     assert Plane((1,2,0), normal_vector=(0,0,1)).intersection(r) == [
         Ray3D(Point(2, 3), Point(4, 2))]
-
+    assert pl9.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, 0))]
+    assert pl10.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(0, 2, 1))]
+    assert pl4.intersection(pl8) == [Line3D(Point3D(0, 0, 0), Point3D(1, -1, 0))]
+    assert pl11.intersection(pl8) == []
+    assert pl9.intersection(pl11) == [Line3D(Point3D(0, 0, 1), Point3D(12, 0, 1))]
+    assert pl9.intersection(pl4) == [Line3D(Point3D(0, 0, 0), Point3D(12, 0, -12))]
     assert pl3.random_point() in pl3
 
     # test geometrical entity using equals

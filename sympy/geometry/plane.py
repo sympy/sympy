@@ -13,7 +13,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve
+from sympy.solvers import solve, linsolve
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 
@@ -402,21 +402,9 @@ class Plane(GeometryEntity):
                 c = list(a.cross(b))
                 d = self.equation(x, y, z)
                 e = o.equation(x, y, z)
-
-                # TODO: Replace solve with solveset, when this line is tested
-                f = solve((d.subs(z, 0), e.subs(z, 0)), [x, y])
-                if len(f) == 2:
-                    return [Line3D(Point3D(f[x], f[y], 0), direction_ratio=c)]
-
-                # TODO: Replace solve with solveset, when this line is tested
-                g = solve((d.subs(y, 0), e.subs(y, 0)),[x, z])
-                if len(g) == 2:
-                    return [Line3D(Point3D(g[x], 0, g[z]), direction_ratio=c)]
-
-                # TODO: Replace solve with solveset, when this line is tested
-                h = solve((d.subs(x, 0), e.subs(x, 0)),[y, z])
-                if len(h) == 2:
-                    return [Line3D(Point3D(0, h[y], h[z]), direction_ratio=c)]
+                result = list(linsolve([d, e], x, y, z))[0]
+                for i in (x, y, z): result = result.subs(i, 0)
+                return [Line3D(Point3D(result), direction_ratio=c)]
 
     def is_coplanar(self, o):
         """ Returns True if `o` is coplanar with self, else False.

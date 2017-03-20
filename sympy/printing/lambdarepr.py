@@ -252,6 +252,33 @@ class NumPyPrinter(LambdaPrinter):
     def _print_Max(self, expr):
         return '{0}(({1}))'.format('amax', ','.join(self._print(i) for i in expr.args))
 
+    def _print_Pow(self, expr):
+        if expr.exp == 0.5:
+            return '{0}({1})'.format('sqrt', self._print(expr.base))
+        else:
+            return super(NumPyPrinter, self)._print_Pow(expr)
+
+    def _print_log10(self, expr):  # log10 in C89, but type-generic macro in C99
+        return 'log10({0})'.format(self._print(expr.args[0]))
+
+    def _print_Sqrt(self, expr):
+        return 'sqrt({0})'.format(self._print(expr.args[0]))
+
+    def _print_hypot(self, expr):
+        return 'hypot({0}, {1})'.format(*map(self._print, expr.args))
+
+    def _print_expm1(self, expr):
+        return 'expm1({0})'.format(self._print(expr.args[0]))
+
+    def _print_log1p(self, expr):
+        return 'log1p({0})'.format(self._print(expr.args[0]))
+
+    def _print_exp2(self, expr):
+        return 'exp2({0})'.format(self._print(expr.args[0]))
+
+    def _print_log2(self, expr):
+        return 'log2({0})'.format(self._print(expr.args[0]))
+
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...

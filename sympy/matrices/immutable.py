@@ -37,6 +37,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _iterable = True
     is_Matrix = True
     _class_priority = 8
+    _op_priority = 10.001
 
     @classmethod
     def _new(cls, *args, **kwargs):
