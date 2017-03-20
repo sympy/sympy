@@ -50,12 +50,10 @@ def dim_simplify(expr):
 
     raise ValueError("Cannot be simplifed: %s", expr)
 
+
 def qsimplify(expr):
     """
     Simplify expression by recursively evaluating the quantity arguments.
-
-    If units are encountered, as it can be when using Constant, they are
-    converted to quantity.
     """
 
     def redmul(x, y):

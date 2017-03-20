@@ -688,6 +688,10 @@ class StrPrinter(Printer):
 
 
     def _print_Unit(self, expr):
+        # Unfortunately, two classes share the same name.
+        # Use `hasattr` trick to distinguish them:
+        if hasattr(expr, "factor"):
+            return "%s" % expr.name
         return expr.abbrev
 
     def _print_Dimension(self, expr):

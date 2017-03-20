@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from sympy import Matrix, eye
+from sympy import Matrix, eye, symbols
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, velocity, mass, current, \
-    action
+    action, charge
 from sympy.utilities.pytest import raises
 
 
@@ -18,26 +18,17 @@ def test_definition():
 
 
 def test_error_definition():
-    raises(ValueError,
-           lambda: DimensionSystem((Dimension("time", {"time": 1}, symbol="T"),
-                                    Dimension({"length": 1}, symbol="L"),
-                                    Dimension("mass", {"mass": 1}),
-                                    Dimension(current=1))))
-
+    raises(ValueError, lambda: DimensionSystem((current, charge, time)))
     raises(ValueError, lambda: DimensionSystem((length, time, velocity)))
 
 
 def test_str_repr():
     assert str(DimensionSystem((length, time), name="MS")) == "MS"
-    dimsys = DimensionSystem((Dimension({"length": 1}, symbol="L"),
-                              Dimension({"time": 1}, symbol="T")))
-    assert str(dimsys) == '(Dimension({length: 1}, L), Dimension({time: 1}, T))'
-    dimsys = DimensionSystem((Dimension("length", {"length": 1}, symbol="L"),
-                              Dimension("time", {"time": 1})))
-    assert str(dimsys) == '(Dimension(length, {length: 1}, L), Dimension(time, {time: 1}))'
+    dimsys = DimensionSystem((length, time))
+    assert str(dimsys) == 'DimensionSystem(Dimension(length, L), Dimension(time, T))'
 
     assert (repr(DimensionSystem((length, time), name="MS"))
-            == '<DimensionSystem: (Dimension(length, {length: 1}, L), Dimension(time, {time: 1}, T))>')
+            == '<DimensionSystem: (Dimension(length, L), Dimension(time, T))>')
 
 
 def test_call():
@@ -51,7 +42,6 @@ def test_get_dim():
     assert ms.get_dim("L") == length
     assert ms.get_dim("length") == length
     assert ms.get_dim(length) == length
-    assert ms.get_dim(Dimension({"length": 1})) == length
 
     assert ms["L"] == ms.get_dim("L")
     raises(KeyError, lambda: ms["M"])
@@ -82,13 +72,13 @@ def test_list_dims():
 def test_dim_can_vector():
     dimsys = DimensionSystem((length, mass, time), (velocity, action))
 
-    assert dimsys.dim_can_vector(length) == [1, 0, 0]
-    assert dimsys.dim_can_vector(velocity) == [1, 0, -1]
+    assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
+    assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
 
     dimsys = DimensionSystem((length, velocity, action), (mass, time))
 
-    assert dimsys.dim_can_vector(length) == [1, 0, 0]
-    assert dimsys.dim_can_vector(velocity) == [1, 0, -1]
+    assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
+    assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
 
 
 def test_dim_vector():
@@ -110,8 +100,7 @@ def test_inv_can_transf_matrix():
     assert dimsys.inv_can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
-    assert dimsys.inv_can_transf_matrix == Matrix(((2, 1, 1), (1, 0, 0),
-                                                   (-2, 0, -1)))
+    assert dimsys.inv_can_transf_matrix == Matrix([[2, 1, 1], [1, 0, 0], [-1, 0, -1]])
 
 
 def test_can_transf_matrix():
@@ -120,8 +109,7 @@ def test_can_transf_matrix():
     assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
-    assert dimsys.can_transf_matrix == Matrix(((0, 1, 0), (1, 0, 1),
-                                               (0, -2, -1)))
+    assert dimsys.can_transf_matrix == Matrix([[0, 1, 0], [1, -1, 1], [0, -1, -1]])
 
 
 def test_is_consistent():
@@ -131,7 +119,8 @@ def test_is_consistent():
 
 def test_print_dim_base():
     mksa = DimensionSystem((length, time, mass, current), (action,))
-    assert mksa.print_dim_base(action) == "L^2 M T^-2"
+    L, M, T = symbols("L M T")
+    assert mksa.print_dim_base(action) == L**2*M/T
 
 
 def test_dim():

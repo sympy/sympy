@@ -18,7 +18,7 @@ import collections
 import numbers
 from sympy.core.sympify import _sympify
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, string_types
 from sympy.core.containers import Dict, Tuple
 from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr, Rational, Symbol, S, Mul
 
@@ -110,8 +110,8 @@ class Dimension(Expr):
     def symbol(self):
         return self._symbol
 
-    def __lt__(self, other):
-        return self.args < other.args
+    def __eq__(self, other):
+        return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
 
     def __str__(self):
         """
@@ -350,7 +350,7 @@ class DimensionSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "(%s)" % ", ".join(str(d) for d in self._base_dims)
+            return "DimensionSystem(%s)" % ", ".join(str(d) for d in self._base_dims)
 
     def __repr__(self):
         return "<DimensionSystem: %s>" % repr(self._base_dims)
@@ -388,7 +388,7 @@ class DimensionSystem(object):
         found_dim = None
 
         #TODO: use copy instead of direct assignment for found_dim?
-        if isinstance(dim, str):
+        if isinstance(dim, string_types) or dim.is_Symbol:
             dim = sympify(dim)
             for d in self._dims:
                 if dim in (d.name, d.symbol):
@@ -396,7 +396,7 @@ class DimensionSystem(object):
                     break
         elif isinstance(dim, Dimension):
             for i, idim in enumerate(self._dims):
-                if dim.pairs == idim.pairs:
+                if dim.get_dimensional_dependencies() == idim.get_dimensional_dependencies():
                     return idim
 
         return found_dim
@@ -434,7 +434,7 @@ class DimensionSystem(object):
         dimset = set([])
         for i in self._base_dims:
             dimset.update(set(i.get_dimensional_dependencies().keys()))
-        return sorted(dimset)
+        return tuple(sorted(dimset))
 
     @property
     def inv_can_transf_matrix(self):
@@ -450,7 +450,10 @@ class DimensionSystem(object):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-        matrix = Matrix([self.dim_can_vector(d) for d in self._base_dims])
+
+        matrix = reduce(lambda x, y: x.row_join(y),
+                        [self.dim_can_vector(d) for d in self._base_dims])
+
         return matrix
 
     #@cacheit
@@ -478,7 +481,7 @@ class DimensionSystem(object):
         for d in self.list_can_dims:
             vec.append(dim.get_dimensional_dependencies().get(d, 0))
 
-        return Matrix(vec).T
+        return Matrix(vec)
 
     def dim_vector(self, dim):
         """
@@ -492,9 +495,9 @@ class DimensionSystem(object):
         """
         dims = self.dim_vector(dim)
         symbols = [i.symbol if i.symbol is not None else i.name for i in self._base_dims]
-        res = S.Zero
+        res = S.One
         for (s, p) in zip(symbols, dims):
-            res += s*p
+            res *= s**p
         return res
 
     @property

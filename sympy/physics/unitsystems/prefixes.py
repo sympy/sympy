@@ -7,10 +7,10 @@ Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
 
-from sympy import sympify
+from sympy import sympify, Expr
 
 
-class Prefix(object):
+class Prefix(Expr):
     """
     This class represent prefixes, with their name, symbol and factor.
 
@@ -29,16 +29,34 @@ class Prefix(object):
     - defines multiplication with prefixes (which is the case for the Unit
       class).
     """
+    _op_priority = 13.0
 
-    def __init__(self, name, abbrev, exponent, base=sympify(10)):
+    def __new__(cls, name, abbrev, exponent, base=sympify(10)):
 
-        self.name = name
-        self.abbrev = abbrev
+        name = sympify(name)
+        abbrev = sympify(abbrev)
+        exponent = sympify(exponent)
+        base = sympify(base)
 
-        self.factor = base**exponent
+        obj = Expr.__new__(cls, name, abbrev, exponent, base)
+        obj._name = name
+        obj._abbrev = abbrev
+        obj._factor = base**exponent
+        return obj
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def abbrev(self):
+        return self._abbrev
 
     def __str__(self):
-        return self.name
+        if self.base == 10:
+            return "Prefix(%s, %s, %s)" % (self.name, self.abbrev, self.exponent)
+        else:
+            return "Prefix(%s, %s, %s, %s)" % (self.name, self.abbrev, self.exponent, self.base)
 
     __repr__ = __str__
 
@@ -101,9 +119,9 @@ def prefix_unit(unit, prefixes):
 
     prefixed_units = []
 
-    for prefix in prefixes:
-        prefixed_units.append(Unit(unit, abbrev=unit.abbrev,
-                                   prefix=prefixes[prefix]))
+    for prefix_abbr, prefix in prefixes.items():
+        prefixed_units.append(Unit("%s%s" % (prefix.name, unit.name), unit.dimension, unit.factor, unit.abbrev,
+                                   prefix=prefix))
 
     return prefixed_units
 

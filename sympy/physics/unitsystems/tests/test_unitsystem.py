@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
+from sympy.physics.unitsystems.definitions import (m, s, c, kg)
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
     action
 from sympy.physics.unitsystems.units import Unit, UnitSystem
 from sympy.physics.unitsystems.quantities import Quantity
 from sympy.utilities.pytest import raises
-
-
-m = Unit(length, abbrev="m")
-s = Unit(time, abbrev="s")
-kg = Unit(mass, factor=10**3, abbrev="kg")
-c = Unit(velocity, abbrev="c")
 
 
 def test_definition():

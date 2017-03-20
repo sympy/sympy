@@ -23,5 +23,6 @@ this page if you are willing to help.
 """
 
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
-from sympy.physics.unitsystems.units import Unit, Constant, UnitSystem
+from sympy.physics.unitsystems.units import Unit, UnitSystem
 from sympy.physics.unitsystems.quantities import Quantity
+from sympy.physics.unitsystems.definitions import *
