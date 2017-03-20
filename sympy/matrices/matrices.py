@@ -31,34 +31,6 @@ def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
-def _next_pivot_down_right(matrix, pivot_row, pivot_col, iszerofunc):
-    """Locates the pivot position by testing if the element at (pivot_row, pivot_col) is zero,
-    and then incrementing the row index until a non-zero element is encountered, or the row index is out of range.
-    If a pivot is not found, then the column index is incremented, the row index is reset to the original value,
-    and the search is repeated.
-    Returns the row and column indices of the pivot position if a pivot is encountered, otherwise returns the
-    dimensions of the input matrix."""
-    for candidate_pivot_col in range(pivot_col, matrix.cols):
-        for candidate_pivot_row in range(pivot_row, matrix.rows):
-            if not iszerofunc(matrix[candidate_pivot_row, candidate_pivot_col]):
-                return candidate_pivot_row, candidate_pivot_col
-
-    return matrix.rows, matrix.cols
-
-def _next_pivot_down(matrix, pivot_row, pivot_col, iszerofunc):
-    """Locates the pivot position by testing if the element at (pivot_row, pivot_col) is zero,
-    and then incrementing the row index until a non-zero element is encountered, or the row index is out of range.
-    Returns the row and column indices of the pivot position if a pivot is encountered, otherwise raises a
-    ValueError."""
-    for candidate_pivot_row in range(pivot_row, matrix.rows):
-        if not iszerofunc(matrix[candidate_pivot_row, pivot_col]):
-            return candidate_pivot_row, pivot_col
-
-    # Did not find a non-zero pivot in the subcolumn whose first element is at (pivot_row, pivot_col).
-    # Raise a ValueError to mimic the behavior of previous versions of LUdecomposition_Simple() that
-    # did not compute the LU decomposition of a rank deficient matrix.
-    raise ValueError("No nonzero pivot found.")
-
 class MatrixError(Exception):
     pass
 
@@ -3949,28 +3921,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         return L, U, p
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero, decomposerankdeficient=False):
-        """Driver function for computing the LU decomposition of a matrix, where the output is a single matrix containing the
-        L and U factors, and a list of row permutations. See the documentaion for LUCombined for more detail about how the
-        outputs of this function, and the a description of the iszerofunc keyword argument.
-        The default behavior is to raise a ValueError if this function is passed a matrix whose number of columns or rows
-        exceeds its rank. Pass the keywordargument decomposerankdeficient=True to compute the LU decomposition of any input
-        matrix.
-        """
-
-        # Compute the LU decomposition regardless of the value of decomposerankdeficient,
-        # and check if its rank deficient instead of exiting the computation as soon as rank deficiency is detected.
-        lu, row_permutations = self.LUCombined(iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right)
-        final_pivot_i = min(self.rows, self.cols)-1
-
-        if not decomposerankdeficient and final_pivot_i != -1 and iszerofunc(lu[final_pivot_i, final_pivot_i]):
-            # Caller specifed that we should not return the factors if the input matrix is rank deficient,
-            # and the input matrix has at least one entry.
-            # The rank of the input matrix is strictly less than min(num rows, num cols) if the last entry on
-            # U's diagonal is zero.
-            raise ValueError("Input matrix is rank deficient. Pass decomposerankdeficient=True to compute LU decomposition.")
-        return lu, row_permutations
-
-    def LUCombined(self, iszerofunc=_iszero, nextpivotfunc=_next_pivot_down_right):
         """Compute an lu decomposition of m x n matrix A, where
         P*A = L*U
         L is m x m lower triangular with unit diagonal
@@ -3985,10 +3935,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         U is stored in the upper triangular portion of lu, that is lu[i ,j] = U[i, j] whenever i <= j.
         perm contains the integers in range(0, m), where each integer occurs exactly once.
         iszerofunc is a callable that returns a boolean indicating if its input is zero.
-        nextpivotfunc is a callable that returns the row and column indices of the location of the next pivot.
-        The default of nextpivotfunc looks for a nonzero pivot in the current pivot position.
-        If this entry is zero, then it looks in the subcolumn below the current position, and then in subcolumns
-        to the right of the current pivot position until all candidates have been exhausted.
+        If iszerofunc may return None if it cannot determine if its input is zero.
+        decomposerankdeficient is a keyword argument that determines if this function raises a ValueError when passed
+        a matrix whose rank is strictly less than min(num rows, num cols).
+        The default is raise a ValueError.
 
         See Also
         ========
@@ -4004,39 +3954,57 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             # entries.
             return self.zeros(self.rows, self.cols), []
 
-        def next_pivot_f(matrix, row, col):
-            return nextpivotfunc(matrix, row, col, iszerofunc)
-
         lu = self.as_mutable()
         row_swaps = []
 
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
 
-            pivot_row_cand, pivot_col = next_pivot_f(lu, pivot_row, pivot_col)
-            if pivot_col == lu.cols:
+            for candidate_pivot_col in range(pivot_col, self.cols):
+                for candidate_pivot_row in range(pivot_row, self.rows):
+                    iszeropivot = iszerofunc(lu[candidate_pivot_row, candidate_pivot_col])
+                    if iszeropivot is None:
+                        iszeropivot = False
+                        break
+                    if not iszeropivot:
+                        break
+                if not iszeropivot:
+                    break
+            pivot_col = candidate_pivot_col
+
+            if not decomposerankdeficient and pivot_col != pivot_row:
+                # All entries including and below the pivot position are zero, which indicates that the
+                # rank of the matrix is strictly less than min(num rows, num cols)
+                # Mimic behavior of previous implementation, by throwing a ValueError.
+                raise ValueError("Rank of matrix is strictly less than number of rows or columns. "
+                                 "Pass keyword argument decomposerankdeficient=True to compute LU decomposition "
+                                 "of this matrix.")
+
+            elif iszeropivot:
+                # iszeropivot is True after pivot search has completed indicates that there are no more entries to zero,
+                # so Gaussian elimination is complete.
                 return lu, row_swaps
 
-            if pivot_row != pivot_row_cand:
+            if pivot_row != candidate_pivot_row:
                 # Row swap book keeping:
                 # Record which rows were swapped.
                 # Update stored portion of L factor by multiplying L on the left and right with the current
                 # permutation.
                 # Swap rows of U.
-                row_swaps.append([pivot_row, pivot_row_cand])
+                row_swaps.append([pivot_row, candidate_pivot_row])
 
                 # Update L.
                 for col in range(0, pivot_row):
-                    lu[pivot_row, col], lu[pivot_row_cand, col] = lu[pivot_row_cand, col], lu[pivot_row, col]
+                    lu[pivot_row, col], lu[candidate_pivot_row, col] = lu[candidate_pivot_row, col], lu[pivot_row, col]
 
                 # Swap rows of U in the pivot column.
-                lu[pivot_row, pivot_col] = lu[pivot_row_cand, pivot_col]
-                lu[pivot_row_cand, pivot_col] = 0
+                lu[pivot_row, pivot_col] = lu[candidate_pivot_row, pivot_col]
+                lu[candidate_pivot_row, pivot_col] = S.Zero
 
                 for col in range(pivot_col+1, lu.cols):
                     tmp = lu[pivot_row, col]
-                    lu[pivot_row, col] = lu[pivot_row_cand, col]
-                    lu[pivot_row_cand, col] = tmp
+                    lu[pivot_row, col] = lu[candidate_pivot_row, col]
+                    lu[candidate_pivot_row, col] = tmp
 
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below (pivot_row, pivot_row).
