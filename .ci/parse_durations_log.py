@@ -28,12 +28,15 @@ def main(limits=(10, .1)):
     parses durations.log (see generate_durations_log.sh for how to generate that file)
     """
     groupings = [[] for _ in range(len(limits))]
+    accumul_t = [0.0 for _ in range(len(limits))]
     for test_id, time in read_log():
         for idx, lim in enumerate(limits):
             if time >= lim:
                 groupings[idx].append(test_id)
-    open(os.path.join(ci_folder, 'durations.json'), 'wt').write(json.dumps([sorted(gr) for gr in groupings]))
-
+                accumul_t[idx] += time
+    json_data = json.dumps([sorted(gr) for gr in groupings], indent=4)
+    open(os.path.join(ci_folder, 'durations.json'), 'wt').write(json_data)
+    print('accumulated_times: %s' % str(accumul_t))
 
 if __name__ == '__main__':
     main()
