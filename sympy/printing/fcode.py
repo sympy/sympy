@@ -50,14 +50,16 @@ known_functions = {
     "conjugate": "conjg"
 }
 
-def _sign_as_Piecewise_args(arg):
-    from sympy import Abs
+def _sign_as_Piecewise(sgn):
+    from sympy import Abs, Piecewise
+    arg, = sgn.args
     if arg.is_integer:
-        return (0, Eq(arg, 0)), (isign(1, arg), True)
+        pw_args = (0, Eq(arg, 0)), (isign(1, arg), True)
     elif arg.is_complex:
-        return (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
+        pw_args = (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
     else:
-        return (0, Eq(arg, 0)), (dsign(1, arg), True)
+        pw_args = (0, Eq(arg, 0)), (dsign(1, arg), True)
+    return Piecewise(*pw_args)
 
 
 class FCodePrinter(CodePrinter):
@@ -109,6 +111,12 @@ class FCodePrinter(CodePrinter):
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
+
+    def doprint(self, expr, assign_to=None):
+        from sympy.functions import sign
+        new_expr = expr.replace(lambda arg: isinstance(arg, sign),
+                                lambda arg: _sign_as_Piecewise(arg))
+        return super(FCodePrinter, self).doprint(new_expr, assign_to)
 
     def _rate_index_position(self, p):
         return -p*5
@@ -181,20 +189,6 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError("Using Piecewise as an expression using "
                                       "inline operators is not supported in "
                                       "standards earlier than Fortran95.")
-
-    def _print_Assignment(self, expr):
-        from sympy.functions import sign
-        if isinstance(expr.rhs, sign) and self._settings["standard"] < 95:
-            from sympy import Piecewise
-            pw_args = _sign_as_Piecewise_args(expr.rhs.args[0])
-            return self._print(Piecewise(*[(Assignment(expr.lhs, e), c) for e, c in pw_args]))
-        return super(FCodePrinter, self)._print_Assignment(expr)
-
-    def _print_sign(self, expr):
-        if self._settings["standard"] < 95:
-            raise NotImplementedError("`sign` with inline operators requires Fortran95.")
-        from sympy import Piecewise
-        return self._print(Piecewise(*_sign_as_Piecewise_args(expr.args[0])))
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
