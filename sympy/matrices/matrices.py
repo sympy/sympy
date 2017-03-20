@@ -1155,6 +1155,15 @@ class MatrixOperations(MatrixRequired):
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
+    def _eval_applyfunc(self, f):
+        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        return out
+
+    def _eval_as_real_imag(self):
+        from sympy.functions.elementary.complexes import re, im
+
+        return (self.applyfunc(re), self.applyfunc(im))
+
     def _eval_conjugate(self):
         return self.applyfunc(lambda x: x.conjugate())
 
@@ -1189,8 +1198,11 @@ class MatrixOperations(MatrixRequired):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
-        return out
+        return self._eval_applyfunc(f)
+
+    def as_real_imag(self):
+        """Returns a tuple containing the (real, imaginary) part of matrix."""
+        return self._eval_as_real_imag()
 
     def conjugate(self):
         """Return the by-element conjugation.
@@ -1667,7 +1679,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
     __array_priority__ = 11
 
     is_Matrix = True
-    is_Identity = None
     _class_priority = 3
     _sympify = staticmethod(sympify)
 
@@ -1703,6 +1714,10 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
                 mml += self[i, j].__mathml__()
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
+
+    # needed for python 2 compatibility
+    def __ne__(self, other):
+        return not self == other
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -2528,10 +2543,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
-    def as_real_imag(self):
-        """Returns a tuple containing the (real, imaginary) part of matrix."""
-        return self.as_real_imag()
-
     def copy(self):
         """
         Returns the copy of a matrix.
@@ -2686,7 +2697,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             det = sign * M[n - 1, n - 1]
 
         return det.expand()
-
 
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
@@ -5039,7 +5049,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
     try:
         if A._class_priority > B._class_priority:

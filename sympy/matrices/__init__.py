@@ -18,10 +18,10 @@ from .sparse import MutableSparseMatrix
 
 SparseMatrix = MutableSparseMatrix
 
-from .immutable import ImmutableMatrix, ImmutableSparseMatrix
+from .immutable import ImmutableDenseMatrix, ImmutableSparseMatrix
 
 MutableSparseMatrix = SparseMatrix
-ImmutableDenseMatrix = ImmutableMatrix
+ImmutableMatrix = ImmutableDenseMatrix
 
 from .expressions import (MatrixSlice, BlockDiagMatrix, BlockMatrix,
         FunctionMatrix, Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr,
