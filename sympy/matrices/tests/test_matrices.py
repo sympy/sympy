@@ -608,7 +608,7 @@ def test_LUdecomp():
                       [4, 5, 6],
                       [7, 8, 9],
                       [10, 11, 12]])
-    L, U, p = testmat.LUdecomposition(decomposerankdeficient=True)
+    L, U, p = testmat.LUdecomposition(allowrankdeficient=True)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permuteBkwd(p) - testmat == zeros(4, 3)
@@ -617,7 +617,7 @@ def test_LUdecomp():
     testmat = Matrix([[1, 2, 3],
                       [2, 4, 6],
                       [4, 5, 6]])
-    L, U, p = testmat.LUdecomposition(decomposerankdeficient=True)
+    L, U, p = testmat.LUdecomposition(allowrankdeficient=True)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permuteBkwd(p) - testmat == zeros(3)
