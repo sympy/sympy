@@ -285,8 +285,8 @@ class DifferentialExtension(object):
             # has been done to guarantee that the simplest solution is
             # returned and that it would be affected be using different
             # variables. Though it is possible that this is the case
-            # one should know that it has not been done intentionally so
-            # further improvements may possible.
+            # one should know that it has not been done intentionally, so
+            # further improvements may be possible.
 
             # TODO: This probably doesn't need to be completely recomputed at
             # each pass.
@@ -595,7 +595,8 @@ class DifferentialExtension(object):
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
 
-    # TODO: Implement __repr__
+    def __repr__(self):
+        return '%s(%s, %s)' % (self.__class__.__name__, self.f, self.x)
 
     def __str__(self):
         return str(self._important_attrs)

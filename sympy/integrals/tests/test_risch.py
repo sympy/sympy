@@ -672,3 +672,8 @@ def test_xtothex():
     a = risch_integrate(x**x, x)
     assert a == NonElementaryIntegral(x**x, x)
     assert isinstance(a, NonElementaryIntegral)
+
+
+def test_DifferentialExtension_printing():
+    DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
+    assert repr(DE) == 'DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)'
