@@ -3,6 +3,7 @@
 from __future__ import print_function, division, absolute_import
 
 import os
+from itertools import chain
 import json
 
 import pytest
@@ -11,7 +12,8 @@ import pytest
 
 durations_path = os.path.join('.ci', 'durations.json')
 if os.path.exists(durations_path):
-    veryslow_group, slow_group = json.loads(open(durations_path, 'rt').read())
+    veryslow_group, slow_group = [list(chain(*[[k+'::'+v for v in files] for k, files in group.items()])) for group
+                                  in json.loads(open(durations_path, 'rt').read())]
 else:
     veryslow_group, slow_group = None, None
 

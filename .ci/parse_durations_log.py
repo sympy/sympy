@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import os
 import json
 
 ci_folder = os.path.dirname(__file__)
 
 def read_log():
-    stop_token = '= FAILURES ='
     start_token = '= slowest test durations ='
     start_token_seen = False
     for line in open(os.path.join(ci_folder, 'durations.log')):
-        if stop_token in line:
-            return
-        elif start_token_seen:
-            time, kind, test_id = line.split()
+        if start_token_seen:
+            try:
+                time, kind, test_id = line.split()
+            except:
+                return
+            else:
+                if time[0] not in '0123456789':
+                    return
             if kind != 'call':
                 continue
             if time[-1] != 's':
@@ -25,18 +29,24 @@ def read_log():
 
 def main(limits=(10, .1)):
     """
-    parses durations.log (see generate_durations_log.sh for how to generate that file)
+    parses durations.log (made by generate_durations_log.sh)
     """
-    groupings = [[] for _ in range(len(limits))]
+    groupings = [defaultdict(list) for _ in range(len(limits))]
+    accumul_n = [0 for _ in range(len(limits))]
     accumul_t = [0.0 for _ in range(len(limits))]
     for test_id, time in read_log():
         for idx, lim in enumerate(limits):
             if time >= lim:
-                groupings[idx].append(test_id)
+                fname, tname = test_id.split('::')
+                groupings[idx][fname].append(tname)
                 accumul_t[idx] += time
-    json_data = json.dumps([sorted(gr) for gr in groupings], indent=4)
+                accumul_n[idx] += 1
+                break
+    json_data = json.dumps([{k: sorted(v) for k, v in gr.items()}
+                            for gr in groupings], indent=4, sort_keys=True)
     open(os.path.join(ci_folder, 'durations.json'), 'wt').write(json_data)
-    print('accumulated_times: %s' % str(accumul_t))
+    print('number in group, accumulated_time: %s' %
+          str(list(zip(accumul_n, accumul_t))))
 
 if __name__ == '__main__':
     main()
