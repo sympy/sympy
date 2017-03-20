@@ -33,7 +33,7 @@ def test_finite_diff_weights():
     # d holds all coefficients
     d = finite_diff_weights(4, xl, S(0))
 
-    # Zeroeth derivative
+    # Zeroth derivative
     for i in range(5):
         assert d[0][i] == [S(1)] + [S(0)]*8
 
