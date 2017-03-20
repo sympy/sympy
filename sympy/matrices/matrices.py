@@ -2489,8 +2489,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise AttributeError
         return self.H * mgamma(0)
 
-    def det_bareis(self):
-        """Compute matrix determinant using Bareis' fraction-free
+    def det_bareiss(self):
+        """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
@@ -2539,7 +2539,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     else:
                         return S.Zero
 
-                # proceed with Bareis' fraction-free (FF)
+                # proceed with Bareiss' fraction-free (FF)
                 # form of Gaussian elimination algorithm
                 for i in range(k + 1, n):
                     for j in range(k + 1, n):
@@ -2574,7 +2574,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
 
         det
-        det_bareis
+        det_bareiss
         berkowitz_det
         """
         if not self.is_square:
@@ -2593,18 +2593,18 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return prod.expand()
 
-    def det(self, method="bareis"):
+    def det(self, method="bareiss"):
         """Computes the matrix determinant using the method "method".
 
         Possible values for "method":
-          bareis ... det_bareis
+          bareiss ... det_bareiss
           berkowitz ... berkowitz_det
           det_LU ... det_LU_decomposition
 
         See Also
         ========
 
-        det_bareis
+        det_bareiss
         berkowitz_det
         det_LU
         """
@@ -2616,8 +2616,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise NonSquareMatrixError()
         if not self:
             return S.One
-        if method == "bareis":
-            return self.det_bareis()
+        if method == "bareiss":
+            return self.det_bareiss()
         elif method == "berkowitz":
             return self.berkowitz_det()
         elif method == "det_LU":
