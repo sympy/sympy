@@ -496,7 +496,12 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
     where `a`, `b` and `c` are constants.
 
-    The general solution is of the form::
+    The general solution is of the form:
+    
+    .. math::
+        f(x, y) = F(- a y + b x ) e^{- \frac{c (a x + b y)}{a^2 + b^2}}
+
+    and can be found in sympy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
@@ -567,7 +572,17 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     where `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
     function in `x` and `y`.
 
-    The general solution of the PDE is::
+    The general solution of the PDE is:
+    
+    .. math::
+        f(x, y) = \left. \left[F(\eta) + \frac{1}{b^2 + c^2}
+        \int^{b x + c y} G\left (\frac{b \xi + c \eta}{b^2 + c^2},
+        \frac{- b \eta + c \xi}{b^2 + c^2} \right )
+        e^{\frac{a \xi}{b^2 + c^2}}\, d\xi\right)
+        e^{- \frac{a \xi}{b^2 + c^2}}
+        \right|_{\substack{ \eta=- b y + c x\\ \xi=b x + c y }}
+    
+    and can be found in sympy with ``pdsolve``::
 
         >>> from sympy.solvers import pdsolve
         >>> from sympy.abc import x, y, a, b, c
@@ -662,18 +677,20 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
 def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     r"""
     Solves a first order linear partial differential equation
-    with variable coefficients. The general form of this partial differential equation is
+    with variable coefficients. The general form of this partial
+    differential equation is
 
     .. math:: a(x, y) \frac{df(x, y)}{dx} + a(x, y) \frac{df(x, y)}{dy}
                 + c(x, y) f(x, y) - G(x, y)
 
-    where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary functions
-    in `x` and `y`. This PDE is converted into an ODE by making the following transformation.
+    where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary
+    functions     in `x` and `y`. This PDE is converted into an ODE by
+    making the following transformation.
 
-    1] `\xi` as `x`
+    1. `\xi` as `x`
 
-    2] `\eta` as the constant in the solution to the differential equation
-    `\frac{dy}{dx} = -\frac{b}{a}`
+    2. `\eta` as the constant in the solution to the differentia
+      equation `\frac{dy}{dx} = -\frac{b}{a}`
 
     Making the following substitutions reduces it to the linear ODE
 
