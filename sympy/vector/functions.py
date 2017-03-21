@@ -212,9 +212,7 @@ def laplace(scalar, coord_sys):
     if isinstance(scalar, Vector):
         raise TypeError("The Expression should be a Scalar Sympy Expression")
     else:
-        return coord_sys.delop.dot(coord_sys.delop(scalar).doit()).doit() 
-
-    
+        return coord_sys.delop.dot(coord_sys.delop(scalar).doit()).doit()
 
 def gradient(scalar, coord_sys):
     """

@@ -189,9 +189,7 @@ def test_laplace():
     assert laplace(x*y*z, C) == S.Zero
     assert laplace(x**2*y**2*z**2, C) == \
                    2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
-
     assert laplace(2*y**2*z, C) == 4*z
-    
 def test_scalar_potential():
     assert scalar_potential(Vector.zero, C) == 0
     assert scalar_potential(i, C) == x
