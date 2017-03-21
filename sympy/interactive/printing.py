@@ -105,6 +105,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy import Basic
         from sympy.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.core.compatibility import integer_types
+        from sympy.tensor.array import NDimArray # all other types inherit from NDimArray
+
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
@@ -116,6 +119,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
+            return True
+        elif isinstance(o, NDimArray):
             return True
         return False
 
@@ -176,8 +181,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.tensor.array import NDimArray # all other types inherit from NDimArray
+
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic] + list(integer_types)
+                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
