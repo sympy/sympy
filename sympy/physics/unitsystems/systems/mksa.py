@@ -8,7 +8,6 @@ MKS stands for "meter, kilogram, second, ampere".
 
 from __future__ import division
 
-
 from sympy.physics.unitsystems.definitions import A, V, C, S, ohm, F, H, Z0, Wb, T
 from sympy.physics.unitsystems.dimensions import (voltage, impedance,
                                                   conductance, capacitance, inductance, charge,

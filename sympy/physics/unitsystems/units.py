@@ -10,7 +10,7 @@ from sympy.physics.unitsystems.prefixes import PREFIXES
 
 from sympy.physics.unitsystems.quantities import Quantity
 
-from sympy import sympify
+from sympy import sympify, Symbol, S
 from sympy.core.compatibility import string_types
 from .dimensions import DimensionSystem
 
@@ -35,13 +35,16 @@ class Unit(Quantity):
         if isinstance(prefix, string_types):
             prefix = PREFIXES[prefix]
 
-        if prefix is not None:
-            factor *= prefix
-            prefix = sympify(prefix)
-
         obj = Quantity.__new__(cls, name, dimension, factor, abbrev, prefix, **assumptions)
         obj._prefix = prefix
         return obj
+
+    @property
+    def factor(self):
+        if self.prefix is None:
+            return self._factor_without_prefix
+        else:
+            return self._factor_without_prefix * self.prefix.factor
 
     @property
     def prefix(self):
@@ -50,22 +53,18 @@ class Unit(Quantity):
     @property
     def abbrev(self):
         if self.prefix is not None:
-            return "%s%s" % (self.prefix.abbrev, self.abbrev)
+            return Symbol("%s%s" % (self.prefix.abbrev, self._abbrev))
         else:
             return self._abbrev
 
-    def is_compatible(self, other):
-        """
-        Test if argument is a unit and has the same dimension as self.
-
-        This function is used to verify that some operations can be done.
-        """
-
-        if isinstance(other, Unit):
-            if self.dim == other.dim:
-                return True
-
-        return False
+    def __eq__(self, other):
+        if not isinstance(other, Quantity):
+            return False
+        if self.dimension != other.dimension:
+            return False
+        if self.factor != other.factor:
+            return False
+        return True
 
 
 class UnitSystem(object):
@@ -111,7 +110,7 @@ class UnitSystem(object):
         if self.name != "":
             return self.name
         else:
-            return "(%s)" % ", ".join(str(d) for d in self._base_units)
+            return "UnitSystem((%s))" % ", ".join(str(d) for d in self._base_units)
 
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
@@ -128,34 +127,6 @@ class UnitSystem(object):
             raise KeyError(key)
 
         return u
-
-    def get_unit(self, unit):
-        """
-        Find a specific unit which is part of the system.
-
-        unit can be a string or a dimension object. If no unit is found, then
-        return None.
-        """
-
-        #TODO: if the argument is a list, return a list of all matching dims
-
-        found_unit = None
-
-        #TODO: use copy instead of direct assignment for found_dim?
-        if isinstance(unit, str):
-            for u in self._units:
-                #TODO: verify not only abbrev
-                if unit in (u.abbrev,):
-                    found_unit = u
-                    break
-        elif isinstance(unit, Unit):
-            try:
-                i = self._units.index(unit)
-                found_unit = self._units[i]
-            except ValueError:
-                pass
-
-        return found_unit
 
     def extend(self, base, units=(), name="", description=""):
         """
@@ -178,10 +149,10 @@ class UnitSystem(object):
         Units are displayed by decreasing power.
         """
 
-        res = ""
+        res = S.One
 
         factor = unit.factor
-        vec = self._system.dim_vector(unit.dim)
+        vec = self._system.dim_vector(unit.dimension)
 
         for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
                              reverse=True):
@@ -190,11 +161,11 @@ class UnitSystem(object):
             if p == 0:
                 continue
             elif p == 1:
-                res += "%s " % str(u)
+                res *= u
             else:
-                res += "%s^%d " % (str(u), p)
+                res *= u**p
 
-        return "%g %s" % (factor, res.strip())
+        return factor * res
 
     @property
     def dim(self):

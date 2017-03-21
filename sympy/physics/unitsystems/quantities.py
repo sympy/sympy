@@ -22,7 +22,9 @@ class Quantity(Expr):
 
     def __new__(cls, name, dimension, factor=S.One, abbrev=None, prefix=None, **assumptions):
 
-        name = Symbol(name)
+        if not isinstance(name, Symbol):
+            name = Symbol(name)
+
         if not isinstance(dimension, dimensions.Dimension):
             dimension = getattr(dimensions, str(dimension))
         factor = sympify(factor)
@@ -39,7 +41,7 @@ class Quantity(Expr):
             obj = Expr.__new__(cls, name, dimension, factor, abbrev, prefix)
         obj._name = name
         obj._dimension = dimension
-        obj._factor = factor
+        obj._factor_without_prefix = factor
         obj._abbrev = abbrev
         return obj
 
@@ -65,7 +67,7 @@ class Quantity(Expr):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
-        return self._factor
+        return self._factor_without_prefix
 
     def __str__(self):
         return "%s" % (self.name)
@@ -109,11 +111,11 @@ class Quantity(Expr):
 
         >>> from sympy.physics.unitsystems import liter
         >>> liter.convert_to(meter**3)
-        1/1000
+        meter**3/1000
         """
         factor, dimension = self._collect_factor_and_dimension(other)
 
         if self.dimension != dimension:
-            raise ValueError("only compatible dimensions can be converted")
+            return self
 
         return self.factor/factor*other

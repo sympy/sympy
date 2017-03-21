@@ -686,7 +686,6 @@ class StrPrinter(Printer):
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
 
-
     def _print_Unit(self, expr):
         # Unfortunately, two classes share the same name.
         # Use `hasattr` trick to distinguish them:

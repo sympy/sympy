@@ -42,27 +42,22 @@ class Dimension(Expr):
         >>> time
         Dimension(time)
 
-    Base dimensions need to be registered in the dependency dictionary:
-
-        >>> length.register_as_base_dim()
-        >>> time.register_as_base_dim()
-
     Dimensions can be composed using multiplication, division and
     exponentiation (by a number) to give new dimensions. Addition and
     subtraction is defined only when the two objects are the same dimension.
 
-        >>> velocity = length.div(time)
+        >>> velocity = length / time
         >>> velocity
         Dimension(length/time)
         >>> velocity.get_dimensional_dependencies()
-        {length: 1, time: -1}
-        >>> length.add(length)
+        {'length': 1, 'time': -1}
+        >>> length + length
         Dimension(length)
-        >>> l2 = length.pow(2)
+        >>> l2 = length**2
         >>> l2
         Dimension(length**2)
         >>> l2.get_dimensional_dependencies()
-        {length: 2}
+        {'length': 2}
 
     """
 

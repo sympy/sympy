@@ -17,13 +17,13 @@ def test_prefix_operations():
 def test_prefix_unit():
     from sympy.physics.unitsystems import Unit, Dimension
 
-    length = Dimension(length=1)
-    m = Unit(length, abbrev="m")
+    length = Dimension("length")
+    m = Unit("meter", length, 1, abbrev="m")
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
-    res = [Unit(length, abbrev="m", prefix=PREFIXES["m"]),
-           Unit(length, abbrev="m", prefix=PREFIXES["c"]),
-           Unit(length, abbrev="m", prefix=PREFIXES["d"])]
+    res = [Unit("millimeter", length, 1, abbrev="m", prefix=PREFIXES["m"]),
+           Unit("centimeter", length, 1, abbrev="m", prefix=PREFIXES["c"]),
+           Unit("decimeter", length, 1, abbrev="m", prefix=PREFIXES["d"])]
 
     assert set(prefix_unit(m, pref)) == set(res)

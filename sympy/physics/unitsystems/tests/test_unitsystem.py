@@ -9,10 +9,10 @@ from sympy.utilities.pytest import raises
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
-    dm = Unit(m, factor=0.1)
+    dm = Unit("dm", length, factor=0.1)
 
     base = (m, s)
-    base_dim = (m.dim, s.dim)
+    base_dim = (m.dimension, s.dimension)
     ms = UnitSystem(base, (c, dm), "MS", "MS system")
 
     assert set(ms._base_units) == set(base)
@@ -31,47 +31,22 @@ def test_error_definition():
 
 def test_str_repr():
     assert str(UnitSystem((m, s), name="MS")) == "MS"
-    assert str(UnitSystem((m, s))) == "(m, s)"
+    assert str(UnitSystem((m, s))) == "UnitSystem((meter, second))"
 
-    assert (repr(UnitSystem((m, s))) == "<UnitSystem: (%s, %s)>"
-                                        % (m.abbrev_dim, s.abbrev_dim))
-
-
-def test_call():
-    A = Unit(current)
-    Js = Unit(action)
-    mksa = UnitSystem((m, kg, s, A), (Js,))
-
-    assert mksa(Js) == mksa.print_unit_base(Js)
-    assert mksa(Js.dim) == mksa._system(Js.dim)
-
-    q = Quantity(10, Js)
-
-    assert mksa(q) == "%g %s" % (q.factor, mksa(Js))
-
-
-def test_get_unit():
-    ms = UnitSystem((m, s), (c,))
-
-    assert ms.get_unit("s") == s
-    assert ms.get_unit(s) == s
-    assert ms.get_unit(Unit(time)) == s
-
-    assert ms["s"] == ms.get_unit("s")
-    raises(KeyError, lambda: ms["g"])
+    assert repr(UnitSystem((m, s))) == "<UnitSystem: (%s, %s)>" % (m, s)
 
 
 def test_print_unit_base():
-    A = Unit(current)
-    Js = Unit(action)
+    A = Unit("A", current, 1)
+    Js = Unit("Js", action, 1)
     mksa = UnitSystem((m, kg, s, A), (Js,))
 
-    assert mksa.print_unit_base(Js) == "0.001 m^2 kg s^-2"
+    assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
 
 
 def test_extend():
     ms = UnitSystem((m, s), (c,))
-    Js = Unit(action)
+    Js = Unit("Js", action, 1)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))

@@ -52,6 +52,10 @@ class Prefix(Expr):
     def abbrev(self):
         return self._abbrev
 
+    @property
+    def factor(self):
+        return self._factor
+
     def __str__(self):
         if self.base == 10:
             return "Prefix(%s, %s, %s)" % (self.name, self.abbrev, self.exponent)
@@ -109,7 +113,7 @@ def prefix_unit(unit, prefixes):
         >>> from sympy.physics.unitsystems.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
         >>> from sympy.physics.unitsystems.systems import mks
-        >>> m = mks["m"]
+        >>> from sympy.physics.unitsystems import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
         >>> prefix_unit(m, pref)  #doctest: +SKIP
         [cm, dm, mm]
@@ -141,7 +145,7 @@ PREFIXES = {
     'd': Prefix('deci', 'd', -1),
     'c': Prefix('centi', 'c', -2),
     'm': Prefix('milli', 'm', -3),
-    'µ': Prefix('micro', 'µ', -6),
+    #'µ': Prefix('micro', 'µ', -6),
     'n': Prefix('nano', 'n', -9),
     'p': Prefix('pico', 'p', -12),
     'f': Prefix('femto', 'f', -15),

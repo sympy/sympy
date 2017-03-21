@@ -1,4 +1,5 @@
 from sympy import pi
+from sympy import S as S_singleton
 from sympy.physics.unitsystems import Quantity
 from sympy.physics.unitsystems import Unit
 from sympy.physics.unitsystems.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
@@ -54,10 +55,10 @@ nmi = nautical_mile = nautical_miles = Quantity("nautical_mile", length, 6076*0.
 
 # Common volume and area units
 
-l = liter = liters = Quantity("liter", length**3, S.One / 1000)
-dl = deciliter = deciliters = Quantity("deciliter", length**3, S.One / 10**4)
-cl = centiliter = centiliters = Quantity("centiliter", length**3, S.One / 10**5)
-ml = milliliter = milliliters = Quantity("milliliter", length**3, S.One / 10**6)
+l = liter = liters = Quantity("liter", length**3, S_singleton.One / 1000)
+dl = deciliter = deciliters = Quantity("deciliter", length**3, S_singleton.One / 10**4)
+cl = centiliter = centiliters = Quantity("centiliter", length**3, S_singleton.One / 10**5)
+ml = milliliter = milliliters = Quantity("milliliter", length**3, S_singleton.One / 10**6)
 
 ### COMMON TIME QUANTITIES
 
