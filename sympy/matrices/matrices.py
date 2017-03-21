@@ -23,6 +23,8 @@ from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
+from sympy.core.decorators import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -2619,6 +2621,10 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             raise AttributeError
         return self.H * mgamma(0)
 
+    @deprecated(useinstead="det_bareiss", issue=12363, deprecated_since_version="1.1")
+    def det_bareis(self):
+        return self.det_bareiss()
+
     def det_bareiss(self):
         """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
@@ -2724,6 +2730,11 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         return prod.expand()
 
     def det(self, method="bareiss"):
+        if method == "bareis":
+            SymPyDeprecationWarning(
+                            feature="Using 'bareis' to compute matrix determinant",
+                            useinstead="'bareiss'").warn()
+            method = "bareiss"
         """Computes the matrix determinant using the method "method".
 
         Possible values for "method":

@@ -17,6 +17,9 @@ from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.solvers import solve
 from sympy.assumptions import Q
+import warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
 
 from sympy.abc import a, b, c, d, x, y, z
 
@@ -317,7 +320,8 @@ def test_determinant():
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
-    assert M.det(method="bareiss") == -1
+    assert M.det(method="bareis") == -1
+    # Test to check if deprecation warning works.
     assert M.det(method="berkowitz") == -1
 
     M = Matrix(( (x,   1),
