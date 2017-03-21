@@ -5,8 +5,7 @@ from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
-from sympy.vector.functions import (curl, divergence, gradient,
-                                    laplacian, vector_laplacian,
+from sympy.vector.functions import (curl, divergence, gradient, laplacian,
                                     is_conservative, is_solenoidal,
                                     scalar_potential,
                                     scalar_potential_difference)
@@ -100,15 +99,15 @@ def test_del_operator():
     assert ((k & delop)(v)).doit() == k
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
-    # Tests for Laplacian
+    # Tests for laplacian on scalar fields
     assert laplacian(x*y*z, C) == S.Zero
     assert laplacian(x**2, C) == S(2)
     assert laplacian(x**2*y**2*z**2, C) == \
                     2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
 
-    # Tests for Vector Laplacian
-    assert vector_laplacian(x*y*z*(i + j + k), C) == Vector.zero
-    assert vector_laplacian(x*y**2*z*(i + j + k), C) == \
+    # Tests for laplacian on vector fields
+    assert laplacian(x*y*z*(i + j + k), C) == Vector.zero
+    assert laplacian(x*y**2*z*(i + j + k), C) == \
                             2*x*z*i + 2*x*z*j + 2*x*z*k
 
 
