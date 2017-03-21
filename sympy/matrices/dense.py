@@ -1623,7 +1623,8 @@ def wronskian(functions, var, method='bareiss'):
     if method == "bareis":
         SymPyDeprecationWarning(
                 feature="Using 'bareis' to compute matrix determinant",
-                useinstead="'bareiss'").warn()
+                useinstead="'bareiss'",
+                issue=12363, deprecated_since_version="1.1").warn()
         method = "bareiss"
     """
     Compute Wronskian for [] of functions
