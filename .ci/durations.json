@@ -30,7 +30,6 @@
             "test_integer",
             "test_pow_pos_neg",
             "test_rational_irrational",
-            "test_real",
             "test_zero_positive"
         ],
         "sympy/categories/tests/test_drawing.py": [
@@ -60,9 +59,6 @@
         "sympy/geometry/tests/test_curve.py": [
             "test_free_symbols"
         ],
-        "sympy/geometry/tests/test_ellipse.py": [
-            "test_ellipse_geom"
-        ],
         "sympy/geometry/tests/test_line.py": [
             "test_line_intersection"
         ],
@@ -90,8 +86,7 @@
         ],
         "sympy/integrals/tests/test_integrals.py": [
             "test_evalf_integrals",
-            "test_issue_3940",
-            "test_issue_7130"
+            "test_issue_3940"
         ],
         "sympy/integrals/tests/test_meijerint.py": [
             "test_expint",
@@ -104,7 +99,6 @@
         ],
         "sympy/integrals/tests/test_transforms.py": [
             "test_inverse_mellin_transform",
-            "test_mellin_transform",
             "test_mellin_transform_bessel"
         ],
         "sympy/matrices/tests/test_matrices.py": [
@@ -144,10 +138,8 @@
             "test_meijerg",
             "test_meijerg_expand",
             "test_prudnikov_10",
-            "test_prudnikov_2",
             "test_prudnikov_2F1",
             "test_prudnikov_3",
-            "test_prudnikov_4",
             "test_prudnikov_5",
             "test_prudnikov_6",
             "test_prudnikov_8",
@@ -185,7 +177,6 @@
         "sympy/assumptions/tests/test_matrices.py": [
             "test_MatrixSlice",
             "test_field_assumptions",
-            "test_fullrank",
             "test_invertible",
             "test_non_atoms",
             "test_non_trivial_implies",
@@ -225,6 +216,7 @@
             "test_old_assump",
             "test_pos_neg",
             "test_prime",
+            "test_real",
             "test_satask",
             "test_zero",
             "test_zero_pow"
@@ -264,7 +256,6 @@
             "test_center",
             "test_centralizer",
             "test_normal_closure",
-            "test_rubik1",
             "test_subgroup_search"
         ],
         "sympy/combinatorics/tests/test_polyhedron.py": [
@@ -292,18 +283,15 @@
             "test_gosper_sum_algebraic",
             "test_gosper_sum_indefinite",
             "test_gosper_sum_iterated",
-            "test_gosper_sum_parametric",
-            "test_gosper_term"
+            "test_gosper_sum_parametric"
         ],
         "sympy/concrete/tests/test_guess.py": [
             "test_guess_generating_function"
         ],
         "sympy/concrete/tests/test_products.py": [
             "test_Product_is_convergent",
-            "test_issue_9983",
             "test_karr_proposition_2a",
-            "test_karr_proposition_2b",
-            "test_simplify"
+            "test_karr_proposition_2b"
         ],
         "sympy/concrete/tests/test_sums_products.py": [
             "test_Sum_doit",
@@ -380,8 +368,7 @@
             "test_Derivative_as_finite_difference",
             "test_function__eval_nseries",
             "test_issue_7231",
-            "test_issue_8469",
-            "test_nfloat"
+            "test_issue_8469"
         ],
         "sympy/core/tests/test_numbers.py": [
             "test_simplify_AlgebraicNumber"
@@ -390,9 +377,6 @@
             "test_equals",
             "test_univariate_relational_as_set"
         ],
-        "sympy/core/tests/test_symbol.py": [
-            "test_ineq_unequal"
-        ],
         "sympy/core/tests/test_sympify.py": [
             "test_kernS"
         ],
@@ -400,7 +384,6 @@
             "test_B2",
             "test_B3",
             "test_C20",
-            "test_C21",
             "test_C22",
             "test_H15",
             "test_H17",
@@ -413,21 +396,17 @@
             "test_K3",
             "test_L9",
             "test_M10",
-            "test_M12",
             "test_M13",
             "test_M14",
             "test_M15",
             "test_M16",
             "test_M2",
-            "test_M24",
             "test_M25",
             "test_M28",
             "test_M38",
             "test_M39",
             "test_M7",
             "test_N10",
-            "test_N11",
-            "test_N12",
             "test_N13",
             "test_N14",
             "test_N15",
@@ -436,12 +415,10 @@
             "test_N5",
             "test_N6",
             "test_N7",
-            "test_P11",
             "test_P13",
             "test_P17",
             "test_P19",
             "test_P22",
-            "test_P25",
             "test_P26",
             "test_P27",
             "test_P32",
@@ -449,7 +426,6 @@
             "test_R1",
             "test_R10",
             "test_R15",
-            "test_R17",
             "test_R19",
             "test_R20",
             "test_R23",
@@ -487,7 +463,6 @@
             "test_W14",
             "test_W15",
             "test_W17",
-            "test_W18",
             "test_W20",
             "test_W21",
             "test_W23",
@@ -520,7 +495,6 @@
             "test_Y4",
             "test_Y5_Y6",
             "test_Y7",
-            "test_Y8",
             "test_Y9",
             "test_Z1",
             "test_Z2",
@@ -534,7 +508,6 @@
         ],
         "sympy/diffgeom/tests/test_diffgeom.py": [
             "test_R2",
-            "test_helpers_and_coordinate_dependent",
             "test_intcurve_diffequ"
         ],
         "sympy/diffgeom/tests/test_function_diffgeom_book.py": [
@@ -585,15 +558,11 @@
         "sympy/functions/elementary/tests/test_exponential.py": [
             "test_exp_values"
         ],
-        "sympy/functions/elementary/tests/test_hyperbolic.py": [
-            "test_asech"
-        ],
         "sympy/functions/elementary/tests/test_interface.py": [
             "test_function_series1",
             "test_function_series3"
         ],
         "sympy/functions/elementary/tests/test_miscellaneous.py": [
-            "test_Max",
             "test_Min",
             "test_issue_11099",
             "test_minmax_assumptions"
@@ -626,15 +595,11 @@
             "test_tan_rewrite"
         ],
         "sympy/functions/special/tests/test_bessel.py": [
-            "test_airyai",
             "test_bessel_rand",
             "test_branching",
             "test_conjugate",
             "test_expand",
             "test_rewrite"
-        ],
-        "sympy/functions/special/tests/test_delta_functions.py": [
-            "test_DiracDelta"
         ],
         "sympy/functions/special/tests/test_elliptic_integrals.py": [
             "test_E",
@@ -645,13 +610,11 @@
         "sympy/functions/special/tests/test_error_functions.py": [
             "test_Li",
             "test__eis",
-            "test__erfs",
             "test_ci",
             "test_ei",
             "test_erf",
             "test_expint",
             "test_fresnel",
-            "test_li",
             "test_si"
         ],
         "sympy/functions/special/tests/test_gamma_functions.py": [
@@ -668,14 +631,12 @@
             "test_meijer",
             "test_meijerg_derivative"
         ],
-        "sympy/functions/special/tests/test_spec_polynomials.py": [
-            "test_jacobi"
-        ],
         "sympy/functions/special/tests/test_zeta_functions.py": [
             "test_derivatives",
             "test_lerchphi_expansion"
         ],
         "sympy/geometry/tests/test_ellipse.py": [
+            "test_ellipse_geom",
             "test_reflect"
         ],
         "sympy/geometry/tests/test_entity.py": [
@@ -686,7 +647,6 @@
             "test_booleans"
         ],
         "sympy/geometry/tests/test_line.py": [
-            "test_arguments",
             "test_issue_2941",
             "test_line3d",
             "test_line_geom",
@@ -700,7 +660,6 @@
             "test_point3D"
         ],
         "sympy/geometry/tests/test_polygon.py": [
-            "test_encloses",
             "test_eulerline",
             "test_reflect",
             "test_triangle_kwargs"
@@ -723,7 +682,6 @@
             "test_from_meijerg",
             "test_multiplication_initial_condition",
             "test_series",
-            "test_to_Sequence",
             "test_to_Sequence_Initial_Coniditons",
             "test_to_expr",
             "test_to_hyper",
@@ -795,22 +753,18 @@
             "test_issue_4517",
             "test_issue_4527",
             "test_issue_4703",
-            "test_issue_4803",
             "test_issue_4884",
             "test_issue_4890",
             "test_issue_4892a",
             "test_issue_4892b",
-            "test_issue_4950",
             "test_issue_4968",
             "test_issue_4992",
-            "test_issue_5167",
             "test_issue_6253",
+            "test_issue_7130",
             "test_issue_7450",
             "test_issue_8368",
             "test_issue_8901",
             "test_limit_bug",
-            "test_multiple_integration",
-            "test_powers",
             "test_series",
             "test_singularities",
             "test_transcendental_functions",
@@ -826,7 +780,6 @@
             "test_issue_9462",
             "test_manualintegrate_inversetrig",
             "test_manualintegrate_parts",
-            "test_manualintegrate_polynomials",
             "test_manualintegrate_trig_substitution",
             "test_manualintegrate_trigonometry",
             "test_manualintegrate_trigpowers",
@@ -843,7 +796,6 @@
             "test_issue_11806",
             "test_issue_6252",
             "test_issue_6348",
-            "test_issue_6860",
             "test_issue_7337",
             "test_issue_8368",
             "test_linear_subs",
@@ -856,8 +808,7 @@
             "test_constant_system",
             "test_is_deriv_k",
             "test_is_log_deriv_k_t_radical_in_field",
-            "test_prde_no_cancel",
-            "test_prde_special_denom"
+            "test_prde_no_cancel"
         ],
         "sympy/integrals/tests/test_quadrature.py": [
             "test_gen_laguerre",
@@ -878,8 +829,6 @@
         ],
         "sympy/integrals/tests/test_risch.py": [
             "test_DifferentialExtension_exp",
-            "test_DifferentialExtension_log",
-            "test_NonElementaryIntegral",
             "test_derivation",
             "test_hermite_reduce",
             "test_integrate_hyperexponential",
@@ -889,9 +838,7 @@
             "test_integrate_primitive",
             "test_recognize_log_derivative",
             "test_residue_reduce",
-            "test_risch_integrate",
-            "test_risch_integrate_float",
-            "test_splitfactor"
+            "test_risch_integrate"
         ],
         "sympy/integrals/tests/test_transforms.py": [
             "test_cosine_transform",
@@ -904,10 +851,8 @@
             "test_issue_8368_7173",
             "test_issue_8514",
             "test_laplace_transform",
+            "test_mellin_transform",
             "test_sine_transform"
-        ],
-        "sympy/integrals/tests/test_trigonometry.py": [
-            "test_trigintegrate_mixed"
         ],
         "sympy/interactive/tests/test_ipythonprinting.py": [
             "test_matplotlib_bad_latex"
@@ -918,8 +863,7 @@
         "sympy/logic/tests/test_boolalg.py": [
             "test_bool_as_set",
             "test_issue_8777",
-            "test_issue_8975",
-            "test_simplification"
+            "test_issue_8975"
         ],
         "sympy/logic/tests/test_dimacs.py": [
             "test_f4"
@@ -941,11 +885,8 @@
             "test_simplify"
         ],
         "sympy/matrices/tests/test_matrices.py": [
-            "test_Matrix_berkowitz_charpoly",
             "test_columnspace",
-            "test_condition_number",
             "test_diagonalization",
-            "test_dual",
             "test_eigen",
             "test_inv_block",
             "test_invertible_check",
@@ -958,8 +899,7 @@
             "test_pinv",
             "test_power",
             "test_refine",
-            "test_simplify",
-            "test_singular_values"
+            "test_simplify"
         ],
         "sympy/matrices/tests/test_sparse.py": [
             "test_add",
@@ -1006,8 +946,6 @@
         ],
         "sympy/physics/mechanics/tests/test_kane.py": [
             "test_aux",
-            "test_parallel_axis",
-            "test_pend",
             "test_rolling_disc"
         ],
         "sympy/physics/mechanics/tests/test_kane2.py": [
@@ -1017,7 +955,6 @@
             "test_sub_qdot2"
         ],
         "sympy/physics/mechanics/tests/test_lagrange.py": [
-            "test_disc_on_an_incline_plane",
             "test_dub_pen",
             "test_rolling_disc"
         ],
@@ -1033,9 +970,6 @@
         "sympy/physics/mechanics/tests/test_rigidbody.py": [
             "test_rigidbody3"
         ],
-        "sympy/physics/optics/tests/test_gaussopt.py": [
-            "test_gauss_opt"
-        ],
         "sympy/physics/optics/tests/test_utils.py": [
             "test_deviation",
             "test_refraction_angle"
@@ -1049,9 +983,6 @@
         ],
         "sympy/physics/quantum/tests/test_cg.py": [
             "test_cg_simp_add"
-        ],
-        "sympy/physics/quantum/tests/test_circuitplot.py": [
-            "test_cnot"
         ],
         "sympy/physics/quantum/tests/test_circuitutils.py": [
             "test_random_insert",
@@ -1076,8 +1007,7 @@
             "test_matrix_tensor_product"
         ],
         "sympy/physics/quantum/tests/test_qft.py": [
-            "test_qft_represent",
-            "test_quantum_fourier"
+            "test_qft_represent"
         ],
         "sympy/physics/quantum/tests/test_qubit.py": [
             "test_apply_represent_equality",
@@ -1098,8 +1028,6 @@
             "test_represent_coupled_states",
             "test_represent_spin_states",
             "test_represent_uncoupled_states",
-            "test_rewrite_Bra",
-            "test_rewrite_Ket",
             "test_rewrite_coupled_state",
             "test_rewrite_uncoupled_state",
             "test_rotation",
@@ -1123,9 +1051,6 @@
             "test_norm",
             "test_wavefunction"
         ],
-        "sympy/physics/tests/test_pring.py": [
-            "test_orthogonality"
-        ],
         "sympy/physics/tests/test_qho_1d.py": [
             "test_coherent_state",
             "test_norm",
@@ -1133,13 +1058,11 @@
         ],
         "sympy/physics/tests/test_secondquant.py": [
             "test_dummy_order_ambiguous",
-            "test_equivalent_internal_lines_VT1T1_AT",
             "test_equivalent_internal_lines_VT2conjT2",
             "test_equivalent_internal_lines_VT2conjT2_AT",
             "test_equivalent_internal_lines_VT2conjT2_ambiguous_order",
             "test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT",
             "test_fully_contracted",
-            "test_internal_external_VT2T2_AT",
             "test_substitute_dummies_substitution_order"
         ],
         "sympy/physics/tests/test_sho.py": [
@@ -1191,7 +1114,6 @@
             "test_dmp_gcd"
         ],
         "sympy/polys/tests/test_factortools.py": [
-            "test_dmp_factor_list",
             "test_dmp_zz_factor"
         ],
         "sympy/polys/tests/test_galoistools.py": [
@@ -1249,9 +1171,6 @@
         "sympy/polys/tests/test_polyutils.py": [
             "test__nsort"
         ],
-        "sympy/polys/tests/test_rationaltools.py": [
-            "test_together"
-        ],
         "sympy/polys/tests/test_ring_series.py": [
             "test_RR",
             "test_atan",
@@ -1261,7 +1180,6 @@
             "test_tanh"
         ],
         "sympy/polys/tests/test_rootisolation.py": [
-            "test_dup_count_complex_roots_4",
             "test_dup_count_complex_roots_7",
             "test_dup_count_complex_roots_8",
             "test_dup_count_complex_roots_exclude",
@@ -1269,7 +1187,6 @@
         ],
         "sympy/polys/tests/test_rootoftools.py": [
             "test_CRootOf___eval_Eq__",
-            "test_CRootOf___new__",
             "test_CRootOf_eval_rational",
             "test_CRootOf_evalf",
             "test_RootSum___new__",
@@ -1281,8 +1198,6 @@
             "test_solve_lin_sys_6x6_2"
         ],
         "sympy/polys/tests/test_subresultants_qq_zz.py": [
-            "test_bezout",
-            "test_euclid_amv",
             "test_euclid_pg",
             "test_modified_subresultants_amv",
             "test_modified_subresultants_bezout",
@@ -1347,10 +1262,8 @@
             "test_simpleDE"
         ],
         "sympy/series/tests/test_fourier.py": [
-            "test_FourierSeries",
             "test_FourierSeries_2",
-            "test_FourierSeries__add__sub",
-            "test_fourier_series_square_wave"
+            "test_FourierSeries__add__sub"
         ],
         "sympy/series/tests/test_gruntz.py": [
             "test_I",
@@ -1407,7 +1320,6 @@
             "test_issue_3934",
             "test_issue_4090",
             "test_issue_4503",
-            "test_issue_4546",
             "test_issue_5164",
             "test_issue_5172",
             "test_issue_5183",
@@ -1423,12 +1335,10 @@
             "test_issue_7088",
             "test_limit_seq",
             "test_newissue",
-            "test_polynomial",
             "test_rational"
         ],
         "sympy/series/tests/test_limitseq.py": [
-            "test_limit_seq",
-            "test_limit_seq_fail"
+            "test_limit_seq"
         ],
         "sympy/series/tests/test_lseries.py": [
             "test_exp",
@@ -1455,7 +1365,6 @@
             "test_issue_3504",
             "test_issue_3505",
             "test_issue_3506",
-            "test_issue_3507",
             "test_issue_3508",
             "test_issue_4115",
             "test_issue_4329",
@@ -1463,26 +1372,20 @@
             "test_issue_5183",
             "test_issue_5654",
             "test_issue_5925",
-            "test_log_power1",
-            "test_mul_1",
             "test_power_x_x1",
             "test_series2",
             "test_seriesbug2c",
             "test_seriesbug2d",
-            "test_sin",
-            "test_sinsinbug",
-            "test_sqrt_1"
+            "test_sinsinbug"
         ],
         "sympy/series/tests/test_order.py": [
             "test_add_1",
             "test_contains_1",
             "test_contains_4",
-            "test_issue_4279",
             "test_ln_args",
             "test_order_at_infinity",
             "test_order_subs_limits",
             "test_performance_of_adding_order",
-            "test_simple_3",
             "test_simple_6"
         ],
         "sympy/series/tests/test_residues.py": [
@@ -1492,8 +1395,7 @@
             "test_expressions_failing",
             "test_f",
             "test_functions",
-            "test_issue_5654",
-            "test_issue_6499"
+            "test_issue_5654"
         ],
         "sympy/series/tests/test_series.py": [
             "test_acceleration",
@@ -1515,7 +1417,6 @@
             "test_Range_set",
             "test_imageset_intersect_interval",
             "test_imageset_intersect_real",
-            "test_issue_11914",
             "test_range_range_intersection"
         ],
         "sympy/sets/tests/test_sets.py": [
@@ -1548,7 +1449,6 @@
         "sympy/simplify/tests/test_hyperexpand.py": [
             "test_Mod1_behavior",
             "test_branch_bug",
-            "test_hyperexpand",
             "test_hyperexpand_bases",
             "test_hyperexpand_special",
             "test_lerchphi",
@@ -1565,6 +1465,8 @@
             "test_prudnikov_1",
             "test_prudnikov_11",
             "test_prudnikov_12",
+            "test_prudnikov_2",
+            "test_prudnikov_4",
             "test_prudnikov_7",
             "test_prudnikov_9",
             "test_reduction_operators",
@@ -1584,7 +1486,6 @@
             "test_radsimp"
         ],
         "sympy/simplify/tests/test_ratsimp.py": [
-            "test_ratsimp",
             "test_ratsimpmodprime"
         ],
         "sympy/simplify/tests/test_simplify.py": [
@@ -1593,11 +1494,9 @@
             "test_hypersimp",
             "test_issue_3557",
             "test_issue_6920",
-            "test_issue_7263",
             "test_nsimplify",
             "test_nthroot",
             "test_nthroot1",
-            "test_simplify_complex",
             "test_simplify_expr",
             "test_simplify_measure",
             "test_simplify_other",
@@ -1635,7 +1534,6 @@
         ],
         "sympy/solvers/tests/test_diophantine.py": [
             "test_DN",
-            "test_bf_pell",
             "test_diop_general_sum_of_squares_quick",
             "test_diop_ternary_quadratic",
             "test_diop_ternary_quadratic_normal",
@@ -1644,7 +1542,6 @@
             "test_general_pythagorean",
             "test_issue_9106",
             "test_length",
-            "test_no_square_ternary_quadratic",
             "test_parametrize_ternary_quadratic",
             "test_power_representation",
             "test_quadratic_non_perfect_square",
@@ -1659,7 +1556,6 @@
             "test_issue_10268",
             "test_issue_8235",
             "test_reduce_abs_inequalities",
-            "test_reduce_poly_inequalities_complex_relational",
             "test_reduce_poly_inequalities_real_interval",
             "test_reduce_rational_inequalities_real_relational",
             "test_slow_general_univariate",
@@ -1741,7 +1637,6 @@
             "test_pde_1st_linear_constant_coeff",
             "test_pde_1st_linear_constant_coeff_homogeneous",
             "test_pde_classify",
-            "test_pde_separate_add",
             "test_pde_separate_mul",
             "test_pdsolve_all",
             "test_pdsolve_variable_coeff"
@@ -1767,8 +1662,6 @@
             "test_guess_rational_cv",
             "test_guess_transcendental",
             "test_high_order_multivariate",
-            "test_high_order_roots",
-            "test_highorder_poly",
             "test_issue_2725",
             "test_issue_2777",
             "test_issue_2840_8155",
@@ -1795,7 +1688,6 @@
             "test_linear_system",
             "test_minsolve_linear_system",
             "test_other_lambert",
-            "test_polysys",
             "test_quintics_1",
             "test_quintics_2",
             "test_real_imag_splitting",
@@ -1808,7 +1700,6 @@
             "test_solve_polynomial1",
             "test_solve_polynomial_cv_1a",
             "test_solve_transcendental",
-            "test_swap_back",
             "test_unrad1",
             "test_unrad_slow",
             "test_uselogcombine"
@@ -1843,12 +1734,8 @@
             "test_solve_only_exp_1",
             "test_solve_polynomial",
             "test_solve_polynomial_symbolic_param",
-            "test_solve_rational",
             "test_solve_trig",
-            "test_solveset",
             "test_solveset_complex_polynomial",
-            "test_solveset_complex_rational",
-            "test_solveset_sqrt_1",
             "test_solveset_sqrt_2",
             "test_solvify",
             "test_substitution_basic",
@@ -1895,8 +1782,7 @@
         "sympy/stats/tests/test_rv.py": [
             "test_Sample",
             "test_dependence",
-            "test_normality",
-            "test_where"
+            "test_normality"
         ],
         "sympy/stats/tests/test_symbolic_probability.py": [
             "test_literal_probability"
@@ -1910,7 +1796,6 @@
         "sympy/tensor/tests/test_tensor.py": [
             "test_TensMul_data",
             "test_add1",
-            "test_canonicalize1",
             "test_contract_metric2",
             "test_fun",
             "test_hidden_indices_for_matrix_multiplication",
@@ -1925,7 +1810,6 @@
             "test_files"
         ],
         "sympy/utilities/tests/test_codegen.py": [
-            "test_complicated_codegen",
             "test_complicated_codegen_f95"
         ],
         "sympy/utilities/tests/test_enumerative.py": [
@@ -1939,9 +1823,7 @@
             "test_module_imports_are_direct"
         ],
         "sympy/utilities/tests/test_pickling.py": [
-            "test_concrete",
             "test_core_interval",
-            "test_core_relational",
             "test_functions",
             "test_pickling_polys_rootoftools"
         ],
@@ -1952,23 +1834,20 @@
             "test_vector"
         ],
         "sympy/vector/tests/test_dyadic.py": [
-            "test_dyadic",
-            "test_dyadic_simplify"
+            "test_dyadic"
         ],
         "sympy/vector/tests/test_field_functions.py": [
             "test_conservative",
             "test_del_operator",
             "test_product_rules",
             "test_scalar_potential",
-            "test_scalar_potential_difference",
-            "test_solenoidal"
+            "test_scalar_potential_difference"
         ],
         "sympy/vector/tests/test_functions.py": [
             "test_express",
             "test_orthogonalize"
         ],
         "sympy/vector/tests/test_vector.py": [
-            "test_projection",
             "test_vector_simplify"
         ]
     }

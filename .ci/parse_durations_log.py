@@ -3,8 +3,10 @@
 from collections import defaultdict
 import os
 import json
+import time
 
 ci_folder = os.path.dirname(__file__)
+
 
 def read_log():
     start_token = '= slowest test durations ='
@@ -27,7 +29,7 @@ def read_log():
             start_token_seen = True
 
 
-def main(limits=(10, .1)):
+def main(ref_timing, limits=(10, .1)):
     """
     parses durations.log (made by generate_durations_log.sh)
     """
@@ -36,7 +38,7 @@ def main(limits=(10, .1)):
     accumul_t = [0.0 for _ in range(len(limits))]
     for test_id, time in read_log():
         for idx, lim in enumerate(limits):
-            if time >= lim:
+            if time/ref_timing >= lim:
                 fname, tname = test_id.split('::')
                 groupings[idx][fname].append(tname)
                 accumul_t[idx] += time
@@ -48,5 +50,14 @@ def main(limits=(10, .1)):
     print('number in group, accumulated_time: %s' %
           str(list(zip(accumul_n, accumul_t))))
 
+def slow_function():
+    t = time.time();
+    a = 0
+    for i in range(5):
+        a += sum([x**.3 - x**i for x in range(1000000) if x % 3 == 0])
+    return time.time() - t
+
+
 if __name__ == '__main__':
-    main()
+    ref_time = slow_function()
+    main(ref_time)
