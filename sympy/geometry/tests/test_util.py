@@ -1,12 +1,13 @@
 from __future__ import division
 
-from sympy import Symbol, sqrt, Derivative, S
-from sympy.geometry import Point, Point2D, Polygon, Segment, convex_hull, intersection, centroid
+from sympy import Symbol, sqrt, Derivative, symbols, S, Mul
+from sympy.geometry import (Line, Point, Point2D, Polygon,
+    Segment, convex_hull, intersection, centroid, Circle, Ellipse)
 from sympy.geometry.util import (idiff, closest_points,
-    farthest_points, _ordered_points, number_hasimaginary, number_isnonzero)
-from sympy.core.numbers import I
+    farthest_points, _ordered_points, gsolve)
 from sympy.solvers.solvers import solve
-from sympy.utilities.pytest import raises
+from sympy.polys.rootoftools import CRootOf
+from sympy.utilities.pytest import raises, slow
 
 
 def test_idiff():
@@ -143,3 +144,65 @@ def test_number_isnonzero():
     x = Symbol('x', imaginary=True)
     assert number_isnonzero(x) is None
     assert number_isnonzero(x(0)) is None
+
+
+def test_gsolve():
+    a, x, y = symbols('a x y')
+    # raises(AssertionError, lambda: gsolve(1, 2, x, y))
+    raises(AssertionError, lambda: gsolve(a + x, a - y, x, y))
+    raises(AssertionError, lambda: gsolve(x + 1/x, x - 2, x, y))
+    #raises(AssertionError, lambda: gsolve(x - 2, y - 2))
+    raises(AttributeError, lambda: gsolve(Segment((0, 1), (1, 2)), x - 2, x, y))
+    assert gsolve(Line((0, 1), slope=1), Line((0, 1), slope=-2)
+        ) == set([(0, 1)])
+    assert gsolve(Circle((0, 0), 2), Circle((0, 0), 1)) == set()
+    assert gsolve(x - 2, x - 3, x, y) == set([])
+    assert gsolve(y - 1, y - 2, x, y) == set([])
+    assert gsolve(x**2 - 4, x - 2, x, y) == set([(2, y)])
+    assert gsolve(y**2 - 4, y - 2, x, y) == set([(x, 2)])
+    assert gsolve(x - 1, y - 2, x, y) == set([(1, 2)])
+    assert gsolve(y - 2, x - 1, x, y) == set([(1, 2)])
+    assert gsolve(x - 2, y**2 - x + 4, x, y) == set([])
+    assert gsolve(y**2 - x + 4, x - 2, x, y) == set([])
+    assert gsolve(y - 2, x**2 - y + 4, x, y) == set([])
+    assert gsolve(x**2 - y + 4, y - 2, x, y) == set([])
+    assert gsolve(x**2 + y - 2, x - 1, x, y) == set([(1, 1)])
+    assert gsolve(x - 1, x**2 + y - 2, x, y) == set([(1, 1)])
+    assert gsolve(x**2 + y - 2, y - 1, x, y) == set([(-1, 1), (1, 1)])
+    assert gsolve(y - 1, x**2 + y - 2, x, y) == set([(-1, 1), (1, 1)])
+    assert gsolve(
+        x**2 + 3*x*y + 3*x + y**2 + 3*y + 1,
+        x**2 + 2*x*y + x + y**2 + 2*y + 1, x, y) == set([(1, -1)])
+    eqs = (x-2)**2-x*y*3-y**2,x**2-3*x*y-y**2
+    assert gsolve(eqs[0], eqs[1], x, y, check=False) == set([
+        (-sqrt(-S(3)/2 + sqrt(13)/2)*sqrt(S(9)/2 + 13*sqrt(13)/2)/2 -
+        S(1)/4 + 3*sqrt(13)/4, -S(3)/2 + sqrt(13)/2), (-S(1)/4 + sqrt(-S(3)/2 +
+        sqrt(13)/2)*sqrt(S(9)/2 + 13*sqrt(13)/2)/2 + 3*sqrt(13)/4, -S(3)/2
+        + sqrt(13)/2), (-sqrt(-S(9)/2 + 13*sqrt(13)/2)*sqrt(S(3)/2 +
+        sqrt(13)/2)/2 - 3*sqrt(13)/4 - S(1)/4, -sqrt(13)/2 - S(3)/2),
+        (-3*sqrt(13)/4 - S(1)/4 + sqrt(-S(9)/2 + 13*sqrt(13)/2)*sqrt(S(3)/2 +
+        sqrt(13)/2)/2, -sqrt(13)/2 - S(3)/2)])
+    # this is a case where a potential y solution satisfies e2y but
+    # x and y do not satisfy e2
+    assert gsolve(eqs[0], eqs[1], x, y) == set([
+        (-sqrt(-S(3)/2 + sqrt(13)/2)*sqrt(S(9)/2 + 13*sqrt(13)/2)/2 - S(1)/4 +
+        3*sqrt(13)/4, -S(3)/2 + sqrt(13)/2), (-3*sqrt(13)/4 - S(1)/4 + sqrt(-S(9)/2 +
+        13*sqrt(13)/2)*sqrt(S(3)/2 + sqrt(13)/2)/2, -sqrt(13)/2 - S(3)/2)])
+    assert gsolve(y-(x-3), x**2/9 + (y/4 - S(1)/4)**2 - 1,
+        x, y, check=False) == set([(0, -3), (S(72)/25, -S(3)/25)])
+    assert gsolve(
+        -8*x*y - 6*x - 7*y**2 - y - 7,
+        -9*x**2 - 10*x*y - x - 4*y**2 + 5*y, x, y, check=False) == set([
+        (Mul(-1, CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 0) +
+        7*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 0)**2 +
+        7, evaluate=False)/(8*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 0) + 6),
+        CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 0)),
+        (Mul(-1, CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1) + 7 +
+        7*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1)**2, evaluate=False)/(6 +
+        8*CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1)),
+        CRootOf(137*y**4 - 366*y**3 - 115*y**2 - 536*y + 399, 1))])
+    assert gsolve(Circle(Point2D(4, -8), 2), Ellipse(Point2D(4, 5), 5, 7)) == set()
+    # ycond is always false (first equation is never real for real coef
+    assert gsolve(9*x**2 + 2*x*y - 7*x + 5*y**2 + 8*y + 6,
+        2*x**2 - 10*x*y - 6*x - 2*y**2 + 6*y + 3, x, y) == set()
+    assert gsolve(-2*x**2 + x*y + 2*x - 2*y**2 - 1, x**2 + y) == set()

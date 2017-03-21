@@ -12,12 +12,13 @@ are_similar
 """
 from __future__ import division, print_function
 
-from sympy import Function, Symbol, solve, S
-from sympy.core.compatibility import (
-    is_sequence, range, string_types)
+from sympy import Function, Symbol, solve, Dummy, Expr, Mul, S
 from sympy.core.evalf import pure_complex
-from sympy.functions.elementary.complexes import im
-from .point import Point, Point2D
+from sympy.solvers.solvers import unrad
+from sympy.polys.polytools import real_roots
+from sympy.solvers.solveset import solveset_real
+from sympy.core.compatibility import (
+    is_sequence, range, string_types, ordered)
 
 
 def _ordered_points(p):
@@ -105,9 +106,10 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line import LinearEntity3D
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
+    from .line import LinearEntity3D
+    from .point import Point3D
+    from .plane import Plane
+    from .entity import GeometryEntity
     # XXX update tests for coverage
 
     e = set(e)
@@ -316,7 +318,7 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Point2D, Triangle
+    >>> from sympy.geometry import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
@@ -326,6 +328,7 @@ def closest_points(*args):
     from collections import deque
     from math import hypot, sqrt as _sqrt
     from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.geometry.point import Point, Point2D
 
     p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
@@ -506,7 +509,7 @@ def farthest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import farthest_points, Point2D, Triangle
+    >>> from sympy.geometry import farthest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)
@@ -514,7 +517,7 @@ def farthest_points(*args):
 
     """
     from math import hypot, sqrt as _sqrt
-
+    from sympy.geometry.point import Point, Point2D
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
 
@@ -706,6 +709,163 @@ def intersection(*entities):
             newres.extend(x.intersection(entity))
         res = newres
     return res
+
+
+def gsolve(ge1, ge2, x=None, y=None, check=True, simplify=True):
+    """Return the set of solution to 2 equations in the form of
+    A*x**2 + B*y**2 + C*x*y + D*x + E*y + F == 0 where A - F are
+    numerical constants.
+    """
+    from sympy.geometry.entity import GeometryEntity
+    from sympy.core.relational import Eq
+    # ------- helpers ----------
+    verbose = False
+    def what(ge1):
+        # return given expression or GeometryEntity's equation
+        # which must be in terms of x and y
+        if not isinstance(ge1, GeometryEntity):
+            return S(ge1)
+        if isinstance(ge1, Expr):
+            return ge1
+        assert isinstance(ge1, GeometryEntity), "expecting Expr or GeometryEntity"
+        try:
+            return ge1
+        except AttributeError:
+            raise AttributeError('Only objects with `equation` method are supported.')
+    def verify(i):
+        # verify that `i` is in the form
+        # a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
+        con = []
+        for p in (x**2, y**2, x*y, x, y):
+            i, d = i.as_independent(p, as_Add=True)
+            if not d:
+                con.append(S.Zero)
+                continue
+            if d == p:
+                con.append(S.One)
+                continue
+            assert d.is_Mul, "expected Mul not %s" % d
+            from sympy.utilities.iterables import sift
+            sifted = sift(d.args, lambda x: x.is_number)
+            _p = Mul(*sifted[False])
+            assert _p == p, "unexpected expression: %s" % _p
+            con.append(Mul(*sifted[True]))
+        assert i.is_number, "expected a number for f in a*x**2+b*y**2+c*x*y+d*x+e*y+f but got %s" % i
+        return con + [i]
+    # ------- end of helpers ----------
+    e1 = what(ge1)
+    e2 = what(ge2)
+    if all(isinstance(g, GeometryEntity) for g in (e1, e2)):
+        x, y = Dummy('x'), Dummy('y')
+        e1 = e1.equation(x, y)
+        e2 = e2.equation(x, y)
+    elif not any(isinstance(g, GeometryEntity) for g in (e1, e2)):
+        free = e1.free_symbols | e2.free_symbols
+        if len(free) == 2:
+            x, y = list(ordered(free))
+    elif not isinstance(e1, GeometryEntity):
+        free = e1.free_symbols
+        if len(free) == 2:
+            x, y = list(ordered(free))
+            e2 = e2.equation(x, y)
+    elif not isinstance(e2, GeometryEntity):
+        free = e2.free_symbols
+        if len(free) == 2:
+            x, y = list(ordered(free))
+            e1 = e1.equation(x, y)
+    assert x and y, "When providing expressions of more than 2 variables, also give x and y."
+    e1 = e1.expand()
+    e2 = e2.expand()
+    c1 = verify(e1)
+    c2 = verify(e2)
+    free1 = e1.free_symbols
+    free2 = e2.free_symbols
+    if len(free2) == 1 and not (len(free1) == 1 and y in free1):
+        e1, e2 = e2, e1
+        free1, free2 = free2, free1
+        a, b, c, d, e, f = c2
+    else:
+        a, b, c, d, e, f = c1
+    if x not in free1:
+        y1 = solveset_real(e1, y)
+        if x not in free2:
+            y2 = solveset_real(e2, y)
+            return set(
+                [(x, i) for i in y1.intersection(y2)])  # f(y), g(y)
+        elif y not in free2:
+            x2 = solveset_real(e2, x)
+            return set(
+                [(i, j) for i in x2 for j in y1])       # f(y), g(x)
+        rv = set()
+        for i in y1:
+            for j in solveset_real(e2.subs(y, i), x):
+                rv.add((j, i))
+        return rv                                       # f(y), g(x, y)
+    elif y not in free1:
+        x1 = solveset_real(e1, x)
+        if y not in free2:
+            x2 = solveset_real(e2, x)
+            return set(
+                [(i, y) for i in x1.intersection(x2)])  # f(x), g(x)
+        rv = set()
+        for i in x1:
+            for j in solveset_real(e2.subs(x, i), y):
+                rv.add((i, j))
+        return rv                                       # f(x), g(x, y)
+    del free1, free2
+    # f(x, y), g(x, y)
+    x1 = solve(e1, x)
+    # e2y is referenced in the unit tests
+    e2y = e2.subs(x, x1[0])  # it doesn't matter which one you pick
+    uu = unrad(e2y)
+    exclude = set()
+    if uu:
+        assert not uu[1], "not expecting a change of variables"
+        u = uu[0]
+    else:
+        u, den = e2y.as_numer_denom()
+        if den.free_symbols:
+            exclude = solveset_real(den, y)
+    ycond = solve((c*y + d)**2 >= 4*a*(b*y**2 + e*y + f))  # or Ge((c*y + d)**2, 4*a*(b*y**2 + e*y + f))
+    if ycond is S.false:
+        print('ycondfalse',e1,e2)
+        if verbose: print('never real')
+        return set()
+    if u.is_number:
+        assert u.equals(0) is False, "think about this..."
+        return set()  # no solution possible
+    # reject solutions of y that would give an imaginary x
+    y2 = []
+    for i in real_roots(u):
+        if i in exclude:
+            if verbose: print('exclude',i)
+            continue
+        cond = ycond.subs(y, i)
+        if cond is S.false:
+            if verbose: print('imagin',i)
+            continue
+        elif cond is not S.true:
+            print('unknonwn',e1,e2)
+            if verbose: print('unevaluated cond', cond)
+        y2.append(i)
+    sols = set([(xi.subs(y, yi), yi) for xi in x1 for yi in y2])
+    if check and uu:  # we used unrad so make sure the solutions satisfy e2
+        ok = []
+        for s in sols:
+            reps = dict(zip((x, y), s))
+            # check for False since those that *do* satisfy might
+            # not give a 0 with precision
+            z2 = number_isnonzero(e2.subs(reps))
+            if z2 is True:
+                if verbose: print('reject',2)
+                continue
+            if z2 is None:
+                if verbose: print(s, 'could not be verified in', e2)
+            ok.append(s)
+        sols = set(ok)
+    if simplify:
+        sols = set([tuple([i.simplify() for i in s]) for s in sols])
+    return sols  # let user use sqrdenest if so desired
 
 
 def number_isnonzero(n):

@@ -184,13 +184,13 @@ def test_ellipse_geom():
     l2 = Line(Point(-5, -1), Point(5, -1))
     l3 = Line(Point(-1, -1), Point(1, 1))
     l4 = Line(Point(-10, 0), Point(0, 10))
-    pts_c1_l3 = [Point(sqrt(2)/2, sqrt(2)/2), Point(-sqrt(2)/2, -sqrt(2)/2)]
+    pts_c1_l3 = [Point(-sqrt(2)/2, -sqrt(2)/2), Point(sqrt(2)/2, sqrt(2)/2)]
 
     assert intersection(e2, l4) == []
     assert intersection(c1, Point(1, 0)) == [Point(1, 0)]
     assert intersection(c1, l1) == [Point(1, 0)]
     assert intersection(c1, l2) == [Point(0, -1)]
-    assert intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
+    assert intersection(c1, l3) == pts_c1_l3
     assert intersection(c1, c2) == [Point(0, 1), Point(1, 0)]
     assert intersection(c1, c3) == [Point(sqrt(2)/2, sqrt(2)/2)]
     assert e1.intersection(l1) == [Point(1, 0)]
@@ -237,12 +237,20 @@ def test_ellipse_geom():
     assert elip.tangent_lines(Point(3, 0)) == \
         [Line(Point(3, 0), Point(3, -12))]
 
+def test_ellipse2():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    y1 = Symbol('y1', real=True)
+    p1 = Point(0, 0)
+    c1 = Circle(p1, 1)
     e1 = Ellipse(Point(0, 0), 5, 10)
     e2 = Ellipse(Point(2, 1), 4, 8)
+    e3 = Ellipse(p1, y1, y1)
     a = 53/17
     c = 2*sqrt(3991)/17
     ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
-    assert e1.intersection(e2) == ans
+    got = e1.intersection(e2)
+    assert got == ans
     e2 = Ellipse(Point(x, y), 4, 8)
     c = sqrt(3991)
     ans = [Point(-c/68 + a, 2*c/17 + a/2), Point(c/68 + a, -2*c/17 + a/2)]

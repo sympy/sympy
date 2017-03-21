@@ -13,6 +13,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
+from sympy.core.compatibility import ordered
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -184,12 +185,19 @@ class Ellipse(GeometrySet):
         except Undecidable:
             pass
         # there is a potential intersection so proceed
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
-        seq = self.equation(x, y)
-        oeq = o.equation(x, y)
-        result = list(ordered(nonlinsolve_real([seq, oeq], (x, y))))
-        return [Point([sqrtdenest(i) for i in r]) for r in result]
+        try:
+            from sympy.geometry.util import gsolve
+            result = list(ordered(gsolve(self, o)))
+            return [Point(*[sqrtdenest(i) for i in s]) for s in result]
+        except (NotImplementedError, AssertionError):
+            # TODO: Replace solve with nonlinsolve, when
+            # nonlinsolve will be able to solve in real domain
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
+            seq = self.equation(x, y)
+            oeq = o.equation(x, y)
+            result = list(ordered(nonlinsolve_real([seq, oeq], (x, y))))
+            return [Point(*[sqrtdenest(i) for i in s]) for s in result]
 
     def _do_line_intersection(self, o):
         """
@@ -200,6 +208,14 @@ class Ellipse(GeometrySet):
 
         """
 
+        try:
+            from sympy.geometry.util import gsolve
+            line = Line(o)
+            sol = gsolve(self, line)
+            return list(ordered([Point(*s) for s in sol if
+                    isinstance(o, Line) or s in o]))
+        except (NotImplementedError, AssertionError):
+            pass
         hr_sq = self.hradius ** 2
         vr_sq = self.vradius ** 2
         lp = o.points
