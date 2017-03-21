@@ -364,8 +364,11 @@ def test_numpy_old_matrix():
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
-    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(all='ignore')
+    assert str(float(f(0,1))) == 'inf'
+    numpy.seterr(all='raise')
 
 def test_issue9474():
     mods = [None, 'math']
