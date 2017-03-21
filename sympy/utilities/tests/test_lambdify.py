@@ -365,6 +365,7 @@ def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
+    numpy.seterr(divide='raise')
     lambdify([x, y], p, modules='numpy')(0, 1)
 
 def test_issue9474():
