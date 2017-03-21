@@ -16,6 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
@@ -1386,7 +1387,13 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     return m
 
 
-def wronskian(functions, var, method='bareis'):
+def wronskian(functions, var, method='bareiss'):
+    if method == "bareis":
+        SymPyDeprecationWarning(
+                feature="Using 'bareis' to compute matrix determinant",
+                useinstead="'bareiss'",
+                issue=12363, deprecated_since_version="1.1").warn()
+        method = "bareiss"
     """
     Compute Wronskian for [] of functions
 

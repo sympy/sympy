@@ -23,6 +23,8 @@ from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
+from sympy.core.decorators import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -2630,8 +2632,12 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             raise AttributeError
         return self.H * mgamma(0)
 
+    @deprecated(useinstead="det_bareiss", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
-        """Compute matrix determinant using Bareis' fraction-free
+        return self.det_bareiss()
+
+    def det_bareiss(self):
+        """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
@@ -2680,7 +2686,7 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
                     else:
                         return S.Zero
 
-                # proceed with Bareis' fraction-free (FF)
+                # proceed with Bareiss' fraction-free (FF)
                 # form of Gaussian elimination algorithm
                 for i in range(k + 1, n):
                     for j in range(k + 1, n):
@@ -2714,7 +2720,7 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
 
 
         det
-        det_bareis
+        det_bareiss
         berkowitz_det
         """
         if not self.is_square:
@@ -2733,18 +2739,24 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
 
         return prod.expand()
 
-    def det(self, method="bareis"):
+    def det(self, method="bareiss"):
+        if method == "bareis":
+            SymPyDeprecationWarning(
+                            feature="Using 'bareis' to compute matrix determinant",
+                            useinstead="'bareiss'",
+                            issue=12363, deprecated_since_version="1.1").warn()
+            method = "bareiss"
         """Computes the matrix determinant using the method "method".
 
         Possible values for "method":
-          bareis ... det_bareis
+          bareiss ... det_bareiss
           berkowitz ... berkowitz_det
           det_LU ... det_LU_decomposition
 
         See Also
         ========
 
-        det_bareis
+        det_bareiss
         berkowitz_det
         det_LU
         """
@@ -2756,8 +2768,8 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             raise NonSquareMatrixError()
         if not self:
             return S.One
-        if method == "bareis":
-            return self.det_bareis()
+        if method == "bareiss":
+            return self.det_bareiss()
         elif method == "berkowitz":
             return self.berkowitz_det()
         elif method == "det_LU":
