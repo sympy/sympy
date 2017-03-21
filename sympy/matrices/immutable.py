@@ -99,6 +99,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 # See https://github.com/sympy/sympy/issues/7213
 ImmutableDenseMatrix.is_zero = DenseMatrix.is_zero
 
+# make sure ImmutableDenseMatrix is aliased as ImmutableMatrix
+ImmutableMatrix = ImmutableDenseMatrix
+
 
 class ImmutableSparseMatrix(SparseMatrix, Basic):
     """Create an immutable version of a sparse matrix.
