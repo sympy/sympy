@@ -689,7 +689,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
 
     1. `\xi` as `x`
 
-    2. `\eta` as the constant in the solution to the differentia
+    2. `\eta` as the constant in the solution to the differential
       equation `\frac{dy}{dx} = -\frac{b}{a}`
 
     Making the following substitutions reduces it to the linear ODE
