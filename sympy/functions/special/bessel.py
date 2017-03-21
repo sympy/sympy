@@ -953,12 +953,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
                                               int(l)), prec)
                 for l in range(1, k + 1)]
     elif method == "scipy":
+        from scipy.optimize import newton
         try:
             from scipy.special import spherical_jn
-            from scipy.optimize import newton
             f = lambda x: spherical_jn(n, x)[0][-1]
         except:
-            print("Unknown method.")      
+            from scipy.special import sph_jn
+            f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
 
