@@ -183,6 +183,38 @@ def divergence(vect, coord_sys):
 
     return coord_sys.delop.dot(vect).doit()
 
+def laplace(scalar, coord_sys):
+    """
+    Returns the laplace transformation of a vector field computed wrt the base
+    scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    scalar : SymPy Expr
+
+    coord_sys : CoordSysCartesian
+        The cooordinate system to calculate the divergence in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, divergence
+    >>> R = CoordSysCartesian('R')
+    >>> v1 = R.x**2*R.y**2*R.z**2
+    >>> laplace(v1, R)
+    2*R.x**2*R.y**2 + 2*R.x**2*R.z**2 + 2*R.y**2*R.z**2
+    >>> v2 = 2*R.y**2*R.z
+    >>> laplace(v2, R)
+    4*R.z
+
+    """
+    if isinstance(scalar, Vector):
+        raise TypeError("The Expression should be a Scalar Sympy Expression")
+    else:
+        return coord_sys.delop.dot(coord_sys.delop(scalar).doit()).doit() 
+
+    
 
 def gradient(scalar, coord_sys):
     """
