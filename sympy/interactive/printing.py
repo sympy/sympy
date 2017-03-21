@@ -96,33 +96,25 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug('matplotlib exception caught:', repr(e))
             return None
 
+    def _get_latex_printable_types():
+        from sympy.core.basic import Basic
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.physics.vector import Vector, Dyadic
+        from sympy.tensor.array import NDimArray # all other NDimArray types inherit from NDimArray
+
+        printable_types = [Basic, MatrixBase, float, tuple, list, set,
+                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
+
+        return printable_types
+
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        from sympy import Basic
-        from sympy.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        from sympy.core.compatibility import integer_types
-        from sympy.tensor.array import NDimArray # all other types inherit from NDimArray
-
-        if isinstance(o, (list, tuple, set, frozenset)):
-            return all(_can_print_latex(i) for i in o)
-        elif isinstance(o, dict):
-            return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
-        elif isinstance(o, bool):
-            return False
-        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-        # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
-            return True
-        elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        elif isinstance(o, NDimArray):
-            return True
-        return False
+        printable_types = _get_latex_printable_types()
+        return isinstance(o, tuple(printable_types))
 
     def _print_latex_png(o):
         """
@@ -178,14 +170,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     import IPython
     if V(IPython.__version__) >= '0.11':
-        from sympy.core.basic import Basic
-        from sympy.matrices.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        from sympy.tensor.array import NDimArray # all other types inherit from NDimArray
-
-        printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
-
+        printable_types = _get_latex_printable_types()
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in printable_types:
