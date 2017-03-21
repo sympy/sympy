@@ -217,6 +217,11 @@ def test_issue_6799():
     assert not integrate(integrand, limits).has(Dummy)
 
 
+def test_issue_12251():
+    assert manualintegrate(x**y, x) == Piecewise(
+        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+
+
 def test_issue_3796():
     assert manualintegrate(diff(exp(x + x**2)), x) == exp(x + x**2)
     assert integrate(x * exp(x**4), x, risch=False) == -I*sqrt(pi)*erf(I*x**2)/4

@@ -5,8 +5,6 @@ SymPy
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/sympy.svg
    :target: https://pypi.python.org/pypi/sympy
-.. |pypi download| image:: https://img.shields.io/pypi/dm/sympy.svg
-   :target: https://pypi.python.org/pypi/sympy
 .. |Build status| image:: https://secure.travis-ci.org/sympy/sympy.svg?branch=master
    :target: http://travis-ci.org/sympy/sympy
 .. |Gitter Badge| image:: https://badges.gitter.im/Join%20Chat.svg

@@ -224,6 +224,28 @@ def test_power():
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(AttributeError, lambda: m._matrix_pow_by_jordan_blocks(10))
 
+    # test issue 11964
+    raises(ValueError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(-10))
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
+    assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    raises(ValueError, lambda: A**2.1)
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[8, 1], [3, 2]])
+    assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
+    A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
+    assert A**10.2 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
+    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    n = Symbol('n', integer=True)
+    raises(ValueError, lambda: A**n)
+    n = Symbol('n', integer=True, nonnegative=True)
+    raises(ValueError, lambda: A**n)
+    assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    raises(ValueError, lambda: A**(S(3)/2))
+    A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
+    assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
+    assert A**5.0 == A**5
+
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))

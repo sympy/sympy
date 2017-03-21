@@ -489,17 +489,19 @@ def test_Rational():
 
 
 def test_Float():
-    # NOTE prec is the whole number of decimal digits
-    assert str(Float('1.23', prec=1 + 2)) == '1.23'
-    assert str(Float('1.23456789', prec=1 + 8)) == '1.23456789'
+    # NOTE dps is the whole number of decimal digits
+    assert str(Float('1.23', dps=1 + 2)) == '1.23'
+    assert str(Float('1.23456789', dps=1 + 8)) == '1.23456789'
     assert str(
-        Float('1.234567890123456789', prec=1 + 18)) == '1.234567890123456789'
+        Float('1.234567890123456789', dps=1 + 18)) == '1.234567890123456789'
     assert str(pi.evalf(1 + 2)) == '3.14'
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
+    assert str(Float(S.Infinity)) == 'inf'
+    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():
@@ -666,14 +668,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
+    assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
+    assert str(where(D > 4)) == "Domain: (Eq(d1, 5)) | (Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: (0 <= a) & (0 <= b) & (a < oo) & (b < oo)"
 
 
 def test_FiniteSet():

@@ -364,7 +364,7 @@ def solve(f, *symbols, **flags):
         - transcendental
         - piecewise combinations of the above
         - systems of linear and polynomial equations
-        - sytems containing relational expressions.
+        - systems containing relational expressions.
 
     Input is formed as:
 
@@ -450,19 +450,27 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(-oo < x, x < 3)
+        (-oo < x) & (x < 3)
+
 
     * to always get a list of solution mappings, use flag dict=True
 
         >>> solve(x - 3, dict=True)
         [{x: 3}]
-        >>> solve([x - 3, y - 1], dict=True)
+        >>> sol = solve([x - 3, y - 1], dict=True)
+        >>> sol
         [{x: 3, y: 1}]
+        >>> sol[0][x]
+        3
+        >>> sol[0][y]
+        1
+
 
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
+
 
     * single expression and single symbol that is in the expression
 
@@ -1329,6 +1337,9 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
+            if m in set([S.NegativeInfinity, S.ComplexInfinity, S.Infinity]):
+                result = set()
+                break
             soln = _solve(m, symbol, **flags)
             result.update(set(soln))
         result = list(result)
@@ -1383,7 +1394,7 @@ def _solve(f, *symbols, **flags):
         # first see if it really depends on symbol and whether there
         # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
-        if f_num is S.Zero:
+        if f_num is S.Zero or sol is S.NaN:
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
@@ -2003,7 +2014,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dnewn_dxi is S.NaN:
                 break
             if xi not in dnewn_dxi.free_symbols:
-                vi = -(newn.subs(xi, 0))/dnewn_dxi
+                vi = -1/dnewn_dxi*(newn.subs(xi, 0))
                 if dens is None:
                     dens = _simple_dens(eq, symbols)
                 if not any(checksol(di, {xi: vi}, minimal=True) is True
@@ -2683,6 +2694,13 @@ def nsolve(*args, **kwargs):
     >>> cos(_)
     0.73908513321516064165531208767387340401341175890076
 
+    To solve for complex roots of real functions, a nonreal initial point
+    must be specified:
+
+    >>> from sympy import I
+    >>> nsolve(x**2 + 2, I)
+    1.4142135623731*I
+
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and
     available solvers. Note, however, that functions which are very
@@ -2746,10 +2764,16 @@ def nsolve(*args, **kwargs):
         f = args[0]
         fargs = args[1]
         x0 = args[2]
+        if iterable(fargs) and iterable(x0):
+            if len(x0) != len(fargs):
+                raise TypeError('nsolve expected exactly %i guess vectors, got %i'
+                                % (len(fargs), len(x0)))
     elif len(args) == 2:
         f = args[0]
         fargs = None
         x0 = args[1]
+        if iterable(f):
+            raise TypeError('nsolve expected 3 arguments, got 2')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
@@ -2780,7 +2804,7 @@ def nsolve(*args, **kwargs):
         # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
-        return Float(findroot(f, x0, **kwargs))
+        return sympify(findroot(f, x0, **kwargs))
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''

@@ -145,7 +145,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> _clash1
     {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
     >>> sympify('I & Q', _clash1)
-    And(I, Q)
+    I & Q
 
     Strict
     ------

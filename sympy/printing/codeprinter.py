@@ -40,7 +40,8 @@ class CodePrinter(StrPrinter):
 
         super(CodePrinter, self).__init__(settings=settings)
 
-        self.reserved_words = set()
+        if not hasattr(self, 'reserved_words'):
+            self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
         """
