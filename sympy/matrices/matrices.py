@@ -3861,10 +3861,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
     def LUdecomposition(self,
                         iszerofunc=_iszero,
-                        allowrankdeficient=True):
+                        rankcheck=False):
         """Returns the decomposition LU and the row swaps p as L, U, p.
         See documentation for LUCombined for details about the keyword
-        argument iszerofunc and allowrankdeficient.
+        argument iszerofunc and rankcheck.
 
         Examples
         ========
@@ -3892,10 +3892,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUsolve
         """
 
-        combined, p = self.LUdecomposition_Simple(iszerofunc=
-                                                  iszerofunc,
-                                                  allowrankdeficient=
-                                                  allowrankdeficient)
+        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
+                                                  rankcheck=rankcheck)
 
         L = self.zeros(combined.rows)
         U = self.zeros(combined.rows, combined.cols)
@@ -3932,7 +3930,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
     def LUdecomposition_Simple(self,
                                iszerofunc=_iszero,
-                               allowrankdeficient=True):
+                               rankcheck=False):
         """Compute an lu decomposition of m x n matrix A, where P*A = L*U
         L is m x m lower triangular with unit diagonal
         U is m x n upper triangular
@@ -3952,10 +3950,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         is zero.
         If iszerofunc may return None if it cannot determine if its input is
         zero.
-        allowrankdeficient determines if this function raises a ValueError
-        when passed a matrix whose rank is strictly less than
+        The keyword argument rankcheck determines if this function raises a
+        ValueError when passed a matrix whose rank is strictly less than
         min(num rows, num cols). The default behavior is to decompose a rank
-        deficient matrix. Pass allowrankdeficient=False to raise a
+        deficient matrix. Pass rankcheck=True to raise a
         ValueError instead. (This mimics the previous behavior of this function).
 
         See Also
@@ -3991,7 +3989,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     break
             pivot_col = candidate_pivot_col
 
-            if not allowrankdeficient and pivot_col != pivot_row:
+            if rankcheck and pivot_col != pivot_row:
                 # All entries including and below the pivot position are
                 # zero, which indicates that the rank of the matrix is
                 # strictly less than min(num rows, num cols)
@@ -4000,7 +3998,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 raise ValueError("Rank of matrix is strictly less than"
                                  " number of rows or columns."
                                  " Pass keyword argument"
-                                 " allowrankdeficient=True to compute"
+                                 " rankcheck=False to compute"
                                  " the LU decomposition of this matrix.")
 
             elif iszeropivot:
