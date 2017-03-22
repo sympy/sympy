@@ -97,6 +97,7 @@ def test_match_exclude():
     assert e.match(p*x + q*y + r) == {p: 4, q: 5, r: 6}
 
     a = Wild('a', exclude=[x])
+    m = Wild('m', exclude=[x])
 
     e = 3*x
     assert e.match(p*x) == {p: 3}
@@ -110,6 +111,8 @@ def test_match_exclude():
     assert e.match(p*x**2 + p*x + 2*p) == {p: 3/x}
     assert e.match(a*x**2 + a*x + 2*a) is None
 
+    e = (2*x)**3
+    assert e.match((a*x)**m) == {m: 3, a: 2}
 
 def test_mul():
     x, y, a, b, c = map(Symbol, 'xyabc')

@@ -1120,6 +1120,7 @@ class Pow(Expr):
         return self.func(n, exp), self.func(d, exp)
 
     def matches(self, expr, repl_dict={}, old=False):
+        from sympy.core import expand_power_base
         expr = _sympify(expr)
 
         # special case, pattern = 1 and expr.exp can match to 0
@@ -1142,6 +1143,10 @@ class Pow(Expr):
                 return sb.matches(b**(e/se), repl_dict)
             return sb.matches(expr**(1/se), repl_dict)
 
+        m = expand_power_base(self,force=True)
+        if m.is_Mul & expr.is_Mul:
+            return m.matches(expr)
+            
         d = repl_dict.copy()
         d = self.base.matches(b, d)
         if d is None:
