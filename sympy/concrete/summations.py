@@ -409,14 +409,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return Sum(func_cond[0], (sym, lower_limit, upper_limit)).is_convergent()
             return S.true
 
-        # Checking for special cases  where limit with abs fails
-        pos_term_l = sequence_term.subs(sym, lower_limit)
-        pos_term_u = sequence_term.subs(sym, upper_limit)
-        if pos_term_l is S.NaN:
-            pos_term_l = S.Infinity
-        if pos_term_u is S.NaN:
-            pos_term_u = S.Infinity
-
         ###  -------- divergence test ----------- ###
         try:
             lim_val = limit(sequence_term, sym, upper_limit)
