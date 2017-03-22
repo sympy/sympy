@@ -263,7 +263,7 @@ class MatrixExpr(Basic):
         """
         Returns a dense Matrix with elements represented explicitly
 
-        Returns an object of type ImmutableMatrix.
+        Returns an object of type ImmutableDenseMatrix.
 
         Examples
         ========
@@ -283,8 +283,8 @@ class MatrixExpr(Basic):
         as_mutable: returns mutable Matrix type
 
         """
-        from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i, j]
+        from sympy.matrices.immutable import ImmutableDenseMatrix
+        return ImmutableDenseMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -309,7 +309,7 @@ class MatrixExpr(Basic):
 
         See Also
         ========
-        as_explicit: returns ImmutableMatrix
+        as_explicit: returns ImmutableDenseMatrix
         """
         return self.as_explicit().as_mutable()
 

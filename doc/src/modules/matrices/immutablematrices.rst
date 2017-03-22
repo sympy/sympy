@@ -8,7 +8,8 @@ performance reasons but means that standard matrices can not interact well with
 the rest of SymPy. This is because the :class:`Basic` object, from which most
 SymPy classes inherit, is immutable.
 
-The mission of the :class:`ImmutableMatrix` class is to bridge the tension
+The mission of the :class:`ImmutableDenseMatrix` class, which is aliased as
+:class:`ImmutableMatrix` for short, is to bridge the tension
 between performance/mutability and safety/immutability. Immutable matrices can
 do almost everything that normal matrices can do but they inherit from
 :class:`Basic` and can thus interact more naturally with the rest of SymPy.
@@ -38,5 +39,5 @@ ImmutableMatrix Class Reference
 
 .. module:: sympy.matrices.immutable
 
-.. autoclass:: ImmutableMatrix
+.. autoclass:: ImmutableDenseMatrix
    :members:
