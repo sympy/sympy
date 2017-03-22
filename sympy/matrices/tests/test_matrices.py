@@ -318,7 +318,6 @@ def test_determinant():
                  ( 8, -5) ))
 
     assert M.det(method="bareiss") == -1
-    # Test to check if deprecation warning works.
     assert M.det(method="berkowitz") == -1
 
     M = Matrix(( (x,   1),

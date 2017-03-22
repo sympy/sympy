@@ -2730,12 +2730,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         return prod.expand()
 
     def det(self, method="bareiss"):
-        if method == "bareis":
-            SymPyDeprecationWarning(
-                            feature="Using 'bareis' to compute matrix determinant",
-                            useinstead="'bareiss'",
-                            issue=12363, deprecated_since_version="1.1").warn()
-            method = "bareiss"
         """Computes the matrix determinant using the method "method".
 
         Possible values for "method":
@@ -2754,6 +2748,12 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
         # the method routines
+        if method == "bareis":
+            SymPyDeprecationWarning(
+                            feature="Using 'bareis' to compute matrix determinant",
+                            useinstead="'bareiss'",
+                            issue=12363, deprecated_since_version="1.1").warn()
+            method = "bareiss"
         if not self.is_square:
             raise NonSquareMatrixError()
         if not self:
