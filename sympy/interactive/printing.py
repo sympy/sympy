@@ -117,11 +117,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return False
         # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
         # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
+        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
             return True
         elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        elif isinstance(o, NDimArray):
             return True
         return False
 
