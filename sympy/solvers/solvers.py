@@ -2804,26 +2804,42 @@ def nsolve(*args, **kwargs):
         # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
-        return sympify(findroot(f, x0, **kwargs))
+        x = sympify(findroot(f, x0, **kwargs))
 
-    if len(fargs) > f.cols:
-        raise NotImplementedError(filldedent('''
-            need at least as many equations as variables'''))
-    verbose = kwargs.get('verbose', False)
-    if verbose:
-        print('f(x):')
-        print(f)
-    # derive Jacobian
-    J = f.jacobian(fargs)
-    if verbose:
-        print('J(x):')
-        print(J)
-    # create functions
-    f = lambdify(fargs, f.T, modules)
-    J = lambdify(fargs, J, modules)
-    # solve the system numerically
-    x = findroot(f, x0, J=J, **kwargs)
-    return Matrix(x)
+    else:
+        if len(fargs) > f.cols:
+            raise NotImplementedError(filldedent('''
+                need at least as many equations as variables'''))
+        verbose = kwargs.get('verbose', False)
+        if verbose:
+            print('f(x):')
+            print(f)
+        # derive Jacobian
+        J = f.jacobian(fargs)
+        if verbose:
+            print('J(x):')
+            print(J)
+        # create functions
+        f = lambdify(fargs, f.T, modules)
+        J = lambdify(fargs, J, modules)
+        # solve the system numerically
+        x = findroot(f, x0, J=J, **kwargs)
+        x = Matrix(x)
+
+    #
+    # done, result is ready to be returned and is stored in x
+    ###########################################################################
+
+    # check if user wants result to be returned as a dictionary
+    as_dict = kwargs.get('dict', False)
+    if as_dict:
+        # x won't be iterable (neither list, tuple nor Matrix) if there is only one variable in fargs, therefore exception TypeError will be raised
+        try:
+            return [dict(zip(fargs, [sympify(xi) for xi in x]))]
+        except TypeError:
+            return [dict([(fargs, x)])]
+
+    return x
 
 
 def _invert(eq, *symbols, **kwargs):
