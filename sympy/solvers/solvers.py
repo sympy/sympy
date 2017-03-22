@@ -2759,6 +2759,9 @@ def nsolve(*args, **kwargs):
     else:
         prec = None
 
+    # keyword argument to return result as a dictionary
+    as_dict = kwargs.get('dict', False)
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
@@ -2805,41 +2808,30 @@ def nsolve(*args, **kwargs):
 
         f = lambdify(fargs, f, modules)
         x = sympify(findroot(f, x0, **kwargs))
-
-    else:
-        if len(fargs) > f.cols:
-            raise NotImplementedError(filldedent('''
-                need at least as many equations as variables'''))
-        verbose = kwargs.get('verbose', False)
-        if verbose:
-            print('f(x):')
-            print(f)
-        # derive Jacobian
-        J = f.jacobian(fargs)
-        if verbose:
-            print('J(x):')
-            print(J)
-        # create functions
-        f = lambdify(fargs, f.T, modules)
-        J = lambdify(fargs, J, modules)
-        # solve the system numerically
-        x = findroot(f, x0, J=J, **kwargs)
-        x = Matrix(x)
-
-    #
-    # done, result is ready to be returned and is stored in x
-    ###########################################################################
-
-    # check if user wants result to be returned as a dictionary
-    as_dict = kwargs.get('dict', False)
-    if as_dict:
-        # x won't be iterable (neither list, tuple nor Matrix) if there is only one variable in fargs, therefore exception TypeError will be raised
-        try:
-            return [dict(zip(fargs, [sympify(xi) for xi in x]))]
-        except TypeError:
+        if as_dict:
             return [dict([(fargs, x)])]
+        return x
 
-    return x
+    if len(fargs) > f.cols:
+        raise NotImplementedError(filldedent('''
+            need at least as many equations as variables'''))
+    verbose = kwargs.get('verbose', False)
+    if verbose:
+        print('f(x):')
+        print(f)
+    # derive Jacobian
+    J = f.jacobian(fargs)
+    if verbose:
+        print('J(x):')
+        print(J)
+    # create functions
+    f = lambdify(fargs, f.T, modules)
+    J = lambdify(fargs, J, modules)
+    # solve the system numerically
+    x = findroot(f, x0, J=J, **kwargs)
+    if as_dict:
+        return [dict(zip(fargs, [sympify(xi) for xi in x]))]
+    return Matrix(x)
 
 
 def _invert(eq, *symbols, **kwargs):
