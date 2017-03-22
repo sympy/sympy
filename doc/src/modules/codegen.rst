@@ -551,8 +551,16 @@ available with ``autowrap``.
 There are other facilities available with Sympy to do efficient numeric
 computation. See :ref:`this<numeric_computation>` page for a comparison among them.
 
+
 Special (finite precision arithmetic) math functions
 ----------------------------------------------------
 
 .. automodule:: sympy.codegen.cfunctions
+    :members:
+
+
+Fortran specific functions
+--------------------------
+
+.. automodule:: sympy.codegen.ffunctions
     :members:
