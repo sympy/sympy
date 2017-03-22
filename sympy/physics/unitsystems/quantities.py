@@ -18,16 +18,17 @@ class Quantity(Expr):
     """
 
     is_commutative = True
+    is_real = True
     is_number = False
 
-    def __new__(cls, name, dimension, factor=S.One, abbrev=None, prefix=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, prefix=None, **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
 
         if not isinstance(dimension, dimensions.Dimension):
             dimension = getattr(dimensions, str(dimension))
-        factor = sympify(factor)
+        scale_factor = sympify(scale_factor)
 
         if abbrev is None:
             abbrev = name
@@ -35,13 +36,13 @@ class Quantity(Expr):
             abbrev = Symbol(abbrev)
 
         if prefix is None:
-            obj = Expr.__new__(cls, name, dimension, factor, abbrev)
+            obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev)
         else:
             prefix = sympify(prefix)
-            obj = Expr.__new__(cls, name, dimension, factor, abbrev, prefix)
+            obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev, prefix)
         obj._name = name
         obj._dimension = dimension
-        obj._factor_without_prefix = factor
+        obj._factor_without_prefix = scale_factor
         obj._abbrev = abbrev
         return obj
 
@@ -63,23 +64,17 @@ class Quantity(Expr):
         return self._abbrev
 
     @property
-    def factor(self):
+    def scale_factor(self):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
         return self._factor_without_prefix
 
-    def __str__(self):
-        return "%s" % (self.name)
-
-    def __repr__(self):
-        return self.__str__()
-
     @staticmethod
     def _collect_factor_and_dimension(expr):
 
         if isinstance(expr, Quantity):
-            return expr.factor, expr.dimension
+            return expr.scale_factor, expr.dimension
         elif isinstance(expr, Mul):
             factor = 1
             dimension = 1
@@ -113,9 +108,5 @@ class Quantity(Expr):
         >>> liter.convert_to(meter**3)
         meter**3/1000
         """
-        factor, dimension = self._collect_factor_and_dimension(other)
-
-        if self.dimension != dimension:
-            return self
-
-        return self.factor/factor*other
+        from .simplifiers import convert_to
+        return convert_to(self, other)

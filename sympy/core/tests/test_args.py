@@ -3165,27 +3165,23 @@ def test_sympy__physics__units__Unit():
 
 def test_sympy__physics__unitsystems__dimensions__Dimension():
     from sympy.physics.unitsystems.dimensions import Dimension
-    assert _test_args(Dimension(name="length", symbol="L", length=1))
+    assert _test_args(Dimension("length", "L"))
 
 
 def test_sympy__physics__unitsystems__quantities__Quantity():
     from sympy.physics.unitsystems.quantities import Quantity
-    from sympy.physics.unitsystems.systems import mks
-    assert _test_args(Quantity(10, mks["m"]))
-
-
-def test_sympy__physics__unitsystems__units__Constant():
-    from sympy.physics.unitsystems.units import Constant
-    from sympy.physics.unitsystems.dimensions import Dimension
-    length = Dimension(length=1)
-    assert _test_args(Constant(length, abbrev="u", factor=10))
+    from sympy.physics.unitsystems import length
+    assert _test_args(Quantity("dam", length, 10))
 
 
 def test_sympy__physics__unitsystems__units__Unit():
-    from sympy.physics.unitsystems.units import Unit
-    from sympy.physics.unitsystems.dimensions import Dimension
-    length = Dimension(length=1)
-    assert _test_args(Unit(length, abbrev="u", factor=10))
+    from sympy.physics.unitsystems import Unit, length
+    assert _test_args(Unit("unit", length, 10, "u"))
+
+
+def test_sympy__physics__unitsystems__prefixes__Prefix():
+    from sympy.physics.unitsystems.prefixes import Prefix
+    assert _test_args(Prefix('kilo', 'k', 3))
 
 
 def test_sympy__core__numbers__AlgebraicNumber():

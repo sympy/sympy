@@ -15,7 +15,7 @@ k = PREFIXES["k"]
 def test_definition():
     q = Quantity("s10", time, 10, "sabbr")
 
-    assert q.factor == 10
+    assert q.scale_factor == 10
     assert q.dimension == time
     assert q.abbrev == Symbol("sabbr")
 

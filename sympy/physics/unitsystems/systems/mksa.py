@@ -13,7 +13,7 @@ from sympy.physics.unitsystems.dimensions import (voltage, impedance,
                                                   conductance, capacitance, inductance, charge,
                                                   magnetic_density, magnetic_flux, current)
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
-from sympy.physics.unitsystems.systems.mks import mks, _mks_dim
+from sympy.physics.unitsystems.systems.mks import MKS, _mks_dim
 
 dims = (voltage, impedance, conductance, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)
@@ -29,4 +29,4 @@ for u in units:
 
 all_units.extend([Z0])
 
-mksa = mks.extend(base=(A,), units=all_units, name='MKSA')
+MKSA = MKS.extend(base=(A,), units=all_units, name='MKSA')

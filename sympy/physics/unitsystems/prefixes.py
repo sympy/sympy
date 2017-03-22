@@ -41,7 +41,7 @@ class Prefix(Expr):
         obj = Expr.__new__(cls, name, abbrev, exponent, base)
         obj._name = name
         obj._abbrev = abbrev
-        obj._factor = base**exponent
+        obj._scale_factor = base**exponent
         return obj
 
     @property
@@ -53,8 +53,8 @@ class Prefix(Expr):
         return self._abbrev
 
     @property
-    def factor(self):
-        return self._factor
+    def scale_factor(self):
+        return self._scale_factor
 
     def __str__(self):
         if self.base == 10:
@@ -65,40 +65,40 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
-        fact = self.factor * other.factor
+        fact = self.scale_factor * other.scale_factor
 
         if fact == 1:
             return 1
         elif isinstance(other, Prefix):
             # simplify prefix
             for p in PREFIXES:
-                if PREFIXES[p].factor == fact:
+                if PREFIXES[p].scale_factor == fact:
                     return PREFIXES[p]
             return fact
 
-        return self.factor * other
+        return self.scale_factor * other
 
     def __div__(self, other):
-        fact = self.factor / other.factor
+        fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
             return 1
         elif isinstance(other, Prefix):
             for p in PREFIXES:
-                if PREFIXES[p].factor == fact:
+                if PREFIXES[p].scale_factor == fact:
                     return PREFIXES[p]
             return fact
 
-        return self.factor / other
+        return self.scale_factor / other
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
         if other == 1:
             for p in PREFIXES:
-                if PREFIXES[p].factor == 1 / self.factor:
+                if PREFIXES[p].scale_factor == 1 / self.scale_factor:
                     return PREFIXES[p]
-        return other / self.factor
+        return other / self.scale_factor
 
     __rtruediv__ = __rdiv__
 
@@ -112,7 +112,7 @@ def prefix_unit(unit, prefixes):
 
         >>> from sympy.physics.unitsystems.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
-        >>> from sympy.physics.unitsystems.systems import mks
+        >>> from sympy.physics.unitsystems.systems import MKS
         >>> from sympy.physics.unitsystems import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
         >>> prefix_unit(m, pref)  #doctest: +SKIP
@@ -124,7 +124,7 @@ def prefix_unit(unit, prefixes):
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Unit("%s%s" % (prefix.name, unit.name), unit.dimension, unit.factor, unit.abbrev,
+        prefixed_units.append(Unit("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor, unit.abbrev,
                                    prefix=prefix))
 
     return prefixed_units
@@ -145,7 +145,7 @@ PREFIXES = {
     'd': Prefix('deci', 'd', -1),
     'c': Prefix('centi', 'c', -2),
     'm': Prefix('milli', 'm', -3),
-    #'µ': Prefix('micro', 'µ', -6),
+    'mu': Prefix('micro', 'mu', -6),
     'n': Prefix('nano', 'n', -9),
     'p': Prefix('pico', 'p', -12),
     'f': Prefix('femto', 'f', -15),

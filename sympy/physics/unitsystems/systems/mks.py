@@ -33,4 +33,4 @@ for u in units:
 all_units.extend([G, c])
 
 # unit system
-mks = UnitSystem(base=(m, kg, s), units=all_units, name="MKS")
+MKS = UnitSystem(base=(m, kg, s), units=all_units, name="MKS")

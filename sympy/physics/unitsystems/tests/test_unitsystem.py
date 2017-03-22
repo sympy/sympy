@@ -9,7 +9,7 @@ from sympy.utilities.pytest import raises
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
-    dm = Unit("dm", length, factor=0.1)
+    dm = Unit("dm", length, 0.1)
 
     base = (m, s)
     base_dim = (m.dimension, s.dimension)

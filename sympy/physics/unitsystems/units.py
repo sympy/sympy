@@ -22,7 +22,7 @@ class Unit(Quantity):
     A Unit is a quantity that support prefixes.
     """
 
-    def __new__(cls, name, dimension, factor, abbrev="", prefix=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor, abbrev="", prefix=None, **assumptions):
         """
         Create a new unit instance.
 
@@ -30,21 +30,21 @@ class Unit(Quantity):
         construct derived units and constants. Note that the argument prefix
         is ignored if ``dim`` is a Unit instance and already has a prefix.
         """
-        factor = sympify(factor)
+        scale_factor = sympify(scale_factor)
 
         if isinstance(prefix, string_types):
             prefix = PREFIXES[prefix]
 
-        obj = Quantity.__new__(cls, name, dimension, factor, abbrev, prefix, **assumptions)
+        obj = Quantity.__new__(cls, name, dimension, scale_factor, abbrev, prefix, **assumptions)
         obj._prefix = prefix
         return obj
 
     @property
-    def factor(self):
+    def scale_factor(self):
         if self.prefix is None:
             return self._factor_without_prefix
         else:
-            return self._factor_without_prefix * self.prefix.factor
+            return self._factor_without_prefix * self.prefix.scale_factor
 
     @property
     def prefix(self):
@@ -62,7 +62,7 @@ class Unit(Quantity):
             return False
         if self.dimension != other.dimension:
             return False
-        if self.factor != other.factor:
+        if self.scale_factor != other.scale_factor:
             return False
         return True
 
@@ -151,13 +151,13 @@ class UnitSystem(object):
 
         res = S.One
 
-        factor = unit.factor
+        factor = unit.scale_factor
         vec = self._system.dim_vector(unit.dimension)
 
         for (u, p) in sorted(zip(self._base_units, vec), key=lambda x: x[1],
                              reverse=True):
 
-            factor /= u.factor**p
+            factor /= u.scale_factor ** p
             if p == 0:
                 continue
             elif p == 1:

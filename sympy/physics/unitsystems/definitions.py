@@ -20,23 +20,23 @@ ampere = A = Unit("ampere", current, 1, abbrev='A')
 gram = g = Unit("gram", mass, 1, abbrev="g")
 
 # derived units
-joule = J = Unit("joule", energy, factor=10**3, abbrev="J")
-newton = N = Unit("newton", force, factor=10**3, abbrev="N")
-watt = W = Unit("watt", power, factor=10**3, abbrev="W")
-pascal = Pa = Unit("pascal", pressure, factor=10**3, abbrev="Pa")
+joule = J = Unit("joule", energy, 10**3, abbrev="J")
+newton = N = Unit("newton", force, 10**3, abbrev="N")
+watt = W = Unit("watt", power, 10**3, abbrev="W")
+pascal = Pa = Unit("pascal", pressure, 10**3, abbrev="Pa")
 hertz = hz = Hz = Unit("hertz", frequency, 1, abbrev="Hz")
 
 # MKSA extension:
 
 # derived units
-volt = V = Unit("volt", voltage, factor=10**3, abbrev='V')
-ohm = Unit("ohm", impedance, factor=10**3, abbrev='ohm')
+volt = V = Unit("volt", voltage, 10**3, abbrev='V')
+ohm = Unit("ohm", impedance, 10**3, abbrev='ohm')
 # siemens
-siemens = S = Unit("siemens", conductance, factor=10**-3, abbrev='S')
+siemens = S = Unit("siemens", conductance, 10**-3, abbrev='S')
 # farad
-farad = F = Unit("farad", capacitance, factor=10**-3, abbrev='F')
+farad = F = Unit("farad", capacitance, 10**-3, abbrev='F')
 # henry
-henry = H = Unit("henry", inductance, factor=10**3, abbrev='H')
+henry = H = Unit("henry", inductance, 10**3, abbrev='H')
 # coulomb
 coulomb = C = Unit("coulomb", charge, 1, abbrev='C')
 # tesla
@@ -80,12 +80,16 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
-G = gravitational_constant = Quantity("gravitational_constant", length**3*mass*-1*time**-2, factor=6.67384e-11, abbrev="G")
+G = gravitational_constant = Quantity("gravitational_constant", length**3*mass**-1*time**-2, 6.67384e-11, abbrev="G")
 # speed of light
-c = speed_of_light = Quantity("speed_of_light", velocity, factor=299792458, abbrev="c")
+c = speed_of_light = Quantity("speed_of_light", velocity, 299792458, abbrev="c")
 # Wave impedance of free space
-Z0 = Quantity("WaveImpedence", impedance, factor=119.9169832*pi, abbrev='Z_0')
+Z0 = Quantity("WaveImpedence", impedance, 119.9169832*pi, abbrev='Z_0')
 # Reduced Planck constant
-hbar = Quantity("hbar", action, factor=1.05457266e-34, abbrev="hbar")
+hbar = Quantity("hbar", action, 1.05457266e-34, abbrev="hbar")
 # Electronvolt
-eV = Quantity("eV", energy, factor=1.60219e-19, abbrev="eV")
+eV = Quantity("eV", energy, 1.60219e-19, abbrev="eV")
+
+## TODO: sort
+
+km = kilometer = Unit("kilometer", length, 1, "km", prefix="k")

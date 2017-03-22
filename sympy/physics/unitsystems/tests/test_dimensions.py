@@ -71,3 +71,6 @@ def test_mul_div_exp():
 
     length_a = length**"a"
     assert length_a.get_dimensional_dependencies() == {"length": Symbol("a")}
+
+    assert length != 1
+    assert length / length != 1

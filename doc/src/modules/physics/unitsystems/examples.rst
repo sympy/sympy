@@ -29,26 +29,25 @@ particle of mass :math:`m` and the body of mass :math:`M`, at a distance
 to determine the dimension of the Newton's constant :math:`G`. The result
 should be :math:`L^3 M^{-1} T^{-2}`.
 
-    >>> from __future__ import division
-    >>> from sympy import solve, Symbol, symbols
-    >>> from sympy.physics.unitsystems.systems import mks_dim as mks
-    >>> from sympy.physics.unitsystems.simplifiers import dim_simplify
-    >>> length, mass, time = mks["length"], mks["mass"], mks["time"]
-    >>> acceleration = mks["acceleration"]
-    >>> m, a, F = symbols("m a F")
-    >>> newton = m*a - F
-    >>> sol = solve(newton, F)[0]
-    >>> force = dim_simplify(sol.subs({m: mass, a: acceleration}))
-    >>> force  #doctest: +SKIP
+    >>> from sympy import symbols
+    >>> from sympy.physics.unitsystems import length, mass, acceleration, force
+    >>> from sympy.physics.unitsystems import gravitational_constant as G
+    >>> F = mass*acceleration
+    >>> F
+    Dimension(acceleration*mass)
+    >>> F.get_dimensional_dependencies()
     {'length': 1, 'mass': 1, 'time': -2}
-    >>> force == mks["force"]
+    >>> force.get_dimensional_dependencies()
+    {'length': 1, 'mass': 1, 'time': -2}
+    >>> F == force
     True
-    >>> M, r, G = symbols("M r G")
-    >>> grav_force = F - G * m * M / r**2
-    >>> sol = solve(grav_force, G)[0]
-    >>> const = dim_simplify(sol.subs({m: mass, M: mass, r: length, F: force}))
-    >>> const  #doctest: +SKIP
-    {'length': 3, 'mass': -1, 'time': -2}
+    >>> m1, m2, r = symbols("m1 m2 r")
+    >>> grav_eq = G * m1 * m2 / r**2
+    >>> F2 = grav_eq.subs({m1: mass, m2: mass, r: length, G: G.dimension})
+    >>> F2  #doctest: +SKIP
+    Dimension(mass*length*time**-2)
+    >>> F2.get_dimensional_dependencies()  #doctest: +SKIP
+    {'length': 1, 'mass': 1, 'time': -2}
 
 Note that one should first solve the equation, and then substitute with the
 dimensions.
@@ -65,21 +64,22 @@ Using Kepler's third law
 we can find the Venus orbital period using the known values for the other
 variables (taken from Wikipedia). The result should be 224.701 days.
 
-    >>> from __future__ import division
-    >>> from sympy import solve, Symbol, symbols, pi
-    >>> from sympy.physics.unitsystems import Unit, Quantity as Q
-    >>> from sympy.physics.unitsystems.simplifiers import qsimplify
+    >>> from sympy import solve, symbols, pi, Eq
+    >>> from sympy.physics.unitsystems import Unit, Quantity, length, mass
     >>> from sympy.physics.unitsystems.systems import mks
-    >>> m, kg, s = mks["m"], mks["kg"], mks["s"]
-    >>> T, a, M, G = symbols("T a M G")
-    >>> venus_a = Q(108208000e3, m)
-    >>> solar_mass = Q(1.9891e30, kg)
-    >>> venus_subs = {"a": venus_a, "M": solar_mass, "G": mks["G"]}
-    >>> Tsol = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
-    >>> q = qsimplify(Tsol.subs(venus_subs))
-    >>> day = Unit(s.dim, abbrev="day", factor=86400)
-    >>> print(q.convert_to(qsimplify(day)))
-    224.667 day
+    >>> from sympy.physics.unitsystems import day, gravitational_constant as G
+    >>> T = symbols("T")
+    >>> a = Quantity("venus_a", length, 108208000e3)
+    >>> M = Quantity("solar_mass", mass, 1.9891e30)
+    >>> Eq(T**2 / a**3, 4*pi**2 / G / M)
+    Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
+    >>> q = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
+    >>> q
+    6.28318530717959*sqrt(venus_a**3/(gravitational_constant*solar_mass))
+    >>> convert_to(q, day)
+    1.59123003109442e-10*sqrt(1993480633430344427209462)*day
+    >>> convert_to(q, day).n()
+    224.667*day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but I wanted to show how to create a unit that one needs.

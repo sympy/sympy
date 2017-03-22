@@ -3,10 +3,13 @@
 from __future__ import division
 
 from sympy import Add, Pow, Mul, sin
+from sympy.physics.unitsystems import length
+from sympy.physics.unitsystems import time
 from sympy.physics.unitsystems.simplifiers import dim_simplify
 from sympy.physics.unitsystems.systems import _mks_dim
 
-L, T = _mks_dim["length"], _mks_dim["time"]
+L = length
+T = time
 
 
 def test_dim_simplify_add():

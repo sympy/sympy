@@ -69,6 +69,7 @@ class Dimension(Expr):
     is_number = False
     # make sqrt(M**2) --> M
     is_positive = True
+    is_real = True
 
     def __new__(cls, name, symbol=None):
         """
@@ -81,12 +82,19 @@ class Dimension(Expr):
             Dimension(velocity, v)
 
         """
-        name = sympify(name)
+
+        if isinstance(name, string_types):
+            name = Symbol(name)
+        else:
+            name = sympify(name)
+
         if not isinstance(name, Expr):
             raise TypeError("Dimension name needs to be a valid math expression")
 
-        if symbol is not None:
-            symbol = sympify(symbol)
+        if isinstance(symbol, string_types):
+            symbol = Symbol(symbol)
+        elif symbol is not None:
+            assert isinstance(symbol, Symbol)
 
         if symbol is not None:
             obj = Expr.__new__(cls, name, symbol)
@@ -106,7 +114,9 @@ class Dimension(Expr):
         return self._symbol
 
     def __eq__(self, other):
-        return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
+        if isinstance(other, Dimension):
+            return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
+        return False
 
     def __str__(self):
         """
@@ -184,10 +194,13 @@ class Dimension(Expr):
     @staticmethod
     def _get_dimensional_dependencies_for_name(name):
 
-        if name in Dimension._dimensional_dependencies:
-            return Dimension._dimensional_dependencies[name]
+        if name.is_Symbol:
+            if name.name in Dimension._dimensional_dependencies:
+                return Dimension._dimensional_dependencies[name.name]
+            else:
+                return {}
 
-        if name.is_Symbol or name.is_Number:
+        if name.is_Number:
             return {}
 
         if name.is_Mul:
@@ -263,33 +276,33 @@ magnetic_flux = Dimension(name='charge')
 ## dimensional dependency dictionary.
 
 # Dimensional dependencies for base dimensions
-Dimension._dimensional_dependencies[Symbol("length")] = dict(length=1)
-Dimension._dimensional_dependencies[Symbol("mass")] = dict(mass=1)
-Dimension._dimensional_dependencies[Symbol("time")] = dict(time=1)
+Dimension._dimensional_dependencies["length"] = dict(length=1)
+Dimension._dimensional_dependencies["mass"] = dict(mass=1)
+Dimension._dimensional_dependencies["time"] = dict(time=1)
 
 # Dimensional dependencies for derived dimensions
-Dimension._dimensional_dependencies[Symbol("velocity")] = dict(length=1, time=-1)
-Dimension._dimensional_dependencies[Symbol("acceleration")] = dict(length=1, time=-2)
-Dimension._dimensional_dependencies[Symbol("momentum")] = dict(mass=1, length=1, time=-1)
-Dimension._dimensional_dependencies[Symbol("force")] = dict(mass=1, length=1, time=-2)
-Dimension._dimensional_dependencies[Symbol("energy")] = dict(mass=1, length=2, time=-2)
-Dimension._dimensional_dependencies[Symbol("power")] = dict(length=2, mass=1, time=-3)
-Dimension._dimensional_dependencies[Symbol("pressure")] = dict(mass=1, length=-1, time=-2)
-Dimension._dimensional_dependencies[Symbol("frequency")] = dict(time=-1)
-Dimension._dimensional_dependencies[Symbol("action")] = dict(length=2, mass=1, time=-1)
+Dimension._dimensional_dependencies["velocity"] = dict(length=1, time=-1)
+Dimension._dimensional_dependencies["acceleration"] = dict(length=1, time=-2)
+Dimension._dimensional_dependencies["momentum"] = dict(mass=1, length=1, time=-1)
+Dimension._dimensional_dependencies["force"] = dict(mass=1, length=1, time=-2)
+Dimension._dimensional_dependencies["energy"] = dict(mass=1, length=2, time=-2)
+Dimension._dimensional_dependencies["power"] = dict(length=2, mass=1, time=-3)
+Dimension._dimensional_dependencies["pressure"] = dict(mass=1, length=-1, time=-2)
+Dimension._dimensional_dependencies["frequency"] = dict(time=-1)
+Dimension._dimensional_dependencies["action"] = dict(length=2, mass=1, time=-1)
 
 # Dimensional dependencies for  base dimensions
-Dimension._dimensional_dependencies[Symbol("current")] = dict(current=1)
+Dimension._dimensional_dependencies["current"] = dict(current=1)
 
 # Dimensional dependencies for derived dimensions
-Dimension._dimensional_dependencies[Symbol("voltage")] = dict(mass=1, length=2, current=-1, time=-3)
-Dimension._dimensional_dependencies[Symbol("impedance")] = dict(mass=1, length=2, current=-2, time=-3)
-Dimension._dimensional_dependencies[Symbol("conductance")] = dict(mass=-1, length=-2, current=2, time=3)
-Dimension._dimensional_dependencies[Symbol("capacitance")] = dict(mass=-1, length=-2, current=2, time=4)
-Dimension._dimensional_dependencies[Symbol("inductance")] = dict(mass=1, length=2, current=-2, time=-2)
-Dimension._dimensional_dependencies[Symbol("charge")] = dict(current=1, time=1)
-Dimension._dimensional_dependencies[Symbol("magnetic_density")] = dict(mass=1, current=-1, time=-2)
-Dimension._dimensional_dependencies[Symbol("magnetic_flux")] = dict(length=2, mass=1, current=-1, time=-2)
+Dimension._dimensional_dependencies["voltage"] = dict(mass=1, length=2, current=-1, time=-3)
+Dimension._dimensional_dependencies["impedance"] = dict(mass=1, length=2, current=-2, time=-3)
+Dimension._dimensional_dependencies["conductance"] = dict(mass=-1, length=-2, current=2, time=3)
+Dimension._dimensional_dependencies["capacitance"] = dict(mass=-1, length=-2, current=2, time=4)
+Dimension._dimensional_dependencies["inductance"] = dict(mass=1, length=2, current=-2, time=-2)
+Dimension._dimensional_dependencies["charge"] = dict(current=1, time=1)
+Dimension._dimensional_dependencies["magnetic_density"] = dict(mass=1, current=-1, time=-2)
+Dimension._dimensional_dependencies["magnetic_flux"] = dict(length=2, mass=1, current=-1, time=-2)
 
 
 class DimensionSystem(object):
@@ -383,8 +396,10 @@ class DimensionSystem(object):
         found_dim = None
 
         #TODO: use copy instead of direct assignment for found_dim?
-        if isinstance(dim, string_types) or dim.is_Symbol:
-            dim = sympify(dim)
+        if isinstance(dim, string_types):
+            dim = Symbol(dim)
+
+        if dim.is_Symbol:
             for d in self._dims:
                 if dim in (d.name, d.symbol):
                     found_dim = d
