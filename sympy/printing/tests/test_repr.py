@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
+    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
@@ -80,7 +80,7 @@ def test_list():
 
 
 def test_Matrix():
-    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
+    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableDenseMatrix, "ImmutableDenseMatrix")]:
         sT(cls([[x**+1, 1], [y, x + y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 

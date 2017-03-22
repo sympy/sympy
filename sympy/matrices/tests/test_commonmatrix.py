@@ -332,6 +332,8 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2,2,[0,1,2,3]).values()) == set([1,2,3])
+    x = Symbol('x', real=True)
+    assert set(PropertiesOnlyMatrix(2,2,[x,0,0,1]).values()) == set([x,1])
 
 
 # OperationsOnlyMatrix tests
@@ -347,6 +349,13 @@ def test_adjoint():
     ans = OperationsOnlyMatrix([[0, 1], [-I, 0]])
     assert ans.adjoint() == Matrix(dat)
 
+def test_as_real_imag():
+    m1 = OperationsOnlyMatrix(2,2,[1,2,3,4])
+    m3 = OperationsOnlyMatrix(2,2,[1+S.ImaginaryUnit,2+2*S.ImaginaryUnit,3+3*S.ImaginaryUnit,4+4*S.ImaginaryUnit])
+
+    a,b = m3.as_real_imag()
+    assert a == m1
+    assert b == m1
 
 def test_conjugate():
     M = OperationsOnlyMatrix([[0, I, 5],
