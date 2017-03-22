@@ -5417,7 +5417,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     where pivot_offset is the index of the pivot, pivot_val is
     the (possibly simplified) value of the pivot, assumed_nonzero
     is True if an assumption that the pivot was non-zero
-    was made without being probed, and newly_determined are
+    was made without being proved, and newly_determined are
     elements that were simplified during the process of pivot
     finding."""
 
