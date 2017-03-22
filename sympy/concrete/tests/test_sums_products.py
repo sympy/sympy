@@ -948,7 +948,7 @@ def test_is_convergent():
     assert Sum(2/(n**2*log(n)), (n, 2, oo)).is_convergent() is S.true
 
     # Raabe's test --
-    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(((n - 1)/(n + 1))**n, (n, 1, oo)).is_convergent() is S.false
 
     # alternating series tests --
     assert Sum((-1)**(n - 1)/(n**2 - 1), (n, 3, oo)).is_convergent() is S.true
@@ -975,7 +975,8 @@ def test_is_absolutely_convergent():
 @XFAIL
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-
+    # Raabe's test
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
     # Dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true

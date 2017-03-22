@@ -500,18 +500,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             except NotImplementedError:
                 pass
 
-        # Checking condition of Raabe's test
-        if pos_term_l >= 0 and pos_term_u >= 0 :
-            lim = Limit(sequence_term.subs(sym, sym+1)/sequence_term,
-                        sym, S.Infinity)
-            lim_evaluated = lim.doit()
-            raabe = False
-            if lim_evaluated == 1:
-                raabe = True
-
         ### ----------- Raabe's test ---------------- ###
-        if raabe:
-            lim_val = Limit(sym * (sequence_term/sequence_term.subs(sym, sym + 1))
+        if lim_evaluated == 1:
+            lim_val = Limit(sym * (abs(sequence_term)/abs(sequence_term).subs(sym, sym + 1))
                             - S(1), sym, S.Infinity)
             val = lim_val.doit()
             if val.is_number:
