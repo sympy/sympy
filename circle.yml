@@ -13,5 +13,5 @@ dependencies:
 
 test:
   override:
-    - python3 -m pytest --strict -ra --veryquickcheck --pep8 --flakes
+    - python3 -m pytest --strict -ra --veryquickcheck --pep8 --flakes --durations 10
     - python3 -m pytest --strict --lf --verbose

@@ -37,6 +37,8 @@ def main(ref_timing, limits=(10, .1)):
     accumul_n = [0 for _ in range(len(limits))]
     accumul_t = [0.0 for _ in range(len(limits))]
     for test_id, dur in read_log():
+        if test_id.startswith('sympy/utilities/tests/test_code_quality.py'):
+            continue # white-listed (worth running since it catches many errors)
         for idx, lim in enumerate(limits):
             if dur/ref_timing >= lim:
                 fname, tname = test_id.split('::')

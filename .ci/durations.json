@@ -1806,9 +1806,6 @@
         "sympy/unify/tests/test_rewrite.py": [
             "test_assumptions"
         ],
-        "sympy/utilities/tests/test_code_quality.py": [
-            "test_files"
-        ],
         "sympy/utilities/tests/test_codegen.py": [
             "test_complicated_codegen_f95"
         ],
