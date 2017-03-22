@@ -106,14 +106,52 @@ class FCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "! {0}".format(text)
-#issue 12267
+
     def _print_sign(self,func):
-        if func.args[0].is_integer:
-            return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
-        elif func.args[0].is_complex:
-            return "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
+        lines=[]
+        if func.has(Assignment):
+            for i,j in enumerate(func.args):
+                if j[2].is_integer:
+                    lines.append("if (%s == 0) then"%self._print(j[2]))
+                    lines.append(self._print(j[0]))
+                    lines.append("else")
+                    tmp=self._print(j[1])
+                    lines.append(tmp+"(1,%s)"%self._print(j[2]))
+                    lines.append("end if")
+                elif j[2].is_complex:
+                    lines.append("if (abs(%s) == 0d0) then"%self._print(j[2]))
+                    lines.append(self._print(j[0])+'(0d0,0d0)')
+                    lines.append("else")
+                    lines.append(self._print(j[1]))
+                    lines.append("end if")
+                else:
+                    lines.append("if (%s == 0d0) then"%self._print(j[2]))
+                    tmp=self._print(j[0])
+                    lines.append(tmp[:-3]+"0d0")
+                    lines.append("else")
+                    tmp=self._print(j[1])
+                    lines.append(tmp+"(1d0,%s)"%self._print(j[2]))
+                    lines.append("end if")
+            return "\n".join(lines)
+        elif self._settings["standard"]>=95:
+            if func.args[0].is_integer:
+                return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
+            elif func.args[0].is_complex:
+                return "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
+            else:
+                return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
         else:
-            return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
+            return "Wrong Syntax Used.\nfcode(sign(x),assign_to='var'):- FORTRAN VERSION LESS THAN 95.\nfcode(sign(x),standard=95):- FORTRAN VERSION MORE THAN 95"
+    #for printing isign() function used in FORTRAN
+    def _print_isign(self,func):
+        return "isign(1,%s)"%self._print(func.args[1])
+    #for printing cmplx() function used in FORTRAN
+    def _print_cmplx(self,func):
+        return "cmplx(0d0,0d0)"
+    #for printing abs() function used in FORTRAN
+    def _print_abs(self,func):
+        return "abs(%s)"%(self._print(func.args[0]))
+    
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
