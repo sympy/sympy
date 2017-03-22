@@ -14,15 +14,15 @@ def read_log():
     for line in open(os.path.join(ci_folder, 'durations.log')):
         if start_token_seen:
             try:
-                time, kind, test_id = line.split()
+                dur, kind, test_id = line.split()
             except:
                 return
             else:
-                if time[0] not in '0123456789':
+                if dur[0] not in '0123456789':
                     return
             if kind != 'call':
                 continue
-            if time[-1] != 's':
+            if dur[-1] != 's':
                 raise NotImplementedError("expected seconds")
             yield test_id, float(time[:-1])
         elif start_token in line:
@@ -36,12 +36,12 @@ def main(ref_timing, limits=(10, .1)):
     groupings = [defaultdict(list) for _ in range(len(limits))]
     accumul_n = [0 for _ in range(len(limits))]
     accumul_t = [0.0 for _ in range(len(limits))]
-    for test_id, time in read_log():
+    for test_id, dur in read_log():
         for idx, lim in enumerate(limits):
-            if time/ref_timing >= lim:
+            if dur/ref_timing >= lim:
                 fname, tname = test_id.split('::')
                 groupings[idx][fname].append(tname)
-                accumul_t[idx] += time
+                accumul_t[idx] += dur
                 accumul_n[idx] += 1
                 break
     json_data = json.dumps([{k: sorted(v) for k, v in gr.items()}
@@ -50,8 +50,9 @@ def main(ref_timing, limits=(10, .1)):
     print('number in group, accumulated_time: %s' %
           str(list(zip(accumul_n, accumul_t))))
 
+
 def slow_function():
-    t = time.time();
+    t = time.time()
     a = 0
     for i in range(5):
         a += sum([x**.3 - x**i for x in range(1000000) if x % 3 == 0])
