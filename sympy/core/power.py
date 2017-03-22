@@ -1146,7 +1146,7 @@ class Pow(Expr):
         m = expand_power_base(self,force=True)
         if m.is_Mul & expr.is_Mul:
             return m.matches(expr)
-            
+
         d = repl_dict.copy()
         d = self.base.matches(b, d)
         if d is None:
