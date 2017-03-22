@@ -1283,7 +1283,7 @@ class Mul(Expr, AssocOp):
                             count_num += 1
                                 
                 
-            if count_num = count_denom:
+            if count_num == count_denom:
                 r = None
             elif count_num > count_denom:
                 r = False
