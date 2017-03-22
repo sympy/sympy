@@ -18,7 +18,7 @@ class MathMLPrinter(Printer):
 
     Whenever possible tries to use Content markup and not Presentation markup.
 
-    References: http://www.w3.org/TR/MathML2/
+    References: https://www.w3.org/TR/MathML3/
     """
     printmethod = "_mathml"
     _default_settings = {
@@ -103,7 +103,7 @@ class MathMLPrinter(Printer):
         coeff, terms = expr.as_coeff_mul()
         if coeff is S.One and len(terms) == 1:
             # XXX since the negative coefficient has been handled, I don't
-            # thing a coeff of 1 can remain
+            # think a coeff of 1 can remain
             return self._print(terms[0])
 
         if self.order != 'old':
@@ -165,7 +165,7 @@ class MathMLPrinter(Printer):
         #numerator
         xnum = self.dom.createElement('cn')
         xnum.appendChild(self.dom.createTextNode(str(e.p)))
-        #denomenator
+        #denominator
         xdenom = self.dom.createElement('cn')
         xdenom.appendChild(self.dom.createTextNode(str(e.q)))
         x.appendChild(xnum)
