@@ -273,6 +273,19 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     except AttributeError:
         pass
 
+
+    #Support for basic numpy datatypes.
+    if type(a).__module__ == 'numpy':
+        import numpy
+        if(numpy.isscalar(a)):  
+            try:
+                return sympify(numpy.asscalar(a))
+            except RuntimeError:
+                return sympify(numpy.float64(a))
+                #Exception case is for float128 which
+                #has no native python equivalent.
+
+
     if not isinstance(a, string_types):
         for coerce in (float, int):
             try:
@@ -297,6 +310,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
+
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
