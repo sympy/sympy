@@ -559,6 +559,14 @@ def test_uselogcombine_1():
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2)
 
+@XFAIL
+def test_otherlog():
+    f1 = log(8*x) - log(1 + x**Rational(1, 2)) - 2
+    f2 = log(x, 4) + log(x - 12, 4) - 3
+    assert solveset(f1, x, S.Reals) == FiniteSet(
+         sqrt(exp(2) + 32)*exp(3)/128 + (exp(2) + 16)*exp(2)/128)
+    assert solveset(f2, x) == FiniteSet(16)
+
 
 @XFAIL
 def test_uselogcombine_2():

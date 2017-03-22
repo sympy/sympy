@@ -561,6 +561,33 @@ def _solve_abs(f, symbol, domain):
     else:
         return ConditionSet(symbol, Eq(f, 0), domain)
 
+def _logsolver(f, symbol, domain):
+    f = sympify(f)
+    f = logcombine(f, force = True)
+    if domain.is_subset(S.Reals):
+        result = solveset_real(f, symbol)
+    else:
+        result = solveset_complex(f, symbol)
+    if isinstance(result, ConditionSet):
+        lhs_s, rhs_s = _invert(f, 0, symbol, domain)
+        if lhs_s == symbol:
+            rhs_s = FiniteSet(*[Mul(*
+                    signsimp(i).as_content_primitive())
+                    for i in rhs_s])
+            result = rhs_s
+        elif isinstance(rhs_s, FiniteSet):
+            for eq in [lhs_s - rhs for rhs in rhs_s]:
+                equation = eq
+            equation = simplify(equation)
+            num,deno = fraction(equation)
+            num = ratsimp(num)
+            result = _solveset(num, symbol, domain)
+    if (result, FiniteSet):
+        for x in result:
+            if sign(x) == -1:
+                result -= FiniteSet(x)  # to remove negative values
+    return result
+
 
 def solve_decomposition(f, symbol, domain):
     """
