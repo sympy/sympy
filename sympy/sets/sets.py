@@ -1845,8 +1845,13 @@ class FiniteSet(Set, EvalfMixin):
     True
 
     >>> members = [1, 2, 3, 4]
-    >>> FiniteSet(*members)
+    >>> f = FiniteSet(*members)
+    >>> f
     {1, 2, 3, 4}
+    >>> f - FiniteSet(2)
+    {1, 3, 4}
+    >>> f + FiniteSet(2, 5)
+    {1, 2, 3, 4, 5}
 
     References
     ==========
