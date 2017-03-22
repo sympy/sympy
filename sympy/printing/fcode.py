@@ -24,8 +24,10 @@ import string
 from sympy.core import S, Add, N
 from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
+from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.codegen.ast import Assignment
+from sympy.codegen.ffunctions import isign, dsign, cmplx
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -43,10 +45,22 @@ known_functions = {
     "log": "log",
     "exp": "exp",
     "erf": "erf",
-    "Abs": "Abs",
+    "Abs": "abs",
     "sign": "sign",
     "conjugate": "conjg"
 }
+
+def _sign_as_Piecewise(sgn):
+    from sympy import Abs, Piecewise
+    arg, = sgn.args
+    if arg.is_integer:
+        pw_args = (0, Eq(arg, 0)), (isign(1, arg), True)
+    elif arg.is_complex:
+        pw_args = (cmplx(0, 0), Eq(Abs(arg), 0)), (arg/Abs(arg), True)
+    else:
+        pw_args = (0, Eq(arg, 0)), (dsign(1, arg), True)
+    return Piecewise(*pw_args)
+
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -98,6 +112,12 @@ class FCodePrinter(CodePrinter):
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
 
+    def doprint(self, expr, assign_to=None):
+        from sympy.functions import sign
+        new_expr = expr.replace(lambda arg: isinstance(arg, sign),
+                                lambda arg: _sign_as_Piecewise(arg))
+        return super(FCodePrinter, self).doprint(new_expr, assign_to)
+
     def _rate_index_position(self, p):
         return -p*5
 
@@ -106,14 +126,6 @@ class FCodePrinter(CodePrinter):
 
     def _get_comment(self, text):
         return "! {0}".format(text)
-#issue 12267
-    def _print_sign(self,func):
-        if func.args[0].is_integer:
-            return "merge(0, isign(1, {0}), {0} == 0)".format(self._print(func.args[0]))
-        elif func.args[0].is_complex:
-            return "merge(cmplx(0d0, 0d0), {0}/abs({0}), abs({0}) == 0d0)".format(self._print(func.args[0]))
-        else:
-            return "merge(0d0, dsign(1d0, {0}), {0} == 0d0)".format(self._print(func.args[0]))
 
     def _declare_number_const(self, name, value):
         return "parameter ({0} = {1})".format(name, value)
@@ -291,6 +303,26 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
+
+    def _print_Equality(self, expr):
+        lhs, rhs = expr.args
+        return ' == '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Unequality(self, expr):
+        lhs, rhs = expr.args
+        return ' /= '.join(map(self._print, (lhs, rhs)))
+
+    def _print_isign(self, expr):
+        return 'isign(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_dsign(self, expr):
+        return 'dsign(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_cmplx(self, expr):
+        return 'cmplx(%s)' % ', '.join(map(self._print, expr.args))
+
+    def _print_kind(self, expr):
+        return 'kind(%s)' % ', '.join(map(self._print, expr.args))
 
     def _pad_leading_columns(self, lines):
         result = []
