@@ -92,6 +92,8 @@ class Mul(Expr, AssocOp):
     __slots__ = []
 
     is_Mul = True
+    is_odd = self._eval_is_odd()
+    is_even = self._eval_is_even()
 
     @classmethod
     def flatten(cls, seq):
@@ -1264,39 +1266,33 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            r = True
             count_denom = 0
             count_num = 0
             for t in self.args:
-                    if isinstance(t,symbol):
-                        if not t.is_integer:
-                            if t == S.Half:
-                                count_denom += 1
-                        elif t.is_integer:
-                            if t.is_even:
-                                count_num += 1
-                            elif t.is_odd is None:
-                                r = None
-                                           
-                    if isinstance(t,int):
-                        if self % 2 == 0:
+                if t == S.Half:
+                    count_denom += 1
+                elif isinstance(t,Symbol):
+                    if t.is_integer:
+                        if t.is_even:
                             count_num += 1
-                                
-                
+                        elif t.is_odd is None or t.is_even is None:
+                            return None
+                                               
+                elif isinstance(t,int):
+                    if self % 2 == 0:
+                        count_num += 1                        
+                    
             if count_num == count_denom:
-                r = None
+                return None
             elif count_num > count_denom:
-                r = False
+                return False
             elif count_num < count_denom:
-                r = None
+                return None
 
-            # !integer -> !odd
+                # !integer -> !odd
         else:
-            r = False
-
+            return False
             
-    return r
-
     def _eval_is_even(self):
         is_integer = self.is_integer
 
