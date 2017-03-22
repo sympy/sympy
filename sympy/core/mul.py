@@ -1266,6 +1266,11 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
+            #The entire expression is an integer, but it
+            #can be decomposed into fractions (i.e.
+            #numerator and denominator.
+            #The counters keep track of multiples of 2 in
+            #numerator and denominator to determine oddness.
             count_denom = 0
             count_num = 0
             for t in self.args:
