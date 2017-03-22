@@ -2801,35 +2801,8 @@ class MatrixBase(MatrixDeterminant, MatrixArithmetic, MatrixOperations, MatrixPr
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky()
 
-    def cofactor(self, i, j, method="berkowitz"):
-        """Calculate the cofactor of an element.
-
-        See Also
-        ========
-
-        cofactorMatrix
-        minorEntry
-        minorMatrix
-        """
-        if (i + j) % 2 == 0:
-            return self.minorEntry(i, j, method)
-        else:
-            return -1 * self.minorEntry(i, j, method)
-
     def cofactorMatrix(self, method="berkowitz"):
-        """Return a matrix containing the cofactor of each element.
-
-        See Also
-        ========
-
-        cofactor
-        minorEntry
-        minorMatrix
-        adjugate
-        """
-        out = self._new(self.rows, self.cols, lambda i, j:
-        self.cofactor(i, j, method))
-        return out
+        return self.cofactor_matrix(method=method)
 
     def columnspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span columnspace of self
@@ -4435,37 +4408,10 @@ class MatrixBase(MatrixDeterminant, MatrixArithmetic, MatrixOperations, MatrixPr
         return rhs.__class__(b)
 
     def minorEntry(self, i, j, method="berkowitz"):
-        """Calculate the minor of an element.
-
-        See Also
-        ========
-
-        minorMatrix
-        cofactor
-        cofactorMatrix
-        """
-        if not 0 <= i < self.rows or not 0 <= j < self.cols:
-            raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` "
-                             "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        return self.minorMatrix(i, j).det(method)
+        return self.minor(i, j, method=method)
 
     def minorMatrix(self, i, j):
-        """Creates the minor matrix of a given element.
-
-        See Also
-        ========
-
-        minorEntry
-        cofactor
-        cofactorMatrix
-        """
-        if not 0 <= i < self.rows or not 0 <= j < self.cols:
-            raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` "
-                             "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        M = self.as_mutable()
-        M.row_del(i)
-        M.col_del(j)
-        return self._new(M)
+        return self.minor_submatrix(i, j)
 
     def multiply(self, b):
         """Returns self*b
