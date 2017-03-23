@@ -25,12 +25,12 @@ class Dimension(Expr):
     """
     This class represent the dimension of a physical quantities.
 
-    The dimensions may have a name and a symbol. All other
-    arguments are dimensional powers. They represent a characteristic of a
-    quantity, giving an interpretation to it: for example (in classical
-    mechanics) we know that time is different from temperature, and dimensions
-    make this difference (but they do not provide any measure of these
-    quantites).
+    The ``Dimension`` constructor takes as parameters a name and an optional
+    symbol.
+
+    For example, in classical mechanics we know that time is different from
+    temperature and dimensions make this difference (but they do not provide
+    any measure of these quantites.
 
         >>> from sympy.physics.unitsystems import Dimension
         >>> length = Dimension('length')
@@ -70,16 +70,6 @@ class Dimension(Expr):
     is_real = True
 
     def __new__(cls, name, symbol=None):
-        """
-        Create a new dimension.
-
-            >>> from sympy.physics.unitsystems.dimensions import Dimension
-            >>> Dimension("length")
-            Dimension(length)
-            >>> Dimension("velocity", "v")
-            Dimension(velocity, v)
-
-        """
 
         if isinstance(name, string_types):
             name = Symbol(name)

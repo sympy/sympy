@@ -1,4 +1,6 @@
-from sympy import pi
+from sympy.physics.units import temperature, acceleration
+
+from sympy import pi, Rational
 from sympy import S as S_singleton
 from sympy.physics.unitsystems import Quantity
 from sympy.physics.unitsystems import Unit
@@ -9,7 +11,7 @@ from sympy.physics.unitsystems.prefixes import PREFIXES
 
 #### UNITS ####
 
-## Base units:
+# Base units:
 meter = m = Unit("meter", length, 1, abbrev="m")
 
 kilogram = kg = Unit("kilogram", mass, 1, abbrev="g", prefix=PREFIXES["k"])
@@ -78,9 +80,9 @@ us = microsecond = microseconds = Unit("microsecond", time, 1, "mu")
 ns = nanosecond = nanoseconds = Unit("nanosecond", time, 1, "n")
 ps = picosecond = picoseconds = Unit("picosecond", time, 1, "p")
 
-minute = Quantity("minute", time, 60)
-hour = Quantity("hour", time, 3600)
-day = Quantity("day", time, 86400)
+minute = minutes = Quantity("minute", time, 60)
+h = hour = hours = Quantity("hour", time, 3600)
+day = days = Quantity("day", time, 86400)
 
 anomalistic_year = anomalistic_years = Quantity("anomalistic_year", time, 365.259636*86400)
 sidereal_year = sidereal_years = Quantity("sidereal_year", time, 31558149.540)
@@ -107,3 +109,12 @@ hbar = Quantity("hbar", action, 1.05457266e-34, abbrev="hbar")
 planck = Quantity("planck", action, 2*pi*hbar.scale_factor, abbrev="h")
 # Electronvolt
 eV = Quantity("eV", energy, 1.60219e-19, abbrev="eV")
+# Avogadro number
+avogadro_number = Quantity("avogadro_number", 1, 6.022140857e23)
+# Boltzmann constant
+boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-20)
+# Atomic mass
+atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24)
+# gee
+gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665)
+#

@@ -5,10 +5,9 @@ Physical quantities.
 """
 
 from __future__ import division
-import numbers
 
 from sympy.core.compatibility import string_types
-from sympy import sympify, Expr, Number, Mul, Pow, S, Symbol, Add
+from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add
 from sympy.physics.unitsystems import dimensions
 
 

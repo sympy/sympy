@@ -55,9 +55,6 @@ def convert_to(expr, quantity):
         second, day, mile, newton, kilogram, inch, centimeter
     >>> from sympy.physics.unitsystems.definitions import kilometer
     >>> from sympy.physics.unitsystems import convert_to
-
-    # TODO: move these to the tests:
-
     >>> convert_to(mile, kilometer)
     1.609344*kilometer
     >>> convert_to(meter/second, speed_of_light)

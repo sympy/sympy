@@ -28,15 +28,26 @@ from .simplifiers import convert_to
 from .quantities import Quantity
 from .definitions import A, C, F, G, H, Hz, J, N, Pa, \
     S, T, V, W, Wb, Z0, ampere, \
-    anomalistic_year, anomalistic_years, c, centiliter, \
-    centiliters, cl, common_year, common_years, coulomb, \
-    day, deciliter, deciliters, dl, draconic_year, draconic_years, \
-    eV, farad, feet, foot, ft, full_moon_cycle, \
+    anomalistic_year, anomalistic_years, c, \
+    liter, liters, l, \
+    deciliter, deciliters, dl, \
+    centiliter, centiliters, cl, \
+    milliliter, milliliters, ml, \
+    common_year, common_years, coulomb, \
+    day, days, \
+    draconic_year, draconic_years, \
+    eV, farad, \
+    feet, foot, ft, \
+    full_moon_cycle, \
     full_moon_cycles, g, gaussian_year, gaussian_years, gram, \
-    gravitational_constant, hbar, henry, hertz, hour, hz, inch, \
+    gravitational_constant, hbar, henry, hertz, \
+    h, hour, hours, \
+    hz, inch, \
     inches, joule, julian_year, julian_years, kg, kilogram, l, \
     liter, liters, m, meter, mi, \
-    mile, miles, milliliter, milliliters, minute, ml, nautical_mile, \
+    ml, mile, miles, \
+    minute, minutes, \
+    nautical_mile, \
     nautical_miles, newton, nmi, ohm, pascal, pi, s, second, \
     sidereal_year, sidereal_years, siemens, speed_of_light, tesla,\
     tropical_year, tropical_years, volt, watt, weber, yard, \

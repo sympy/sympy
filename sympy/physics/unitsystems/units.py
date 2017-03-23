@@ -23,13 +23,7 @@ class Unit(Quantity):
     """
 
     def __new__(cls, name, dimension, scale_factor, abbrev="", prefix=None, **assumptions):
-        """
-        Create a new unit instance.
 
-        ``dim`` can be a Dimension or Unit object. The latter allows to
-        construct derived units and constants. Note that the argument prefix
-        is ignored if ``dim`` is a Unit instance and already has a prefix.
-        """
         scale_factor = sympify(scale_factor)
 
         if isinstance(prefix, string_types):
