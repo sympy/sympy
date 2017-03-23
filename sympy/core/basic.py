@@ -1525,6 +1525,20 @@ class Basic(with_metaclass(ManagedProperties)):
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
 
+
+    def match_between(self, pattern1, pattern2, old=False):
+        pattern1 = sympify(pattern1)
+        pattern2 = sympify(pattern2)
+        if pattern1.matches(self) != None and pattern2.matches(self) != None:
+            if len(pattern1.matches(self)) > len(pattern2.matches(self)):
+                return pattern1.matches(self,old=old)
+            else:
+                return pattern2.matches(self,old=old)
+        elif pattern1.matches(self) != None:
+            return pattern1.matches(self, old=old)
+        elif pattern2.matches(self) != None:
+            return pattern2.matches(self, old=old)
+
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
