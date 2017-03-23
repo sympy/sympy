@@ -342,7 +342,7 @@ def potential_energy(*body):
     return pe_sys
 
 
-def Lagrangian(frame, *body):
+def Lagrangian(frame, *body, **kwargs):
     """Lagrangian of a multibody system.
 
     This function returns the Lagrangian of a system of Particle's and/or
@@ -365,6 +365,9 @@ def Lagrangian(frame, *body):
     body1, body2, body3... : Particle and/or RigidBody
         The body (or bodies) whose Lagrangian is required.
 
+    kwargs : generic_potential_energy
+        The potential energy which cannot be mapped to the .potential_energy
+        attribute of particles.
     Examples
     ========
 
@@ -388,7 +391,6 @@ def Lagrangian(frame, *body):
     >>> A.potential_energy = M * g * h
     >>> Lagrangian(N, Pa, A)
     -M*g*h - g*h*m + 350
-
     """
 
     if not isinstance(frame, ReferenceFrame):
@@ -396,7 +398,10 @@ def Lagrangian(frame, *body):
     for e in body:
         if not isinstance(e, (RigidBody, Particle)):
             raise TypeError('*body must have only Particle or RigidBody')
-    return kinetic_energy(frame, *body) - potential_energy(*body)
+    if ('generic_potential_energy' in kwargs):
+        return kinetic_energy(frame, *body) - potential_energy(*body) - kwargs['generic_potential_energy']
+    else:
+        return kinetic_energy(frame, *body) - potential_energy(*body)
 
 
 def find_dynamicsymbols(expression, exclude=None):
