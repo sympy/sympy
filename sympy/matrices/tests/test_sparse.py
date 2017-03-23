@@ -352,12 +352,12 @@ def test_sparse_matrix():
     assert not a.is_symmetric(simplify=False)
 
     # test_cofactor
-    assert sparse_eye(3) == sparse_eye(3).cofactorMatrix()
+    assert sparse_eye(3) == sparse_eye(3).cofactor_matrix()
     test = SparseMatrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         SparseMatrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
     test = SparseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         SparseMatrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
     # test_jacobian

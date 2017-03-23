@@ -309,9 +309,9 @@ def test_determinant():
     for M in [Matrix(), Matrix([[1]])]:
         assert (
             M.det() ==
-            M.det_bareiss() ==
-            M.berkowitz_det() ==
-            M.det_LU_decomposition() ==
+            M._eval_det_bareiss() ==
+            M._eval_det_berkowitz() ==
+            M._eval_det_lu() ==
             1)
 
     M = Matrix(( (-3,  2),
@@ -459,17 +459,6 @@ def test_det_LU_decomposition():
 
     assert M.det(method="lu") == z**2 - x*y
 
-
-def test_berkowitz_minors():
-    B = Matrix(2, 2, [1, 2, 2, 1])
-
-    assert B.berkowitz_minors() == (1, 1, -3)
-    E = Matrix([])
-    assert E.berkowitz() == ((1,),)
-    assert E.berkowitz_minors() == (1,)
-    assert E.berkowitz_eigenvals() == {}
-    A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert A.berkowitz() == ((1,), (1, -1), (1, -6, -3), (1, -15, -18, 0))
 
 def test_slicing():
     m0 = eye(4)
@@ -735,12 +724,12 @@ def test_util():
     assert ones(1, 2) == Matrix(1, 2, [1, 1])
     assert v1.copy() == v1
     # cofactor
-    assert eye(3) == eye(3).cofactorMatrix()
+    assert eye(3) == eye(3).cofactor_matrix()
     test = Matrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         Matrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
     test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
 
@@ -1727,7 +1716,7 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    charpoly = A.berkowitz_charpoly(x)
+    charpoly = A.charpoly(x)
 
     assert charpoly == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x +
@@ -1788,8 +1777,8 @@ def test_errors():
     raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
     raises(
         NonSquareMatrixError, lambda: Matrix([1, 2]).LUdecomposition_Simple())
-    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorEntry(4, 5))
-    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5))
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
+    raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
     raises(TypeError, lambda: Matrix([1, 2, 3]).dot(1))
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
@@ -1807,9 +1796,6 @@ def test_errors():
     raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det())
     raises(ValueError,
         lambda: Matrix([[1, 2], [3, 4]]).det(method='Not a real method'))
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).det_bareiss())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz())
-    raises(NonSquareMatrixError, lambda: Matrix([1, 2]).berkowitz_det())
     raises(ValueError,
         lambda: hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]])))
     raises(ValueError, lambda: hessian(Matrix([[1, 2], [3, 4]]), []))
