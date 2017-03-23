@@ -2760,7 +2760,7 @@ def nsolve(*args, **kwargs):
         prec = None
 
     # keyword argument to return result as a dictionary
-    as_dict = kwargs.get('dict', False)
+    as_dict = kwargs.pop('dict', False)
 
     # interpret arguments
     if len(args) == 3:
