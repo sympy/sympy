@@ -8,22 +8,8 @@ import json
 import warnings
 import pytest
 
-
-try:
-    from pytest_flakes import FlakesItem
-except ImportError:
-    FlakesItem = None
-    warnings.warng("pytest_flakes is not installed, code quality tests will not be complete")
-
-try:
-    from pytest_pep8 import Pep8Item
-except ImportError:
-    Pep8Item = None
-    warnings.warng("pytest_pep8 is not installed, code quality tests will not be complete")
-
-
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
-whitelist_path = os.path.join(os.path.dirname(__file__), '.ci', 'code_quality_whitelist.json')
+
 
 if os.path.exists(durations_path):
     veryslow_group, slow_group = [list(chain(*[[k+'::'+v for v in files] for k, files in group.items()])) for group
@@ -31,15 +17,6 @@ if os.path.exists(durations_path):
 else:
     warnings.warn("Could not find %s, --quickcheck and --veryquickcheck will have no effect." % durations_path)
     veryslow_group, slow_group = [], []
-
-if os.path.exists(whitelist_path):
-    whitelist = list(chain(*[
-        [os.path.join(dirname, fname).lstrip('./') for fname in fnames] for dirname, fnames
-        in json.loads(open(whitelist_path, 'rt').read()).items()
-    ]))
-else:
-    warnings.warn("Could not find %s, no code quality checks will be run" % whitelist_path)
-    whitelist = []
 
 
 def pytest_addoption(parser):
@@ -65,11 +42,3 @@ def pytest_runtest_setup(item):
         if item.nodeid in slow_group and item.config.getvalue("runveryquick"):
             pytest.skip("slow test, skipping since --veryquickcheck was passed.")
             return
-    else:
-        for ItemClass in (Pep8Item, FlakesItem):
-            if ItemClass is None:
-                continue
-
-            if isinstance(item, ItemClass) and item.location[0] not in whitelist:
-                pytest.skip("File not listed in ./ci/code_quality_whitelist.json")
-                return
