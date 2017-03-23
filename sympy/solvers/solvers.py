@@ -2662,6 +2662,14 @@ def nsolve(*args, **kwargs):
     that supports matrices. For more information on the syntax, please see the
     docstring of lambdify.
 
+    If the keyword arguments contain 'dict'=True (default is False) nsolve
+    will return a list (perhaps empty) of solution mappings. This might be
+    especially useful if you want to use nsolve as a fallback to solve since
+    using the dict argument for both methods produces return values of
+    consistent type structure. Please note: to keep this consistency with
+    solve, the solution will be returned in a list even though nsolve
+    (currently at least) only finds one solution at a time.
+
     Overdetermined systems are supported.
 
     >>> from sympy import Symbol, nsolve
