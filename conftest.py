@@ -63,7 +63,7 @@ def pytest_runtest_setup(item):
             pytest.skip("very slow test, skipping since --quickcheck or --veryquickcheck was passed.")
             return
         if item.nodeid in slow_group and item.config.getvalue("runveryquick"):
-            pytest.skip("very slow test, skipping since --veryquickcheck was passed.")
+            pytest.skip("slow test, skipping since --veryquickcheck was passed.")
             return
     else:
         for ItemClass in (Pep8Item, FlakesItem):
