@@ -22,27 +22,39 @@ Ideas about future developments can be found on the `Github wiki
 this page if you are willing to help.
 """
 
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem
-from sympy.physics.unitsystems.units import Unit, UnitSystem
+from .dimensions import Dimension, DimensionSystem
+from .units import Unit, UnitSystem
 from .simplifiers import convert_to
-from sympy.physics.unitsystems.quantities import Quantity
+from .quantities import Quantity
 from .definitions import A, C, F, G, H, Hz, J, N, Pa, \
-    Quantity, S, S_singleton, T, Unit, V, W, Wb, Z0, action, ampere, \
-    anomalistic_year, anomalistic_years, c, capacitance, centiliter, \
-    centiliters, charge, cl, common_year, common_years, conductance, coulomb, \
-    current, day, deciliter, deciliters, dl, draconic_year, draconic_years, \
-    eV, energy, farad, feet, foot, force, frequency, ft, full_moon_cycle, \
+    S, T, V, W, Wb, Z0, ampere, \
+    anomalistic_year, anomalistic_years, c, centiliter, \
+    centiliters, cl, common_year, common_years, coulomb, \
+    day, deciliter, deciliters, dl, draconic_year, draconic_years, \
+    eV, farad, feet, foot, ft, full_moon_cycle, \
     full_moon_cycles, g, gaussian_year, gaussian_years, gram, \
-    gravitational_constant, hbar, henry, hertz, hour, hz, impedance, inch, \
-    inches, inductance, joule, julian_year, julian_years, kg, kilogram, l, \
-    length, liter, liters, m, magnetic_density, magnetic_flux, mass, meter, mi, \
+    gravitational_constant, hbar, henry, hertz, hour, hz, inch, \
+    inches, joule, julian_year, julian_years, kg, kilogram, l, \
+    liter, liters, m, meter, mi, \
     mile, miles, milliliter, milliliters, minute, ml, nautical_mile, \
-    nautical_miles, newton, nmi, ohm, pascal, pi, power, pressure, s, second, \
-    sidereal_year, sidereal_years, siemens, speed_of_light, tesla, time, \
-    tropical_year, tropical_years, velocity, volt, voltage, watt, weber, yard, \
-    yards, yd, year, years
+    nautical_miles, newton, nmi, ohm, pascal, pi, s, second, \
+    sidereal_year, sidereal_years, siemens, speed_of_light, tesla,\
+    tropical_year, tropical_years, volt, watt, weber, yard, \
+    yards, yd, year, years,\
+    km, kilometer, kilometers,\
+    dm, decimeter, decimeters, \
+    cm, centimeter, centimeters, \
+    mm, millimeter, millimeters, \
+    um, micrometer, micrometers, \
+    nm, nanometer, nanometers, \
+    pm, picometer, picometers, \
+    ms, millisecond, milliseconds, \
+    us, microsecond, microseconds, \
+    ns, nanosecond, nanoseconds, \
+    ps, picosecond, picoseconds
+
 from .dimensions import acceleration, action, \
     capacitance, charge, conductance, current, energy, \
     force, frequency, impedance, inductance, length, magnetic_density, \
-    magnetic_flux, mass, momentum, nsimplify, power, pressure, time, \
+    magnetic_flux, mass, momentum, power, pressure, time, \
     velocity, voltage

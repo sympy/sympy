@@ -66,20 +66,25 @@ variables (taken from Wikipedia). The result should be 224.701 days.
 
     >>> from sympy import solve, symbols, pi, Eq
     >>> from sympy.physics.unitsystems import Unit, Quantity, length, mass
-    >>> from sympy.physics.unitsystems.systems import mks
     >>> from sympy.physics.unitsystems import day, gravitational_constant as G
     >>> T = symbols("T")
     >>> a = Quantity("venus_a", length, 108208000e3)
     >>> M = Quantity("solar_mass", mass, 1.9891e30)
-    >>> Eq(T**2 / a**3, 4*pi**2 / G / M)
+    >>> eq = Eq(T**2 / a**3, 4*pi**2 / G / M)
+    >>> eq
     Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
-    >>> q = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
+    >>> q = solve(eq, T)[1]
     >>> q
     6.28318530717959*sqrt(venus_a**3/(gravitational_constant*solar_mass))
+
+To convert to days, use the ``convert_to`` function (and possibly approximate
+the outcoming result:
+
+    >>> from sympy.physics.unitsystems import convert_to
     >>> convert_to(q, day)
     1.59123003109442e-10*sqrt(1993480633430344427209462)*day
     >>> convert_to(q, day).n()
-    224.667*day
+    224.666840070582*day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but I wanted to show how to create a unit that one needs.

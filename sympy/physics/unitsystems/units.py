@@ -57,6 +57,9 @@ class Unit(Quantity):
         else:
             return self._abbrev
 
+    def __hash__(self):
+        return Quantity.__hash__(self)
+
     def __eq__(self, other):
         if not isinstance(other, Quantity):
             return False

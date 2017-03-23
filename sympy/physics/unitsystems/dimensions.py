@@ -15,12 +15,10 @@ question of adding time to length has no meaning.
 from __future__ import division
 
 import collections
-import numbers
-from sympy.core.sympify import _sympify
 
 from sympy.core.compatibility import reduce, string_types
-from sympy.core.containers import Dict, Tuple
-from sympy import sympify, nsimplify, Number, Integer, Matrix, Expr, Rational, Symbol, S, Mul
+from sympy import sympify, Integer, Matrix, Symbol, S
+from sympy.core.expr import Expr
 
 
 class Dimension(Expr):
@@ -34,7 +32,7 @@ class Dimension(Expr):
     make this difference (but they do not provide any measure of these
     quantites).
 
-        >>> from sympy.physics.unitsystems.dimensions import Dimension
+        >>> from sympy.physics.unitsystems import Dimension
         >>> length = Dimension('length')
         >>> length
         Dimension(length)
@@ -113,6 +111,9 @@ class Dimension(Expr):
     def symbol(self):
         return self._symbol
 
+    def __hash__(self):
+        return Expr.__hash__(self)
+
     def __eq__(self, other):
         if isinstance(other, Dimension):
             return self.get_dimensional_dependencies() == other.get_dimensional_dependencies()
@@ -133,7 +134,7 @@ class Dimension(Expr):
     def __neg__(self):
         return self
 
-    def register_as_base_dim(self):
+    def _register_as_base_dim(self):
         if self.name in self._dimensional_dependencies:
             raise IndexError("already in dependecies dict")
         if not self.name.is_Symbol:
@@ -271,9 +272,9 @@ charge = Dimension(name='charge', symbol='Q')
 magnetic_density = Dimension(name='charge', symbol='B')
 magnetic_flux = Dimension(name='charge')
 
-## Create dimensions according the the base units in MKSA.
-## For other unit systems, they can be derived by transforming the base
-## dimensional dependency dictionary.
+# Create dimensions according the the base units in MKSA.
+# For other unit systems, they can be derived by transforming the base
+# dimensional dependency dictionary.
 
 # Dimensional dependencies for base dimensions
 Dimension._dimensional_dependencies["length"] = dict(length=1)

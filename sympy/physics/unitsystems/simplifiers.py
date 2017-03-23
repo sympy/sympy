@@ -51,26 +51,10 @@ def convert_to(expr, quantity):
     Examples
     ========
 
-    >>> from sympy.physics.unitsystems import speed_of_light, meter, hour, minute, second, day, mile, newton, kilogram
+    >>> from sympy.physics.unitsystems import speed_of_light, meter, hour, minute,\
+        second, day, mile, newton, kilogram, inch, centimeter
     >>> from sympy.physics.unitsystems.definitions import kilometer
     >>> from sympy.physics.unitsystems import convert_to
-
-    >>> from sympy import solve, symbols, pi, Eq
-    >>> from sympy.physics.unitsystems import Unit, Quantity, length, mass
-    >>> from sympy.physics.unitsystems.systems import mks
-    >>> from sympy.physics.unitsystems import day, gravitational_constant as G
-    >>> T = symbols("T")
-    >>> a = Quantity("venus_a", length, 108208000e3)
-    >>> M = Quantity("solar_mass", mass, 1.9891e30)
-    >>> Eq(T**2 / a**3, 4*pi**2 / G / M)
-    Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
-    >>> q = solve(T**2 / a**3 - 4*pi**2 / G / M, T)[1]
-    >>> q
-    6.28318530717959*sqrt(venus_a**3/(gravitational_constant*solar_mass))
-    >>> convert_to(q, day)
-    1.59123003109442e-10*sqrt(1993480633430344427209462)*day
-    >>> convert_to(q, day).n()
-    224.666840070582*day
 
     # TODO: move these to the tests:
 
@@ -98,7 +82,20 @@ def convert_to(expr, quantity):
     3*newton
     >>> convert_to(3*newton, kilogram*meter/second**2)
     3*meter*kilogram/second**2
+    >>> convert_to(kilometer + mile, meter)
+    2609.344*meter
+    >>> convert_to(2*kilometer + 3*mile, meter)
+    6828.032*meter
+    >>> convert_to(inch**2, meter**2)
+    0.00064516*meter**2
+    >>> convert_to(3*inch**2, meter)
+    0.00193548*meter**2
+    >>> convert_to(2*kilometer/hour + 3*mile/hour, meter/second)
+    1.89667555555556*meter/second
+    >>> convert_to(2*kilometer/hour + 3*mile/hour, centimeter/second)
+    189.667555555556*centimeter/second
     """
+
     def get_dimensional_expr(expr):
         if isinstance(expr, Mul):
             return Mul(*[get_dimensional_expr(i) for i in expr.args])
