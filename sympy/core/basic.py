@@ -1527,6 +1527,28 @@ class Basic(with_metaclass(ManagedProperties)):
 
 
     def match_between(self, pattern1, pattern2, old=False):
+        """
+        match_between compares the given two patterns, and suggests the one
+        with more variables matched. This will help less initialization of
+        variables which will be helpful in Rubi. Example:
+
+        >>> from sympy import Wild
+        >>> from sympy.abc import  x
+        >>> a = Wild('a',exclude=[x])
+        >>> m = Wild('m',exclude=[x])
+        >>> b = Wild('b',exclude=[x])
+        >>> c = Wild('c',exclude=[x])
+        >>> d = Wild('d',exclude=[x])
+        >>> n = Wild('n',exclude=[x])
+        >>> expr = 2 + 3*x
+
+        >>> expr.match_between((m + n + b*x), (c + d*x))
+        {b_: 3, m_: 0, n_: 2}
+
+        >>> expr.match_between((m*(n + b*x)), (c + d*x))
+        {b_: 3, m_: 1, n_: 2}
+
+        """
         pattern1 = sympify(pattern1)
         pattern2 = sympify(pattern2)
         if pattern1.matches(self) != None and pattern2.matches(self) != None:
