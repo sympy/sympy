@@ -3761,29 +3761,36 @@ def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
 
+
 def test_sympy__codegen__cfunctions__expm1():
     from sympy.codegen.cfunctions import expm1
     assert _test_args(expm1(x))
+
 
 def test_sympy__codegen__cfunctions__log1p():
     from sympy.codegen.cfunctions import log1p
     assert _test_args(log1p(x))
 
+
 def test_sympy__codegen__cfunctions__exp2():
     from sympy.codegen.cfunctions import exp2
     assert _test_args(exp2(x))
+
 
 def test_sympy__codegen__cfunctions__log2():
     from sympy.codegen.cfunctions import log2
     assert _test_args(log2(x))
 
+
 def test_sympy__codegen__cfunctions__fma():
     from sympy.codegen.cfunctions import fma
     assert _test_args(fma(x, y, z))
 
+
 def test_sympy__codegen__cfunctions__log10():
     from sympy.codegen.cfunctions import log10
     assert _test_args(log10(x))
+
 
 def test_sympy__codegen__cfunctions__Sqrt():
     from sympy.codegen.cfunctions import Sqrt
@@ -3796,6 +3803,56 @@ def test_sympy__codegen__cfunctions__Cbrt():
 def test_sympy__codegen__cfunctions__hypot():
     from sympy.codegen.cfunctions import hypot
     assert _test_args(hypot(x, y))
+
+
+def test_sympy__codegen__ffunctions__FFunction():
+    from sympy.codegen.ffunctions import FFunction
+    assert _test_args(FFunction('f'))
+
+
+def test_sympy__codegen__ffunctions__F95Function():
+    from sympy.codegen.ffunctions import F95Function
+    assert _test_args(F95Function('f'))
+
+
+def test_sympy__codegen__ffunctions__isign():
+    from sympy.codegen.ffunctions import isign
+    assert _test_args(isign(1, x))
+
+
+def test_sympy__codegen__ffunctions__dsign():
+    from sympy.codegen.ffunctions import dsign
+    assert _test_args(dsign(1, x))
+
+
+def test_sympy__codegen__ffunctions__cmplx():
+    from sympy.codegen.ffunctions import cmplx
+    assert _test_args(cmplx(x, y))
+
+
+def test_sympy__codegen__ffunctions__kind():
+    from sympy.codegen.ffunctions import kind
+    assert _test_args(kind(x))
+
+
+def test_sympy__codegen__ffunctions__merge():
+    from sympy.codegen.ffunctions import merge
+    assert _test_args(merge(1, 2, Eq(x, 0)))
+
+
+def test_sympy__codegen__ffunctions___literal():
+    from sympy.codegen.ffunctions import _literal
+    assert _test_args(_literal(1))
+
+
+def test_sympy__codegen__ffunctions__literal_sp():
+    from sympy.codegen.ffunctions import literal_sp
+    assert _test_args(literal_sp(1))
+
+
+def test_sympy__codegen__ffunctions__literal_dp():
+    from sympy.codegen.ffunctions import literal_dp
+    assert _test_args(literal_dp(1))
 
 
 def test_sympy__vector__coordsysrect__CoordSysCartesian():
