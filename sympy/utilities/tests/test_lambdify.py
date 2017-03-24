@@ -366,9 +366,9 @@ def test_python_div_zero_issue_11306():
         skip("numpy not installed.")
     p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
     f = lambdify([x, y], p, modules='numpy')
-    numpy.seterr(all='ignore')
+    numpy.seterr(divide='ignore')
     assert str(float(f(0,1))) == 'inf'
-    numpy.seterr(all='raise')
+    numpy.seterr(divide='warn')
 
 def test_issue9474():
     mods = [None, 'math']
