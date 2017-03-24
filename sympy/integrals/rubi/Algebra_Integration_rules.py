@@ -10,10 +10,10 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.core.symbol import Wild
 
 def rubi_integrate(self, x):
-	"""
-	rubi_integrate decides which category of rule does the
-	given integrand (self) falls in and returns to that rule.
-	"""
+    """
+    rubi_integrate decides which category of rule does the
+    given integrand (self) falls in and returns to that rule.
+    """
     if self.is_Mul:
         if self.args[0].has(x) == False and len(self.args) == 2:
             # condition to check if the first arg is a constant,
