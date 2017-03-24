@@ -187,7 +187,7 @@ For example:
 
 Why not use dicts as output?
 
-  Dictionary are easy to deal with programatically but mathematically they are
+  Dictionary are easy to deal with programmatically but mathematically they are
   not very precise and use of them can quickly lead to inconsistency and a lot
   of confusion. For example:
 
@@ -293,7 +293,7 @@ What are the general methods employed by solveset to solve an equation?
 
 
  * The function is now checked if there is any instance of a ``Piecewise``
-   expression, if it is, then it's converted to explict expression and
+   expression, if it is, then it's converted to explicit expression and
    set pairs and then solved recursively.
 
 
@@ -308,7 +308,7 @@ What are the general methods employed by solveset to solve an equation?
 
  * After the invert, the equations are checked for radical or Abs (Modulus),
    then the method ``_solve_radical`` tries to simplify the radical, by
-   removing it using techniques like squarring, cubing etc, and ``_solve_abs``
+   removing it using techniques like squaring, cubing etc, and ``_solve_abs``
    solves nested Modulus by considering the positive and negative variants,
    iteratively.
 
