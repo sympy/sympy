@@ -1386,7 +1386,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     return m
 
 
-def wronskian(functions, var, method='bareis'):
+def wronskian(functions, var, method='bareiss'):
     """
     Compute Wronskian for [] of functions
 
