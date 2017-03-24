@@ -12,6 +12,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
 from .expr import Expr
+from sympy.simplify.radsimp import radsimp, fraction
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -1265,38 +1266,44 @@ class Mul(Expr, AssocOp):
     def _eval_is_odd(self):
         is_integer = self.is_integer
 
-        if is_integer:
-            #The entire expression is an integer, but it
-            #can be decomposed into fractions (i.e.
-            #numerator and denominator.
-            #The counters keep track of multiples of 2 in
-            #numerator and denominator to determine oddness.
-            count_denom = 0
-            count_num = 0
-            for t in self.args:
-                if t == S.Half:
-                    count_denom += 1
-                elif isinstance(t,Symbol):
-                    if t.is_integer:
+            if is_integer:
+                self.as_coeff_mul()
+               
+                if arg[0] == 1
+                r = True
+                    for t in self.arg[1]:
                         if t.is_even:
-                            count_num += 1
-                        elif t.is_odd is None or t.is_even is None:
-                            return None
-                                               
-                elif isinstance(t,int):
-                    if self % 2 == 0:
-                        count_num += 1                        
-                    
-            if count_num == count_denom:
-                return None
-            elif count_num > count_denom:
-                return False
-            elif count_num < count_denom:
-                return None
+                            return False
+                        elif t.is_even == None:
+                            r = None
+                    return r
+                
+                else:
+                    arg[0].fraction()
+                    if numer(arg[0]) % 2 == 0:
+                        return False
 
-                # !integer -> !odd
-        else:
-            return False
+                    elif denom(arg[0]) % 2 == 0:
+                        denom(arg[0]).factorint()
+                        k = factordict[2]
+                        for t in self.arg[1]:
+                            if t.is_even:
+                                factor2_num += 1
+                            if t.is_even == None:
+                                pass
+                        if k < factor2_num:
+                            return False
+                        else:
+                            return None
+                    elif numer(arg[0]) % 2 !== 0 and denom(arg[0]) % 2 !== 0:
+                        for t in self.arg[1]:
+                            if t.is_even:
+                                return False
+                            elif t.is_even == None:
+                                r = None
+                        return r
+                        
+
             
     def _eval_is_even(self):
         is_integer = self.is_integer
