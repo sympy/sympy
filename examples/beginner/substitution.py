@@ -29,5 +29,16 @@ def main():
     pprint(e.evalf())
     print()
 
+    a = sympy.Symbol('a')
+    b = sympy.Symbol('b')
+    e = a*2 + a**b/a
+    print('\n')
+    pprint(e)
+    a = 2
+    print('\n')
+    pprint(e.subs(a,8))
+    print()
+
+
 if __name__ == "__main__":
     main()
