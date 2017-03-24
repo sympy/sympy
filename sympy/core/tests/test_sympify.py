@@ -1,5 +1,5 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
     Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
@@ -11,6 +11,7 @@ from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
+from sympy.external import import_module
 
 import mpmath
 
@@ -510,6 +511,52 @@ def test_sympify_set():
     n = Symbol('n')
     assert sympify({n}) == FiniteSet(n)
     assert sympify(set()) == EmptySet()
+
+
+def test_numpy():
+    from sympy.utilities.pytest import skip
+    np = import_module('numpy')
+
+
+    def equal(x, y):
+        return x == y and type(x) == type(y)
+
+    if not np:
+        skip('numpy not installed.Abort numpy tests.')
+
+    assert sympify(np.bool_(1)) is S(True)
+    assert equal(
+        sympify(np.int_(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.intc(1234567891)), S(1234567891))
+    assert equal(
+        sympify(np.intp(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.int8(-123)), S(-123))
+    assert equal(sympify(np.int16(-12345)), S(-12345))
+    assert equal(sympify(np.int32(-1234567891)), S(-1234567891))
+    assert equal(
+        sympify(np.int64(-1234567891234567891)), S(-1234567891234567891))
+    assert equal(sympify(np.uint8(123)), S(123))
+    assert equal(sympify(np.uint16(12345)), S(12345))
+    assert equal(sympify(np.uint32(1234567891)), S(1234567891))
+    assert equal(
+        sympify(np.uint64(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.float32(1.123456)), Float(1.123456, precision=24))
+    assert equal(sympify(np.float64(1.1234567891234)),
+                Float(1.1234567891234, precision=53))
+    assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
+
+    try:
+        assert equal(sympify(np.float96(1.123456789)),
+                    Float(1.123456789, precision=80))
+    except AttributeError:  #float96 does not exist on all platforms
+        pass
+
+    try:
+        assert equal(sympify(np.float128(1.123456789123)),
+                    Float(1.123456789123, precision=80))
+    except AttributeError:  #float128 does not exist on all platforms
+        pass
 
 
 @XFAIL
