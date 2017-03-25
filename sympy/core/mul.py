@@ -12,7 +12,6 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce, range
 from .expr import Expr
-from sympy.simplify.radsimp import radsimp, fraction
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -1262,7 +1261,6 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)     
     
     def _eval_is_odd(self):
-
         """
         First we check to see if the expression as a whole is an integer because
         !integer implies !odd.  If is_integer, then proceed. Since we are using 
@@ -1283,6 +1281,8 @@ class Mul(Expr, AssocOp):
         evaluate the denom, then we need to evaluate the symbols that make up the rest of the 
         expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
         """
+        from sympy.simplify.radsimp import radsimp, fraction
+        
         is_integer = self.is_integer
 
         if is_integer:
