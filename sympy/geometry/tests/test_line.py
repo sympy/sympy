@@ -54,13 +54,13 @@ def test_line_geom():
     raises(ValueError, lambda: Line(Point(0, 0), Point(0, 0)))
 
     # Basic stuff
-    assert Line((1, 1), slope=1) == Line((1, 1), (2, 2))
-    assert Line((1, 1), slope=oo) == Line((1, 1), (1, 2))
-    assert Line((1, 1), slope=-oo) == Line((1, 1), (1, 2))
+    assert Line((1, 1), slope=1).equals(Line((1, 1), (2, 2)))
+    assert Line((1, 1), slope=oo).equals(Line((1, 1), (1, 2)))
+    assert Line((1, 1), slope=-oo).equals(Line((1, 1), (1, 2)))
     raises(TypeError, lambda: Line((1, 1), 1))
-    assert Line(p1, p2) == Line(p1, p2)
-    assert Line(p1, p2) != Line(p2, p1)
-    assert l1 != l2
+    assert Line(p1, p2).equals(Line(p1, p2))
+    assert Line(p1, p2).equals(Line(p2, p1))
+    assert l1.equals(l2)
     assert l1 != l3
     assert l1.slope == 1
     assert l1.length == oo
@@ -89,8 +89,8 @@ def test_line_geom():
     # Orthogonality
     p1_1 = Point(-x1, x1)
     l1_1 = Line(p1, p1_1)
-    assert l1.perpendicular_line(p1.args).equals( Line(Point(0, 0), Point(1, -1)) )
-    assert l1.perpendicular_line(p1).equals( Line(Point(0, 0), Point(1, -1)) )
+    assert l1.perpendicular_line(p1.args).equals(Line(Point(0, 0), Point(1, -1)))
+    assert l1.perpendicular_line(p1).equals(Line(Point(0, 0), Point(1, -1)))
     assert Line.is_perpendicular(l1, l1_1)
     assert Line.is_perpendicular(l1, l2) is False
     p = l1.random_point()
@@ -98,9 +98,9 @@ def test_line_geom():
 
     # Parallelity
     l2_1 = Line(p3, p5)
-    assert l2.parallel_line(p1_1).equals( Line(Point(-x1, x1), Point(-y1, 2*x1 - y1)) )
-    assert l2_1.parallel_line(p1.args).equals( Line(Point(0, 0), Point(0, -1)) )
-    assert l2_1.parallel_line(p1).equals( Line(Point(0, 0), Point(0, -1)) )
+    assert l2.parallel_line(p1_1).equals(Line(Point(-x1, x1), Point(-y1, 2*x1 - y1)))
+    assert l2_1.parallel_line(p1.args).equals(Line(Point(0, 0), Point(0, -1)))
+    assert l2_1.parallel_line(p1).equals(Line(Point(0, 0), Point(0, -1)))
     assert Line.is_parallel(l1, l2)
     assert Line.is_parallel(l2, l3) is False
     assert Line.is_parallel(l2, l2.parallel_line(p1_1))
@@ -136,30 +136,31 @@ def test_line_geom():
     assert Line(a, o).angle_between(Line(b, o)) == pi/2
 
     # Testing Rays and Segments (very similar to Lines)
-    assert Ray((1, 1), angle=pi/4) == Ray((1, 1), (2, 2))
-    assert Ray((1, 1), angle=pi/2) == Ray((1, 1), (1, 2))
-    assert Ray((1, 1), angle=-pi/2) == Ray((1, 1), (1, 0))
-    assert Ray((1, 1), angle=-3*pi/2) == Ray((1, 1), (1, 2))
-    assert Ray((1, 1), angle=5*pi/2) == Ray((1, 1), (1, 2))
-    assert Ray((1, 1), angle=5.0*pi/2) == Ray((1, 1), (1, 2))
-    assert Ray((1, 1), angle=pi) == Ray((1, 1), (0, 1))
-    assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
-    assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
-    assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
-    assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
-               Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5)))
-    assert Ray((1, 1), angle=4.02*pi) == Ray(Point(1, 1),
-               Point(2, 1 + tan(4.02*pi)))
-    assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + tan(5)))
+    assert Ray((1, 1), angle=pi/4).equals(Ray((1, 1), (2, 2)))
+    assert Ray((1, 1), angle=pi/4).equals(Ray((1, 1), (300, 300)))
+    assert Ray((1, 1), angle=pi/2).equals(Ray((1, 1), (1, 2)))
+    assert Ray((1, 1), angle=-pi/2).equals(Ray((1, 1), (1, 0)))
+    assert Ray((1, 1), angle=-3*pi/2).equals(Ray((1, 1), (1, 2)))
+    assert Ray((1, 1), angle=5*pi/2).equals(Ray((1, 1), (1, 2)))
+    assert Ray((1, 1), angle=5.0*pi/2).equals(Ray((1, 1), (1, 2)))
+    assert Ray((1, 1), angle=pi).equals(Ray((1, 1), (0, 1)))
+    assert Ray((1, 1), angle=3.0*pi).equals(Ray((1, 1), (0, 1)))
+    assert Ray((1, 1), angle=4.0*pi).equals(Ray((1, 1), (2, 1)))
+    assert Ray((1, 1), angle=0).equals(Ray((1, 1), (2, 1)))
+    assert Ray((1, 1), angle=4.05*pi).equals(Ray(Point(1, 1),
+               Point(2, -sqrt(5)*sqrt(2*sqrt(5) + 10)/4 - sqrt(2*sqrt(5) + 10)/4 + 2 + sqrt(5))))
+    assert Ray((1, 1), angle=4.02*pi).equals(Ray(Point(1, 1),
+               Point(2, 1 + tan(4.02*pi))))
+    assert Ray((1, 1), angle=5).equals(Ray((1, 1), (2, 1 + tan(5))))
     raises(TypeError, lambda: Ray((1, 1), 1))
 
     # issue 7963
     r = Ray((0, 0), angle=x)
-    assert r.subs(x, 3*pi/4) == Ray((0, 0), (-1, 1))
-    assert r.subs(x, 5*pi/4) == Ray((0, 0), (-1, -1))
-    assert r.subs(x, -pi/4) == Ray((0, 0), (1, -1))
-    assert r.subs(x, pi/2) == Ray((0, 0), (0, 1))
-    assert r.subs(x, -pi/2) == Ray((0, 0), (0, -1))
+    assert r.subs(x, 3*pi/4).equals(Ray((0, 0), (-1, 1)))
+    assert r.subs(x, 5*pi/4).equals(Ray((0, 0), (-1, -1)))
+    assert r.subs(x, -pi/4).equals(Ray((0, 0), (1, -1)))
+    assert r.subs(x, pi/2).equals(Ray((0, 0), (0, 1)))
+    assert r.subs(x, -pi/2).equals(Ray((0, 0), (0, -1)))
 
     r1 = Ray(p1, Point(-1, 5))
     r2 = Ray(p1, Point(-1, 1))
@@ -168,7 +169,7 @@ def test_line_geom():
     r5 = Ray(p2, p1)
     r6 = Ray(Point(0, 1), Point(1, 2))
     r7 = Ray(Point(0.5, 0.5), Point(1, 1))
-    assert l1.projection(r1) == Ray(Point(0, 0), Point(2, 2))
+    assert l1.projection(r1).equals(Ray(Point(0, 0), Point(2, 2)))
     assert l1.projection(r2) == p1
     assert r3 != r1
     t = Symbol('t', real=True)
@@ -186,14 +187,14 @@ def test_line_geom():
     aline = Line(Point(1/2, 1/2), Point(3/2, -1/2))
     assert s1.perpendicular_bisector().equals(aline)
     on_line = Segment(Point(1/2, 1/2), Point(3/2, -1/2)).midpoint
-    assert s1.perpendicular_bisector(on_line) == Segment(s1.midpoint, on_line)
+    assert s1.perpendicular_bisector(on_line).equals(Segment(s1.midpoint, on_line))
     assert s1.perpendicular_bisector(on_line + (1, 0)).equals(aline)
     # intersections
     assert s1.intersection(Line(p6, p9)) == []
     s3 = Segment(Point(0.25, 0.25), Point(0.5, 0.5))
-    assert s1.intersection(s3) == [s3]
-    assert s3.intersection(s1) == [s3]
-    assert r4.intersection(s3) == [s3]
+    assert s1.intersection(s3)[0].equals(s3)
+    assert s3.intersection(s1)[0].equals(s3)
+    assert r4.intersection(s3)[0].equals(s3)
     assert r4.intersection(Segment(Point(2, 3), Point(3, 4))) == []
     assert r4.intersection(Segment(Point(-1, -1), Point(0.5, 0.5))) == \
         [Segment(p1, Point(0.5, 0.5))]
@@ -205,7 +206,7 @@ def test_line_geom():
     assert s1.intersection(Segment(Point(-1, -1), p1)) == [p1]
     assert s1.intersection(Segment(Point(-1, -1), Point(0.5, 0.5))) == \
         [Segment(p1, Point(0.5, 0.5))]
-    assert r4.intersection(r5) == [s1]
+    assert r4.intersection(r5)[0].equals(s1)
     assert r5.intersection(r6) == []
     assert r4.intersection(r7) == r7.intersection(r4) == [r7]
 
@@ -279,10 +280,10 @@ def test_line_geom():
     r3 = Ray(Point(1, 1), Point(-1, -1))
     r4 = Ray(Point(0, 4), Point(-1, -5))
     r5 = Ray(Point(2, 2), Point(3, 3))
-    assert intersection(r1, r2) == [Segment(Point(1, 1), Point(2, 2))]
-    assert intersection(r1, r3) == [Point(1, 1)]
+    assert intersection(r1, r2)[0].equals(Segment(Point(1, 1), Point(2, 2)))
+    assert intersection(r1, r3)[0].equals(Point(1, 1))
     assert r1.projection(r3) == Point(1, 1)
-    assert r1.projection(r4) == Segment(Point(1, 1), Point(2, 2))
+    assert r1.projection(r4).equals(Segment(Point(1, 1), Point(2, 2)))
 
     r5 = Ray(Point(0, 0), Point(0, 1))
     r6 = Ray(Point(0, 0), Point(0, 2))
@@ -292,18 +293,18 @@ def test_line_geom():
     s1 = Segment(Point(0, 0), Point(2, 2))
     s2 = Segment(Point(-1, 5), Point(-5, -10))
     s3 = Segment(Point(0, 4), Point(-2, 2))
-    assert intersection(r1, s1) == [Segment(Point(1, 1), Point(2, 2))]
-    assert r1.projection(s2) == Segment(Point(1, 1), Point(2, 2))
-    assert s3.projection(r1) == Segment(Point(0, 4), Point(-1, 3))
+    assert intersection(r1, s1)[0].equals(Segment(Point(1, 1), Point(2, 2)))
+    assert r1.projection(s2).equals(Segment(Point(1, 1), Point(2, 2)))
+    assert s3.projection(r1).equals(Segment(Point(0, 4), Point(-1, 3)))
 
     l1 = Line(Point(0, 0), Point(3, 4))
     r1 = Ray(Point(0, 0), Point(3, 4))
     s1 = Segment(Point(0, 0), Point(3, 4))
-    assert intersection(l1, l1) == [l1]
-    assert intersection(l1, r1) == [r1]
-    assert intersection(l1, s1) == [s1]
-    assert intersection(r1, l1) == [r1]
-    assert intersection(s1, l1) == [s1]
+    assert intersection(l1, l1)[0].equals(l1)
+    assert intersection(l1, r1)[0].equals(r1)
+    assert intersection(l1, s1)[0].equals(s1)
+    assert intersection(r1, l1)[0].equals(r1)
+    assert intersection(s1, l1)[0].equals(s1)
 
     entity1 = Segment(Point(-10, 10), Point(10, 10))
     entity2 = Segment(Point(-5, -5), Point(-5, 5))
@@ -395,16 +396,16 @@ def test_line3d():
     assert l1.perpendicular_segment(p) == p
 
     # Parallelity
-    assert l1.parallel_line(p1_1) == Line3D(Point3D(x1, x1, x1),
-        Point3D(x1 + 1, x1 + 1, x1 + 1))
+    assert l1.parallel_line(p1_1).equals(Line3D(Point3D(x1, x1, x1),
+        Point3D(x1 + 1, x1 + 1, x1 + 1)))
     assert l1.parallel_line(p1_1.args) == \
         Line3D(Point3D(x1, x1, x1), Point3D(x1 + 1, x1 + 1, x1 + 1))
 
     # Intersection
-    assert intersection(l1, p1) == [p1]
+    assert intersection(l1, p1)[0].equals(p1)
     assert intersection(l1, p5) == []
-    assert intersection(l1, l1.parallel_line(p1)) == [
-        Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))]
+    assert intersection(l1, l1.parallel_line(p1))[0].equals(
+        Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)))
     # issue 8517
     line3 = Line3D(Point3D(4, 0, 1), Point3D(0, 4, 1))
     line4 = Line3D(Point3D(0, 0, 1), Point3D(4, 4, 1))
@@ -414,20 +415,20 @@ def test_line3d():
         Line3D((0, 1, 2), (0, 1, 1))) == [Point3D(0,1,2)]
     ray0 = Ray3D((0, 0), (3, 0))
     ray1 = Ray3D((1, 0), (3, 0))
-    assert ray0.intersection(ray1) == [ray1]
-    assert ray1.intersection(ray0) == [ray1]
+    assert ray0.intersection(ray1)[0].equals(ray1)
+    assert ray1.intersection(ray0)[0].equals(ray1)
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((1, 0), (2, 0))) == [Segment3D((1, 0), (2, 0))]
+        Segment3D((1, 0), (2, 0)))[0].equals(Segment3D((1, 0), (2, 0)))
     assert Segment3D((1, 0), (2, 0)).intersection(
-        Segment3D((0, 0), (3, 0))) == [Segment3D((1, 0), (2, 0))]
+        Segment3D((0, 0), (3, 0)))[0].equals(Segment3D((1, 0), (2, 0)))
     assert Segment3D((0, 0), (3, 0)).intersection(
         Segment3D((3, 0), (4, 0))) == [Point3D((3, 0))]
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((2, 0), (5, 0))) == [Segment3D((3, 0), (2, 0))]
+        Segment3D((2, 0), (5, 0)))[0].equals(Segment3D((3, 0), (2, 0)))
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (1, 0))) == [Segment3D((0, 0), (1, 0))]
+        Segment3D((-2, 0), (1, 0)))[0].equals(Segment3D((0, 0), (1, 0)))
     assert Segment3D((0, 0), (3, 0)).intersection(
-        Segment3D((-2, 0), (0, 0))) == [Point3D(0, 0)]
+        Segment3D((-2, 0), (0, 0)))[0].equals(Point3D(0, 0))
     # issue 7757
     p = Ray3D(Point3D(1, 0, 0), Point3D(-1, 0, 0))
     q = Ray3D(Point3D(0, 1, 0), Point3D(0, -1, 0))
@@ -534,21 +535,21 @@ def test_line3d():
 
     s1 = Segment3D(Point3D(0, 0, 0), Point3D(2, 2, 2))
     s2 = Segment3D(Point3D(-1, 5, 2), Point3D(-5, -10, 0))
-    assert intersection(r1, s1) == [
-        Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))]
+    assert intersection(r1, s1)[0].equals(
+        Segment3D(Point3D(1, 1, 1), Point3D(2, 2, 2)))
 
     l1 = Line3D(Point3D(0, 0, 0), Point3D(3, 4, 0))
     r1 = Ray3D(Point3D(0, 0, 0), Point3D(3, 4, 0))
     s1 = Segment3D(Point3D(0, 0, 0), Point3D(3, 4, 0))
-    assert intersection(l1, r1) == [r1]
-    assert intersection(l1, s1) == [s1]
-    assert intersection(r1, l1) == [r1]
-    assert intersection(s1, r1) == [s1]
+    assert intersection(l1, r1)[0].equals(r1)
+    assert intersection(l1, s1)[0].equals(s1)
+    assert intersection(r1, l1)[0].equals(r1)
+    assert intersection(s1, r1)[0].equals(s1)
 
     # check that temporary symbol is Dummy
-    assert Line3D((0, 0), (t, t)).perpendicular_line((0, 1, 0)).equals( \
+    assert Line3D((0, 0), (t, t)).perpendicular_line(Point(0, 1, 0)).equals(\
         Line3D(Point3D(0, 1, 0), Point3D(1/2, 1/2, 0)))
-    assert Line3D((0, 0), (t, t)).perpendicular_segment((0, 1, 0)).equals( \
+    assert Line3D((0, 0), (t, t)).perpendicular_segment(Point(0, 1, 0)).equals(\
         Segment3D((0, 1), (1/2, 1/2)))
     assert Line3D((0, 0), (t, t)).intersection(Line3D((0, 1), (t, t))) == \
         [Point3D(t, t)]
@@ -561,7 +562,7 @@ def test_line3d():
 
     # Test projection
     assert parallel_1.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
-    assert parallel_1.projection(parallel_2).equals( parallel_1 )
+    assert parallel_1.projection(parallel_2).equals(parallel_1)
     raises(GeometryError, lambda: parallel_1.projection(Plane(p1, p2, p6)))
 
     # Test __new__
