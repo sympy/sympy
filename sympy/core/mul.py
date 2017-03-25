@@ -1288,7 +1288,7 @@ class Mul(Expr, AssocOp):
         if is_integer:
             (coeff,symbols) = self.as_coeff_mul()
                
-            if coeff == 1             
+            if coeff == 1
                 r = True
                 for t in symbols.arg[1]:
                     if t.is_even:
@@ -1323,7 +1323,7 @@ class Mul(Expr, AssocOp):
                     return r
                                      
         else:
-            return False           
+            return False
 
             
     def _eval_is_even(self):
