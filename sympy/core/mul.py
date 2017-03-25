@@ -1314,7 +1314,7 @@ class Mul(Expr, AssocOp):
                         return False
                     else:
                         return None
-                elif numer % 2 !== 0 and denom % 2 !== 0:
+                elif numer % 2 != 0 and denom % 2 != 0:
                     for t in symbols:
                         if t.is_even:
                             return False
