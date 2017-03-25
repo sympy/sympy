@@ -483,14 +483,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
+        try:
+            integral_val_evaluated = integral_val.doit()
+            if integral_val_evaluated.is_number and integral_val_evaluated.is_finite:
+                return S(integral_val_evaluated.is_finite)
+        except NotImplementedError:
+            pass
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:

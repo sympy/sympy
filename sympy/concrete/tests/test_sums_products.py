@@ -930,6 +930,7 @@ def test_is_convergent():
     assert Sum(2**n/factorial(n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
+    assert Sum(log(n)/n**3, (n, 1, oo)).is_convergent() is S.true
 
     # p-series test --
     assert Sum(1/(n**2 + 1), (n, 1, oo)).is_convergent() is S.true
@@ -972,9 +973,6 @@ def test_is_absolutely_convergent():
 @XFAIL
 def test_convergent_failing():
     assert Sum(sin(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    assert Sum(ln(n)/n**3, (n, 1, oo)).is_convergent() is S.true
-    # is_decreasing is not handling "is_decreasing(1)", so raises error
-
     # dirichlet tests
     assert Sum(sin(n)/n, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(2*n)/n, (n, 1, oo)).is_convergent() is S.true
