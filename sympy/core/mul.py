@@ -1279,9 +1279,9 @@ class Mul(Expr, AssocOp):
     numerator ("num") and denominator ("denom").  If the num is even, then the expression
     is even because .fraction() puts the quotient in lowest terms, so False.  If the
     denom is even, then we must find its 2-adic valuation to compare the factors of 2
-    in the denom against the factors of 2 in the num.  Once we evaluate the denom, then
-    we need to evaluate the symbols that make up the rest of the expression.  If
-    more factors of 2 in the num, then even.  Else, not enough info, so None.
+    in the denom against the factors of 2 in the symbols which are in the num.  Once we 
+    evaluate the denom, then we need to evaluate the symbols that make up the rest of the 
+    expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
     """
         is_integer = self.is_integer
 
