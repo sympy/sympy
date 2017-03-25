@@ -3174,11 +3174,6 @@ def test_sympy__physics__unitsystems__quantities__Quantity():
     assert _test_args(Quantity("dam", length, 10))
 
 
-def test_sympy__physics__unitsystems__units__Unit():
-    from sympy.physics.unitsystems import Unit, length
-    assert _test_args(Unit("unit", length, 10, "u"))
-
-
 def test_sympy__physics__unitsystems__prefixes__Prefix():
     from sympy.physics.unitsystems.prefixes import Prefix
     assert _test_args(Prefix('kilo', 'k', 3))

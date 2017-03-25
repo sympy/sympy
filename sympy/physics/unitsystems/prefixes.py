@@ -6,7 +6,6 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-
 from sympy import sympify, Expr
 
 
@@ -126,13 +125,13 @@ def prefix_unit(unit, prefixes):
         [cm, dm, mm]
     """
 
-    from sympy.physics.unitsystems.units import Unit
+    from sympy.physics.unitsystems.quantities import Quantity
 
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Unit("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor, unit.abbrev,
-                                   prefix=prefix))
+        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
+                                       "%s%s" % (prefix.abbrev, unit.abbrev)))
 
     return prefixed_units
 

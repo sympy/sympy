@@ -1,54 +1,67 @@
-from sympy.physics.units import temperature, acceleration
-
-from sympy import pi
+from sympy import pi, Rational
 from sympy.physics.unitsystems import Quantity
 from sympy.physics.unitsystems.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
-    impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action
+    impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action, \
+    amount_of_substance, luminous_intensity, temperature, acceleration
 from sympy.physics.unitsystems.prefixes import kilo, milli, micro, nano, pico, deci, centi
 
 #### UNITS ####
 
-# Base units:
-meter = m = Quantity("meter", length, 1, abbrev="m")
+# Dimensionless:
 
-kilogram = kg = Quantity("kilogram", mass, kilo, abbrev="g")
-second = s = Quantity("second", time, 1, abbrev="s")
-ampere = A = Quantity("ampere", current, 1, abbrev='A')
+percent = percents = Quantity("percent", 1, Rational(1, 100))
+permille = permilles = Quantity("permille", 1, Rational(1, 1000))
+
+# Angular units (dimensionless)
+
+rad = radian = radians = Quantity("radian", 1, 1)
+deg = degree = degrees = Quantity("degree", 1, pi/180, "deg")
+sr = steradian = steradians = Quantity("steradian", 1, 1, "sr")
+mil = angular_mil = angular_mils = Quantity("angular_mil", 1, 2*pi/6400, "mil")
+
+# Base units:
+m = meter = meters = Quantity("meter", length, 1, abbrev="m")
+kg = kilogram = kilograms = Quantity("kilogram", mass, kilo, abbrev="g")
+s = second = seconds = Quantity("second", time, 1, abbrev="s")
+A = ampere = amperes = Quantity("ampere", current, 1, abbrev='A')
+K = kelvin = kelvins = Quantity('kelvin', temperature, 1, 'K')
+mol = mole = moles = Quantity("mole", amount_of_substance, 1, "mol")
+cd = candela = candelas = Quantity("candela", luminous_intensity, 1, "cd")
 
 # gram; used to define its prefixed units
 
-g = gram = grams = Quantity("gram", mass, 1, abbrev="g")
-mg = milligram = milligrams = Quantity("gram", mass, 1, "mg", "m")
-ug = microgram = micrograms = Quantity("gram", mass, 1, "ug", "mu")
+g = gram = grams = Quantity("gram", mass, 1, "g")
+mg = milligram = milligrams = Quantity("gram", mass, milli*gram, "mg")
+ug = microgram = micrograms = Quantity("gram", mass, micro*gram, "ug")
 
 # derived units
-newton = N = Quantity("newton", force, kilogram*meter/second**2, abbrev="N")
-joule = J = Quantity("joule", energy, newton*meter, abbrev="J")
-watt = W = Quantity("watt", power, joule/second, abbrev="W")
-pascal = Pa = Quantity("pascal", pressure, newton/meter**2, abbrev="Pa")
-hertz = hz = Hz = Quantity("hertz", frequency, 1, abbrev="Hz")
+newton = N = Quantity("newton", force, kilogram*meter/second**2, "N")
+joule = J = Quantity("joule", energy, newton*meter, "J")
+watt = W = Quantity("watt", power, joule/second, "W")
+pascal = Pa = Quantity("pascal", pressure, newton/meter**2, "Pa")
+hertz = hz = Hz = Quantity("hertz", frequency, 1, "Hz")
 
-# MKSA extension:
-
-# derived units
+# MKSA extension to MKS: derived units
 
 # coulomb
 coulomb = C = Quantity("coulomb", charge, 1, abbrev='C')
 # volt
 volt = V = Quantity("volt", voltage, joule/coulomb, abbrev='V')
 # ohm
-ohm = Quantity("ohm", impedance, 10**3, abbrev='ohm')
+ohm = Quantity("ohm", impedance, volt/ampere, abbrev='ohm')
 # siemens
-siemens = S = Quantity("siemens", conductance, 10**-3, abbrev='S')
+siemens = S = Quantity("siemens", conductance, ampere/volt, abbrev='S')
 # farad
 farad = F = Quantity("farad", capacitance, coulomb/volt, abbrev='F')
 # henry
-henry = H = Quantity("henry", inductance, 10**3, abbrev='H')
+henry = H = Quantity("henry", inductance, volt*second/ampere, abbrev='H')
 # tesla
-tesla = T = Quantity("tesla", magnetic_density, 1, abbrev='T')
+tesla = T = Quantity("tesla", magnetic_density, volt*second/meter**2, abbrev='T')
 # weber
-weber = Wb = Quantity("weber", magnetic_flux, 1, abbrev='Wb')
+weber = Wb = Quantity("weber", magnetic_flux, joule/ampere, abbrev='Wb')
 
+# Other derived units:
+optical_power = dioptre = D = Quantity("dioptre", 1/length, 1/meter)
 
 # Common length units
 
@@ -60,8 +73,8 @@ um = micrometer = micrometers = micron = microns = Quantity("micrometer", length
 nm = nanometer = nanometers = Quantity("nanometer", length, nano*meter, "nn")
 pm = picometer = picometers = Quantity("picometer", length, pico*meter, "pm")
 
-ft = foot = feet = Quantity("foot", length, 0.3048*meter, "ft")
-inch = inches = Quantity("inch", length, 0.0254*meter)
+ft = foot = feet = Quantity("foot", length, Rational(3048, 10000)*meter, "ft")
+inch = inches = Quantity("inch", length, foot/12)
 yd = yard = yards = Quantity("yard", length, 3*feet, "yd")
 mi = mile = miles = Quantity("mile", length, 5280*feet)
 nmi = nautical_mile = nautical_miles = Quantity("nautical_mile", length, 6076*feet)
@@ -81,7 +94,7 @@ ns = nanosecond = nanoseconds = Quantity("nanosecond", time, nano*second, "ns")
 ps = picosecond = picoseconds = Quantity("picosecond", time, pico*second, "ps")
 
 minute = minutes = Quantity("minute", time, 60*second)
-h = hour = hours = Quantity("hour", time, 60*second)
+h = hour = hours = Quantity("hour", time, 60*minute)
 day = days = Quantity("day", time, 24*hour)
 
 anomalistic_year = anomalistic_years = Quantity("anomalistic_year", time, 365.259636*day)
@@ -98,23 +111,45 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
-G = gravitational_constant = Quantity("gravitational_constant", length**3*mass**-1*time**-2, 6.67384e-11, abbrev="G")
+G = gravitational_constant = Quantity("gravitational_constant", length**3*mass**-1*time**-2, 6.67408e-11*m**3/(kg*s**2), abbrev="G")
 # speed of light
 c = speed_of_light = Quantity("speed_of_light", velocity, 299792458*meter/second, abbrev="c")
 # Wave impedance of free space
 Z0 = Quantity("WaveImpedence", impedance, 119.9169832*pi, abbrev='Z_0')
 # Reduced Planck constant
-hbar = Quantity("hbar", action, 1.05457266e-34, abbrev="hbar")
+hbar = Quantity("hbar", action, 1.05457266e-34*joule*second, abbrev="hbar")
 # Planck constant
 planck = Quantity("planck", action, 2*pi*hbar.scale_factor, abbrev="h")
 # Electronvolt
-eV = Quantity("eV", energy, 1.60219e-19, abbrev="eV")
+eV = electronvolt = electronvolts = Quantity("electronvolt", energy, 1.60219e-19*joule, abbrev="eV")
 # Avogadro number
 avogadro_number = Quantity("avogadro_number", 1, 6.022140857e23)
+# Avogadro constant
+avogadro = avogadro_constant = Quantity("avogadro_constant", amount_of_substance**-1, avogadro_number / mol)
 # Boltzmann constant
-boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-20)
+boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-23*joule/kelvin)
 # Atomic mass
-atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24)
+amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24*gram)
 # gee
 gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665)
-#
+# magnetic constant:
+u0 = magnetic_constant = Quantity("magnetic_constant", force/current**2, 4*pi/10**7 * newton/ampere**2)
+# electric constat:
+e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", capacitance/length, 1/(u0 * c**2))
+# vacuum impedance:
+Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
+
+atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, "atm")
+
+kPa = Quantity("kiloPascal", pressure, kilo*Pa, "kPa")
+bar = bars = Quantity("bar", pressure, 100*kPa, "bar")
+pound = pounds = Quantity("pound", mass, 0.45359237 * kg)  # exact
+psi = Quantity("psi", pressure, pound * gee / inch ** 2)
+dHg0 = 13.5951  # approx value at 0 C
+mmHg = Quantity("mmHg", pressure, dHg0 * 9.80665 * Pa)
+mmu = mmus = milli_mass_unit = Quantity("milli_mass_unit", mass, atomic_mass_unit/1000)
+
+# Other convenient units and magnitudes
+
+ly = lightyear = lightyears = Quantity("lightyear", length, speed_of_light*julian_year, "ly")
+au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", length, 149597870691*meter, "AU")

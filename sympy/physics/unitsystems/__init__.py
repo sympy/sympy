@@ -23,46 +23,9 @@ this page if you are willing to help.
 """
 
 from .dimensions import Dimension, DimensionSystem
-from .units import Unit, UnitSystem
+from .units import UnitSystem
 from .util import convert_to
 from .quantities import Quantity
-from .definitions import A, C, F, G, H, Hz, J, N, Pa, \
-    S, T, V, W, Wb, Z0, ampere, \
-    anomalistic_year, anomalistic_years, c, \
-    liter, liters, l, \
-    deciliter, deciliters, dl, \
-    centiliter, centiliters, cl, \
-    milliliter, milliliters, ml, \
-    common_year, common_years, coulomb, \
-    day, days, \
-    draconic_year, draconic_years, \
-    eV, farad, \
-    feet, foot, ft, \
-    full_moon_cycle, \
-    full_moon_cycles, g, gaussian_year, gaussian_years, gram, \
-    gravitational_constant, hbar, henry, hertz, \
-    h, hour, hours, \
-    hz, inch, \
-    inches, joule, julian_year, julian_years, kg, kilogram, l, \
-    liter, liters, m, meter, mi, \
-    ml, mile, miles, \
-    minute, minutes, \
-    nautical_mile, \
-    nautical_miles, newton, nmi, ohm, pascal, pi, s, second, \
-    sidereal_year, sidereal_years, siemens, speed_of_light, tesla,\
-    tropical_year, tropical_years, volt, watt, weber, yard, \
-    yards, yd, year, years,\
-    km, kilometer, kilometers,\
-    dm, decimeter, decimeters, \
-    cm, centimeter, centimeters, \
-    mm, millimeter, millimeters, \
-    um, micrometer, micrometers, \
-    nm, nanometer, nanometers, \
-    pm, picometer, picometers, \
-    ms, millisecond, milliseconds, \
-    us, microsecond, microseconds, \
-    ns, nanosecond, nanoseconds, \
-    ps, picosecond, picoseconds
 
 from .dimensions import acceleration, action, \
     capacitance, charge, conductance, current, energy, \
@@ -99,4 +62,93 @@ from .prefixes import (
     tebi,
     pebi,
     exbi,
+)
+
+from .definitions import (
+    percent, percents,
+    permille, permilles,
+    rad, radian, radians,
+    deg, degree, degrees,
+    sr, steradian, steradians,
+    mil, angular_mil, angular_mils,
+    m, meter, meters,
+    kg, kilogram, kilograms,
+    s, second, seconds,
+    A, ampere, amperes,
+    K, kelvin, kelvins,
+    mol, mole, moles,
+    cd, candela, candelas,
+    g, gram, grams,
+    mg, milligram, milligrams,
+    ug, microgram, micrograms,
+    newton, N,
+    joule, J,
+    watt, W,
+    pascal, Pa,
+    hertz, hz, Hz,
+    coulomb, C,
+    volt, V,
+    ohm,
+    siemens, S,
+    farad, F,
+    henry, H,
+    tesla, T,
+    weber, Wb,
+    optical_power, dioptre, D,
+    km, kilometer, kilometers,
+    dm, decimeter, decimeters,
+    cm, centimeter, centimeters,
+    mm, millimeter, millimeters,
+    um, micrometer, micrometers, micron, microns,
+    nm, nanometer, nanometers,
+    pm, picometer, picometers,
+    ft, foot, feet,
+    inch, inches,
+    yd, yard, yards,
+    mi, mile, miles,
+    nmi, nautical_mile, nautical_miles,
+    l, liter, liters,
+    dl, deciliter, deciliters,
+    cl, centiliter, centiliters,
+    ml, milliliter, milliliters,
+    ms, millisecond, milliseconds,
+    us, microsecond, microseconds,
+    ns, nanosecond, nanoseconds,
+    ps, picosecond, picoseconds,
+    minute, minutes,
+    h, hour, hours,
+    day, days,
+    anomalistic_year, anomalistic_years,
+    sidereal_year, sidereal_years,
+    tropical_year, tropical_years,
+    common_year, common_years,
+    julian_year, julian_years,
+    draconic_year, draconic_years,
+    gaussian_year, gaussian_years,
+    full_moon_cycle, full_moon_cycles,
+    year, years, tropical_year,
+    G, gravitational_constant,
+    c, speed_of_light,
+    Z0,
+    hbar,
+    planck,
+    eV, electronvolt, electronvolts,
+    avogadro_number,
+    avogadro, avogadro_constant,
+    boltzmann, boltzmann_constant,
+    amu, amus, atomic_mass_unit, atomic_mass_constant,
+    gee, gees, acceleration_due_to_gravity,
+    u0, magnetic_constant,
+    e0, electric_constant, vacuum_permittivity,
+    Z0, vacuum_impedance,
+    atmosphere, atmospheres, atm,
+    kPa,
+    bar, bars,
+    pound, pounds,
+    psi,
+    dHg0,
+    mmHg,
+    mmu, mmus, milli_mass_unit,
+    ly, lightyear, lightyears,
+    au, astronomical_unit, astronomical_units,
 )

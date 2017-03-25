@@ -51,46 +51,24 @@ def convert_to(expr, quantity):
     Examples
     ========
 
-    >>> from sympy.physics.unitsystems import speed_of_light, meter, hour, minute,\
-        second, day, mile, newton, kilogram, inch, centimeter
+    >>> from sympy.physics.unitsystems import speed_of_light, meter, gram, \
+        second, day, mile, newton, kilogram, inch, centimeter, atomic_mass_constant
     >>> from sympy.physics.unitsystems.definitions import kilometer
     >>> from sympy.physics.unitsystems import convert_to
     >>> convert_to(mile, kilometer)
+    25146*kilometer/15625
+    >>> convert_to(mile, kilometer).n()
     1.609344*kilometer
-    >>> convert_to(meter/second, speed_of_light)
-    speed_of_light/299792458
-    >>> convert_to(299792458*meter/second, speed_of_light)
-    speed_of_light
-    >>> convert_to(2*299792458*meter/second, speed_of_light)
-    2*speed_of_light
     >>> convert_to(speed_of_light, meter/second)
     299792458*meter/second
-    >>> convert_to(2*speed_of_light, meter/second)
-    599584916*meter/second
     >>> convert_to(day, second)
     86400*second
-    >>> convert_to(2*hour, minute)
-    120*minute
-    >>> convert_to(mile, meter)
-    1609.344*meter
-    >>> convert_to(mile/hour, kilometer/hour)
-    1.609344*kilometer/hour
-    >>> convert_to(3*newton, meter/second)
+    >>> 3*newton
     3*newton
     >>> convert_to(3*newton, kilogram*meter/second**2)
-    3*meter*kilogram/second**2
-    >>> convert_to(kilometer + mile, meter)
-    2609.344*meter
-    >>> convert_to(2*kilometer + 3*mile, meter)
-    6828.032*meter
-    >>> convert_to(inch**2, meter**2)
-    0.00064516*meter**2
-    >>> convert_to(3*inch**2, meter)
-    0.00193548*meter**2
-    >>> convert_to(2*kilometer/hour + 3*mile/hour, meter/second)
-    1.89667555555556*meter/second
-    >>> convert_to(2*kilometer/hour + 3*mile/hour, centimeter/second)
-    189.667555555556*centimeter/second
+    3*kilogram*meter/second**2
+    >>> convert_to(atomic_mass_constant, gram)
+    1.66053904e-24*gram
     """
 
     def get_total_scale_factor(expr):

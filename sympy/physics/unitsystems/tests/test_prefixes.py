@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from sympy import symbols
 from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
 
 
@@ -15,15 +15,17 @@ def test_prefix_operations():
 
 
 def test_prefix_unit():
-    from sympy.physics.unitsystems import Unit, Dimension
+    from sympy.physics.unitsystems import Quantity, Dimension
 
     length = Dimension("length")
-    m = Unit("meter", length, 1, abbrev="m")
+    m = Quantity("meter", length, 1, abbrev="m")
 
     pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
 
-    res = [Unit("millimeter", length, 1, abbrev="m", prefix=PREFIXES["m"]),
-           Unit("centimeter", length, 1, abbrev="m", prefix=PREFIXES["c"]),
-           Unit("decimeter", length, 1, abbrev="m", prefix=PREFIXES["d"])]
+    res = [Quantity("millimeter", length, PREFIXES["m"], "mm"),
+           Quantity("centimeter", length, PREFIXES["c"], "cm"),
+           Quantity("decimeter", length, PREFIXES["d"], "dm")]
 
-    assert set(prefix_unit(m, pref)) == set(res)
+    prefs = prefix_unit(m, pref)
+    assert set(prefs) == set(res)
+    assert set(map(lambda x: x.abbrev, prefs)) == set(symbols("mm,cm,dm"))

@@ -65,11 +65,12 @@ we can find the Venus orbital period using the known values for the other
 variables (taken from Wikipedia). The result should be 224.701 days.
 
     >>> from sympy import solve, symbols, pi, Eq
-    >>> from sympy.physics.unitsystems import Unit, Quantity, length, mass
+    >>> from sympy.physics.unitsystems import Quantity, length, mass
     >>> from sympy.physics.unitsystems import day, gravitational_constant as G
+    >>> from sympy.physics.unitsystems import meter, kilogram
     >>> T = symbols("T")
-    >>> a = Quantity("venus_a", length, 108208000e3)
-    >>> M = Quantity("solar_mass", mass, 1.9891e30)
+    >>> a = Quantity("venus_a", length, 108208000e3*meter)
+    >>> M = Quantity("solar_mass", mass, 1.9891e30*kilogram)
     >>> eq = Eq(T**2 / a**3, 4*pi**2 / G / M)
     >>> eq
     Eq(T**2/venus_a**3, 4*pi**2/(gravitational_constant*solar_mass))
@@ -82,9 +83,9 @@ the outcoming result:
 
     >>> from sympy.physics.unitsystems import convert_to
     >>> convert_to(q, day)
-    1.59123003109442e-10*sqrt(1993480633430344427209462)*day
+    2.15992161980729e-7*sqrt(1081898088255574765)*day
     >>> convert_to(q, day).n()
-    224.666840070582*day
+    224.662800523082*day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but I wanted to show how to create a unit that one needs.

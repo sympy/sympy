@@ -200,9 +200,11 @@ class Dimension(Expr):
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
-            return dict(ret)
+            return {k: v for (k, v) in ret.items() if v != 0}
 
         if name.is_Pow:
+            if name.exp == 0:
+                return {}
             dim = Dimension._get_dimensional_dependencies_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
 
@@ -238,6 +240,14 @@ length = Dimension(name="length", symbol="L")
 mass = Dimension(name="mass", symbol="M")
 time = Dimension(name="time", symbol="T")
 
+# base dimensions (MKSA not in MKS)
+current = Dimension(name='current', symbol='I')
+
+# other base dimensions:
+temperature = Dimension("temperature", "T")
+amount_of_substance = Dimension("amount_of_substance")
+luminous_intensity = Dimension("luminous_intensity")
+
 # derived dimensions (MKS)
 velocity = Dimension(name="velocity")
 acceleration = Dimension(name="acceleration")
@@ -249,9 +259,6 @@ pressure = Dimension(name="pressure")
 frequency = Dimension(name="frequency", symbol="f")
 action = Dimension(name="action", symbol="A")
 
-# base dimensions (MKSA not in MKS)
-current = Dimension(name='current', symbol='I')
-
 # derived dimensions (MKSA not in MKS)
 voltage = Dimension(name='voltage', symbol='U')
 impedance = Dimension(name='impedance', symbol='Z')
@@ -259,17 +266,25 @@ conductance = Dimension(name='conductance', symbol='G')
 capacitance = Dimension(name='capacitance')
 inductance = Dimension(name='inductance')
 charge = Dimension(name='charge', symbol='Q')
-magnetic_density = Dimension(name='charge', symbol='B')
-magnetic_flux = Dimension(name='charge')
+magnetic_density = Dimension(name='magnetic_density', symbol='B')
+magnetic_flux = Dimension(name='magnetic_flux')
 
 # Create dimensions according the the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 
-# Dimensional dependencies for base dimensions
+# Dimensional dependencies for MKS base dimensions
 Dimension._dimensional_dependencies["length"] = dict(length=1)
 Dimension._dimensional_dependencies["mass"] = dict(mass=1)
 Dimension._dimensional_dependencies["time"] = dict(time=1)
+
+# Dimensional dependencies for base dimensions (MKSA not in MKS)
+Dimension._dimensional_dependencies["current"] = dict(current=1)
+
+# Dimensional dependencies for other base dimensions:
+Dimension._dimensional_dependencies["temperature"] = dict(temperature=1)
+Dimension._dimensional_dependencies["amount_of_substance"] = dict(amount_of_substance=1)
+Dimension._dimensional_dependencies["luminous_intensity"] = dict(luminous_intensity=1)
 
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["velocity"] = dict(length=1, time=-1)
@@ -281,9 +296,6 @@ Dimension._dimensional_dependencies["power"] = dict(length=2, mass=1, time=-3)
 Dimension._dimensional_dependencies["pressure"] = dict(mass=1, length=-1, time=-2)
 Dimension._dimensional_dependencies["frequency"] = dict(time=-1)
 Dimension._dimensional_dependencies["action"] = dict(length=2, mass=1, time=-1)
-
-# Dimensional dependencies for  base dimensions
-Dimension._dimensional_dependencies["current"] = dict(current=1)
 
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["voltage"] = dict(mass=1, length=2, current=-1, time=-3)

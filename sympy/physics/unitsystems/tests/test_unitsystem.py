@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
+from sympy import Rational
 from sympy.physics.unitsystems.definitions import (m, s, c, kg)
 from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
     action
-from sympy.physics.unitsystems.units import Unit, UnitSystem
+from sympy.physics.unitsystems.units import UnitSystem
 from sympy.physics.unitsystems.quantities import Quantity
 from sympy.utilities.pytest import raises
 
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
-    dm = Unit("dm", length, 0.1)
+    dm = Quantity("dm", length, Rational(1, 10))
 
     base = (m, s)
     base_dim = (m.dimension, s.dimension)
@@ -37,8 +38,8 @@ def test_str_repr():
 
 
 def test_print_unit_base():
-    A = Unit("A", current, 1)
-    Js = Unit("Js", action, 1)
+    A = Quantity("A", current, 1)
+    Js = Quantity("Js", action, 1)
     mksa = UnitSystem((m, kg, s, A), (Js,))
 
     assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
@@ -46,7 +47,7 @@ def test_print_unit_base():
 
 def test_extend():
     ms = UnitSystem((m, s), (c,))
-    Js = Unit("Js", action, 1)
+    Js = Quantity("Js", action, 1)
     mks = ms.extend((kg,), (Js,))
 
     res = UnitSystem((m, s, kg), (c, Js))

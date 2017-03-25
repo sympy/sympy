@@ -22,13 +22,16 @@ class Quantity(Expr):
     is_real = True
     is_number = False
 
-    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, prefix=None, **assumptions):
+    def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
 
         if not isinstance(name, Symbol):
             name = Symbol(name)
 
         if not isinstance(dimension, dimensions.Dimension):
-            dimension = getattr(dimensions, str(dimension))
+            if dimension == 1:
+                dimension = Dimension(1)
+            else:
+                raise ValueError("expected dimension or 1")
         scale_factor = sympify(scale_factor)
 
         dimex = Quantity.get_dimensional_expr(scale_factor)
@@ -46,11 +49,7 @@ class Quantity(Expr):
         elif isinstance(abbrev, string_types):
             abbrev = Symbol(abbrev)
 
-        if prefix is None:
-            obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev)
-        else:
-            prefix = sympify(prefix)
-            obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev, prefix)
+        obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev)
         obj._name = name
         obj._dimension = dimension
         obj._factor_without_prefix = scale_factor
