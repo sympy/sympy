@@ -185,6 +185,8 @@ Alternatively, the `A` and `B` form can be generated instead by specifying
 An operating point can also be specified as a dictionary or an iterable of
 dictionaries. This will evaluate the linearized form at the specified
 point before returning the matrices: ::
+Note : You must not specify python floats as for op_points as due to
+limited precision, it could leave udots, only specify sympy types.
 
   >>> op_point = {q1: 0, u1: 0}
   >>> A_op, B_op = linearizer.linearize(A_and_B=True, op_point=op_point)
