@@ -189,7 +189,7 @@ def test_directional_derivative():
     assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k, C) == 3*C.y*C.z + 4*C.x*C.z + C.x*C.y
     assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k, C) == 30*C.x*C.z + 5*C.x**2
     assert directional_derivative(5*C.x**2*C.z, 4*C.j, C) == S.Zero
-    
+
 def test_scalar_potential():
     assert scalar_potential(Vector.zero, C) == 0
     assert scalar_potential(i, C) == x
