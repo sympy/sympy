@@ -23,6 +23,8 @@ from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
+from sympy.core.decorators import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -1155,6 +1157,15 @@ class MatrixOperations(MatrixRequired):
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
+    def _eval_applyfunc(self, f):
+        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        return out
+
+    def _eval_as_real_imag(self):
+        from sympy.functions.elementary.complexes import re, im
+
+        return (self.applyfunc(re), self.applyfunc(im))
+
     def _eval_conjugate(self):
         return self.applyfunc(lambda x: x.conjugate())
 
@@ -1189,8 +1200,11 @@ class MatrixOperations(MatrixRequired):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
-        return out
+        return self._eval_applyfunc(f)
+
+    def as_real_imag(self):
+        """Returns a tuple containing the (real, imaginary) part of matrix."""
+        return self._eval_as_real_imag()
 
     def conjugate(self):
         """Return the by-element conjugation.
@@ -1667,7 +1681,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
     __array_priority__ = 11
 
     is_Matrix = True
-    is_Identity = None
     _class_priority = 3
     _sympify = staticmethod(sympify)
 
@@ -1703,6 +1716,10 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
                 mml += self[i, j].__mathml__()
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
+
+    # needed for python 2 compatibility
+    def __ne__(self, other):
+        return not self == other
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -2528,10 +2545,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
 
-    def as_real_imag(self):
-        """Returns a tuple containing the (real, imaginary) part of matrix."""
-        return self.as_real_imag()
-
     def copy(self):
         """
         Returns the copy of a matrix.
@@ -2619,8 +2632,12 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
             raise AttributeError
         return self.H * mgamma(0)
 
+    @deprecated(useinstead="det_bareiss", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
-        """Compute matrix determinant using Bareis' fraction-free
+        return self.det_bareiss()
+
+    def det_bareiss(self):
+        """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
@@ -2669,7 +2686,7 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
                     else:
                         return S.Zero
 
-                # proceed with Bareis' fraction-free (FF)
+                # proceed with Bareiss' fraction-free (FF)
                 # form of Gaussian elimination algorithm
                 for i in range(k + 1, n):
                     for j in range(k + 1, n):
@@ -2687,7 +2704,6 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
 
         return det.expand()
 
-
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
 
@@ -2704,7 +2720,7 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
 
 
         det
-        det_bareis
+        det_bareiss
         berkowitz_det
         """
         if not self.is_square:
@@ -2723,18 +2739,18 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
 
         return prod.expand()
 
-    def det(self, method="bareis"):
+    def det(self, method="bareiss"):
         """Computes the matrix determinant using the method "method".
 
         Possible values for "method":
-          bareis ... det_bareis
+          bareiss ... det_bareiss
           berkowitz ... berkowitz_det
           det_LU ... det_LU_decomposition
 
         See Also
         ========
 
-        det_bareis
+        det_bareiss
         berkowitz_det
         det_LU
         """
@@ -2742,12 +2758,18 @@ class MatrixBase(MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixSha
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
         # the method routines
+        if method == "bareis":
+            SymPyDeprecationWarning(
+                            feature="Using 'bareis' to compute matrix determinant",
+                            useinstead="'bareiss'",
+                            issue=12363, deprecated_since_version="1.1").warn()
+            method = "bareiss"
         if not self.is_square:
             raise NonSquareMatrixError()
         if not self:
             return S.One
-        if method == "bareis":
-            return self.det_bareis()
+        if method == "bareiss":
+            return self.det_bareiss()
         elif method == "berkowitz":
             return self.berkowitz_det()
         elif method == "det_LU":
@@ -5039,7 +5061,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
     try:
         if A._class_priority > B._class_priority:

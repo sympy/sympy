@@ -751,7 +751,7 @@ def test_intrinsic_math_codegen():
         'REAL*8 function test_abs(x)\n'
         'implicit none\n'
         'REAL*8, intent(in) :: x\n'
-        'test_abs = Abs(x)\n'
+        'test_abs = abs(x)\n'
         'end function\n'
         'REAL*8 function test_acos(x)\n'
         'implicit none\n'
