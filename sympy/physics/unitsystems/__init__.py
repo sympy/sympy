@@ -24,7 +24,7 @@ this page if you are willing to help.
 
 from .dimensions import Dimension, DimensionSystem
 from .units import Unit, UnitSystem
-from .simplifiers import convert_to
+from .util import convert_to
 from .quantities import Quantity
 from .definitions import A, C, F, G, H, Hz, J, N, Pa, \
     S, T, V, W, Wb, Z0, ampere, \
@@ -69,3 +69,34 @@ from .dimensions import acceleration, action, \
     force, frequency, impedance, inductance, length, magnetic_density, \
     magnetic_flux, mass, momentum, power, pressure, time, \
     velocity, voltage
+
+from .prefixes import (
+    # 10-power based:
+    yotta,
+    zetta,
+    exa,
+    peta,
+    tera,
+    giga,
+    mega,
+    kilo,
+    hecto,
+    deca,
+    deci,
+    centi,
+    milli,
+    micro,
+    nano,
+    pico,
+    femto,
+    atto,
+    zepto,
+    yocto,
+    # 2-power based:
+    kibi,
+    mebi,
+    gibi,
+    tebi,
+    pebi,
+    exbi,
+)

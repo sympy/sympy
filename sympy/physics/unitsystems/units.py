@@ -6,6 +6,7 @@ Unit system for physical quantities; include definition of constants.
 
 from __future__ import division
 
+from sympy.core.decorators import deprecated
 from sympy.physics.unitsystems.prefixes import PREFIXES
 
 from sympy.physics.unitsystems.quantities import Quantity
@@ -15,53 +16,9 @@ from sympy.core.compatibility import string_types
 from .dimensions import DimensionSystem
 
 
+@deprecated(use_instead="Quantity")
 class Unit(Quantity):
-    """
-    Class for the units.
-
-    A Unit is a quantity that support prefixes.
-    """
-
-    def __new__(cls, name, dimension, scale_factor, abbrev="", prefix=None, **assumptions):
-
-        scale_factor = sympify(scale_factor)
-
-        if isinstance(prefix, string_types):
-            prefix = PREFIXES[prefix]
-
-        obj = Quantity.__new__(cls, name, dimension, scale_factor, abbrev, prefix, **assumptions)
-        obj._prefix = prefix
-        return obj
-
-    @property
-    def scale_factor(self):
-        if self.prefix is None:
-            return self._factor_without_prefix
-        else:
-            return self._factor_without_prefix * self.prefix.scale_factor
-
-    @property
-    def prefix(self):
-        return self._prefix
-
-    @property
-    def abbrev(self):
-        if self.prefix is not None:
-            return Symbol("%s%s" % (self.prefix.abbrev, self._abbrev))
-        else:
-            return self._abbrev
-
-    def __hash__(self):
-        return Quantity.__hash__(self)
-
-    def __eq__(self, other):
-        if not isinstance(other, Quantity):
-            return False
-        if self.dimension != other.dimension:
-            return False
-        if self.scale_factor != other.scale_factor:
-            return False
-        return True
+    pass
 
 
 class UnitSystem(object):

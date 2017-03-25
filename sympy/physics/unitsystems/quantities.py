@@ -8,7 +8,9 @@ from __future__ import division
 
 from sympy.core.compatibility import string_types
 from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add
+from sympy.physics.unitsystems import Dimension
 from sympy.physics.unitsystems import dimensions
+from sympy.physics.unitsystems.prefixes import Prefix
 
 
 class Quantity(Expr):
@@ -28,6 +30,16 @@ class Quantity(Expr):
         if not isinstance(dimension, dimensions.Dimension):
             dimension = getattr(dimensions, str(dimension))
         scale_factor = sympify(scale_factor)
+
+        dimex = Quantity.get_dimensional_expr(scale_factor)
+        if dimex != 1:
+            if dimension != Dimension(dimex):
+                raise ValueError("quantity value and dimension mismatch")
+
+        # replace all prefixes by their ratio to canonical units:
+        scale_factor = scale_factor.replace(lambda x: isinstance(x, Prefix), lambda x: x.scale_factor)
+        # replace all quantities by their ratio to canonical units:
+        scale_factor = scale_factor.replace(lambda x: isinstance(x, Quantity), lambda x: x.scale_factor)
 
         if abbrev is None:
             abbrev = name
@@ -70,6 +82,19 @@ class Quantity(Expr):
         return self._factor_without_prefix
 
     @staticmethod
+    def get_dimensional_expr(expr):
+        if isinstance(expr, Mul):
+            return Mul(*[Quantity.get_dimensional_expr(i) for i in expr.args])
+        elif isinstance(expr, Pow):
+            return Quantity.get_dimensional_expr(expr.base) ** expr.exp
+        elif isinstance(expr, Add):
+            # return get_dimensional_expr()
+            raise NotImplementedError
+        elif isinstance(expr, Quantity):
+            return expr.dimension.name
+        return 1
+
+    @staticmethod
     def _collect_factor_and_dimension(expr):
 
         if isinstance(expr, Quantity):
@@ -107,5 +132,5 @@ class Quantity(Expr):
         >>> liter.convert_to(meter**3)
         meter**3/1000
         """
-        from .simplifiers import convert_to
+        from .util import convert_to
         return convert_to(self, other)

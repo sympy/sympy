@@ -42,6 +42,8 @@ class Prefix(Expr):
         obj._name = name
         obj._abbrev = abbrev
         obj._scale_factor = base**exponent
+        obj._exponent = exponent
+        obj._base = base
         return obj
 
     @property
@@ -56,11 +58,16 @@ class Prefix(Expr):
     def scale_factor(self):
         return self._scale_factor
 
+    @property
+    def base(self):
+        return self._base
+
     def __str__(self):
+        # TODO: add proper printers and tests:
         if self.base == 10:
-            return "Prefix(%s, %s, %s)" % (self.name, self.abbrev, self.exponent)
+            return "Prefix(%s, %s, %s)" % (self.name, self.abbrev, self._exponent)
         else:
-            return "Prefix(%s, %s, %s, %s)" % (self.name, self.abbrev, self.exponent, self.base)
+            return "Prefix(%s, %s, %s, %s)" % (self.name, self.abbrev, self._exponent, self.base)
 
     __repr__ = __str__
 
@@ -130,36 +137,67 @@ def prefix_unit(unit, prefixes):
     return prefixed_units
 
 
+yotta = Prefix('yotta', 'Y', 24)
+zetta = Prefix('zetta', 'Z', 21)
+exa = Prefix('exa', 'E', 18)
+peta = Prefix('peta', 'P', 15)
+tera = Prefix('tera', 'T', 12)
+giga = Prefix('giga', 'G', 9)
+mega = Prefix('mega', 'M', 6)
+kilo = Prefix('kilo', 'k', 3)
+hecto = Prefix('hecto', 'h', 2)
+deca = Prefix('deca', 'da', 1)
+deci = Prefix('deci', 'd', -1)
+centi = Prefix('centi', 'c', -2)
+milli = Prefix('milli', 'm', -3)
+micro = Prefix('micro', 'mu', -6)
+nano = Prefix('nano', 'n', -9)
+pico = Prefix('pico', 'p', -12)
+femto = Prefix('femto', 'f', -15)
+atto = Prefix('atto', 'a', -18)
+zepto = Prefix('zepto', 'z', -21)
+yocto = Prefix('yocto', 'y', -24)
+
+
 # http://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
-    'Y': Prefix('yotta', 'Y', 24),
-    'Z': Prefix('zetta', 'Z', 21),
-    'E': Prefix('exa', 'E', 18),
-    'P': Prefix('peta', 'P', 15),
-    'T': Prefix('tera', 'T', 12),
-    'G': Prefix('giga', 'G', 9),
-    'M': Prefix('mega', 'M', 6),
-    'k': Prefix('kilo', 'k', 3),
-    'h': Prefix('hecto', 'h', 2),
-    'da': Prefix('deca', 'da', 1),
-    'd': Prefix('deci', 'd', -1),
-    'c': Prefix('centi', 'c', -2),
-    'm': Prefix('milli', 'm', -3),
-    'mu': Prefix('micro', 'mu', -6),
-    'n': Prefix('nano', 'n', -9),
-    'p': Prefix('pico', 'p', -12),
-    'f': Prefix('femto', 'f', -15),
-    'a': Prefix('atto', 'a', -18),
-    'z': Prefix('zepto', 'z', -21),
-    'y': Prefix('yocto', 'y', -24)
+    'Y': yotta,
+    'Z': zetta,
+    'E': exa,
+    'P': peta,
+    'T': tera,
+    'G': giga,
+    'M': mega,
+    'k': kilo,
+    'h': hecto,
+    'da': deca,
+    'd': deci,
+    'c': centi,
+    'm': milli,
+    'mu': micro,
+    'n': nano,
+    'p': pico,
+    'f': femto,
+    'a': atto,
+    'z': zepto,
+    'y': yocto,
 }
+
+
+kibi = Prefix('kibi', 'Y', 10, 2),
+mebi = Prefix('mebi', 'Y', 20, 2),
+gibi = Prefix('gibi', 'Y', 30, 2),
+tebi = Prefix('tebi', 'Y', 40, 2),
+pebi = Prefix('pebi', 'Y', 50, 2),
+exbi = Prefix('exbi', 'Y', 60, 2)
+
 
 # http://physics.nist.gov/cuu/Units/binary.html
 BIN_PREFIXES = {
-    'Ki': Prefix('kibi', 'Y', 10, 2),
-    'Mi': Prefix('mebi', 'Y', 20, 2),
-    'Gi': Prefix('gibi', 'Y', 30, 2),
-    'Ti': Prefix('tebi', 'Y', 40, 2),
-    'Pi': Prefix('pebi', 'Y', 50, 2),
-    'Ei': Prefix('exbi', 'Y', 60, 2)
+    'Ki': kibi,
+    'Mi': mebi,
+    'Gi': gibi,
+    'Ti': tebi,
+    'Pi': pebi,
+    'Ei': exbi,
 }

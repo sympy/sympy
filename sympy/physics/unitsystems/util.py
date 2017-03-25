@@ -6,9 +6,9 @@ Several methods to simplify expressions involving unit objects.
 
 from __future__ import division
 
+from sympy.physics.unitsystems.quantities import Quantity
 from sympy import Add, Mul, Pow, Function
 from sympy.core.compatibility import reduce
-from sympy.physics.unitsystems.quantities import Quantity
 from sympy.physics.unitsystems.dimensions import Dimension
 
 
@@ -93,18 +93,6 @@ def convert_to(expr, quantity):
     189.667555555556*centimeter/second
     """
 
-    def get_dimensional_expr(expr):
-        if isinstance(expr, Mul):
-            return Mul(*[get_dimensional_expr(i) for i in expr.args])
-        elif isinstance(expr, Pow):
-            return get_dimensional_expr(expr.base)**expr.exp
-        elif isinstance(expr, Add):
-            #return get_dimensional_expr()
-            raise NotImplementedError
-        elif isinstance(expr, Quantity):
-            return expr.dimension.name
-        return 1
-
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
             return reduce(lambda x, y: x*y, [get_total_scale_factor(i) for i in expr.args])
@@ -127,27 +115,27 @@ def convert_to(expr, quantity):
         backup_quantity = None
     else:
         backup_quantity = quantity
-        quantity = Quantity("_temp", Dimension(get_dimensional_expr(quantity)), get_total_scale_factor(quantity))
+        quantity = Quantity("_temp", Dimension(Quantity.get_dimensional_expr(quantity)), get_total_scale_factor(quantity))
 
     def _convert_to(expr, quantity):
         if isinstance(expr, Add):
             return Add(*[_convert_to(i, quantity) for i in expr.args])
         elif isinstance(expr, Mul):
             new_args = [_convert_to(i, quantity) for i in expr.args]
-            edim = Dimension(get_dimensional_expr(expr))
+            edim = Dimension(Quantity.get_dimensional_expr(expr))
             if edim == quantity.dimension:
                 scale_factor_old = get_total_scale_factor(expr)
                 return expr / get_units(expr) * scale_factor_old / quantity.scale_factor * quantity
             return Mul(*new_args)
         elif isinstance(expr, Pow):
             base = _convert_to(expr.base, quantity)
-            edim = Dimension(get_dimensional_expr(base))**expr.exp
+            edim = Dimension(Quantity.get_dimensional_expr(base))**expr.exp
             if edim == quantity.dimension:
                 scale_factor_old = get_total_scale_factor(expr)
                 return expr / get_units(expr) * scale_factor_old / quantity.scale_factor * quantity
             return base**expr.exp
         elif isinstance(expr, Quantity):
-            edim = Dimension(get_dimensional_expr(expr))
+            edim = Dimension(Quantity.get_dimensional_expr(expr))
             if edim == quantity.dimension:
                 return expr.scale_factor / quantity.scale_factor * quantity
             else:
