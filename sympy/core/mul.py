@@ -93,8 +93,6 @@ class Mul(Expr, AssocOp):
     __slots__ = []
 
     is_Mul = True
-    is_odd = self._eval_is_odd()
-    is_even = self._eval_is_even()
 
     @classmethod
     def flatten(cls, seq):
