@@ -717,7 +717,7 @@ def _integer_basis(poly):
             return div
 
 
-def preprocess_roots(poly):
+def preprocess_roots(poly, extension=None):
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
@@ -727,7 +727,7 @@ def preprocess_roots(poly):
         return coeff, poly
 
     poly = poly.primitive()[1]
-    poly = poly.retract()
+    poly = poly.retract(extension=extension)
 
     # TODO: This is fragile. Figure out how to make this independent of construct_domain().
     if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
@@ -796,9 +796,9 @@ def roots(f, *gens, **flags):
     a list of the polynomial's coefficients), returns a dictionary
     with its roots and their multiplicities.
 
-    Only roots expressible via radicals will be returned.  To get
-    a complete set of roots use RootOf class or numerical methods
-    instead. By default cubic and quartic formulas are used in
+    If only roots expressible via radicals are desired, set the flag
+    `extension=None` otherwise a complete set of roots is returned.
+    By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
     set ``cubics=False`` or ``quartics=False`` respectively. If cubic
     roots are real but are expressed in terms of complex numbers
@@ -820,17 +820,17 @@ def roots(f, *gens, **flags):
     Examples
     ========
 
-    >>> from sympy import Poly, roots
+    >>> from sympy import Poly, roots, S, I, sqrt
     >>> from sympy.abc import x, y
 
     >>> roots(x**2 - 1, x)
     {-1: 1, 1: 1}
 
-    >>> p = Poly(x**2-1, x)
+    >>> p = Poly(x**2 - 1, x)
     >>> roots(p)
     {-1: 1, 1: 1}
 
-    >>> p = Poly(x**2-y, x, y)
+    >>> p = Poly(x**2 - y, x, y)
 
     >>> roots(Poly(p, x))
     {-sqrt(y): 1, sqrt(y): 1}
@@ -841,6 +841,44 @@ def roots(f, *gens, **flags):
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
 
+    Filtering of the results can be handled with the `filter` keyword:
+        'Z', integer
+        'Q', rational
+        'R', real
+        'I', imaginary
+        'C', complex
+
+    >>> p = Poly((x - S.Half)*(x - 1)*(x - sqrt(2)), x)
+    >>> for f in 'ZQR':
+    ...     print f, roots(p, filter=f)
+    ...
+    Z {1: 1}
+    Q {1: 1, 1/2: 1}
+    R {1: 1, 1/2: 1, sqrt(2): 1}
+
+    >>> p = Poly((x**2 - x + 1)*(x**2 + 1), x)
+    >>> for f in 'IC':
+    ...     print f, roots(p, filter=f)
+    ...
+    I {I: 1, -I: 1}
+    C {I: 1, 1/2 + sqrt(3)*I/2: 1, 1/2 - sqrt(3)*I/2: 1, -I: 1}
+
+    # TODO what is it that extension is actually controlling?
+    # does the docstring need to be modified? The first and last look
+    # like they are expressed in terms of radicals -- what am I missing?
+
+    >>> p = Polx(x**4 - 3*x**3 + x**2*(-3*sqrt(2) + 1) + 2*sqrt(2)*x + 2, x)
+    >>> roots(p)
+    {-sqrt(7/8 + 3*sqrt(2)/2 + sqrt(5)*(15/8 + 5*sqrt(2)/2)/5) + sqrt(5)/4 + 3/4: 1,
+     sqrt(5)/4 + 3/4 + sqrt(7/8 + 3*sqrt(2)/2 + sqrt(5)*(15/8 + 5*sqrt(2)/2)/5): 1,
+    -sqrt(5)/4 + 3/4 + sqrt(-sqrt(5)*(15/8 + 5*sqrt(2)/2)/5 + 7/8 + 3*sqrt(2)/2): 1,
+     -sqrt(-sqrt(5)*(15/8 + 5*sqrt(2)/2)/5 + 7/8 + 3*sqrt(2)/2) - sqrt(5)/4 + 3/4: 1
+    }
+    >>> roots(p, extension=None)
+    {}
+
+    >>> roots(Poly((x - sqrt(1 + sqrt(2)))*(x - 1), x), extension=None)
+    {1: 1, sqrt(1 + sqrt(2)): 1}
 
     References
     ==========
@@ -859,6 +897,7 @@ def roots(f, *gens, **flags):
     multiple = flags.pop('multiple', False)
     filter = flags.pop('filter', None)
     predicate = flags.pop('predicate', None)
+    extension = flags.pop('extension', True)
 
     if isinstance(f, list):
         if gens:
@@ -974,7 +1013,10 @@ def roots(f, *gens, **flags):
     else:
         zeros = {S(0): k}
 
-    coeff, f = preprocess_roots(f)
+    # be careful with specifying extension b/c it cannot be set
+    # if a composite domain is being used
+    coeff, f = preprocess_roots(f,
+        extension=None if f.domain.is_Composite else extension)
 
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
