@@ -848,32 +848,16 @@ def roots(f, *gens, **flags):
         'I', imaginary
         'C', complex
 
-    >>> p = Poly((x - S.Half)*(x - 1)*(x - sqrt(2)), x)
-    >>> for f in 'ZQR':
-    ...     print f, roots(p, filter=f)
-    ...
-    Z {1: 1}
-    Q {1: 1, 1/2: 1}
-    R {1: 1, 1/2: 1, sqrt(2): 1}
-
-    >>> p = Poly((x**2 - x + 1)*(x**2 + 1), x)
-    >>> for f in 'IC':
-    ...     print f, roots(p, filter=f)
-    ...
-    I {I: 1, -I: 1}
-    C {I: 1, 1/2 + sqrt(3)*I/2: 1, 1/2 - sqrt(3)*I/2: 1, -I: 1}
+    >>> roots(Poly((x - S.Half)*(x - 2)*(x - sqrt(2)), x), filter='Z')
+    {2: 1}
 
     # TODO what is it that extension is actually controlling?
     # does the docstring need to be modified? The first and last look
     # like they are expressed in terms of radicals -- what am I missing?
 
-    >>> p = Polx(x**4 - 3*x**3 + x**2*(-3*sqrt(2) + 1) + 2*sqrt(2)*x + 2, x)
-    >>> roots(p)
-    {-sqrt(7/8 + 3*sqrt(2)/2 + sqrt(5)*(15/8 + 5*sqrt(2)/2)/5) + sqrt(5)/4 + 3/4: 1,
-     sqrt(5)/4 + 3/4 + sqrt(7/8 + 3*sqrt(2)/2 + sqrt(5)*(15/8 + 5*sqrt(2)/2)/5): 1,
-    -sqrt(5)/4 + 3/4 + sqrt(-sqrt(5)*(15/8 + 5*sqrt(2)/2)/5 + 7/8 + 3*sqrt(2)/2): 1,
-     -sqrt(-sqrt(5)*(15/8 + 5*sqrt(2)/2)/5 + 7/8 + 3*sqrt(2)/2) - sqrt(5)/4 + 3/4: 1
-    }
+    >>> p = Poly(x**4 - 3*x**3 + x**2*(-3*sqrt(2) + 1) + 2*sqrt(2)*x + 2, x)
+    >>> len(roots(p))
+    4
     >>> roots(p, extension=None)
     {}
 
@@ -1015,8 +999,12 @@ def roots(f, *gens, **flags):
 
     # be careful with specifying extension b/c it cannot be set
     # if a composite domain is being used
-    coeff, f = preprocess_roots(f,
-        extension=None if f.domain.is_Composite else extension)
+    try:
+        coeff, f = preprocess_roots(f,
+        extension=extension)
+    except:
+        coeff, f = preprocess_roots(f,
+        extension=None)
 
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
