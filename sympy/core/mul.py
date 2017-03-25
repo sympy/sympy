@@ -1285,45 +1285,45 @@ class Mul(Expr, AssocOp):
         """
         is_integer = self.is_integer
 
-            if is_integer:
-                (coeff,symbols) = self.as_coeff_mul()
+        if is_integer:
+            (coeff,symbols) = self.as_coeff_mul()
                
-                if coeff == 1
+            if coeff == 1             
                 r = True
-                    for t in symbols.arg[1]:
+                for t in symbols.arg[1]:
+                    if t.is_even:
+                        return False
+                    elif t.is_even == None:
+                        r = None
+                return r
+                
+            else:
+                (numer,denom) = coeff.fraction()
+                if numer % 2 == 0:
+                    return False
+
+                elif denom % 2 == 0:
+                    factordict = denom.factorint()
+                    k = factordict[2]
+                    for t in symbols:
+                        if t.is_even:
+                            factor2_num += 1
+                        elif t.is_even == None:
+                            pass
+                    if k < factor2_num:
+                        return False
+                    else:
+                        return None
+                elif numer % 2 !== 0 and denom % 2 !== 0:
+                    for t in symbols:
                         if t.is_even:
                             return False
                         elif t.is_even == None:
                             r = None
                     return r
-                
-                else:
-                    (numer,denom) = coeff.fraction()
-                    if numer % 2 == 0:
-                        return False
-
-                    elif denom % 2 == 0:
-                        factordict = denom.factorint()
-                        k = factordict[2]
-                        for t in symbols:
-                            if t.is_even:
-                                factor2_num += 1
-                            elif t.is_even == None:
-                                pass
-                        if k < factor2_num:
-                            return False
-                        else:
-                            return None
-                    elif numer % 2 !== 0 and denom % 2 !== 0:
-                        for t in symbols:
-                            if t.is_even:
-                                return False
-                            elif t.is_even == None:
-                                r = None
-                        return r
                                      
-            else:
-                return False           
+        else:
+            return False           
 
             
     def _eval_is_even(self):
