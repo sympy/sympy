@@ -13,6 +13,7 @@ class DiagonalMatrix(MatrixExpr):
             return S.Zero
         elif eq is S.true:
             return self.arg[i, 0]
+        return self.arg[i, 0]*KroneckerDelta(i,j)
 
 class DiagonalOf(MatrixExpr):
     arg = property(lambda self: self.args[0])
