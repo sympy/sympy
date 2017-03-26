@@ -35,7 +35,7 @@ from sympy.core.compatibility import reduce, range
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
-    dom = f.get_domain()
+    dom = f.domain
 
     if not dom.is_Numerical:
         if dom.is_Composite:
@@ -55,7 +55,7 @@ def roots_quadratic(f):
     """
 
     a, b, c = f.all_coeffs()
-    dom = f.get_domain()
+    dom = f.domain
 
     def _sqrt(d):
         # remove squares from square root since both will be represented
@@ -730,7 +730,7 @@ def preprocess_roots(poly, extension=None):
     poly = poly.retract(extension=extension)
 
     # TODO: This is fragile. Figure out how to make this independent of construct_domain().
-    if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
+    if poly.domain.is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
         strips = list(zip(*poly.monoms()))
@@ -772,7 +772,7 @@ def preprocess_roots(poly, extension=None):
         if gens:
             poly = poly.eject(*gens)
 
-    if poly.is_univariate and poly.get_domain().is_ZZ:
+    if poly.is_univariate and poly.domain.is_ZZ:
         basis = _integer_basis(poly)
 
         if basis is not None:
@@ -1004,7 +1004,7 @@ def roots(f, *gens, **flags):
         coeff, f = preprocess_roots(f,
         extension=extension)
 
-    if auto and f.get_domain().has_Ring:
+    if auto and f.domain.has_Ring:
         f = f.to_field()
 
     rescale_x = None
@@ -1013,7 +1013,7 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
+        if not f.domain.is_Exact:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
@@ -1029,7 +1029,7 @@ def roots(f, *gens, **flags):
                     _update_dict(result, r, 1)
             else:
                 if len(factors) == 1 and factors[0][1] == 1:
-                    if f.get_domain().is_EX:
+                    if f.domain.is_EX:
                         res = to_rational_coeffs(f)
                         if res:
                             if res[0] is None:

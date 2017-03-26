@@ -464,7 +464,7 @@ class Poly(Expr):
         2
 
         """
-        domain = f.get_domain()
+        domain = f.domain
 
         if domain.is_FiniteField:
             return Integer(domain.characteristic())
@@ -532,7 +532,7 @@ class Poly(Expr):
             return f
 
         if x in f.gens and y not in f.gens:
-            dom = f.get_domain()
+            dom = f.domain
 
             if not dom.is_Composite or y not in dom.symbols:
                 gens = list(f.gens)
@@ -2117,7 +2117,7 @@ class Poly(Expr):
         if not f.rep.dom.has_Field:
             return S.One, f
 
-        dom = f.get_domain()
+        dom = f.domain
         if dom.has_assoc_Ring:
             dom = f.rep.dom.get_ring()
 
@@ -2319,7 +2319,7 @@ class Poly(Expr):
                 raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
                 a_domain, [a] = construct_domain([a])
-                new_domain = f.get_domain().unify_with_symbols(a_domain, f.gens)
+                new_domain = f.domain.unify_with_symbols(a_domain, f.gens)
 
                 f = f.set_domain(new_domain)
                 a = new_domain.convert(a, a_domain)
@@ -4040,7 +4040,7 @@ class Poly(Expr):
 
         if not g.is_Poly:
             try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
+                g = f.__class__(g, f.gens, domain=f.domain)
             except (PolynomialError, DomainError, CoercionFailed):
                 return False
 
@@ -4118,7 +4118,7 @@ class PurePoly(Poly):
 
         if not g.is_Poly:
             try:
-                g = f.__class__(g, f.gens, domain=f.get_domain())
+                g = f.__class__(g, f.gens, domain=f.domain)
             except (PolynomialError, DomainError, CoercionFailed):
                 return False
 
@@ -5941,7 +5941,7 @@ def to_rational_coeffs(f):
                     return False
         return has_sq
 
-    if f.get_domain().is_EX and _has_square_roots(f):
+    if f.domain.is_EX and _has_square_roots(f):
         f1 = f.monic()
         r = _try_rescale(f, f1)
         if r:
