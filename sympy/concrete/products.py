@@ -7,6 +7,7 @@ from sympy.core.symbol import symbols
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.functions.elementary.exponential import exp, log
 from sympy.polys import quo, roots
+from sympy.polys.polyerrors import NotAlgebraic
 from sympy.simplify import powsimp
 from sympy.core.compatibility import range
 
@@ -260,7 +261,10 @@ class Product(ExprWithIntLimits):
 
             A = B = Q = S.One
 
-            all_roots = roots(poly)
+            try:
+                all_roots = roots(poly)
+            except NotAlgebraic:
+                all_roots = roots(poly, extension=None)
 
             M = 0
             for r, m in all_roots.items():
