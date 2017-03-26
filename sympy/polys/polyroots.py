@@ -997,14 +997,12 @@ def roots(f, *gens, **flags):
     else:
         zeros = {S(0): k}
 
-    # be careful with specifying extension b/c it cannot be set
-    # if a composite domain is being used
-    try:
-        coeff, f = preprocess_roots(f,
-        extension=extension)
-    except:
+    if f.domain.is_Composite or f.get_domain().is_EX:
         coeff, f = preprocess_roots(f,
         extension=None)
+    else:
+        coeff, f = preprocess_roots(f,
+        extension=extension)
 
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
