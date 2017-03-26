@@ -99,4 +99,4 @@ will be greatly improved.
 
 More information:
 
-.. autofunction:: cse
+.. autofunction:noindex: cse
