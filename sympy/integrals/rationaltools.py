@@ -6,6 +6,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
     roots, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, resultant, ZZ
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.core.compatibility import range
 
 def ratint(f, x, **flags):
@@ -353,7 +354,10 @@ def log_to_real(h, q, x, t):
 
     for r_u in R_u.keys():
         C = Poly(c.subs({u: r_u}), v)
-        R_v = roots(C, filter='R')
+        try:
+            R_v = roots(C, filter='R')
+        except CoercionFailed:
+            R_v = roots(C, filter='R', extension=None)
 
         if len(R_v) != C.count_roots():
             return None

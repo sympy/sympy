@@ -1001,12 +1001,8 @@ def roots(f, *gens, **flags):
         coeff, f = preprocess_roots(f,
         extension=None)
     else:
-        fwas = f
         coeff, f = preprocess_roots(f,
-        extension=extension)
-        if f.domain.is_Algebraic:
-            coeff, f = preprocess_roots(fwas,
-            extension=None)
+        extension=extension)  # does the calling program need to know what val was used for extension, e.g. so it can simplify result if extension=True?
 
     if auto and f.domain.has_Ring:
         f = f.to_field()

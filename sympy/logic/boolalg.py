@@ -86,6 +86,9 @@ class BooleanAtom(Boolean):
     is_Boolean = True
     _op_priority = 11  # higher than Expr
 
+    def simplify(self, ratio=None, measure=None):
+        return self
+
     @property
     def canonical(self):
         return self

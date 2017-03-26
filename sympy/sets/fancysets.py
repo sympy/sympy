@@ -6,6 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, with_metaclass, range, PY3
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda, _coeff_isneg
+from sympy.core.relational import Gt
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.sympify import _sympify, sympify, converter
@@ -472,7 +473,7 @@ class ImageSet(Set):
                 if all(i.is_real for i in (new_sup, new_inf)):
                     # this assumes continuity of underlying function
                     # however fixes the case when it is decreasing
-                    if new_inf > new_sup:
+                    if Gt(new_inf, new_sup).simplify():
                         new_inf, new_sup = new_sup, new_inf
                     new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
                     range_set = base_set._intersect(new_interval)
