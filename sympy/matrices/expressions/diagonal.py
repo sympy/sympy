@@ -11,7 +11,7 @@ class DiagonalMatrix(MatrixExpr):
         eq=Eq(i,j)
         if eq is S.false:
             return S.Zero
-        elif eq is S.false:
+        elif eq is S.true:
             return self.arg[i, 0]
 
 class DiagonalOf(MatrixExpr):
