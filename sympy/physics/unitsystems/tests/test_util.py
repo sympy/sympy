@@ -3,6 +3,7 @@
 from __future__ import division
 
 from sympy import Add, Pow, Mul, sin
+from sympy.physics.unitsystems import coulomb
 from sympy.physics.unitsystems import mile, speed_of_light, meter, second, minute, hour, day
 from sympy.physics.unitsystems import centimeter
 from sympy.physics.unitsystems import inch
@@ -10,6 +11,7 @@ from sympy.physics.unitsystems import kilogram
 from sympy.physics.unitsystems import kilometer
 from sympy.physics.unitsystems import length
 from sympy.physics.unitsystems import newton
+from sympy.physics.unitsystems import steradian
 from sympy.physics.unitsystems import time
 from sympy.physics.unitsystems.util import dim_simplify, convert_to
 
@@ -64,3 +66,4 @@ def test_convert_to_quantities():
     assert convert_to(3*inch**2, meter) == 48387*meter**2/25000000
     assert convert_to(2*kilometer/hour + 3*mile/hour, meter/second) == 53344*meter/(28125*second)
     assert convert_to(2*kilometer/hour + 3*mile/hour, centimeter/second) == 213376*centimeter/(1125*second)
+    assert convert_to(steradian, coulomb) == steradian

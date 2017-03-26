@@ -20,18 +20,34 @@ will not repeat all the explanations we gave there concerning our approach.
 Ideas about future developments can be found on the `Github wiki
 <https://github.com/sympy/sympy/wiki/Unit-systems>`_, and you should consult
 this page if you are willing to help.
+
+Useful functions:
+
+- ``find_unit``: easily lookup pre-defined units.
+- ``convert_to(expr, newunit)``: converts an expression into the same
+    expression expressed in another unit.
+
 """
 
+from sympy.core.compatibility import string_types
 from .dimensions import Dimension, DimensionSystem
 from .units import UnitSystem
 from .util import convert_to
 from .quantities import Quantity
 
-from .dimensions import acceleration, action, \
-    capacitance, charge, conductance, current, energy, \
-    force, frequency, impedance, inductance, length, magnetic_density, \
-    magnetic_flux, mass, momentum, power, pressure, time, \
-    velocity, voltage
+from .dimensions import (
+    amount_of_substance, acceleration, action,
+    capacitance, charge, conductance, current, energy,
+    force, frequency, impedance, inductance, length,
+    luminous_intensity, magnetic_density,
+    magnetic_flux, mass, momentum, power, pressure, temperature, time,
+    velocity, voltage, volume,
+)
+
+speed = velocity
+luminosity = luminous_intensity
+magnetic_flux_density = magnetic_density
+amount = amount_of_substance
 
 from .prefixes import (
     # 10-power based:
@@ -81,20 +97,21 @@ from .definitions import (
     g, gram, grams,
     mg, milligram, milligrams,
     ug, microgram, micrograms,
-    newton, N,
-    joule, J,
-    watt, W,
-    pascal, Pa,
+    newton, newtons, N,
+    joule, joules, J,
+    watt, watts, W,
+    pascal, pascals, Pa, pa,
     hertz, hz, Hz,
-    coulomb, C,
-    volt, V,
-    ohm,
-    siemens, S,
-    farad, F,
-    henry, H,
-    tesla, T,
-    weber, Wb,
+    coulomb, coulombs, C,
+    volt, volts, v, V,
+    ohm, ohms,
+    siemens, S, mho, mhos,
+    farad, farads, F,
+    henry, henrys, H,
+    tesla, teslas, T,
+    weber, webers, Wb, wb,
     optical_power, dioptre, D,
+    lux, lx,
     km, kilometer, kilometers,
     dm, decimeter, decimeters,
     cm, centimeter, centimeters,
@@ -149,6 +166,59 @@ from .definitions import (
     dHg0,
     mmHg,
     mmu, mmus, milli_mass_unit,
+    quart, quarts,
     ly, lightyear, lightyears,
     au, astronomical_unit, astronomical_units,
 )
+
+
+def find_unit(quantity):
+    """
+    Return a list of matching units or dimension names.
+
+    - If ``quantity`` is a string -- units/dimensions containing the string
+    `quantity`.
+    - If ``quantity`` is a unit or dimension -- units having matching base
+    units or dimensions.
+
+    Examples
+    ========
+
+    >>> from sympy.physics import unitsystems as u
+    >>> u.find_unit('charge')
+    ['C', 'coulomb', 'coulombs']
+    >>> u.find_unit(u.charge)
+    ['C', 'coulomb', 'coulombs']
+    >>> u.find_unit("ampere")
+    ['ampere', 'amperes']
+    >>> u.find_unit('volt')
+    ['volt', 'volts', 'electronvolt', 'electronvolts']
+    >>> u.find_unit(u.inch**3)[:5]
+    ['l', 'cl', 'dl', 'ml', 'liter']
+    """
+    import sympy.physics.unitsystems as u
+    rv = []
+    if isinstance(quantity, string_types):
+        rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]
+        dim = getattr(u, quantity)
+        if isinstance(dim, Dimension):
+            rv.extend(find_unit(dim))
+    else:
+        for i in sorted(dir(u)):
+            other = getattr(u, i)
+            if not isinstance(other, Quantity):
+                continue
+            if isinstance(quantity, Quantity):
+                if quantity.dimension == other.dimension:
+                    rv.append(str(i))
+            elif isinstance(quantity, Dimension):
+                if other.dimension == quantity:
+                    rv.append(str(i))
+            elif other.dimension == Dimension(Quantity.get_dimensional_expr(quantity)):
+                rv.append(str(i))
+
+    return sorted(rv, key=len)
+
+# NOTE: the old units module had additional variables:
+# 'density', 'illuminance', 'resistance'.
+# They were not dimensions, but units (old Unit class).

@@ -7,7 +7,7 @@ Several methods to simplify expressions involving unit objects.
 from __future__ import division
 
 from sympy.physics.unitsystems.quantities import Quantity
-from sympy import Add, Mul, Pow, Function
+from sympy import Add, Mul, Pow, Function, Rational
 from sympy.core.compatibility import reduce
 from sympy.physics.unitsystems.dimensions import Dimension
 
@@ -114,8 +114,15 @@ def convert_to(expr, quantity):
             return base**expr.exp
         elif isinstance(expr, Quantity):
             edim = Dimension(Quantity.get_dimensional_expr(expr))
+            edep1 = edim.get_dimensional_dependencies()
+            edep2 = quantity.dimension.get_dimensional_dependencies()
             if edim == quantity.dimension:
                 return expr.scale_factor / quantity.scale_factor * quantity
+            if set(edep1.keys()) == set(edep2.keys()):
+                fracs = [Rational(v1, v2) for v1, v2 in zip(edep1.values(), edep2.values())]
+                powers = list(set(fracs))
+                if len(powers) == 1:
+                    return expr.scale_factor / quantity.scale_factor**powers[0] * quantity**powers[0]
             else:
                 return expr
         return expr

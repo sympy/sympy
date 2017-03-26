@@ -35,33 +35,34 @@ mg = milligram = milligrams = Quantity("gram", mass, milli*gram, "mg")
 ug = microgram = micrograms = Quantity("gram", mass, micro*gram, "ug")
 
 # derived units
-newton = N = Quantity("newton", force, kilogram*meter/second**2, "N")
-joule = J = Quantity("joule", energy, newton*meter, "J")
-watt = W = Quantity("watt", power, joule/second, "W")
-pascal = Pa = Quantity("pascal", pressure, newton/meter**2, "Pa")
+newton = newtons = N = Quantity("newton", force, kilogram*meter/second**2, "N")
+joule = joules = J = Quantity("joule", energy, newton*meter, "J")
+watt = watts = W = Quantity("watt", power, joule/second, "W")
+pascal = pascals = Pa = pa = Quantity("pascal", pressure, newton/meter**2, "Pa")
 hertz = hz = Hz = Quantity("hertz", frequency, 1, "Hz")
 
 # MKSA extension to MKS: derived units
 
 # coulomb
-coulomb = C = Quantity("coulomb", charge, 1, abbrev='C')
+coulomb = coulombs = C = Quantity("coulomb", charge, 1, abbrev='C')
 # volt
-volt = V = Quantity("volt", voltage, joule/coulomb, abbrev='V')
+volt = volts = v = V = Quantity("volt", voltage, joule/coulomb, abbrev='V')
 # ohm
-ohm = Quantity("ohm", impedance, volt/ampere, abbrev='ohm')
+ohm = ohms = Quantity("ohm", impedance, volt/ampere, abbrev='ohm')
 # siemens
-siemens = S = Quantity("siemens", conductance, ampere/volt, abbrev='S')
+siemens = S = mho = mhos = Quantity("siemens", conductance, ampere/volt, abbrev='S')
 # farad
-farad = F = Quantity("farad", capacitance, coulomb/volt, abbrev='F')
+farad = farads = F = Quantity("farad", capacitance, coulomb/volt, abbrev='F')
 # henry
-henry = H = Quantity("henry", inductance, volt*second/ampere, abbrev='H')
+henry = henrys = H = Quantity("henry", inductance, volt*second/ampere, abbrev='H')
 # tesla
-tesla = T = Quantity("tesla", magnetic_density, volt*second/meter**2, abbrev='T')
+tesla = teslas = T = Quantity("tesla", magnetic_density, volt*second/meter**2, abbrev='T')
 # weber
-weber = Wb = Quantity("weber", magnetic_flux, joule/ampere, abbrev='Wb')
+weber = webers = Wb = wb = Quantity("weber", magnetic_flux, joule/ampere, abbrev='Wb')
 
 # Other derived units:
 optical_power = dioptre = D = Quantity("dioptre", 1/length, 1/meter)
+lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter**2)
 
 # Common length units
 
@@ -148,6 +149,7 @@ psi = Quantity("psi", pressure, pound * gee / inch ** 2)
 dHg0 = 13.5951  # approx value at 0 C
 mmHg = Quantity("mmHg", pressure, dHg0 * 9.80665 * Pa)
 mmu = mmus = milli_mass_unit = Quantity("milli_mass_unit", mass, atomic_mass_unit/1000)
+quart = quarts = Quantity("quart", length**3, Rational(231, 4) * inch**3)
 
 # Other convenient units and magnitudes
 

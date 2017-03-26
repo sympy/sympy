@@ -258,6 +258,7 @@ power = Dimension(name="power")
 pressure = Dimension(name="pressure")
 frequency = Dimension(name="frequency", symbol="f")
 action = Dimension(name="action", symbol="A")
+volume = Dimension("volume")
 
 # derived dimensions (MKSA not in MKS)
 voltage = Dimension(name='voltage', symbol='U')
@@ -296,6 +297,7 @@ Dimension._dimensional_dependencies["power"] = dict(length=2, mass=1, time=-3)
 Dimension._dimensional_dependencies["pressure"] = dict(mass=1, length=-1, time=-2)
 Dimension._dimensional_dependencies["frequency"] = dict(time=-1)
 Dimension._dimensional_dependencies["action"] = dict(length=2, mass=1, time=-1)
+Dimension._dimensional_dependencies["volume"] = dict(length=3)
 
 # Dimensional dependencies for derived dimensions
 Dimension._dimensional_dependencies["voltage"] = dict(mass=1, length=2, current=-1, time=-3)

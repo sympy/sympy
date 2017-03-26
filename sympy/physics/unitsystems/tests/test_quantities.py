@@ -2,10 +2,12 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S
+from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs
+from sympy.physics.unitsystems import convert_to, find_unit
 
-from sympy.physics.unitsystems.definitions import s, m, kg, speed_of_light, day
-from sympy.physics.unitsystems.dimensions import length, time
+from sympy.physics.unitsystems.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
+    quart, inch, coulomb, millimeter, steradian
+from sympy.physics.unitsystems.dimensions import length, time, charge
 from sympy.physics.unitsystems.quantities import Quantity
 from sympy.physics.unitsystems.prefixes import PREFIXES, kilo
 
@@ -156,6 +158,58 @@ def test_mul_div():
     assert u ** 2 != Quantity("u2", length ** 2, 100)
     assert u ** -1 != Quantity("u3", length ** -1, 0.1)
 
-    # TODO: conversion to dimensional power:
-    # assert u ** 2 == Quantity("u2", length ** 2, 100).convert_to(u)
-    # assert u ** -1 == Quantity("u3", length ** -1, 0.1).convert_to(u)
+    assert u ** 2 == Quantity("u2", length ** 2, 100).convert_to(u)
+    assert u ** -1 == Quantity("u3", length ** -1, S.One/10).convert_to(u)
+
+
+def test_units():
+    assert convert_to((5*m/s * day) / km, 1) == 432
+    assert convert_to(foot / meter, meter) == Rational('0.3048')
+    # amu is a pure mass so mass/mass gives a number, not an amount (mol)
+    # TODO: need better simplification routine:
+    assert str(convert_to(grams/amu, grams).n(2)) == '6.0e+23'
+
+    # Light from the sun needs about 8.3 minutes to reach earth
+    t = (1*au / speed_of_light) / minute
+    # TODO: need a better way to simplify expressions containing units:
+    t = convert_to(convert_to(t, meter / minute), meter)
+    assert t == 49865956897/5995849160
+
+    # TODO: fix this, it should give `m` without `Abs`
+    assert sqrt(m**2) == Abs(m)
+    assert (sqrt(m))**2 == m
+
+    t = Symbol('t')
+    assert integrate(t*m/s, (t, 1*s, 5*s)) == 12*m*s
+    assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
+
+
+def test_issue_quart():
+    assert convert_to(4 * quart / inch ** 3, meter) == 231
+    assert convert_to(4 * quart / inch ** 3, millimeter) == 231
+
+
+def test_issue_5565():
+    assert (m < s).is_Relational
+
+
+def test_find_unit():
+    assert find_unit('coulomb') == ['coulomb', 'coulombs']
+    assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs']
+    assert find_unit(charge) == ['C', 'coulomb', 'coulombs']
+    assert find_unit(inch) == [
+        'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
+        'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
+        'yards', 'inches', 'meters', 'micron', 'microns', 'decimeter',
+        'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter',
+        'decimeters', 'kilometers', 'lightyears', 'micrometer', 'millimeter',
+        'nanometers', 'picometers', 'centimeters', 'micrometers',
+        'millimeters', 'nautical_mile', 'nautical_miles', 'astronomical_unit',
+        'astronomical_units']
+    assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
+    assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
+    assert find_unit(inch ** 3) == [
+        'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
+        'deciliter', 'centiliter', 'deciliters', 'milliliter',
+        'centiliters', 'milliliters']
+    assert find_unit('voltage') == ['V', 'v', 'volt', 'volts']
