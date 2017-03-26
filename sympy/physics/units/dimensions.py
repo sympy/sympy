@@ -32,7 +32,7 @@ class Dimension(Expr):
     temperature and dimensions make this difference (but they do not provide
     any measure of these quantites.
 
-        >>> from sympy.physics.unitsystems import Dimension
+        >>> from sympy.physics.units import Dimension
         >>> length = Dimension('length')
         >>> length
         Dimension(length)

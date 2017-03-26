@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from sympy import Rational
-from sympy.physics.unitsystems.definitions import (m, s, c, kg)
-from sympy.physics.unitsystems.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
+from sympy.physics.units.definitions import (m, s, c, kg)
+from sympy.physics.units.dimensions import Dimension, DimensionSystem, length, time, mass, velocity, current, \
     action
-from sympy.physics.unitsystems.units import UnitSystem
-from sympy.physics.unitsystems.quantities import Quantity
+from sympy.physics.units.unitsystem import UnitSystem
+from sympy.physics.units.quantities import Quantity
 from sympy.utilities.pytest import raises
 
 

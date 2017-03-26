@@ -7,7 +7,7 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import division
 
 from sympy.core.decorators import deprecated
-from sympy.physics.unitsystems.quantities import Quantity
+from sympy.physics.units.quantities import Quantity
 
 from sympy import S
 from .dimensions import DimensionSystem

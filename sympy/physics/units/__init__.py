@@ -31,7 +31,7 @@ Useful functions:
 
 from sympy.core.compatibility import string_types
 from .dimensions import Dimension, DimensionSystem
-from .units import UnitSystem
+from .unitsystem import UnitSystem
 from .util import convert_to
 from .quantities import Quantity
 
@@ -43,6 +43,8 @@ from .dimensions import (
     magnetic_flux, mass, momentum, power, pressure, temperature, time,
     velocity, voltage, volume,
 )
+
+Unit = Quantity
 
 speed = velocity
 luminosity = luminous_intensity
@@ -184,7 +186,7 @@ def find_unit(quantity):
     Examples
     ========
 
-    >>> from sympy.physics import unitsystems as u
+    >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
     ['C', 'coulomb', 'coulombs']
     >>> u.find_unit(u.charge)
@@ -196,7 +198,7 @@ def find_unit(quantity):
     >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
-    import sympy.physics.unitsystems as u
+    import sympy.physics.units as u
     rv = []
     if isinstance(quantity, string_types):
         rv = [i for i in dir(u) if quantity in i and isinstance(getattr(u, i), Quantity)]

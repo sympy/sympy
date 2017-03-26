@@ -689,13 +689,6 @@ class StrPrinter(Printer):
     def _print_Quantity(self, expr):
         return "%s" % expr.name
 
-    def _print_Unit(self, expr):
-        # Unfortunately, two classes share the same name.
-        # Use `hasattr` trick to distinguish between them:
-        if hasattr(expr, "dimension"):
-            return "%s" % expr.name
-        return expr.abbrev
-
     def _print_Dimension(self, expr):
         return str(expr)
 

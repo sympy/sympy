@@ -30,8 +30,8 @@ to determine the dimension of the Newton's constant :math:`G`. The result
 should be :math:`L^3 M^{-1} T^{-2}`.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.unitsystems import length, mass, acceleration, force
-    >>> from sympy.physics.unitsystems import gravitational_constant as G
+    >>> from sympy.physics.units import length, mass, acceleration, force
+    >>> from sympy.physics.units import gravitational_constant as G
     >>> F = mass*acceleration
     >>> F
     Dimension(acceleration*mass)
@@ -65,9 +65,9 @@ we can find the Venus orbital period using the known values for the other
 variables (taken from Wikipedia). The result should be 224.701 days.
 
     >>> from sympy import solve, symbols, pi, Eq
-    >>> from sympy.physics.unitsystems import Quantity, length, mass
-    >>> from sympy.physics.unitsystems import day, gravitational_constant as G
-    >>> from sympy.physics.unitsystems import meter, kilogram
+    >>> from sympy.physics.units import Quantity, length, mass
+    >>> from sympy.physics.units import day, gravitational_constant as G
+    >>> from sympy.physics.units import meter, kilogram
     >>> T = symbols("T")
     >>> a = Quantity("venus_a", length, 108208000e3*meter)
     >>> M = Quantity("solar_mass", mass, 1.9891e30*kilogram)
@@ -81,7 +81,7 @@ variables (taken from Wikipedia). The result should be 224.701 days.
 To convert to days, use the ``convert_to`` function (and possibly approximate
 the outcoming result:
 
-    >>> from sympy.physics.unitsystems import convert_to
+    >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
     2.15992161980729e-7*sqrt(1081898088255574765)*day
     >>> convert_to(q, day).n()

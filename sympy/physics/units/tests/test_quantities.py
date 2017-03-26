@@ -3,13 +3,13 @@
 from __future__ import division
 
 from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs
-from sympy.physics.unitsystems import convert_to, find_unit
+from sympy.physics.units import convert_to, find_unit
 
-from sympy.physics.unitsystems.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
+from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
     quart, inch, coulomb, millimeter, steradian
-from sympy.physics.unitsystems.dimensions import length, time, charge
-from sympy.physics.unitsystems.quantities import Quantity
-from sympy.physics.unitsystems.prefixes import PREFIXES, kilo
+from sympy.physics.units.dimensions import length, time, charge
+from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.prefixes import PREFIXES, kilo
 
 k = PREFIXES["k"]
 

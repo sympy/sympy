@@ -3,17 +3,17 @@
 from __future__ import division
 
 from sympy import Add, Pow, Mul, sin
-from sympy.physics.unitsystems import coulomb
-from sympy.physics.unitsystems import mile, speed_of_light, meter, second, minute, hour, day
-from sympy.physics.unitsystems import centimeter
-from sympy.physics.unitsystems import inch
-from sympy.physics.unitsystems import kilogram
-from sympy.physics.unitsystems import kilometer
-from sympy.physics.unitsystems import length
-from sympy.physics.unitsystems import newton
-from sympy.physics.unitsystems import steradian
-from sympy.physics.unitsystems import time
-from sympy.physics.unitsystems.util import dim_simplify, convert_to
+from sympy.physics.units import coulomb
+from sympy.physics.units import mile, speed_of_light, meter, second, minute, hour, day
+from sympy.physics.units import centimeter
+from sympy.physics.units import inch
+from sympy.physics.units import kilogram
+from sympy.physics.units import kilometer
+from sympy.physics.units import length
+from sympy.physics.units import newton
+from sympy.physics.units import steradian
+from sympy.physics.units import time
+from sympy.physics.units.util import dim_simplify, convert_to
 
 
 L = length

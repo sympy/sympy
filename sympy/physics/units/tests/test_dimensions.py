@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from sympy import sympify, Symbol, S, sqrt
-from sympy.physics.unitsystems.dimensions import Dimension
-from sympy.physics.unitsystems.dimensions import length, time
+from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.dimensions import length, time
 from sympy.utilities.pytest import raises
 
 

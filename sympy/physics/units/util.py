@@ -6,10 +6,10 @@ Several methods to simplify expressions involving unit objects.
 
 from __future__ import division
 
-from sympy.physics.unitsystems.quantities import Quantity
+from sympy.physics.units.quantities import Quantity
 from sympy import Add, Mul, Pow, Function, Rational
 from sympy.core.compatibility import reduce
-from sympy.physics.unitsystems.dimensions import Dimension
+from sympy.physics.units.dimensions import Dimension
 
 
 def dim_simplify(expr):
@@ -51,10 +51,10 @@ def convert_to(expr, quantity):
     Examples
     ========
 
-    >>> from sympy.physics.unitsystems import speed_of_light, meter, gram, \
+    >>> from sympy.physics.units import speed_of_light, meter, gram, \
         second, day, mile, newton, kilogram, inch, centimeter, atomic_mass_constant
-    >>> from sympy.physics.unitsystems.definitions import kilometer
-    >>> from sympy.physics.unitsystems import convert_to
+    >>> from sympy.physics.units.definitions import kilometer
+    >>> from sympy.physics.units import convert_to
     >>> convert_to(mile, kilometer)
     25146*kilometer/15625
     >>> convert_to(mile, kilometer).n()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import symbols
-from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 
 
 def test_prefix_operations():
@@ -15,7 +15,7 @@ def test_prefix_operations():
 
 
 def test_prefix_unit():
-    from sympy.physics.unitsystems import Quantity, Dimension
+    from sympy.physics.units import Quantity, Dimension
 
     length = Dimension("length")
     m = Quantity("meter", length, 1, abbrev="m")

@@ -116,16 +116,16 @@ def prefix_unit(unit, prefixes):
     You can use the predefined PREFIXES or BIN_PREFIXES, but you can also
     pass as argument a subdict of them if you don't want all prefixed units.
 
-        >>> from sympy.physics.unitsystems.prefixes import (PREFIXES,
+        >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
-        >>> from sympy.physics.unitsystems.systems import MKS
-        >>> from sympy.physics.unitsystems import m
+        >>> from sympy.physics.units.systems import MKS
+        >>> from sympy.physics.units import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
         >>> prefix_unit(m, pref)  #doctest: +SKIP
         [cm, dm, mm]
     """
 
-    from sympy.physics.unitsystems.quantities import Quantity
+    from sympy.physics.units.quantities import Quantity
 
     prefixed_units = []
 

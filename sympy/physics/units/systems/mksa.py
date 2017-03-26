@@ -8,12 +8,12 @@ MKS stands for "meter, kilogram, second, ampere".
 
 from __future__ import division
 
-from sympy.physics.unitsystems.definitions import A, V, C, S, ohm, F, H, Z0, Wb, T
-from sympy.physics.unitsystems.dimensions import (voltage, impedance,
-                                                  conductance, capacitance, inductance, charge,
-                                                  magnetic_density, magnetic_flux, current)
-from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
-from sympy.physics.unitsystems.systems.mks import MKS, _mks_dim
+from sympy.physics.units.definitions import A, V, C, S, ohm, F, H, Z0, Wb, T
+from sympy.physics.units.dimensions import (voltage, impedance,
+                                            conductance, capacitance, inductance, charge,
+                                            magnetic_density, magnetic_flux, current)
+from sympy.physics.units.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units.systems.mks import MKS, _mks_dim
 
 dims = (voltage, impedance, conductance, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)

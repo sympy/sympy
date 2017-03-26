@@ -1,9 +1,9 @@
 from sympy import pi, Rational
-from sympy.physics.unitsystems import Quantity
-from sympy.physics.unitsystems.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
+from sympy.physics.units import Quantity
+from sympy.physics.units.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
     impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action, \
     amount_of_substance, luminous_intensity, temperature, acceleration
-from sympy.physics.unitsystems.prefixes import kilo, milli, micro, nano, pico, deci, centi
+from sympy.physics.units.prefixes import kilo, milli, micro, nano, pico, deci, centi
 
 #### UNITS ####
 

@@ -3158,24 +3158,19 @@ def test_sympy__physics__secondquant__TensorSymbol():
     assert _test_args(TensorSymbol(x))
 
 
-def test_sympy__physics__units__Unit():
-    from sympy.physics.units import Unit
-    assert _test_args(Unit("meter", "m"))
-
-
-def test_sympy__physics__unitsystems__dimensions__Dimension():
-    from sympy.physics.unitsystems.dimensions import Dimension
+def test_sympy__physics__units__dimensions__Dimension():
+    from sympy.physics.units.dimensions import Dimension
     assert _test_args(Dimension("length", "L"))
 
 
-def test_sympy__physics__unitsystems__quantities__Quantity():
-    from sympy.physics.unitsystems.quantities import Quantity
-    from sympy.physics.unitsystems import length
+def test_sympy__physics__units__quantities__Quantity():
+    from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units import length
     assert _test_args(Quantity("dam", length, 10))
 
 
-def test_sympy__physics__unitsystems__prefixes__Prefix():
-    from sympy.physics.unitsystems.prefixes import Prefix
+def test_sympy__physics__units__prefixes__Prefix():
+    from sympy.physics.units.prefixes import Prefix
     assert _test_args(Prefix('kilo', 'k', 3))
 
 

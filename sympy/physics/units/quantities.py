@@ -8,9 +8,9 @@ from __future__ import division
 
 from sympy.core.compatibility import string_types
 from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add
-from sympy.physics.unitsystems import Dimension
-from sympy.physics.unitsystems import dimensions
-from sympy.physics.unitsystems.prefixes import Prefix
+from sympy.physics.units import Dimension
+from sympy.physics.units import dimensions
+from sympy.physics.units.prefixes import Prefix
 
 
 class Quantity(Expr):
@@ -121,13 +121,13 @@ class Quantity(Expr):
         Examples
         ========
 
-        >>> from sympy.physics.unitsystems import speed_of_light, meter, second
+        >>> from sympy.physics.units import speed_of_light, meter, second
         >>> speed_of_light
         speed_of_light
         >>> speed_of_light.convert_to(meter/second)
         299792458*meter/second
 
-        >>> from sympy.physics.unitsystems import liter
+        >>> from sympy.physics.units import liter
         >>> liter.convert_to(meter**3)
         meter**3/1000
         """

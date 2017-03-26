@@ -8,12 +8,12 @@ MKS stands for "meter, kilogram, second".
 
 from __future__ import division
 
-from sympy.physics.unitsystems.definitions import (m, kg, s, J, N, W, Pa, Hz, g, G, c)
-from sympy.physics.unitsystems.dimensions import (velocity, acceleration, momentum, force, energy, power, pressure,
-                                                  frequency, action, length, mass, time)
+from sympy.physics.units.definitions import (m, kg, s, J, N, W, Pa, Hz, g, G, c)
+from sympy.physics.units.dimensions import (velocity, acceleration, momentum, force, energy, power, pressure,
+                                            frequency, action, length, mass, time)
 
-from sympy.physics.unitsystems import DimensionSystem, UnitSystem
-from sympy.physics.unitsystems.prefixes import PREFIXES, prefix_unit
+from sympy.physics.units import DimensionSystem, UnitSystem
+from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)
