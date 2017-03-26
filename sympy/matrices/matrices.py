@@ -17,6 +17,7 @@ from sympy.core.compatibility import is_sequence, default_sort_key, range, \
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
@@ -3859,12 +3860,15 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self,
-                        iszerofunc=_iszero,
-                        rankcheck=False):
-        """Returns the decomposition LU and the row swaps p as L, U, p.
-        See documentation for LUCombined for details about the keyword
-        argument iszerofunc and rankcheck.
+    def LUdecomposition(self, iszerofunc=_iszero, rankcheck=False):
+        """Returns (L, U, perm) where L is a lower triangular matrix with unit
+        diagonal, U is an upper triangular matrix, and perm is a list of row
+        swap index pairs. If A is the original matrix, then
+        A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
+        that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
+
+        See documentation for LUCombined for details about the keyword argument
+        iszerofunc and rankcheck.
 
         Examples
         ========
@@ -3895,9 +3899,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
                                                   rankcheck=rankcheck)
 
-        L = self.zeros(combined.rows)
-        U = self.zeros(combined.rows, combined.cols)
-
         # L is lower triangular self.rows x self.rows
         # U is upper triangular self.rows x self.cols
         # L has unit diagonal. For each column in combined, the subcolumn
@@ -3906,37 +3907,34 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         # below the diagonal of L are zero.
         # The upper triangular portion of L and combined are equal.
 
-        max_index = min(self.rows, self.cols)
+        def entry_L(i, j):
+            if i < j:
+                return S.Zero
+            elif i == j:
+                return S.One
+            return combined[i, j]
 
-        # Set diagonal entry to 1, and subdiagonal entries of L to
-        # subdiagonal entries of combined
-        for col_i in range(max_index):
-            L[col_i, col_i] = 1
-            for row_i in range(col_i + 1, L.rows):
-                L[row_i, col_i] = combined[row_i, col_i]
-                row_i += 1
+        L = self._new(combined.rows, combined.rows, entry_L)
 
-        # Fill in the remaining diagonal entries of L
-        for col_i in range(max_index, L.cols):
-            L[col_i, col_i] = 1
+        def entry_U(i, j):
+            return S.Zero if i > j else combined[i, j]
 
-        # Set upper triangular portion of U to upper triangular portion of
-        # combined
-        for row_i in range(max_index):
-            for col_i in range(row_i, U.cols):
-                U[row_i, col_i] = combined[row_i, col_i]
-
+        U = self._new(combined.rows, combined.cols, entry_U)
+        
         return L, U, p
 
     def LUdecomposition_Simple(self,
                                iszerofunc=_iszero,
                                rankcheck=False):
         """Compute an lu decomposition of m x n matrix A, where P*A = L*U
-        L is m x m lower triangular with unit diagonal
-        U is m x n upper triangular
-        P is an m x m permutation matrix
+
+        * L is m x m lower triangular with unit diagonal
+        * U is m x n upper triangular
+        * P is an m x m permutation matrix
+
         Returns an m x n matrix lu, and an m element list perm where each
-        element of perm is a two element list of row exchange indices.
+        element of perm is a pair of row exchange indices.
+
         The factors L and U are stored in lu as follows:
         The subdiagonal elements of L are stored in the subdiagonal elements
         of lu, that is lu[i, j] = L[i, j] whenever i > j.
@@ -3944,12 +3942,26 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         stored.
         U is stored in the upper triangular portion of lu, that is
         lu[i ,j] = U[i, j] whenever i <= j.
-        perm contains the integers in range(0, m), where each integer occurs
-        exactly once.
+        The output matrix can be visualized as:
+        Matrix([
+        [u, u, u, u],
+        [l, u, u, u],
+        [l, l, u, u],
+        [l, l, l, u]])
+        where l represents a subdiagonal entry of the L factor, and u
+        represents an entry from the upper triangular entry of the U
+        factor.
+
+        perm is a list row swap index pairs such that if A is the original
+        matrix, then A = (L*U).permuteBkwd(perm), and the row permutation
+        matrix P such that P*A = L*U can be computed by
+        soP=eye(A.row).permuteFwd(perm).
+
         iszerofunc is a callable that returns a boolean indicating if its input
         is zero.
         If iszerofunc may return None if it cannot determine if its input is
         zero.
+
         The keyword argument rankcheck determines if this function raises a
         ValueError when passed a matrix whose rank is strictly less than
         min(num rows, num cols). The default behavior is to decompose a rank
@@ -3960,10 +3972,17 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         ========
 
         LUdecomposition
-        LUdecomposition_Simple
         LUdecompositionFF
         LUsolve
         """
+
+        if rankcheck:
+            SymPyDeprecationWarning(
+                feature="Keyword argument rankcheck is deprecated. "
+                        "Future LUdecomposition_Simple() will complete "
+                        "regardless rank of input matrix.",
+                issue=9796,
+                deprecated_since_version="1.1").warn()
 
         if self.rows == 0 or self.cols == 0:
             # Define LU decomposition of a matrix with no entries as a matrix
@@ -3976,18 +3995,39 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
 
-            for candidate_pivot_col in range(pivot_col, self.cols):
-                for candidate_pivot_row in range(pivot_row, self.rows):
-                    iszeropivot = iszerofunc(lu[candidate_pivot_row,
-                                                candidate_pivot_col])
-                    if iszeropivot is None:
-                        iszeropivot = False
+            # Search for pivot. Prefer entry that iszeropivot determines
+            # is nonzero, over entry that iszeropivot cannot guarantee
+            # is  zero.
+            candidate_pivot_row = None
+            while pivot_col != self.cols:
+                for r in range(pivot_row, self.rows):
+                    iszeropivot = iszerofunc(lu[r, pivot_col])
+                    if iszeropivot is None and candidate_pivot_row is None:
+                        # iszerofunc could not determine if
+                        # lu[r, pivot_col] is zero.
+                        # Save this row in case we don't
+                        # find a nonzero entry during the search
+                        # of this column
+                        candidate_pivot_row = r
+                    elif iszeropivot is False:
+                        # iszerofunc determined that
+                        # lu[r, pivot_col] is zero.
+                        # Use this entry as the pivot
+                        candidate_pivot_row = r
                         break
-                    if not iszeropivot:
-                        break
-                if not iszeropivot:
+                    elif iszeropivot is True:
+                        lu[r, pivot_col] = S.Zero
+                if candidate_pivot_row is None:
+                    # There is no nonzero pivot in this column.
+                    # Exited search within column because
+                    # iszeropivot() returned False for each
+                    # entry
+                    pivot_col += 1
+                else:
+                    # lu[r, pivot_col] is either non-zero,
+                    # or iszeropivot could not determine that it is
+                    # zero.
                     break
-            pivot_col = candidate_pivot_col
 
             if rankcheck and pivot_col != pivot_row:
                 # All entries including and below the pivot position are
@@ -3995,11 +4035,14 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 # strictly less than min(num rows, num cols)
                 # Mimic behavior of previous implementation, by throwing a
                 # ValueError.
+
                 raise ValueError("Rank of matrix is strictly less than"
                                  " number of rows or columns."
                                  " Pass keyword argument"
                                  " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix.")
+                                 " the LU decomposition of this matrix."
+                                 " This behavior is deprecated since sympy"
+                                 " 1.1.")
 
             elif iszeropivot:
                 # iszeropivot is True after pivot search has completed
@@ -4038,8 +4081,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 # Add multiple of pivot row to row below it.
                 # Two loops to handle case where pivot_col > pivot_row
 
-                for col in range(pivot_row + 1 if pivot_row == pivot_col
-                                 else pivot_col, lu.cols):
+                col_start =\
+                    pivot_row + 1 if pivot_row == pivot_col else pivot_col
+                for col in range(col_start, lu.cols):
                     lu[row, col] -= lu[row, pivot_row] * lu[pivot_row, col]
 
             pivot_col += 1
