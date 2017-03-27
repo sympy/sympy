@@ -69,7 +69,6 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
         sys.path.insert(0, sympy_top)
     os.chdir(sympy_top)
 
-    import sympy
     cov = coverage.coverage()
     cov.exclude("raise NotImplementedError")
     cov.exclude("def canonize")  # this should be "@decorated"
@@ -79,6 +78,7 @@ def make_report(source_dir, report_dir, use_cache=False, slow=False):
     else:
         cov.erase()
         cov.start()
+        import sympy
         sympy.test(source_dir, subprocess=False)
         if slow:
             sympy.test(source_dir, subprocess=False, slow=slow)
