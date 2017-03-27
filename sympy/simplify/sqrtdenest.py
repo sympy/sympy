@@ -127,13 +127,16 @@ def sqrtdenest(expr, max_iter=3):
     by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
 
     """
-    expr = expand_mul(sympify(expr))
-    for i in range(max_iter):
-        z = _sqrtdenest0(expr)
-        if expr == z:
-            return expr
-        expr = z
-    return expr
+    try:
+        expr = expand_mul(sympify(expr))
+        for i in range(max_iter):
+           z = _sqrtdenest0(expr)
+           if expr == z:
+               return expr
+           expr = z
+        return expr
+    except:
+        return expr
 
 
 def _sqrt_match(p):
