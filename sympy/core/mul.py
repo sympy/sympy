@@ -1261,26 +1261,26 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)     
     
     def _eval_is_odd(self):
-        """
-        First we check to see if the expression as a whole is an integer because
-        !integer implies !odd.  If is_integer, then proceed. Since we are using 
-        .as_coeff_mul(), there are two cases: either all
-        the arguments are symbols or there is a numeric coefficient !==1. 
+        
+        #First we check to see if the expression as a whole is an integer because
+        #!integer implies !odd.  If is_integer, then proceed. Since we are using 
+        #.as_coeff_mul(), there are two cases: either all
+        #the arguments are symbols or there is a numeric coefficient !==1. 
 
-        If we have all symbols, then we only need to find one symbol that is even
-        because an even*odd = even and even*even=even.  Therefore, even if a symbol is
-        None, if a different symbol in the expression is even, then we can still determine
-        that the expression is even, so False.  If no even or None symbols are encountered, 
-        then all symbols must have been odd which would make the expression odd, so True.
+        #If we have all symbols, then we only need to find one symbol that is even
+        #because an even*odd = even and even*even=even.  Therefore, even if a symbol is
+        #None, if a different symbol in the expression is even, then we can still determine
+        #that the expression is even, so False.  If no even or None symbols are encountered, 
+        #then all symbols must have been odd which would make the expression odd, so True.
 
-        If we have a numeric coefficient !==1, then we will use .fraction() to get its
-        numerator ("num") and denominator ("denom").  If the num is even, then the expression
-        is even because .fraction() puts the quotient in lowest terms, so False.  If the
-        denom is even, then we must find its 2-adic valuation to compare the factors of 2
-        in the denom against the factors of 2 in the symbols which are in the num.  Once we 
-        evaluate the denom, then we need to evaluate the symbols that make up the rest of the 
-        expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
-        """
+        #If we have a numeric coefficient !==1, then we will use .fraction() to get its
+        #numerator ("num") and denominator ("denom").  If the num is even, then the expression
+        #is even because .fraction() puts the quotient in lowest terms, so False.  If the
+        #denom is even, then we must find its 2-adic valuation to compare the factors of 2
+        #in the denom against the factors of 2 in the symbols which are in the num.  Once we 
+        #evaluate the denom, then we need to evaluate the symbols that make up the rest of the 
+        #expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
+        
         from sympy.simplify.radsimp import radsimp, fraction
         
         is_integer = self.is_integer
