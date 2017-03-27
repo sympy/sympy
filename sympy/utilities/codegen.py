@@ -470,7 +470,8 @@ class Result(Variable, ResultBase):
             Controls the precision of floating point constants.
 
         """
-        if not isinstance(expr, (Expr, MatrixBase, MatrixExpr)):
+        from sympy.logic.boolalg import Boolean
+        if not isinstance(expr, (Expr, Boolean, MatrixBase, MatrixExpr)):
             raise TypeError("The first argument must be a sympy expression.")
 
         if name is None:
