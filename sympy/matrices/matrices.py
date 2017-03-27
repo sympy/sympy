@@ -3920,7 +3920,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             return S.Zero if i > j else combined[i, j]
 
         U = self._new(combined.rows, combined.cols, entry_U)
-        
+
         return L, U, p
 
     def LUdecomposition_Simple(self,
@@ -4044,10 +4044,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                                  " This behavior is deprecated since sympy"
                                  " 1.1.")
 
-            elif iszeropivot:
-                # iszeropivot is True after pivot search has completed
-                # indicates that there are no more entries to zero,
-                # so Gaussian elimination is complete.
+            elif candidate_pivot_row is None and iszeropivot:
+                # If candidate_pivot_row is None and iszeropivot is True
+                # after pivot search has completed, then the submatrix
+                # below and to the right of (pivot_row, pivot_col) is
+                # all zeros, indicating that Gaussian elimination is
+                # complete.
                 return lu, row_swaps
 
             if pivot_row != candidate_pivot_row:
