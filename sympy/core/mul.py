@@ -1298,7 +1298,7 @@ class Mul(Expr, AssocOp):
                 return r
                 
             else:
-                (numer,denom) = coeff.fraction()
+                (numer,denom) = fraction(coeff)
                 if numer % 2 == 0:
                     return False
 
