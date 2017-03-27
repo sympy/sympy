@@ -13,6 +13,7 @@ def test_DiagonalMatrix():
     assert D.shape == (n, n)
     assert D[1, 2] == 0
     assert D[1, 1] == x[1, 0]
+    
     i = Symbol('i')
     j = Symbol('j')
     x = MatrixSymbol('x', 3, 3)
