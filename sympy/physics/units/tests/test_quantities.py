@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs
+from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
@@ -213,3 +213,11 @@ def test_find_unit():
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts']
+
+
+def test_Quantity_derivative():
+    x = symbols("x")
+    assert diff(x*meter, x) == meter
+    assert diff(x**3*meter**2, x) == 3*x**2*meter**2
+    assert diff(meter, meter) == 1
+    assert diff(meter**2, meter) == 2*meter

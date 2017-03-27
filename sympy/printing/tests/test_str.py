@@ -574,9 +574,10 @@ def test_tuple():
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
-def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 5560
+
+def test_Quantity_str():
+    assert str(second) == "second"
+    assert str(joule) == "joule"
 
 
 def test_wild_str():

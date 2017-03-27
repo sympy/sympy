@@ -7,13 +7,13 @@ Physical quantities.
 from __future__ import division
 
 from sympy.core.compatibility import string_types
-from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add
+from sympy import sympify, Expr, Mul, Pow, S, Symbol, Add, AtomicExpr
 from sympy.physics.units import Dimension
 from sympy.physics.units import dimensions
 from sympy.physics.units.prefixes import Prefix
 
 
-class Quantity(Expr):
+class Quantity(AtomicExpr):
     """
     Physical quantity.
     """
@@ -21,6 +21,8 @@ class Quantity(Expr):
     is_commutative = True
     is_real = True
     is_number = False
+    is_nonzero = True
+    _diff_wrt = True
 
     def __new__(cls, name, dimension, scale_factor=S.One, abbrev=None, **assumptions):
 
@@ -49,10 +51,10 @@ class Quantity(Expr):
         elif isinstance(abbrev, string_types):
             abbrev = Symbol(abbrev)
 
-        obj = Expr.__new__(cls, name, dimension, scale_factor, abbrev)
+        obj = AtomicExpr.__new__(cls, name, dimension, scale_factor, abbrev)
         obj._name = name
         obj._dimension = dimension
-        obj._factor_without_prefix = scale_factor
+        obj._scale_factor = scale_factor
         obj._abbrev = abbrev
         return obj
 
@@ -78,7 +80,13 @@ class Quantity(Expr):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
-        return self._factor_without_prefix
+        return self._scale_factor
+
+    def _eval_is_positive(self):
+       return self.scale_factor.is_positive
+
+    def _eval_is_constant(self):
+        return self.scale_factor.is_constant()
 
     @staticmethod
     def get_dimensional_expr(expr):
@@ -133,3 +141,7 @@ class Quantity(Expr):
         """
         from .util import convert_to
         return convert_to(self, other)
+
+    @property
+    def free_symbols(self):
+        return set([])
