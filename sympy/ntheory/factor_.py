@@ -636,6 +636,50 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         a = prng.randint(2, n - 2)
 
 
+def _quadratic_residue(n):
+    """
+    Helper function for Integer factorization with Quadratic Sieve.
+
+    Given an integer ``n``, find a number of small primes for which
+    n is a quadratic residue of. A quadratic residue ``q`` satisfies
+    the following identity:
+
+    x**2 (mod n) == q (mod n)
+
+    Examples
+    ========
+
+    """
+
+
+def quadratic_sieve(n, a, b, verbose=False):
+    """
+    Use the Quadratic Sieve to try to extract a nontrivial
+    factor of ``n``. Either a divisor (perhaps composite), or ``None`` is
+    returned.
+
+    The value of ``a`` and ``b`` are integers in the following polynomial
+    that would be used for the sieve:
+
+    y(x) = (ax + b)**2 - n
+
+    This algorithm requires exp(sqrt(ln(n) * ln(ln(n))) steps.
+
+    Examples
+    ========
+
+
+    References
+    ==========
+    - http://mathworld.wolfram.com/QuadraticSieve.html
+
+    See Also
+    ========
+    _quadratic_residue,
+    """
+    pass
+
+
 def _trial(factors, n, candidates, verbose=False):
     """
     Helper function for integer factorization. Trial factors ``n`
