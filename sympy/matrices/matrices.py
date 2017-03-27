@@ -3994,7 +3994,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
-
             # Search for pivot. Prefer entry that iszeropivot determines
             # is nonzero, over entry that iszeropivot cannot guarantee
             # is  zero.
@@ -4065,14 +4064,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     lu[pivot_row, col], lu[candidate_pivot_row, col] =\
                         lu[candidate_pivot_row, col], lu[pivot_row, col]
 
-                # Swap rows of U in the pivot column.
-                lu[pivot_row, pivot_col] = lu[candidate_pivot_row, pivot_col]
-                lu[candidate_pivot_row, pivot_col] = S.Zero
-
-                for col in range(pivot_col+1, lu.cols):
-                    tmp = lu[pivot_row, col]
-                    lu[pivot_row, col] = lu[candidate_pivot_row, col]
-                    lu[candidate_pivot_row, col] = tmp
+                # Swap pivot row of U with candidate pivot row.
+                for col in range(pivot_col, lu.cols):
+                    lu[pivot_row, col], lu[candidate_pivot_row, col] = \
+                        lu[candidate_pivot_row, col], lu[pivot_row, col]
 
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below
