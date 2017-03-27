@@ -2,10 +2,7 @@
 Units and unit systems
 ======================
 
-.. automodule:: sympy.physics.unitsystems.units
-
-.. autoclass:: Unit
-   :members:
+.. automodule:: sympy.physics.units.unitsystem
 
 .. autoclass:: UnitSystem
    :members:
