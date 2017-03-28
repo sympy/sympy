@@ -9,7 +9,17 @@ class _global_evaluate(list):
         clear_cache()
         super(_global_evaluate, self).__setitem__(key, value)
 
+
+class _global_distribute(list):
+    """ The cache must be cleared whenever global_distribute is changed. """
+
+    def __setitem__(self, key, value):
+        clear_cache()
+        super(_global_distribute, self).__setitem__(key, value)
+
+
 global_evaluate = _global_evaluate([True])
+global_distribute = _global_distribute([True])
 
 
 @contextmanager
@@ -40,3 +50,29 @@ def evaluate(x):
     global_evaluate[0] = x
     yield
     global_evaluate[0] = old
+
+
+@contextmanager
+def distribute(x):
+    """ Control automatic distribution of Number over Add
+
+    This context managers controls whether or not Mul distribute Number over
+    Add
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.core.evaluate import distribute
+    >>> print(2*(x + 1))
+    2*x + 2
+    >>> with distribute(False):
+    ...     print(2*(x + 1))
+    2*(x + 1)
+    """
+
+    old = global_distribute[0]
+
+    global_distribute[0] = x
+    yield
+    global_distribute[0] = old

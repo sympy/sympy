@@ -26,7 +26,7 @@ from .function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
 from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
-from .evaluate import evaluate
+from .evaluate import evaluate, distribute
 
 # expose singletons
 Catalan = S.Catalan
