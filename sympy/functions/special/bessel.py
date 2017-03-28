@@ -957,7 +957,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         try:
             from scipy.special import spherical_jn
             f = lambda x: spherical_jn(n, x)
-        except:
+        except ImportError:
             from scipy.special import sph_jn
             f = lambda x: sph_jn(n, x)[0][-1]
     else:
