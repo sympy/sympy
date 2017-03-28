@@ -1289,10 +1289,10 @@ class Mul(Expr, AssocOp):
             coeff,symbols = self.as_coeff_mul()
             if coeff == 1 or coeff == -1:
                 r = True
-                for t in symbols:
-                    if t.is_even:
+                for symbol in symbols:
+                    if symbol.is_even:
                         return False
-                    elif t.is_even == None:
+                    elif symbol.is_even == None:
                         r = None
                 return r
                 
@@ -1304,20 +1304,20 @@ class Mul(Expr, AssocOp):
                 elif denom % 2 == 0:
                     factordict = denom.factorint()
                     k = factordict[2]
-                    for t in symbols:
-                        if t.is_even:
+                    for symbol in symbols:
+                        if symbol.is_even:
                             factor2_num += 1
-                        elif t.is_even == None:
+                        elif symbol.is_even == None:
                             pass
                     if k < factor2_num:
                         return False
                     else:
                         return None
                 elif numer % 2 != 0 and denom % 2 != 0:
-                    for t in symbols:
-                        if t.is_even:
+                    for symbol in symbols:
+                        if symbol.is_even:
                             return False
-                        elif t.is_even == None:
+                        elif symbol.is_even == None:
                             r = None
                     return r
         # !integer = !odd                            
