@@ -1286,38 +1286,38 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            coeff,symbols = self.as_coeff_mul()
+            coeff,args = self.as_coeff_mul()
             if coeff == 1 or coeff == -1:
                 r = True
-                for symbol in symbols:
-                    if symbol.is_even:
+                for arg in args:
+                    if arg.is_even:
                         return False
-                    elif symbol.is_even == None:
+                    elif arg.is_even == None:
                         r = None
                 return r
                 
             else:
-                (numer,denom) = fraction(coeff)
+                numer,denom = fraction(coeff)
                 if numer % 2 == 0:
                     return False
 
                 elif denom % 2 == 0:
                     factordict = denom.factorint()
                     k = factordict[2]
-                    for symbol in symbols:
-                        if symbol.is_even:
+                    for arg in args:
+                        if arg.is_even:
                             factor2_num += 1
-                        elif symbol.is_even == None:
+                        elif arg.is_even == None:
                             pass
                     if k < factor2_num:
                         return False
                     else:
                         return None
                 elif numer % 2 != 0 and denom % 2 != 0:
-                    for symbol in symbols:
-                        if symbol.is_even:
+                    for arg in args:
+                        if arg.is_even:
                             return False
-                        elif symbol.is_even == None:
+                        elif arg.is_even == None:
                             r = None
                     return r
         # !integer = !odd                            
