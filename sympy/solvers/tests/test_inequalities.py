@@ -319,6 +319,11 @@ def test_issue_9954():
     assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
     assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
 
+def test_issue_12429():
+    eq = solveset(log(x)/x<=0,x,S.Reals)
+    sol = Interval(0, 1, True)
+    assert eq == sol
+
 
 @XFAIL
 def test_slow_general_univariate():
@@ -361,8 +366,10 @@ def test_issue_10268():
     assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
 
 
+
 @XFAIL
 def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
         Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
+

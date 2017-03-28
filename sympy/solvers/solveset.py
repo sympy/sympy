@@ -98,10 +98,17 @@ def _invert(f_x, y, x, domain=S.Complexes):
         raise ValueError("y should be independent of x ")
 
     if domain.is_subset(S.Reals):
-        x, s = _invert_real(f_x, FiniteSet(y), x)
+        x1, s = _invert_real(f_x, FiniteSet(y), x)
     else:
-        x, s = _invert_complex(f_x, FiniteSet(y), x)
-    return x, s.intersection(domain) if isinstance(s, FiniteSet) else s
+        x1, s = _invert_complex(f_x, FiniteSet(y), x)
+
+    if not isinstance(s, FiniteSet):
+        return s
+
+    if x1 == f_x:
+        return x1, s
+
+    return x1, s.intersection(domain)
 
 
 invert_complex = _invert
