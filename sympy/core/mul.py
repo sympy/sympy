@@ -1282,13 +1282,11 @@ class Mul(Expr, AssocOp):
         #expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
         
         from sympy.simplify.radsimp import radsimp, fraction
-        from itertools import chain
         
         is_integer = self.is_integer
 
         if is_integer:
             coeff,symbols = self.as_coeff_mul()
-            symbols = list(chain.from_iterable(symbols)) #.as_coeff_mul() returns a tuple for arg[1] so we change it to a list
             if coeff == 1 or coeff == -1:
                 r = True
                 for t in symbols:
