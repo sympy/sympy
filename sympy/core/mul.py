@@ -1303,7 +1303,7 @@ class Mul(Expr, AssocOp):
                     return False
 
                 elif denom % 2 == 0:
-                    factordict = Factors(denom,limit>2)
+                    factordict = Factors(denom,limit(>2))
                     k = factordict[2]
                     for arg in args:
                         if arg.is_even:
