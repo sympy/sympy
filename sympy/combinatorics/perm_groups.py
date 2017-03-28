@@ -678,6 +678,60 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._transversals
 
+    def coset_transversal(self, H, partitioned=False):
+        '''
+        Returns a transversal of the right cosets of self by its subgroup H
+        using the second method described in [1], Subsection 4.6.7
+        '''
+        if not H.is_subgroup(self):
+            raise ValueError("The argument must be a subgroup")
+
+        self._schreier_sims(base=H.base) #so that G.base is an extension of H.base
+
+        base = self.base
+        base_ordering = _base_ordering(base, self.degree)
+        identity = Permutation(self.degree - 1)
+
+        transversals = self.basic_transversals
+        # transversals is a dictionary. Get rid of the keys so that it is a list
+        # of lists and sort each list in the increasing order of base[l]^x
+        for l, t in enumerate(transversals):
+            transversals[l] = sorted(t.values(), key = lambda x: base_ordering[base[l]^x])
+
+        orbits = H.basic_orbits
+        h_stabs = H.basic_stabilizers
+        g_stabs = self.basic_stabilizers
+
+        indices = [x.order()/y.order() for x, y in zip(g_stabs, h_stabs)]
+
+        # T^(l) should be a right transversal of H^(l) in G^(l) for 1<=l<=len(base)
+        # While H^(l) is the trivial group, T^(l) contains all the elements of G^(l)
+        # so we might just as well start with l = len(h_stabs)-1
+        T = [g_stabs[len(h_stabs)]._elements]
+        t_len = len(T[0])
+        l = len(h_stabs)-1
+        while l>-1:
+            T_next = []
+            for u in transversals[l]:
+                if u == identity:
+                    continue
+                b = base_ordering[base[l]^u]
+                for t in sum(T, []):
+                    p = t*u
+                    if all([base_ordering[h^p] >= b for h in orbits[l]]):
+                        T_next.append(p)
+                    if t_len + len(T_next) == indices[l]:
+                        break
+                if t_len + len(T_next) == indices[l]:
+                    break
+            T.append(T_next)
+            t_len += len(T_next)
+            l -= 1
+        if partitioned:
+            return T
+        return sum(T, [])
+
+
     def center(self):
         r"""
         Return the center of a permutation group.
@@ -1061,7 +1115,7 @@ class PermutationGroup(Basic):
 
     @property
     def elements(self):
-        """Returns all the elements of the permutation group in a list
+        """Returns all the elements of the permutation group as a set
 
         Examples
         ========
@@ -1072,7 +1126,22 @@ class PermutationGroup(Basic):
         {(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)}
 
         """
-        return set(list(islice(self.generate(), None)))
+        return set(self._elements)
+
+    @property
+    def _elements(self):
+        """Returns all the elements of the permutation group as a list
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
+        >>> p.elements
+        [(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)]
+
+        """
+        return list(islice(self.generate(), None))
 
     def derived_series(self):
         r"""Return the derived series for the group.
@@ -2467,7 +2536,11 @@ class PermutationGroup(Basic):
         """
         if self._transversals:
             return
-        base, strong_gens = self.schreier_sims_incremental()
+        self._schreier_sims()
+        return
+
+    def _schreier_sims(self, base=None):
+        base, strong_gens = self.schreier_sims_incremental(base=base)
         self._base = base
         self._strong_gens = strong_gens
         if not base:
