@@ -123,12 +123,12 @@ class MathMLPrinter(Printer):
         plusNodes = []
         for arg in args[1:]:
             if _coeff_isneg(arg):
-                #use minus
+                # use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))
                 x.appendChild(lastProcessed)
                 x.appendChild(self._print(-arg))
-                #invert expression since this is now minused
+                # invert expression since this is now minused
                 lastProcessed = x
                 if(arg == args[-1]):
                     plusNodes.append(lastProcessed)
@@ -156,16 +156,16 @@ class MathMLPrinter(Printer):
 
     def _print_Rational(self, e):
         if e.q == 1:
-            #don't divide
+            # don't divide
             x = self.dom.createElement('cn')
             x.appendChild(self.dom.createTextNode(str(e.p)))
             return x
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement('divide'))
-        #numerator
+        # numerator
         xnum = self.dom.createElement('cn')
         xnum.appendChild(self.dom.createTextNode(str(e.p)))
-        #denominator
+        # denominator
         xdenom = self.dom.createElement('cn')
         xdenom.appendChild(self.dom.createTextNode(str(e.q)))
         x.appendChild(xnum)
@@ -306,7 +306,7 @@ class MathMLPrinter(Printer):
         return ci
 
     def _print_Pow(self, e):
-        #Here we use root instead of power if the exponent is the reciprocal of an integer
+        # Here we use root instead of power if the exponent is the reciprocal of an integer
         if e.exp.is_Rational and e.exp.p == 1:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('root'))
