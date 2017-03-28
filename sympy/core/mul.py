@@ -1287,11 +1287,11 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            (coeff,symbols) = self.as_coeff_mul()
+            coeff,symbols = self.as_coeff_mul()
             symbols = list(chain.from_iterable(symbols)) #.as_coeff_mul() returns a tuple for arg[1] so we change it to a list
             if coeff == 1 or coeff == -1:
                 r = True
-                for t in symbols.arg[1]:
+                for t in symbols:
                     if t.is_even:
                         return False
                     elif t.is_even == None:
