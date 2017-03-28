@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.matrices.expressions import MatrixExpr
-from sympy.core import S, Eq
+from sympy.core import S,Eq
 from sympy.functions.special.tensor_functions import KroneckerDelta
 class DiagonalMatrix(MatrixExpr):
     arg = property(lambda self: self.args[0])
