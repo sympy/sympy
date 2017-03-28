@@ -3,16 +3,14 @@ from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf
 from sympy import Symbol, ask, Q
 
 n = Symbol('n')
-x = MatrixSymbol('x', n, 1)
 X = MatrixSymbol('X', n, n)
-D = DiagonalMatrix(x)
+D = DiagonalMatrix(X)
 d = DiagonalOf(X)
 
 def test_DiagonalMatrix():
-    x = MatrixSymbol('x', n, 1)
     assert D.shape == (n, n)
     assert D[1, 2] == 0
-    assert D[1, 1] == x[1, 0]
+    assert D[1, 1] == X[1, 1]
     i = Symbol('i')
     j = Symbol('j')
     x = MatrixSymbol('x', 3, 3)

@@ -12,7 +12,7 @@ class DiagonalMatrix(MatrixExpr):
         if eq is S.false:
             return S.Zero
         elif eq is S.true:
-            return self.arg[i, 0]
+            return self.arg[i, i]*KroneckerDelta(i, j)
         return self.arg[i, j]*KroneckerDelta(i, j)
 
 class DiagonalOf(MatrixExpr):
