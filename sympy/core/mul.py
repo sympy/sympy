@@ -186,17 +186,14 @@ class Mul(Expr, AssocOp):
                         # leave the Mul as a Mul
                         rv = [cls(a*r, b, evaluate=False)], [], None
                     elif b.is_commutative:
-                        if a is S.One:
-                            rv = [b], [], None
-                        else:
-                            r, b = b.as_coeff_Add()
-                            bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                            _addsort(bargs)
-                            ar = a*r
-                            if ar:
-                                bargs.insert(0, ar)
-                            bargs = [Add._from_args(bargs)]
-                            rv = bargs, [], None
+                        r, b = b.as_coeff_Add()
+                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
+                        _addsort(bargs)
+                        ar = a*r
+                        if ar:
+                            bargs.insert(0, ar)
+                        bargs = [Add._from_args(bargs)]
+                        rv = bargs, [], None
             if rv:
                 return rv
 
