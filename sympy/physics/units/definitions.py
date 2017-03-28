@@ -10,7 +10,7 @@ from sympy.physics.units.prefixes import kilo, milli, micro, nano, pico, deci, c
 # Dimensionless:
 
 percent = percents = Quantity("percent", 1, Rational(1, 100))
-permille = permilles = Quantity("permille", 1, Rational(1, 1000))
+permille = Quantity("permille", 1, Rational(1, 1000))
 
 # Angular units (dimensionless)
 
@@ -20,6 +20,7 @@ sr = steradian = steradians = Quantity("steradian", 1, 1, "sr")
 mil = angular_mil = angular_mils = Quantity("angular_mil", 1, 2*pi/6400, "mil")
 
 # Base units:
+
 m = meter = meters = Quantity("meter", length, 1, abbrev="m")
 kg = kilogram = kilograms = Quantity("kilogram", mass, kilo, abbrev="g")
 s = second = seconds = Quantity("second", time, 1, abbrev="s")
@@ -31,8 +32,8 @@ cd = candela = candelas = Quantity("candela", luminous_intensity, 1, "cd")
 # gram; used to define its prefixed units
 
 g = gram = grams = Quantity("gram", mass, 1, "g")
-mg = milligram = milligrams = Quantity("gram", mass, milli*gram, "mg")
-ug = microgram = micrograms = Quantity("gram", mass, micro*gram, "ug")
+mg = milligram = milligrams = Quantity("milligram", mass, milli*gram, "mg")
+ug = microgram = micrograms = Quantity("microgram", mass, micro*gram, "ug")
 
 # derived units
 newton = newtons = N = Quantity("newton", force, kilogram*meter/second**2, "N")
@@ -43,24 +44,17 @@ hertz = hz = Hz = Quantity("hertz", frequency, 1, "Hz")
 
 # MKSA extension to MKS: derived units
 
-# coulomb
 coulomb = coulombs = C = Quantity("coulomb", charge, 1, abbrev='C')
-# volt
 volt = volts = v = V = Quantity("volt", voltage, joule/coulomb, abbrev='V')
-# ohm
 ohm = ohms = Quantity("ohm", impedance, volt/ampere, abbrev='ohm')
-# siemens
 siemens = S = mho = mhos = Quantity("siemens", conductance, ampere/volt, abbrev='S')
-# farad
 farad = farads = F = Quantity("farad", capacitance, coulomb/volt, abbrev='F')
-# henry
 henry = henrys = H = Quantity("henry", inductance, volt*second/ampere, abbrev='H')
-# tesla
 tesla = teslas = T = Quantity("tesla", magnetic_density, volt*second/meter**2, abbrev='T')
-# weber
 weber = webers = Wb = wb = Quantity("weber", magnetic_flux, joule/ampere, abbrev='Wb')
 
 # Other derived units:
+
 optical_power = dioptre = D = Quantity("dioptre", 1/length, 1/meter)
 lux = lx = Quantity("lux", luminous_intensity/length**2, steradian*candela/meter**2)
 
@@ -131,8 +125,8 @@ avogadro = avogadro_constant = Quantity("avogadro_constant", amount_of_substance
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-23*joule/kelvin)
 # Atomic mass
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24*gram)
-# gee
-gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665)
+# Acceleration due to gravity (on the Earth surface)
+gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665*meter/second**2, "g")
 # magnetic constant:
 u0 = magnetic_constant = Quantity("magnetic_constant", force/current**2, 4*pi/10**7 * newton/ampere**2)
 # electric constat:
@@ -142,12 +136,12 @@ Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, "atm")
 
-kPa = Quantity("kiloPascal", pressure, kilo*Pa, "kPa")
+kPa = kilopascal = Quantity("kilopascal", pressure, kilo*Pa, "kPa")
 bar = bars = Quantity("bar", pressure, 100*kPa, "bar")
 pound = pounds = Quantity("pound", mass, 0.45359237 * kg)  # exact
 psi = Quantity("psi", pressure, pound * gee / inch ** 2)
 dHg0 = 13.5951  # approx value at 0 C
-mmHg = Quantity("mmHg", pressure, dHg0 * 9.80665 * Pa)
+mmHg = torr = Quantity("mmHg", pressure, dHg0 * acceleration_due_to_gravity * kilogram / meter**2)
 mmu = mmus = milli_mass_unit = Quantity("milli_mass_unit", mass, atomic_mass_unit/1000)
 quart = quarts = Quantity("quart", length**3, Rational(231, 4) * inch**3)
 

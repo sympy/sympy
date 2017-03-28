@@ -84,7 +84,7 @@ from .prefixes import (
 
 from .definitions import (
     percent, percents,
-    permille, permilles,
+    permille,
     rad, radian, radians,
     deg, degree, degrees,
     sr, steradian, steradians,
@@ -166,7 +166,7 @@ from .definitions import (
     pound, pounds,
     psi,
     dHg0,
-    mmHg,
+    mmHg, torr,
     mmu, mmus, milli_mass_unit,
     quart, quarts,
     ly, lightyear, lightyears,
