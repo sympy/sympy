@@ -162,7 +162,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts',)
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=False):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -422,7 +422,7 @@ class DifferentialExtension(object):
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
 
-    def _exp_part(self, exps, dummy=True):
+    def _exp_part(self, exps, dummy=False):
         """
         Try to build an exponential extension.
 
@@ -529,7 +529,7 @@ class DifferentialExtension(object):
             return None
         return new_extension
 
-    def _log_part(self, logs, dummy=True):
+    def _log_part(self, logs, dummy=False):
         """
         Try to build a logarithmic extension.
 
@@ -596,12 +596,16 @@ class DifferentialExtension(object):
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
 
     def __repr__(self):
-        return '%s(%s, %s)' % (self.__class__.__name__, self.f, self.x)
+        return 'DifferentialExtension(extension=dict(fa=%s, fd=%s, D=%s))' % \
+                (self.fa, self.fd, self.D)
 
     def __str__(self):
-        return str(self._important_attrs)
+        return "{'fa': %s, 'fd': %s, 'D': %s, 'T': %s, 'Tfuncs': %s, " \
+            "'backsubs': %s, 'E_K': %s, 'E_args': %s, 'L_K': %s, 'L_args': %s}" % \
+            (tuple(self._important_attrs[i] for i in range(10)))
 
-    def reset(self, dummy=True):
+
+    def reset(self, dummy=False):
         """
         Reset self to an initial state.  Used by __init__.
         """

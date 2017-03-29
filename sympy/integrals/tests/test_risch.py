@@ -632,7 +632,7 @@ def test_DecrementLevel():
 
 
 def test_risch_integrate():
-    assert risch_integrate(t0*exp(x), x) == t0*exp(x)
+    assert risch_integrate(y*exp(x), x) == y*exp(x)
     assert risch_integrate(sin(x), x, rewrite_complex=True) == -exp(I*x)/2 - exp(-I*x)/2
 
     # From my GSoC writeup
@@ -676,4 +676,10 @@ def test_xtothex():
 
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
-    assert repr(DE) == 'DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)'
+    assert repr(DE) == "DifferentialExtension(extension=dict(fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), " \
+        "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), " \
+        "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]))"
+    assert str(DE) == "{'fa': Poly(t1 + t0**2, t1, domain='ZZ[t0]'), 'fd': Poly(1, t1, domain='ZZ'), " \
+        "'D': [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')], " \
+        "'T': [x, t0, t1], 'Tfuncs': [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))], 'backsubs': [], " \
+        "'E_K': [1], 'E_args': [x**2], 'L_K': [2], 'L_args': [t0 + 1]}"
