@@ -642,6 +642,8 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
+        if not base: # e.g. if self is trivial
+            return []
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_stabilizers = []
         for gens in strong_gens_distr:
@@ -678,7 +680,7 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._transversals
 
-    def coset_transversal(self, H, partitioned=False):
+    def coset_transversal(self, H):
         '''
         Returns a transversal of the right cosets of self by its subgroup H
         using the second method described in [1], Subsection 4.6.7
@@ -686,13 +688,16 @@ class PermutationGroup(Basic):
         if not H.is_subgroup(self):
             raise ValueError("The argument must be a subgroup")
 
+        if H.order() == 1:
+            return self._elements
+
         self._schreier_sims(base=H.base) #so that G.base is an extension of H.base
 
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         identity = Permutation(self.degree - 1)
 
-        transversals = self.basic_transversals
+        transversals = self.basic_transversals[:]
         # transversals is a dictionary. Get rid of the keys so that it is a list
         # of lists and sort each list in the increasing order of base[l]^x
         for l, t in enumerate(transversals):
@@ -707,8 +712,8 @@ class PermutationGroup(Basic):
         # T^(l) should be a right transversal of H^(l) in G^(l) for 1<=l<=len(base)
         # While H^(l) is the trivial group, T^(l) contains all the elements of G^(l)
         # so we might just as well start with l = len(h_stabs)-1
-        T = [g_stabs[len(h_stabs)]._elements]
-        t_len = len(T[0])
+        T = g_stabs[len(h_stabs)]._elements
+        t_len = len(T)
         l = len(h_stabs)-1
         while l>-1:
             T_next = []
@@ -716,7 +721,7 @@ class PermutationGroup(Basic):
                 if u == identity:
                     continue
                 b = base_ordering[base[l]^u]
-                for t in sum(T, []):
+                for t in T:
                     p = t*u
                     if all([base_ordering[h^p] >= b for h in orbits[l]]):
                         T_next.append(p)
@@ -724,13 +729,82 @@ class PermutationGroup(Basic):
                         break
                 if t_len + len(T_next) == indices[l]:
                     break
-            T.append(T_next)
+            T += T_next
             t_len += len(T_next)
             l -= 1
-        if partitioned:
-            return T
-        return sum(T, [])
+        return T
 
+    def _coset_representative(self, g, H):
+        '''
+        Finds the representative of gH from transversal that
+        would be computed by `self.coset_transversal(H)`.
+        The base of self must be an extension of H.base.
+        '''
+        if H.order() == 1:
+            return g
+        if not(self.base[:len(H.base)] == H.base):
+            self._schreier_sims(base=H.base)
+        orbits = H.basic_orbits
+        stabilizers = H.basic_stabilizers
+        transversals = self.basic_transversals
+        base = self.base
+        base_ordering = _base_ordering(base, self.degree)
+        def step(l, x):
+            gammas = sorted(orbits[l], key = lambda y: base_ordering[y^x])
+            gamma = gammas[0]
+            for h in stabilizers[l]._elements:
+                if base[l]^h == gamma:
+                    break
+            x = h*x
+            if l<len(orbits)-1:
+                for u in transversals[l].values():
+                    if base[l]^u == base[l]^x:
+                        break
+                x = step(l+1, x*u**-1)*u
+            return x
+        return step(0, g)
+
+    def coset_table(self, H):
+        '''
+        Returns standardised (right) coset table of self in H as a list of lists
+        Maybe this should be made to return an instance of CosetTable from fp_groups.py
+        but the class would need to be changed first to be compatible with PermutationGroups
+        '''
+        from itertools import chain, product
+        T = self.coset_transversal(H)
+        n = len(T)
+
+        A = list(chain.from_iterable((gen, gen**-1) \
+                for gen in self.generators))
+
+        table = []
+        for i in range(n):
+            row = [self._coset_representative(T[i]*x, H) for x in A]
+            row = [T.index(r) for r in row]
+            table.append(row)
+
+
+        # standardize (this is the same as the algorithm used in fp_groups)
+        # If CosetTable is made compatible with PermutationGroups, this should
+        # be replaced by table.standardize()
+        A = range(len(A))
+        gamma = 1
+        for alpha, a in product(range(n), A):
+            beta = table[alpha][a]
+            if beta >= gamma:
+                if beta > gamma:
+                    for x in A:
+                        z = table[gamma][x]
+                        table[gamma][x] = table[beta][x]
+                        table[beta][x] = z
+                        for i in range(n):
+                            if table[i][x] == beta:
+                                table[i][x] = gamma
+                            elif table[i][x] == gamma:
+                                table[i][x] = beta
+                gamma += 1
+                if gamma == n-1:
+                    return table
 
     def center(self):
         r"""
