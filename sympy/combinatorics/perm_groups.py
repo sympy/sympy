@@ -685,8 +685,6 @@ class PermutationGroup(Basic):
         Returns a transversal of the right cosets of self by its subgroup H
         using the second method described in [1], Subsection 4.6.7
         '''
-        if not H.is_subgroup(self):
-            raise ValueError("The argument must be a subgroup")
 
         if H.order() == 1:
             return self._elements
@@ -771,6 +769,8 @@ class PermutationGroup(Basic):
         but the class would need to be changed first to be compatible with PermutationGroups
         '''
         from itertools import chain, product
+        if not H.is_subgroup(self):
+            raise ValueError("The argument must be a subgroup")
         T = self.coset_transversal(H)
         n = len(T)
 
