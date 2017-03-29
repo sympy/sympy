@@ -822,7 +822,7 @@ class Add(Expr, AssocOp):
         return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return self.func(*[-t for t in self.args])
+        return self*(-1)
 
     def _sage_(self):
         s = 0
