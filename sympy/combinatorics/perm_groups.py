@@ -685,6 +685,8 @@ class PermutationGroup(Basic):
         Returns a transversal of the right cosets of self by its subgroup H
         using the second method described in [1], Subsection 4.6.7
         '''
+        if not H.is_subgroup(self):
+            raise ValueError("The argument must be a subgroup")
 
         if H.order() == 1:
             return self._elements
