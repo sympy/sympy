@@ -13,9 +13,9 @@ determines the one of unit systems. Our definition could seem rough but they
 are largely sufficient for our purposes.
 
 A dimension will be defined as a property which is measurable and assigned to
-a specific phenomenom. In this sense dimensions are different from pure numbers
+a specific phenomenon. In this sense dimensions are different from pure numbers
 because they carry some extra-sense, and for this reason two different
-dimensions can not be added. For example time or length are dimensions, but
+dimensions cannot be added. For example time or length are dimensions, but
 also any other things which has some sense for us, like angle, number of
 particles (moles...) or information (bits...).
 
@@ -253,7 +253,7 @@ It is not possible to define from scratch units and unit systems: one needs
 to define some references, and then build the rest over them. Said in another
 way, we need an origin for the scales of our units (i.e. a unit with factor 1),
 and to be sure that all units of a given dimension are defined consistently we
-need to use the same origin for all of them. This can happend if we want to use
+need to use the same origin for all of them. This can happen if we want to use
 a derived unit as a base units in another system: we should not define it as
 having a scale 1, because, even if it is inconsistent inside the system, we
 could not convert to the first system since we have two different units (from
