@@ -470,7 +470,7 @@ class Result(Variable, ResultBase):
             Controls the precision of floating point constants.
 
         """
-        if not isinstance(expr, Base):
+        if not isinstance(expr, Basic):
             raise TypeError("The first argument must be a sympy expression.")
 
         if name is None:
