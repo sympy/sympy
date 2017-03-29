@@ -302,7 +302,7 @@ install:
       python setup.py install;
     fi
 script:
-  # Don't run doctr of the build fails
+  # Don't run doctr if the build fails
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
