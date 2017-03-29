@@ -1710,6 +1710,9 @@ def test_held_expression_UnevaluatedExpr():
     assert ue2.doit() == x**2
     assert ue2.doit(deep=False) == xx
 
+    x2 = UnevaluatedExpr(2)*2
+    assert type(x2) is Mul
+    assert x2.args == (2, UnevaluatedExpr(2))
 
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
