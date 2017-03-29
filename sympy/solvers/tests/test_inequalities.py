@@ -10,6 +10,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_abs_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
 from sympy.utilities.pytest import raises, slow, XFAIL
@@ -372,4 +373,3 @@ def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
         Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
-
