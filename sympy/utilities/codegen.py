@@ -84,7 +84,7 @@ import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
+from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
 from sympy.core.compatibility import is_sequence, StringIO, string_types
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
@@ -470,8 +470,7 @@ class Result(Variable, ResultBase):
             Controls the precision of floating point constants.
 
         """
-        from sympy.logic.boolalg import Boolean
-        if not isinstance(expr, (Expr, Boolean, MatrixBase, MatrixExpr)):
+        if not isinstance(expr, Base):
             raise TypeError("The first argument must be a sympy expression.")
 
         if name is None:
