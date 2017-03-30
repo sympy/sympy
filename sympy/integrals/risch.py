@@ -1673,7 +1673,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, rewrite_complex=rewrite_complex)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, dummy=True, \
+            rewrite_complex=rewrite_complex)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
