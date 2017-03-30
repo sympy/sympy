@@ -2084,7 +2084,7 @@ class MatrixDeprecated(MatrixRequired):
 
         berkowitz
         """
-        return PurePoly(list(map(simplify, self.berkowitz()[-1])), x)
+        return self.charpoly(x=x)
 
     @deprecated(useinstead="det(method='berkowitz')", issue=12389, deprecated_since_version="1.1")
     def berkowitz_det(self):
@@ -2096,13 +2096,7 @@ class MatrixDeprecated(MatrixRequired):
         det
         berkowitz
         """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self:
-            return S.One
-        poly = self.berkowitz()[-1]
-        sign = (-1) ** (len(poly) - 1)
-        return sign * poly[-1]
+        return self.det(method='berkowitz')
 
     @deprecated(useinstead="eigenvals", issue=12389, deprecated_since_version="1.1")
     def berkowitz_eigenvals(self, **flags):
@@ -2236,9 +2230,9 @@ class MatrixDeprecated(MatrixRequired):
     def cofactorMatrix(self, method="berkowitz"):
         return self.cofactor_matrix(method=method)
 
-    @deprecated(useinstead="det_bareiss", issue=12363, deprecated_since_version="1.1")
+    @deprecated(useinstead="det(method='bareiss')", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
-        return self.det_bareiss()
+        return self.det(method='bariess')
 
     @deprecated(useinstead="det(method='bareiss')", issue=12389, deprecated_since_version="1.1")
     def det_bareiss(self):
@@ -2258,56 +2252,7 @@ class MatrixDeprecated(MatrixRequired):
         det
         berkowitz_det
         """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self:
-            return S.One
-
-        M, n = self.copy().as_mutable(), self.rows
-
-        if n == 1:
-            det = M[0, 0]
-        elif n == 2:
-            det = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
-        elif n == 3:
-            det = (
-                      M[0, 0] * M[1, 1] * M[2, 2] + M[0, 1] * M[1, 2] * M[2, 0] + M[
-                          0, 2] * M[1, 0] * M[2, 1]) - \
-                  (
-                      M[0, 2] * M[1, 1] * M[2, 0] + M[0, 0] * M[1, 2] * M[2, 1] + M[
-                          0, 1] * M[1, 0] * M[2, 2])
-        else:
-            sign = 1  # track current sign in case of column swap
-
-            for k in range(n - 1):
-                # look for a pivot in the current column
-                # and assume det == 0 if none is found
-                if M[k, k] == 0:
-                    for i in range(k + 1, n):
-                        if M[i, k]:
-                            M.row_swap(i, k)
-                            sign *= -1
-                            break
-                    else:
-                        return S.Zero
-
-                # proceed with Bareiss' fraction-free (FF)
-                # form of Gaussian elimination algorithm
-                for i in range(k + 1, n):
-                    for j in range(k + 1, n):
-                        D = M[k, k] * M[i, j] - M[i, k] * M[k, j]
-
-                        if k > 0:
-                            D /= M[k - 1, k - 1]
-
-                        if D.is_Atom:
-                            M[i, j] = D
-                        else:
-                            M[i, j] = cancel(D)
-
-            det = sign * M[n - 1, n - 1]
-
-        return det.expand()
+        return self.det(method='bariess')
 
     @deprecated(useinstead="det(method='lu')", issue=12389, deprecated_since_version="1.1")
     def det_LU_decomposition(self):
@@ -2329,21 +2274,7 @@ class MatrixDeprecated(MatrixRequired):
         det_bareiss
         berkowitz_det
         """
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self:
-            return S.One
-
-        M, n = self.copy(), self.rows
-        p, prod = [], 1
-        l, u, p = M.LUdecomposition()
-        if len(p) % 2:
-            prod = -1
-
-        for k in range(n):
-            prod = prod * u[k, k] * l[k, k]
-
-        return prod.expand()
+        return self.det(method='lu')
 
     @deprecated(useinstead="minor", issue=12389, deprecated_since_version="1.1")
     def minorEntry(self, i, j, method="berkowitz"):
