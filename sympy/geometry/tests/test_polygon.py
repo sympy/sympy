@@ -376,3 +376,21 @@ def test_eulerline():
         == Point2D(5, 5*sqrt(3)/3)
     assert Triangle(Point(4, -6), Point(4, -1), Point(-3, 3)).eulerline \
         == Line(Point2D(64/7, 3), Point2D(-29/14, -7/2))
+
+def test_intersection():
+    poly1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))
+    poly2 = Polygon(Point(0, 1), Point(-5, 0),
+                    Point(0, -4), Point(0, 1/5), Point(1/2, -0.1), Point(1,0), Point(0, 1))
+
+    assert poly1.intersection(poly2) == [Point(1/3, 0), Segment(Point(0, 0), Point(0, 1/5)),
+                                         Segment(Point(0, 1), Point(1, 0))]
+    assert poly2.intersection(poly1) == [Point2D(1/3, 0), Segment(Point2D(0, 0), Point(0, 1/5)),
+                                         Segment(Point(0, 1), Point(1, 0))]
+    assert poly1.intersection(Point(0, 0)) == [Point(0, 0)]
+    assert poly1.intersection(Point(-12,  -43)) == []
+    assert poly2.intersection(Line((-12, 0), (12, 0))) == [Point(-5, 0), Point(0, 0),
+                                                           Point(1/3, 0), Point(1, 0)]
+    assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(0, 1), Point(1, 0))]
+    assert poly2.intersection(Circle((0, -1), 1)) == [Point2D(0, -2), Point2D(0, 0)]
+
+test_intersection()
