@@ -233,6 +233,7 @@ def test_AccumBounds():
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
     assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
+    # Possible improvement: AccumBounds(0, 1)
 
 
 @XFAIL
@@ -483,13 +484,20 @@ def test_limit_seq():
     assert (limit(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x, oo) == 4)
 
+
 def test_issue_11879():
     assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
+
 
 def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
 
+
 def test_issue_10610():
     assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == S(1)/3
+
+
+def test_issue_6599():
+    assert limit((n + cos(n))/n, n, oo) == 1

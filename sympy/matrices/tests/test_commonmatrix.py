@@ -7,7 +7,7 @@ from sympy import (
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
-    MatrixProperties, MatrixOperations)
+    MatrixProperties, MatrixOperations, MatrixArithmetic)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -49,8 +49,14 @@ def eye_Operations(n):
 def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
+class ArithmeticOnlyMatrix(_MinimalMatrix, MatrixArithmetic):
+    pass
 
+def eye_Arithmetic(n):
+    return ArithmeticOnlyMatrix(n, n, lambda i, j: int(i == j))
 
+def zeros_Arithmetic(n):
+    return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
 
 def test__MinimalMatrix():
     x = _MinimalMatrix(2,3,[1,2,3,4,5,6])
@@ -326,6 +332,8 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2,2,[0,1,2,3]).values()) == set([1,2,3])
+    x = Symbol('x', real=True)
+    assert set(PropertiesOnlyMatrix(2,2,[x,0,0,1]).values()) == set([x,1])
 
 
 # OperationsOnlyMatrix tests
@@ -341,6 +349,13 @@ def test_adjoint():
     ans = OperationsOnlyMatrix([[0, 1], [-I, 0]])
     assert ans.adjoint() == Matrix(dat)
 
+def test_as_real_imag():
+    m1 = OperationsOnlyMatrix(2,2,[1,2,3,4])
+    m3 = OperationsOnlyMatrix(2,2,[1+S.ImaginaryUnit,2+2*S.ImaginaryUnit,3+3*S.ImaginaryUnit,4+4*S.ImaginaryUnit])
+
+    a,b = m3.as_real_imag()
+    assert a == m1
+    assert b == m1
 
 def test_conjugate():
     M = OperationsOnlyMatrix([[0, I, 5],
@@ -455,3 +470,108 @@ def test_xreplace():
            Matrix([[1, 5], [5, 4]])
     assert OperationsOnlyMatrix([[x, 2], [x + y, 4]]).xreplace({x: -1, y: -2}) == \
            Matrix([[-1, 2], [-3, 4]])
+
+
+# ArithmeticOnlyMatrix tests
+def test_add():
+    m = ArithmeticOnlyMatrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
+    assert m + m == ArithmeticOnlyMatrix([[2, 4, 6], [2*x, 2*y, 2*x], [4*y, -100, 2*z*x]])
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    raises(ShapeError, lambda: m + n)
+
+def test_multiplication():
+    a = ArithmeticOnlyMatrix((
+        (1, 2),
+        (3, 1),
+        (0, 6),
+    ))
+
+    b = ArithmeticOnlyMatrix((
+        (1, 2),
+        (3, 0),
+    ))
+
+    raises(ShapeError, lambda: b*a)
+    raises(TypeError, lambda: a*{})
+
+    c = a*b
+    assert c[0, 0] == 7
+    assert c[0, 1] == 2
+    assert c[1, 0] == 6
+    assert c[1, 1] == 6
+    assert c[2, 0] == 18
+    assert c[2, 1] == 0
+
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
+    h = a.multiply_elementwise(c)
+    assert h == matrix_multiply_elementwise(a, c)
+    assert h[0, 0] == 7
+    assert h[0, 1] == 4
+    assert h[1, 0] == 18
+    assert h[1, 1] == 6
+    assert h[2, 0] == 0
+    assert h[2, 1] == 0
+    raises(ShapeError, lambda: a.multiply_elementwise(b))
+
+    c = b * Symbol("x")
+    assert isinstance(c, ArithmeticOnlyMatrix)
+    assert c[0, 0] == x
+    assert c[0, 1] == 2*x
+    assert c[1, 0] == 3*x
+    assert c[1, 1] == 0
+
+    c2 = x * b
+    assert c == c2
+
+    c = 5 * b
+    assert isinstance(c, ArithmeticOnlyMatrix)
+    assert c[0, 0] == 5
+    assert c[0, 1] == 2*5
+    assert c[1, 0] == 3*5
+    assert c[1, 1] == 0
+
+    try:
+        eval('c = 5 @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert isinstance(c, ArithmeticOnlyMatrix)
+        assert c[0, 0] == 5
+        assert c[0, 1] == 2*5
+        assert c[1, 0] == 3*5
+        assert c[1, 1] == 0
+
+def test_power():
+    raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
+
+    A = ArithmeticOnlyMatrix([[2, 3], [4, 5]])
+    assert (A**5)[:] == (6140, 8097, 10796, 14237)
+    A = ArithmeticOnlyMatrix([[2, 1, 3], [4, 2, 4], [6, 12, 1]])
+    assert (A**3)[:] == (290, 262, 251, 448, 440, 368, 702, 954, 433)
+    assert A**0 == eye(3)
+    assert A**1 == A
+    assert (ArithmeticOnlyMatrix([[2]]) ** 100)[0, 0] == 2**100
+    assert ArithmeticOnlyMatrix([[1, 2], [3, 4]])**Integer(2) == ArithmeticOnlyMatrix([[7, 10], [15, 22]])
+
+def test_neg():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert -n == ArithmeticOnlyMatrix(1, 2, [-1, -2])
+
+def test_sub():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert n - n == ArithmeticOnlyMatrix(1, 2, [0, 0])
+
+def test_div():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert n/2 == ArithmeticOnlyMatrix(1, 2, [1/2, 2/2])
