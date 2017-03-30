@@ -5,6 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import print_function, division
 
+from functools import wraps
 import inspect
 import textwrap
 
@@ -436,6 +437,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # This is a fix for gh-11306.
     if module_provided and _module_present('numpy',namespaces):
         def array_wrap(funcarg):
+            @wraps(funcarg)
             def wrapper(*argsx, **kwargsx):
                 return funcarg(*[namespace['asarray'](i) for i in argsx], **kwargsx)
             return wrapper
