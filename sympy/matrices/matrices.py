@@ -1713,7 +1713,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         diags = [C]
         for i in range(self.rows - 2):
             diags.append(A * diags[i])
-        diags = [(-R*d)[0,0] for d in diags]
+        diags = [(-R*d)[0, 0] for d in diags]
         diags = [S.One, -a] + diags
 
         def entry(i,j):
@@ -1769,7 +1769,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         return toeplitz * submat._eval_berkowitz_vector()
 
     def _eval_det_bareiss(self):
-        """Compute matrix determinant using Bareis' fraction-free
+        """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
@@ -1788,17 +1788,17 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
             return (None, None, None, None)
 
 
-        # Recursively implimented Bareiss algorithm as per Deanna Richelle Leggett's
+        # Recursively implimented Bareiss' algorithm as per Deanna Richelle Leggett's
         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         def bareiss(mat, cumm=1):
             if mat.rows == 0:
                 return S.One
             elif mat.rows == 1:
-                return mat[0,0]
+                return mat[0, 0]
 
             # find a pivot and extract the remaining matrix
             # XXX should use `_find_reasonable_pivot`.  Blocked by issue #12362
-            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:,0])
+            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0])
             if pivot_pos == None:
                 return S.Zero
 
@@ -1812,7 +1812,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
             tmp_mat = mat.extract(rows, cols)
 
             def entry(i, j):
-                ret = (pivot_val*tmp_mat[i, j+1] - mat[pivot_pos, j+1]*tmp_mat[i, 0]) / cumm
+                ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
                 if not ret.is_Atom:
                     cancel(ret)
                 return ret
@@ -1839,7 +1839,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         det = (-1) ** (len(p) % 2)
         # multiply by the diagonal entries
         for k in range(self.rows):
-            det *= l[k,k] * u[k, k]
+            det *= l[k, k] * u[k, k]
 
         return det
 
@@ -1920,7 +1920,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         if self.rows != self.cols or self.rows < 1:
             raise NonSquareMatrixError()
 
-        return (-1)**((i+j) % 2) * self.minor(i, j, method)
+        return (-1)**((i + j) % 2) * self.minor(i, j, method)
 
     def cofactor_matrix(self, method="berkowitz"):
         """Return a matrix containing the cofactor of each element.
