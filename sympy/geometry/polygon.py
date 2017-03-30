@@ -652,7 +652,7 @@ class Polygon(GeometrySet):
         return [t, 0, 1]
 
     def intersection(self, o):
-        """The intersection of two polygons.
+        """The intersection of polygon and geometry entity.
 
         The intersection may be empty and can contain individual Points and
         complete Line Segments.
@@ -660,7 +660,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        other: Polygon
+        other: GeometryEntity
 
         Returns
         =======
@@ -683,7 +683,10 @@ class Polygon(GeometrySet):
         >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
         [Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1), Point2D(1/3, 1)]
-
+        >>> poly1.intersection(Line(p1, p2))
+        [Point2D(0, 0), Point2D(1, 0), Segment2D(Point2D(0, 0), Point2D(1, 0))]
+        >>> poly1.intersection(p1)
+        [Point2D(0, 0)]
         """
         intersection_result = []
 
