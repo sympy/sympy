@@ -470,6 +470,7 @@ class Result(Variable, ResultBase):
             Controls the precision of floating point constants.
 
         """
+# Basic because it is the base class for all types of expressions
         if not isinstance(expr, (Basic, MatrixBase)):
             raise TypeError("The first argument must be a sympy expression.")
 
