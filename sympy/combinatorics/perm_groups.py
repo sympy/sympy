@@ -1213,7 +1213,7 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
-        >>> p.elements
+        >>> p._elements
         [(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)]
 
         """
