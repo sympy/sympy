@@ -686,9 +686,8 @@ class StrPrinter(Printer):
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
 
-
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quantity(self, expr):
+        return "%s" % expr.name
 
     def _print_Dimension(self, expr):
         return str(expr)
