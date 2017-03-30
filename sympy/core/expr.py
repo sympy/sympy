@@ -3324,6 +3324,7 @@ class UnevaluatedExpr(Expr):
     """
 
     def __new__(cls, arg, **kwargs):
+        arg = _sympify(arg)
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
