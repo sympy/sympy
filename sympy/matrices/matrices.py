@@ -1780,7 +1780,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
         """
 
-        # XXX included as a workaround for issue #12362.  Should use `_find_reasonalbe_pivot` instead
+        # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
         def _find_pivot(l):
             for pos,val in enumerate(l):
                 if val:
