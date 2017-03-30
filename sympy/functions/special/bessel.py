@@ -920,7 +920,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     * method = "sympy": uses :func:`mpmath.besseljzero`
     * method = "scipy": uses the
-      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
+      `SciPy's spherical_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
       `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all
@@ -953,9 +953,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
                                               int(l)), prec)
                 for l in range(1, k + 1)]
     elif method == "scipy":
-        from scipy.special import sph_jn
         from scipy.optimize import newton
-        f = lambda x: sph_jn(n, x)[0][-1]
+        try:
+            from scipy.special import spherical_jn
+            f = lambda x: spherical_jn(n, x)[0][-1]
+        except:
+            from scipy.special import sph_jn
+            f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
 
