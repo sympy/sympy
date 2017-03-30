@@ -1112,7 +1112,7 @@ class MatrixProperties(MatrixRequired):
         """
         return all(self[i, j].is_zero
                    for i in range(1, self.rows)
-                   for j in range(min(i,self.cols)))
+                   for j in range(min(i, self.cols)))
 
     @property
     def is_zero(self):
