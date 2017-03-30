@@ -1315,6 +1315,7 @@ class Mul(Expr, AssocOp):
                     else:
                         return None
                 elif numer % 2 != 0 and denom % 2 != 0:
+                    r = True
                     for arg in args:
                         if arg.is_even:
                             return False
