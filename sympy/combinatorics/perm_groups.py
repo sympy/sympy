@@ -767,7 +767,6 @@ class PermutationGroup(Basic):
 
     def coset_table(self, H):
         """Return the standardised (right) coset table of self in H as a list of lists.
-
         """
         #Maybe this should be made to return an instance of CosetTable from fp_groups.py
         #but the class would need to be changed first to be compatible with PermutationGroups
