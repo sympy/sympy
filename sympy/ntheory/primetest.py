@@ -38,7 +38,7 @@ def is_square(n, prep=True):
             return True
     m = n & 127
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63;
+        m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
             from sympy.ntheory import perfect_power
             if perfect_power(n, [2]):

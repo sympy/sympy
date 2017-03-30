@@ -28,5 +28,5 @@ Ideas about future developments can be found on the `Github wiki
     examples.rst
     dimensions.rst
     prefixes.rst
-    units.rst
+    unitsystem.rst
     quantities.rst
