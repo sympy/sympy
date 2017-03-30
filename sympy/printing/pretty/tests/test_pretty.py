@@ -4547,23 +4547,25 @@ def test_units():
     expr = joule
     ascii_str = \
 """\
-    2\n\
-kg*m \n\
------\n\
-   2 \n\
-  s  \
+              2\n\
+kilogram*meter \n\
+---------------\n\
+          2    \n\
+    second     \
 """
-
     unicode_str = \
 u("""\
-    2\n\
-kg⋅m \n\
-─────\n\
-   2 \n\
-  s  \
+              2\n\
+kilogram⋅meter \n\
+───────────────\n\
+          2    \n\
+    second     \
 """)
-    assert upretty(expr) == unicode_str
-    assert pretty(expr) == ascii_str
+    from sympy.physics.units import kg, m, s
+    assert upretty(expr) == u("joule")
+    assert pretty(expr) == "joule"
+    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str
+    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str
 
 
 def test_pretty_Subs():

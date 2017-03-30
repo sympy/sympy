@@ -396,30 +396,30 @@ def test_determinant():
 def test_det_LU_decomposition():
 
     for M in [Matrix(), Matrix([[1]])]:
-        assert M.det(method="det_LU") == 1
+        assert M.det(method="lu") == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
-    assert M.det(method="det_LU") == -1
+    assert M.det(method="lu") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det(method="det_LU") == 2*x*y - y
+    assert M.det(method="lu") == 2*x*y - y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
                  (1, 3, 6) ))
 
-    assert M.det(method="det_LU") == 1
+    assert M.det(method="lu") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
-    assert M.det(method="det_LU") == -289
+    assert M.det(method="lu") == -289
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -427,7 +427,7 @@ def test_det_LU_decomposition():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
-    assert M.det(method="det_LU") == 275
+    assert M.det(method="lu") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
@@ -435,7 +435,7 @@ def test_det_LU_decomposition():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
-    assert M.det(method="det_LU") == -55
+    assert M.det(method="lu") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -443,7 +443,7 @@ def test_det_LU_decomposition():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
-    assert M.det(method="det_LU") == 11664
+    assert M.det(method="lu") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
@@ -451,13 +451,13 @@ def test_det_LU_decomposition():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
-    assert M.det(method="det_LU") == 123
+    assert M.det(method="lu") == 123
 
     M = Matrix(( (x, y, z),
                  (1, 0, 0),
                  (y, z, x) ))
 
-    assert M.det(method="det_LU") == z**2 - x*y
+    assert M.det(method="lu") == z**2 - x*y
 
 
 def test_berkowitz_minors():
