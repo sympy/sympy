@@ -125,6 +125,15 @@ avogadro = avogadro_constant = Quantity("avogadro_constant", amount_of_substance
 boltzmann = boltzmann_constant = Quantity("boltzmann_constant", energy/temperature, 1.38064852e-23*joule/kelvin)
 # Atomic mass
 amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", mass, 1.660539040e-24*gram)
+# Molar gas constant
+R = molar_gas_constant = Quantity("molar_gas_constant", energy/(temperature * amount_of_substance),
+                                  8.3144598*joule/kelvin/mol, abbrev="R")
+# Faraday constant
+faraday_constant = Quantity("faraday_constant", charge/amount_of_substance, 96485.33289*C/mol)
+# Josephson constant
+josephson_constant = Quantity("josephson_constant", frequency/voltage, 483597.8525e9*hertz/V, abbrev="K_j")
+# Von Klitzing constant
+von_klitzing_constant = Quantity("von_klitzing_constant", voltage/current, 25812.8074555*ohm, abbrev="R_k")
 # Acceleration due to gravity (on the Earth surface)
 gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", acceleration, 9.80665*meter/second**2, "g")
 # magnetic constant:
