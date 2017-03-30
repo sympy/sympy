@@ -7,6 +7,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy import S, sqrt, sin, Float, E, GoldenRatio, pi, Catalan
 from sympy.abc import x, y
 
+
 def test_construct_domain():
     assert construct_domain([1, 2, 3]) == (ZZ, [ZZ(1), ZZ(2), ZZ(3)])
     assert construct_domain([1, 2, 3], field=True) == (QQ, [QQ(1), QQ(2), QQ(3)])
@@ -92,6 +93,7 @@ def test_construct_domain():
 
     assert construct_domain({}) == (ZZ, {})
 
+
 def test_composite_option():
     assert construct_domain({(1,): sin(y)}, composite=False) == \
         (EX, {(1,): EX(sin(y))})
@@ -104,6 +106,7 @@ def test_composite_option():
 
     assert construct_domain({(1, 0): y}, composite=False) == \
         (EX, {(1, 0): EX(y)})
+
 
 def test_precision():
     f1 = Float("1.01")
@@ -122,17 +125,10 @@ def test_precision():
     y = result[1][0]
     assert y-1 > 1e-50
 
+
 def test_issue_11538():
-    dom = ZZ[E]
-    assert construct_domain(E)[0] == ZZ[E]
-    dom = ZZ[x,E]
-    assert construct_domain(x**2 + 2*x + E) == \
-           (dom,dom.convert(x**2 + 2*x + E))
-    dom = ZZ[pi]
-    assert construct_domain(pi) == (dom,dom.convert(pi))
-    dom = ZZ[y,pi]
-    assert construct_domain(y**2 + pi) == \
-           (dom,dom.convert(y**2 + pi))
-    dom = EX
-    assert construct_domain(x + y + GoldenRatio) == \
-           (dom,dom.convert(x + y + GoldenRatio))
+    for n in [E, pi, Catalan]:
+        assert construct_domain(n)[0] == ZZ[n]
+        assert construct_domain(x + n)[0] == ZZ[x, n]
+    assert construct_domain(GoldenRatio)[0] == EX
+    assert construct_domain(x + GoldenRatio)[0] == EX
