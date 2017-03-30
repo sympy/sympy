@@ -681,10 +681,11 @@ class PermutationGroup(Basic):
         return self._transversals
 
     def coset_transversal(self, H):
-        '''
-        Returns a transversal of the right cosets of self by its subgroup H
+        """Return a transversal of the right cosets of self by its subgroup H
         using the second method described in [1], Subsection 4.6.7
-        '''
+
+        """
+
         if not H.is_subgroup(self):
             raise ValueError("The argument must be a subgroup")
 
@@ -735,11 +736,11 @@ class PermutationGroup(Basic):
         return T
 
     def _coset_representative(self, g, H):
-        '''
-        Finds the representative of gH from transversal that
+        """Return the representative of gH from the transversal that
         would be computed by `self.coset_transversal(H)`.
         The base of self must be an extension of H.base.
-        '''
+
+        """
         if H.order() == 1:
             return g
         if not(self.base[:len(H.base)] == H.base):
@@ -765,11 +766,12 @@ class PermutationGroup(Basic):
         return step(0, g)
 
     def coset_table(self, H):
-        '''
-        Returns standardised (right) coset table of self in H as a list of lists
-        Maybe this should be made to return an instance of CosetTable from fp_groups.py
-        but the class would need to be changed first to be compatible with PermutationGroups
-        '''
+        """Return the standardised (right) coset table of self in H as a list of lists.
+
+        """
+        #Maybe this should be made to return an instance of CosetTable from fp_groups.py
+        #but the class would need to be changed first to be compatible with PermutationGroups
+
         from itertools import chain, product
         if not H.is_subgroup(self):
             raise ValueError("The argument must be a subgroup")
