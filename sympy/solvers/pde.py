@@ -853,6 +853,9 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return pde_separate(Eq(eq.lhs - eq.rhs), fun, sep, strategy)
+    else:
+        return pde_separate(Eq(eq, 0), fun, sep, strategy)
+
     if eq.rhs != 0:
         raise ValueError("Value should be 0")
 

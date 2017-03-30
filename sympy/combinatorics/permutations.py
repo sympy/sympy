@@ -1001,7 +1001,7 @@ class Permutation(Basic):
             use = full = str(self.array_form)
             if len(trim) < len(full):
                 use = trim
-            return 'Permutation%s' % use
+            return 'Permutation(%s)' % use
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
@@ -1586,9 +1586,9 @@ class Permutation(Basic):
 
         >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         >>> Permutation([[0, 1], [2, 3], [4, 5]]).atoms()
-        set([0, 1, 2, 3, 4, 5])
+        {0, 1, 2, 3, 4, 5}
         """
         return set(self.array_form)
 

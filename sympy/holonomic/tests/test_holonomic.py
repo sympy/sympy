@@ -527,7 +527,7 @@ def test_to_hyper():
     q = 2*x**3 + 6*x**2 + 6*x + 2
     assert p == q
     p = HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_hyper()
-    q = -x**2*hyper((2, 2, 1), (2, 3), -x)/2 + x
+    q = -x**2*hyper((2, 2, 1), (3, 2), -x)/2 + x
     assert p == q
     p = HolonomicFunction(2*x*Dx + Dx**2, x, 0, [0, 2/sqrt(pi)]).to_hyper()
     q = 2*x*hyper((1/2,), (3/2,), -x**2)/sqrt(pi)

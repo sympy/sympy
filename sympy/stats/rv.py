@@ -17,6 +17,7 @@ from __future__ import print_function, division
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
         Equality, Lambda, DiracDelta, sympify)
 from sympy.core.relational import Relational
+from sympy.core.compatibility import string_types
 from sympy.logic.boolalg import Boolean
 from sympy.solvers.solveset import solveset
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -174,7 +175,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
+        if isinstance(s, string_types):
             s = Symbol(s)
         if not isinstance(s, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -235,6 +236,7 @@ class RandomSymbol(Expr):
 
     is_finite = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     _diff_wrt = True
@@ -780,13 +782,13 @@ def where(condition, given_condition=None, **kwargs):
     >>> X = Normal('x', 0, 1)
 
     >>> where(X**2<1)
-    Domain: And(-1 < x, x < 1)
+    Domain: (-1 < x) & (x < 1)
 
     >>> where(X**2<1).set
     (-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
-    Domain: Or(And(Eq(a, 1), Eq(b, 1)), And(Eq(a, 1), Eq(b, 2)), And(Eq(a, 2), Eq(b, 2)))    """
+    Domain: ((Eq(a, 1)) & (Eq(b, 1))) | ((Eq(a, 1)) & (Eq(b, 2))) | ((Eq(a, 2)) & (Eq(b, 2)))    """
     if given_condition is not None:  # If there is a condition
         # Recompute on new conditional expr
         return where(given(condition, given_condition, **kwargs), **kwargs)

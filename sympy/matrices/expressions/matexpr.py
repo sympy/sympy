@@ -2,11 +2,12 @@ from __future__ import print_function, division
 
 from functools import wraps
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import range
 from sympy.core.sympify import SympifyError, sympify
 from sympy.functions import conjugate, adjoint
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 
@@ -171,6 +172,12 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.transpose import Transpose
         return Adjoint(Transpose(self))
 
+    def as_real_imag(self):
+        from sympy import I
+        real = (S(1)/2) * (self + self._eval_conjugate())
+        im = (self - self._eval_conjugate())/(2*I)
+        return (real, im)
+
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
@@ -257,7 +264,7 @@ class MatrixExpr(Basic):
         """
         Returns a dense Matrix with elements represented explicitly
 
-        Returns an object of type ImmutableMatrix.
+        Returns an object of type ImmutableDenseMatrix.
 
         Examples
         ========
@@ -277,8 +284,8 @@ class MatrixExpr(Basic):
         as_mutable: returns mutable Matrix type
 
         """
-        from sympy.matrices.immutable import ImmutableMatrix
-        return ImmutableMatrix([[    self[i, j]
+        from sympy.matrices.immutable import ImmutableDenseMatrix
+        return ImmutableDenseMatrix([[    self[i, j]
                             for j in range(self.cols)]
                             for i in range(self.rows)])
 
@@ -303,7 +310,7 @@ class MatrixExpr(Basic):
 
         See Also
         ========
-        as_explicit: returns ImmutableMatrix
+        as_explicit: returns ImmutableDenseMatrix
         """
         return self.as_explicit().as_mutable()
 
@@ -338,7 +345,18 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
     _diff_wrt = True
+    is_symbol = True
     is_commutative = True
+
+    def __new__(cls, name, n, m):
+        n, m = map(sympify, (n, m))
+        from sympy import MatrixBase
+        if isinstance(name, (MatrixBase,)):
+            if n.is_Integer and m.is_Integer:
+                return name[n, m]
+        name = sympify(name)
+        obj = Expr.__new__(cls, name, n, m)
+        return obj
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -347,6 +365,18 @@ class MatrixElement(Expr):
         else:
             args = self.args
         return args[0][args[1], args[2]]
+
+    def _eval_derivative(self, v):
+        if not isinstance(v, MatrixElement):
+            from sympy import MatrixBase
+            if isinstance(self.parent, MatrixBase):
+                return self.parent.diff(v)[self.i, self.j]
+            return S.Zero
+
+        if self.args[0] != v.args[0]:
+            return S.Zero
+
+        return KroneckerDelta(self.args[1], v.args[1])*KroneckerDelta(self.args[2], v.args[2])
 
 
 class MatrixSymbol(MatrixExpr):
@@ -446,10 +476,12 @@ class Identity(MatrixExpr):
         return self
 
     def _entry(self, i, j):
-        if i == j:
+        eq = Eq(i, j)
+        if eq is S.true:
             return S.One
-        else:
+        elif eq is S.false:
             return S.Zero
+        return KroneckerDelta(i, j)
 
     def _eval_determinant(self):
         return S.One

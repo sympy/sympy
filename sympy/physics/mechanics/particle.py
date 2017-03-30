@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 __all__ = ['Particle']
 
-from sympy import sympify
+from sympy.core.backend import sympify
 from sympy.physics.vector import Point
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

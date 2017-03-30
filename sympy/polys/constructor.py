@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
-from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.utilities import public
@@ -116,9 +115,8 @@ def _construct_composite(coeffs, opt):
         numers.append(numer)
         denoms.append(denom)
 
-    try:
-        polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
-    except GeneratorsNeeded:
+    polys, gens = parallel_dict_from_basic(numers + denoms)  # XXX: sorting
+    if not gens:
         return None
 
     if opt.composite is None:

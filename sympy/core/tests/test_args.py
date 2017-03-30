@@ -54,6 +54,8 @@ def test_all_classes_are_tested():
 
             def is_Basic(name):
                 cls = getattr(mod, name)
+                if hasattr(cls, '_sympy_deprecated_func'):
+                    cls = cls._sympy_deprecated_func
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
@@ -294,6 +296,12 @@ def test_sympy__core__expr__AtomicExpr():
 def test_sympy__core__expr__Expr():
     from sympy.core.expr import Expr
     assert _test_args(Expr())
+
+
+def test_sympy__core__expr__UnevaluatedExpr():
+    from sympy.core.expr import UnevaluatedExpr
+    from sympy.abc import x
+    assert _test_args(UnevaluatedExpr(x))
 
 
 def test_sympy__core__function__Application():
@@ -952,6 +960,10 @@ def test_sympy__stats__crv_types__GammaInverseDistribution():
 def test_sympy__stats__crv_types__GammaDistribution():
     from sympy.stats.crv_types import GammaDistribution
     assert _test_args(GammaDistribution(1, 1))
+
+def test_sympy__stats__crv_types__GumbelDistribution():
+    from sympy.stats.crv_types import GumbelDistribution
+    assert _test_args(GumbelDistribution(1, 1))
 
 def test_sympy__stats__crv_types__GompertzDistribution():
     from sympy.stats.crv_types import GompertzDistribution
@@ -2097,6 +2109,10 @@ def test_sympy__logic__boolalg__Xor():
     from sympy.logic.boolalg import Xor
     assert _test_args(Xor(x, y, 2))
 
+def test_sympy__logic__boolalg__Xnor():
+    from sympy.logic.boolalg import Xnor
+    assert _test_args(Xnor(x, y, 2))
+
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
@@ -2108,17 +2124,17 @@ def test_sympy__matrices__expressions__matexpr__MatrixBase():
     pass
 
 
-def test_sympy__matrices__immutable__ImmutableMatrix():
-    from sympy.matrices.immutable import ImmutableMatrix
-    m = ImmutableMatrix([[1, 2], [3, 4]])
+def test_sympy__matrices__immutable__ImmutableDenseMatrix():
+    from sympy.matrices.immutable import ImmutableDenseMatrix
+    m = ImmutableDenseMatrix([[1, 2], [3, 4]])
     assert _test_args(m)
     assert _test_args(Basic(*list(m)))
-    m = ImmutableMatrix(1, 1, [1])
+    m = ImmutableDenseMatrix(1, 1, [1])
     assert _test_args(m)
     assert _test_args(Basic(*list(m)))
-    m = ImmutableMatrix(2, 2, lambda i, j: 1)
+    m = ImmutableDenseMatrix(2, 2, lambda i, j: 1)
     assert m[0, 0] is S.One
-    m = ImmutableMatrix(2, 2, lambda i, j: 1/(1 + i) + 1/(1 + j))
+    m = ImmutableDenseMatrix(2, 2, lambda i, j: 1/(1 + i) + 1/(1 + j))
     assert m[1, 1] is S.One  # true div. will give 1.0 if i,j not sympified
     assert _test_args(m)
     assert _test_args(Basic(*list(m)))
@@ -2512,10 +2528,10 @@ def test_sympy__physics__quantum__gate__TwoQubitGate():
 
 def test_sympy__physics__quantum__gate__UGate():
     from sympy.physics.quantum.gate import UGate
-    from sympy.matrices.immutable import ImmutableMatrix
+    from sympy.matrices.immutable import ImmutableDenseMatrix
     from sympy import Integer, Tuple
     assert _test_args(
-        UGate(Tuple(Integer(1)), ImmutableMatrix([[1, 0], [0, 2]])))
+        UGate(Tuple(Integer(1)), ImmutableDenseMatrix([[1, 0], [0, 2]])))
 
 
 def test_sympy__physics__quantum__gate__XGate():
@@ -3462,24 +3478,43 @@ def test_sympy__geometry__line__Segment():
     from sympy.geometry.line import Segment
     assert _test_args(Segment((0, 1), (2, 3)))
 
-
 @SKIP("abstract class")
-def test_sympy__geometry__line3d__LinearEntity3D():
+def test_sympy__geometry__line__LinearEntity2D():
     pass
 
 
-def test_sympy__geometry__line3d__Line3D():
-    from sympy.geometry.line3d import Line3D
+def test_sympy__geometry__line__Line2D():
+    from sympy.geometry.line import Line2D
+    assert _test_args(Line2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Ray2D():
+    from sympy.geometry.line import Ray2D
+    assert _test_args(Ray2D((0, 1), (2, 3)))
+
+
+def test_sympy__geometry__line__Segment2D():
+    from sympy.geometry.line import Segment2D
+    assert _test_args(Segment2D((0, 1), (2, 3)))
+
+
+@SKIP("abstract class")
+def test_sympy__geometry__line__LinearEntity3D():
+    pass
+
+
+def test_sympy__geometry__line__Line3D():
+    from sympy.geometry.line import Line3D
     assert _test_args(Line3D((0, 1, 1), (2, 3, 4)))
 
 
-def test_sympy__geometry__line3d__Segment3D():
-    from sympy.geometry.line3d import Segment3D
+def test_sympy__geometry__line__Segment3D():
+    from sympy.geometry.line import Segment3D
     assert _test_args(Segment3D((0, 1, 1), (2, 3, 4)))
 
 
-def test_sympy__geometry__line3d__Ray3D():
-    from sympy.geometry.line3d import Ray3D
+def test_sympy__geometry__line__Ray3D():
+    from sympy.geometry.line import Ray3D
     assert _test_args(Ray3D((0, 1, 1), (2, 3, 4)))
 
 
@@ -3725,6 +3760,99 @@ def test_sympy__physics__optics__medium__Medium():
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
+
+
+def test_sympy__codegen__cfunctions__expm1():
+    from sympy.codegen.cfunctions import expm1
+    assert _test_args(expm1(x))
+
+
+def test_sympy__codegen__cfunctions__log1p():
+    from sympy.codegen.cfunctions import log1p
+    assert _test_args(log1p(x))
+
+
+def test_sympy__codegen__cfunctions__exp2():
+    from sympy.codegen.cfunctions import exp2
+    assert _test_args(exp2(x))
+
+
+def test_sympy__codegen__cfunctions__log2():
+    from sympy.codegen.cfunctions import log2
+    assert _test_args(log2(x))
+
+
+def test_sympy__codegen__cfunctions__fma():
+    from sympy.codegen.cfunctions import fma
+    assert _test_args(fma(x, y, z))
+
+
+def test_sympy__codegen__cfunctions__log10():
+    from sympy.codegen.cfunctions import log10
+    assert _test_args(log10(x))
+
+
+def test_sympy__codegen__cfunctions__Sqrt():
+    from sympy.codegen.cfunctions import Sqrt
+    assert _test_args(Sqrt(x))
+
+def test_sympy__codegen__cfunctions__Cbrt():
+    from sympy.codegen.cfunctions import Cbrt
+    assert _test_args(Cbrt(x))
+
+def test_sympy__codegen__cfunctions__hypot():
+    from sympy.codegen.cfunctions import hypot
+    assert _test_args(hypot(x, y))
+
+
+def test_sympy__codegen__ffunctions__FFunction():
+    from sympy.codegen.ffunctions import FFunction
+    assert _test_args(FFunction('f'))
+
+
+def test_sympy__codegen__ffunctions__F95Function():
+    from sympy.codegen.ffunctions import F95Function
+    assert _test_args(F95Function('f'))
+
+
+def test_sympy__codegen__ffunctions__isign():
+    from sympy.codegen.ffunctions import isign
+    assert _test_args(isign(1, x))
+
+
+def test_sympy__codegen__ffunctions__dsign():
+    from sympy.codegen.ffunctions import dsign
+    assert _test_args(dsign(1, x))
+
+
+def test_sympy__codegen__ffunctions__cmplx():
+    from sympy.codegen.ffunctions import cmplx
+    assert _test_args(cmplx(x, y))
+
+
+def test_sympy__codegen__ffunctions__kind():
+    from sympy.codegen.ffunctions import kind
+    assert _test_args(kind(x))
+
+
+def test_sympy__codegen__ffunctions__merge():
+    from sympy.codegen.ffunctions import merge
+    assert _test_args(merge(1, 2, Eq(x, 0)))
+
+
+def test_sympy__codegen__ffunctions___literal():
+    from sympy.codegen.ffunctions import _literal
+    assert _test_args(_literal(1))
+
+
+def test_sympy__codegen__ffunctions__literal_sp():
+    from sympy.codegen.ffunctions import literal_sp
+    assert _test_args(literal_sp(1))
+
+
+def test_sympy__codegen__ffunctions__literal_dp():
+    from sympy.codegen.ffunctions import literal_dp
+    assert _test_args(literal_dp(1))
 
 
 def test_sympy__vector__coordsysrect__CoordSysCartesian():

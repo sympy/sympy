@@ -8,7 +8,7 @@ from __future__ import print_function, division
 from sympy import (Symbol, diff, S, Dummy, Order, rf, meijerint, I,
     solve, limit, Float, nsimplify, gamma)
 from sympy.printing import sstr
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.core.sympify import sympify
 from sympy.simplify.hyperexpand import hyperexpand
@@ -390,7 +390,7 @@ class HolonomicFunction(object):
     format:
     :math:`{s0: [C_0, C_1, ...], s1: [C^1_0, C^1_1, ...], ...}`
     where s0, s1, ... are the roots of indicial equation and vectors
-    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intiial
+    :math:`[C_0, C_1, ...], [C^0_0, C^0_1, ...], ...` are the corresponding intial
     terms of the associated power series. See Examples below.
 
     Examples
@@ -1413,7 +1413,7 @@ class HolonomicFunction(object):
 
         reals = []
         compl = []
-        for i in indicialroots:
+        for i in ordered(indicialroots.keys()):
             if i.is_real:
                 reals.extend([i] * indicialroots[i])
             else:
@@ -1454,8 +1454,8 @@ class HolonomicFunction(object):
         # then use them.
         if self.is_singularics() == True:
             rootstoconsider = []
-            for i in self.y0:
-                for j in indicialroots:
+            for i in ordered(self.y0.keys()):
+                for j in ordered(indicialroots.keys()):
                     if j == i:
                         rootstoconsider.append(i)
 
@@ -1629,7 +1629,7 @@ class HolonomicFunction(object):
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
         A list of series might be returned if :math:`x_0` is a regular point with
-        multiple roots of the indcial equation.
+        multiple roots of the indicial equation.
 
         Examples
         ========
@@ -2013,10 +2013,10 @@ class HolonomicFunction(object):
             bq = []
 
             # substitute m * n + i for n
-            for k in arg1:
+            for k in ordered(arg1.keys()):
                 ap.extend([nsimplify((i - k) / m)] * arg1[k])
 
-            for k in arg2:
+            for k in ordered(arg2.keys()):
                 bq.extend([nsimplify((i - k) / m)] * arg2[k])
 
             # convention of (k + 1) in the denominator
@@ -2406,7 +2406,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
             _y0 = _find_conditions(func, x, x0, lenics)
         return sol.composition(func.args[0], x0, _y0)
 
-    # iterate though the expression recursively
+    # iterate through the expression recursively
     args = func.args
     f = func.func
     from sympy.core import Add, Mul, Pow

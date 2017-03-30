@@ -79,9 +79,9 @@ matrix element ``M[i, j]`` as in the following diagram::
 
     >>> from sympy.tensor import get_indices, get_contraction_structure
     >>> get_indices(A[i, j, j])
-    (set([i]), {})
+    ({i}, {})
     >>> get_contraction_structure(A[i, j, j])
-    {(j,): set([A[i, j, j]])}
+    {(j,): {A[i, j, j]}}
 
     See the appropriate docstrings for a detailed explanation of the output.
 
@@ -107,6 +107,9 @@ matrix element ``M[i, j]`` as in the following diagram::
 
 from __future__ import print_function, division
 
+import collections
+
+from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
@@ -134,10 +137,13 @@ class Indexed(Expr):
     is_commutative = True
     is_Indexed = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
+        from sympy.tensor.array.ndim_array import NDimArray
+        from sympy.matrices.matrices import MatrixBase
 
         if not args:
             raise IndexException("Indexed needs at least one index.")
@@ -147,6 +153,8 @@ class Indexed(Expr):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
+        if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+            return base[args]
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -155,6 +163,8 @@ class Indexed(Expr):
         return True
 
     def _eval_derivative(self, wrt):
+        from sympy.tensor.array.ndim_array import NDimArray
+
         if isinstance(wrt, Indexed) and wrt.base == self.base:
             if len(self.indices) != len(wrt.indices):
                 msg = "Different # of indices: d({!s})/d({!s})".format(self,
@@ -164,7 +174,12 @@ class Indexed(Expr):
             for index1, index2 in zip(self.indices, wrt.indices):
                 result *= KroneckerDelta(index1, index2)
             return result
+        elif isinstance(self.base, NDimArray):
+            from sympy.tensor.array import derive_by_array
+            return Indexed(derive_by_array(self.base, wrt), *self.args[1:])
         else:
+            if Tuple(self.indices).has(wrt):
+                return S.NaN
             return S.Zero
 
     @property
@@ -345,6 +360,7 @@ class IndexedBase(Expr, NotIterable):
     """
     is_commutative = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
@@ -353,7 +369,7 @@ class IndexedBase(Expr, NotIterable):
         elif isinstance(label, Symbol):
             pass
         else:
-            raise TypeError("Base label should be a string or Symbol.")
+            label = _sympify(label)
 
         if is_sequence(shape):
             shape = Tuple(*shape)
@@ -487,6 +503,7 @@ class Idx(Expr):
     is_finite = True
     is_real = True
     is_Symbol = True
+    is_symbol = True
     is_Atom = True
     _diff_wrt = True
 
@@ -597,3 +614,59 @@ class Idx(Expr):
     @property
     def free_symbols(self):
         return {self}
+
+    def __le__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return False
+        return super(Idx, self).__le__(other)
+
+    def __ge__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return False
+        return super(Idx, self).__ge__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.upper is not None and (self.upper < other_lower) == True:
+            return True
+        if self.lower is not None and (self.lower >= other_upper) == True:
+            return False
+        return super(Idx, self).__lt__(other)
+
+    def __gt__(self, other):
+        if isinstance(other, Idx):
+            other_upper = other if other.upper is None else other.upper
+            other_lower = other if other.lower is None else other.lower
+        else:
+            other_upper = other
+            other_lower = other
+
+        if self.lower is not None and (self.lower > other_upper) == True:
+            return True
+        if self.upper is not None and (self.upper <= other_lower) == True:
+            return False
+        return super(Idx, self).__gt__(other)
