@@ -1282,7 +1282,7 @@ class Mul(Expr, AssocOp):
         #expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
         
         from sympy.simplify.radsimp import radsimp, fraction
-        from sympy.core.exprtools import Factors
+        from sympy.ntheory import factorint
         
         is_integer = self.is_integer
 
@@ -1303,7 +1303,7 @@ class Mul(Expr, AssocOp):
                     return False
 
                 elif denom % 2 == 0:
-                    factordict = Factors(denom,limit=2)
+                    factordict = factorint(denom,limit(>2))
                     k = factordict[2]
                     for arg in args:
                         if arg.is_even:
