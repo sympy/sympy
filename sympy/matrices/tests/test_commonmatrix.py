@@ -7,7 +7,7 @@ from sympy import (
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
-    MatrixProperties, MatrixOperations, MatrixArithmetic)
+    MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -57,6 +57,16 @@ def eye_Arithmetic(n):
 
 def zeros_Arithmetic(n):
     return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
+
+class DeterminantOnlyMatrix(_MinimalMatrix, MatrixDeterminant):
+    pass
+
+def eye_Determinant(n):
+    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
+
+def zeros_Determinant(n):
+    return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
+
 
 def test__MinimalMatrix():
     x = _MinimalMatrix(2,3,[1,2,3,4,5,6])
@@ -575,3 +585,96 @@ def test_sub():
 def test_div():
     n = ArithmeticOnlyMatrix(1, 2, [1, 2])
     assert n/2 == ArithmeticOnlyMatrix(1, 2, [1/2, 2/2])
+
+
+# DeterminantOnlyMatrix tests
+def test_det():
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    raises(NonSquareMatrixError, lambda: a.det())
+
+    z = zeros_Determinant(2)
+    ey = eye_Determinant(2)
+    assert z.det() == 0
+    assert ey.det() == 1
+
+    x = Symbol('x')
+    a = DeterminantOnlyMatrix(0,0,[])
+    b = DeterminantOnlyMatrix(1,1,[5])
+    c = DeterminantOnlyMatrix(2,2,[1,2,3,4])
+    d = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,8])
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    # the method keyword for `det` doesn't kick in until 4x4 matrices,
+    # so there is no need to test all methods on smaller ones
+
+    assert a.det() == 1
+    assert b.det() == 5
+    assert c.det() == -2
+    assert d.det() == 3
+    assert e.det() == 4*x - 24
+    assert e.det(method='bareiss') == 4*x - 24
+    assert e.det(method='berkowitz') == 4*x - 24
+
+def test_adjugate():
+    x = Symbol('x')
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    adj = Matrix([
+        [   4,         -8,         4,         0],
+        [  76, -14*x - 68,  14*x - 8, -4*x + 24],
+        [-122, 17*x + 142, -21*x + 4,  8*x - 48],
+        [  48,  -4*x - 72,       8*x, -4*x + 24]])
+    assert e.adjugate() == adj
+    assert e.adjugate(method='bareiss') == adj
+    assert e.adjugate(method='berkowitz') == adj
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    raises(NonSquareMatrixError, lambda: a.adjugate())
+
+def test_cofactor_and_minors():
+    x = Symbol('x')
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    m = Matrix([
+        [ x,  1,  3],
+        [ 2,  9, 11],
+        [12, 13, 14]])
+    cm = Matrix([
+        [ 4,         76,       -122,        48],
+        [-8, -14*x - 68, 17*x + 142, -4*x - 72],
+        [ 4,   14*x - 8,  -21*x + 4,       8*x],
+        [ 0,  -4*x + 24,   8*x - 48, -4*x + 24]])
+    sub = Matrix([
+            [x, 1,  2],
+            [4, 5,  6],
+            [2, 9, 10]])
+
+    assert e.minor_submatrix(1,2) == m
+    assert e.minor_submatrix(-1,-1) == sub
+    assert e.minor(1,2) == -17*x - 142
+    assert e.cofactor(1,2) == 17*x + 142
+    assert e.cofactor_matrix() == cm
+    assert e.cofactor_matrix(method="bareiss") == cm
+    assert e.cofactor_matrix(method="berkowitz") == cm
+
+    raises(ValueError, lambda: e.cofactor(4,5))
+    raises(ValueError, lambda: e.minor(4,5))
+    raises(ValueError, lambda: e.minor_submatrix(4,5))
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    assert a.minor_submatrix(0,0) == Matrix([[5, 6]])
+
+    raises(ValueError, lambda: DeterminantOnlyMatrix(0,0,[]).minor_submatrix(0,0))
+    raises(NonSquareMatrixError, lambda: a.cofactor(0,0))
+    raises(NonSquareMatrixError, lambda: a.minor(0,0))
+    raises(NonSquareMatrixError, lambda: a.cofactor_matrix())
+
+def test_charpoly():
+    x, y = Symbol('x'), Symbol('y')
+
+    m = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,9])
+
+    assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
+    assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
+    assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
