@@ -10,6 +10,7 @@ from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.utilities.pytest import raises
 
+
 n, m, l, k, p = symbols('n m l k p', integer=True)
 x = symbols('x')
 A = MatrixSymbol('A', n, m)
@@ -190,6 +191,7 @@ def test_matmul_simplify():
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
         MatMul(A, ImmutableMatrix([[1]]))
 
+
 def test_invariants():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
@@ -216,9 +218,13 @@ def test_single_indexing():
     raises(IndexError, lambda: A[n])
     B = MatrixSymbol('B', n, m)
     raises(IndexError, lambda: B[1])
+    B = MatrixSymbol('B', n, 3)
+    assert B[3] == B[1, 0]
+
 
 def test_MatrixElement_commutative():
     assert A[0, 1]*A[1, 0] == A[1, 0]*A[0, 1]
+
 
 def test_MatrixSymbol_determinant():
     A = MatrixSymbol('A', 4, 4)
@@ -235,6 +241,7 @@ def test_MatrixSymbol_determinant():
         A[0, 3]*A[1, 0]*A[2, 2]*A[3, 1] + A[0, 3]*A[1, 1]*A[2, 0]*A[3, 2] - \
         A[0, 3]*A[1, 1]*A[2, 2]*A[3, 0] - A[0, 3]*A[1, 2]*A[2, 0]*A[3, 1] + \
         A[0, 3]*A[1, 2]*A[2, 1]*A[3, 0]
+
 
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
