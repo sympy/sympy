@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -685,12 +685,22 @@ class Polygon(GeometrySet):
         [Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1), Point2D(1/3, 1)]
 
         """
-        res = []
+        intersection_result = []
+
         for side in self.sides:
             inter = side.intersection(o)
             if inter is not None:
-                res.extend(inter)
-        return list(uniq(res))
+                intersection_result.extend(inter)
+        intersection_result = list(uniq(intersection_result))
+
+        points = [object for object in intersection_result if isinstance(object, Point)]
+        segments = [object for object in intersection_result if isinstance(object, Segment)]
+
+        if points != [] and segments != []:
+            point_not_in_segment = [point for point in points for segment in segments if point not in segment]
+            return list(ordered(segments + point_not_in_segment))
+        else:
+            return list(ordered(intersection_result))
 
     def distance(self, o):
         """
