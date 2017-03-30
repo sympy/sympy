@@ -2,7 +2,8 @@ from sympy import (symbols, Symbol, pi, sqrt, cos, sin, Derivative,
     Function, simplify, I, atan2)
 from sympy.abc import epsilon, mu
 from sympy.functions.elementary.exponential import exp
-from sympy.physics.units import c, m, s
+from sympy.physics.units import m, s
+from sympy.physics.constants import c
 from sympy.physics.optics import TWave
 
 
