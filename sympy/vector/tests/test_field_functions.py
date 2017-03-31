@@ -5,7 +5,7 @@ from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
-from sympy.vector.functions import (curl, divergence, gradient,
+from sympy.vector.functions import (curl, divergence, laplace, gradient,
                                     is_conservative, is_solenoidal,
                                     scalar_potential,
                                     scalar_potential_difference)
@@ -185,7 +185,11 @@ def test_solenoidal():
     assert is_solenoidal(cos(q)*i + sin(q)*j + cos(q)*P.k) is True
     assert is_solenoidal(z*P.i + P.x*k) is True
 
-
+def test_laplace():
+    assert laplace(x*y*z, C) == S.Zero
+    assert laplace(x**2*y**2*z**2, C) == \
+                   2*y**2*z**2 + 2*x**2*z**2 + 2*x**2*y**2
+    assert laplace(2*y**2*z, C) == 4*z
 def test_scalar_potential():
     assert scalar_potential(Vector.zero, C) == 0
     assert scalar_potential(i, C) == x
