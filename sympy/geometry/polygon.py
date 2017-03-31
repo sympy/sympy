@@ -676,15 +676,15 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon
+        >>> from sympy import Point, Polygon, Line
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly1 = Polygon(p1, p2, p3, p4)
         >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
         >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
-        [Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1), Point2D(1/3, 1)]
+        [Point2D(1/3, 1), Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1)]
         >>> poly1.intersection(Line(p1, p2))
-        [Point2D(0, 0), Point2D(1, 0), Segment2D(Point2D(0, 0), Point2D(1, 0))]
+        [Segment2D(Point2D(0, 0), Point2D(1, 0))]
         >>> poly1.intersection(p1)
         [Point2D(0, 0)]
         """
