@@ -699,7 +699,7 @@ class PermutationGroup(Basic):
         identity = Permutation(self.degree - 1)
 
         transversals = self.basic_transversals[:]
-        # transversals is a dictionary. Get rid of the keys so that it is a list
+        # transversals is a list of dictionaries. Get rid of the keys so that it is a list
         # of lists and sort each list in the increasing order of base[l]^x
         for l, t in enumerate(transversals):
             transversals[l] = sorted(t.values(), key = lambda x: base_ordering[base[l]^x])
@@ -708,7 +708,7 @@ class PermutationGroup(Basic):
         h_stabs = H.basic_stabilizers
         g_stabs = self.basic_stabilizers
 
-        indices = [x.order()/y.order() for x, y in zip(g_stabs, h_stabs)]
+        indices = [x.order()//y.order() for x, y in zip(g_stabs, h_stabs)]
 
         # T^(l) should be a right transversal of H^(l) in G^(l) for 1<=l<=len(base)
         # While H^(l) is the trivial group, T^(l) contains all the elements of G^(l)
@@ -716,7 +716,7 @@ class PermutationGroup(Basic):
         T = g_stabs[len(h_stabs)]._elements
         t_len = len(T)
         l = len(h_stabs)-1
-        while l>-1:
+        while l > -1:
             T_next = []
             for u in transversals[l]:
                 if u == identity:
@@ -738,27 +738,24 @@ class PermutationGroup(Basic):
     def _coset_representative(self, g, H):
         """Return the representative of gH from the transversal that
         would be computed by `self.coset_transversal(H)`.
-        The base of self must be an extension of H.base.
 
         """
         if H.order() == 1:
             return g
+        #The base of self must be an extension of H.base.
         if not(self.base[:len(H.base)] == H.base):
             self._schreier_sims(base=H.base)
-        orbits = H.basic_orbits
-        stabilizers = H.basic_stabilizers
-        transversals = self.basic_transversals
+        orbits = H.basic_orbits[:]
+        h_transversals = [_.values() for _ in H.basic_transversals]
+        transversals = [_.values() for _ in self.basic_transversals]
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         def step(l, x):
-            gammas = sorted(orbits[l], key = lambda y: base_ordering[y^x])
-            gamma = gammas[0]
-            for h in stabilizers[l]._elements:
-                if base[l]^h == gamma:
-                    break
-            x = h*x
-            if l<len(orbits)-1:
-                for u in transversals[l].values():
+            gamma = sorted(orbits[l], key = lambda y: base_ordering[y^x])[0]
+            i = [base[l]^h for h in h_transversals[l]].index(gamma)
+            x = h_transversals[l][i]*x
+            if l < len(orbits)-1:
+                for u in transversals[l]:
                     if base[l]^u == base[l]^x:
                         break
                 x = step(l+1, x*u**-1)*u
