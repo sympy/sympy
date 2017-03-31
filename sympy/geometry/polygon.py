@@ -702,13 +702,13 @@ class Polygon(GeometrySet):
         segments = [object for object in intersection_result if isinstance(object, Segment)]
 
         if points != [] and segments != []:
-            points_in_segments = [point for point in points for segment in segments if point in segment]
-            for i in points_in_segments:
-                points.remove(i)
+            points_in_segments = list(uniq([point for point in points for segment in segments if point in segment]))
+            if points_in_segments:
+                for i in points_in_segments:
+                    points.remove(i)
             return list(ordered(segments + points))
         else:
             return list(ordered(intersection_result))
-
 
     def distance(self, o):
         """
