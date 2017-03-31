@@ -8,15 +8,17 @@ Contains
 
 from __future__ import division, print_function
 
+from sympy import symbols
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry import Ray, Segment
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
@@ -187,34 +189,13 @@ class Ellipse(GeometrySet):
         the end to see that they lie in o.
 
         """
-
-        hr_sq = self.hradius ** 2
-        vr_sq = self.vradius ** 2
-        lp = o.points
-
-        ldir = lp[1] - lp[0]
-        diff = lp[0] - self.center
-        mdir = Point(ldir.x/hr_sq, ldir.y/vr_sq)
-        mdiff = Point(diff.x/hr_sq, diff.y/vr_sq)
-
-        a = ldir.dot(mdir)
-        b = ldir.dot(mdiff)
-        c = diff.dot(mdiff) - 1
-        det = simplify(b*b - a*c)
-
-        result = []
-        if det == 0:
-            t = -b / a
-            result.append(lp[0] + (lp[1] - lp[0]) * t)
-        # Definite and potential symbolic intersections are allowed.
-        elif (det > 0) != False:
-            root = sqrt(det)
-            t_a = (-b - root) / a
-            t_b = (-b + root) / a
-            result.append( lp[0] + (lp[1] - lp[0]) * t_a )
-            result.append( lp[0] + (lp[1] - lp[0]) * t_b )
-
-        return [r for r in result if r in o]
+        x, y = symbols('x y', real=True)
+        ellipse_equation = self.equation(x, y)
+        if isinstance(o, (Segment, Ray)):
+            result = solve([ellipse_equation,Line(o.points[0], o.points[1]).equation()], [x, y])
+            return list(ordered([Point(i) for i in result if i in o]))
+        elif isinstance(o, Line):
+            return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation()], [x, y])]))
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG ellipse element for the Ellipse.
