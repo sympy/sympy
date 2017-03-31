@@ -124,8 +124,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             elif isinstance(o, (float, integer_types)) and print_builtin:
                return True
             return False
-        except:
-            print("RuntimeError: maximum recursion depth exceeded in comparison")
+        except RuntimeError:
+            return False
             # This is in case maximum recursion depth is reached.
             # Since RecursionError is for versions of Python 3.5+
             # so this is to guard against RecursionError for older versions.
