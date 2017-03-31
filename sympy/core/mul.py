@@ -1287,6 +1287,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
+            factor2_num = 0
             coeff,args = self.as_coeff_mul()
             if coeff == 1 or coeff == -1:
                 r = True
