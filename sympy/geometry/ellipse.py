@@ -167,36 +167,6 @@ class Ellipse(GeometrySet):
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
-    def _do_ellipse_intersection(self, o):
-        """The intersection of an ellipse with another ellipse or a circle.
-
-        Private helper method for `intersection`.
-
-        """
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
-        seq = self.equation(x, y)
-        oeq = o.equation(x, y)
-        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        result = solve([seq, oeq], x, y)
-        return [Point(*r) for r in list(uniq(result))]
-
-    def _do_line_intersection(self, o):
-        """
-        Find the intersection of a LinearEntity and the ellipse.
-
-        All LinearEntities are treated as a line and filtered at
-        the end to see that they lie in o.
-
-        """
-        x, y = symbols('x y', real=True)
-        ellipse_equation = self.equation(x, y)
-        if isinstance(o, (Segment, Ray)):
-            result = solve([ellipse_equation,Line(o.points[0], o.points[1]).equation()], [x, y])
-            return list(ordered([Point(i) for i in result if i in o]))
-        elif isinstance(o, Line):
-            return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation()], [x, y])]))
-
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG ellipse element for the Ellipse.
 
@@ -663,24 +633,27 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
+
         if isinstance(o, Point):
             if o in self:
                 return [o]
             else:
                 return []
 
-        elif isinstance(o, LinearEntity):
-            # LinearEntity may be a ray/segment, so check the points
-            # of intersection for coincidence first
-            return self._do_line_intersection(o)
+        elif isinstance(o, (Segment, Ray)):
+            ellipse_equation = self.equation(x, y)
+            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            return list(ordered([Point(i) for i in result if i in o]))
 
-        elif isinstance(o, Ellipse):
+        elif isinstance(o, (Ellipse, Line)):
             if o == self:
                 return self
             else:
-                return self._do_ellipse_intersection(o)
-
-        return o.intersection(self)
+                ellipse_equation = self.equation(x, y)
+                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
 
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?
@@ -727,7 +700,7 @@ class Ellipse(GeometrySet):
             return (inter is not None and len(inter) == 1
                     and isinstance(inter[0], Point))
         elif isinstance(o, LinearEntity):
-            inter = self._do_line_intersection(o)
+            inter = self.intersection(o)
             if inter is not None and len(inter) == 1:
                 return inter[0] in o
             else:
@@ -735,7 +708,7 @@ class Ellipse(GeometrySet):
         elif isinstance(o, Polygon):
             c = 0
             for seg in o.sides:
-                inter = self._do_line_intersection(seg)
+                inter = self.intersection(seg)
                 c += len([True for point in inter if point in seg])
             return c == 1
         else:
