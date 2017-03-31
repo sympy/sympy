@@ -214,7 +214,7 @@ def gradient(scalar, coord_sys):
 
     return coord_sys.delop(scalar).doit()
 
-def directional_derivative(scalar, vect, coord_sys):
+def directional_derivative(scalar, vect):
     """
     Returns the directional derivative of a scalar field computed along a given vector
     in given coordinate system.
@@ -238,14 +238,15 @@ def directional_derivative(scalar, vect, coord_sys):
     >>> R = CoordSysCartesian('R')
     >>> f1 = R.x*R.y*R.z
     >>> v1 = 3*R.i + 4*R.j + R.k
-    >>> directional_derivative(f1, v1, R)
+    >>> directional_derivative(f1, v1)
     R.x*R.y + 4*R.x*R.z + 3*R.y*R.z
     >>> f2 = 5*R.x**2*R.z
-    >>> directional_derivative(f2, v1, R)
+    >>> directional_derivative(f2, v1)
     5*R.x**2 + 30*R.x*R.z
 
     """
-    return gradient(scalar,coord_sys).dot(vect).doit()
+    coord_sys = vect._sys
+    return gradient(scalar, coord_sys).dot(vect).doit()
 
 def is_conservative(field):
     """

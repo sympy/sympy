@@ -186,9 +186,9 @@ def test_solenoidal():
     assert is_solenoidal(z*P.i + P.x*k) is True
 
 def test_directional_derivative():
-    assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k, C) == C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
-    assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k, C) == 5*C.x**2 + 30*C.x*C.z
-    assert directional_derivative(5*C.x**2*C.z, 4*C.j, C) == S.Zero
+    assert directional_derivative(C.x*C.y*C.z, 3*C.i + 4*C.j + C.k) == C.x*C.y + 4*C.x*C.z + 3*C.y*C.z
+    assert directional_derivative(5*C.x**2*C.z, 3*C.i + 4*C.j + C.k) == 5*C.x**2 + 30*C.x*C.z
+    assert directional_derivative(5*C.x**2*C.z, 4*C.j) == S.Zero
 
 def test_scalar_potential():
     assert scalar_potential(Vector.zero, C) == 0
