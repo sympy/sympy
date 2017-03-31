@@ -7,6 +7,7 @@ from __future__ import print_function, division
 
 import inspect
 import textwrap
+import re
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins)
@@ -422,6 +423,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 names.append('arg_' + str(n))
 
     # Create lambda function.
+    valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
+    result = valid_identifier_regex.match(str(expr))
+    if result is None:
+        dummify = True
+    else:
+        dummify = False
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
 
