@@ -1848,22 +1848,18 @@ def test_inf():
 
 
 def test_issue_12448():
-    from time import time
-    e, s = S('''
-        ([a(0, 0)*x(0) + a(0, 1)*x(1) + a(0, 2)*x(2) + b(0),
-        a(1, 0)*x(0) + a(1, 1)*x(1) + a(1, 2)*x(2) + b(1),
-        a(2, 0)*x(0) + a(2, 1)*x(1) + a(2, 2)*x(2) + b(2)],
-        [x(0), x(1), x(2)])''')
-    t = time()
-    ans = solve(e, s)
-    tf = time() - t
-    e, s = S('''
-    ([a_00*x_0 + a_01*x_1 + a_02*x_2 + b_0, a_10*x_0 +
-    a_11*x_1 + a_12*x_2 + b_1, a_20*x_0 + a_21*x_1 +
-    a_22*x_2 + b_2], (x_0, x_1, x_2))''')
-    t = time()
-    ans = solve(e, s)
-    ts = time() - t
-    # the two solutions should be found in nearly the same amount
-    # of time.
-    assert min(tf, ts)/max(tf, ts) > 0.9
+    f = Symbol('f')
+    fun = [f(i) for i in range(15)]
+    sym = symbols('x:15')
+    reps = dict(zip(fun, sym))
+
+    (x, y, z), c = sym[:3], sym[3:]
+    ssym = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    (x, y, z), c = fun[:3], fun[3:]
+    sfun = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    assert sfun[fun[0]].xreplace(reps).count_ops() == \
+        ssym[sym[0]].count_ops()
