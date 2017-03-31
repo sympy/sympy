@@ -5553,9 +5553,9 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == 'Interval(-oo, oo, True, True) \ S.Naturals'
+    assert pretty(S.Reals - S.Naturals) == 'S.Reals \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == 'Interval(-oo, oo, True, True) \ S.Naturals'
+    assert pretty(S.Reals - S.Naturals0) == 'S.Reals \ S.Naturals'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
 
 

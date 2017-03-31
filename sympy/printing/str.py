@@ -521,6 +521,9 @@ class StrPrinter(Printer):
     def _print_Naturals(self, expr):
         return 'S.Naturals'
 
+    def _print_Reals(self, expr):
+        return 'S.Reals'
+
     def _print_int(self, expr):
         return str(expr)
 

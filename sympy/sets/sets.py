@@ -179,7 +179,7 @@ class Set(Basic):
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
 
         >>> Interval(0, 1).complement(S.UniversalSet)
-         UniversalSet() \ Interval(0, 1)
+        UniversalSet() \ Interval(0, 1)
 
         """
         return Complement(universe, self)
