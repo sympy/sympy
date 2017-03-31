@@ -692,12 +692,10 @@ class Polygon(GeometrySet):
         if isinstance(o, Polygon):
             for side in self.sides:
                 for side1 in o.sides:
-                    inter = side.intersection(side1)
-                    intersection_result.extend(inter)
+                    intersection_result.extend(side.intersection(side1))
         else:
             for side in self.sides:
-                inter = side.intersection(o)
-                intersection_result.extend(inter)
+                intersection_result.extend(side.intersection(o))
         intersection_result = list(uniq(intersection_result))
 
         points = [object for object in intersection_result if isinstance(object, Point)]
@@ -710,7 +708,6 @@ class Polygon(GeometrySet):
             return list(ordered(segments + points))
         else:
             return list(ordered(intersection_result))
-
 
 
     def distance(self, o):

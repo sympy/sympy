@@ -102,7 +102,7 @@ def test_polygon():
         Point(0, 0)
     raises(ValueError, lambda: Polygon(
         Point(x, 0), Point(0, y), Point(x, y)).arbitrary_point('x'))
-    assert p6.intersection(r) == [Point(-9, 33/5), Point(-9, -84/13)]
+    assert p6.intersection(r) == [Point(-9, -84/13), Point(-9, 33/5)]
     #
     # Regular polygon
     #
@@ -393,4 +393,3 @@ def test_intersection():
     assert poly2.intersection(Ray((-3,4), (1,0))) == [Segment(Point(0, 1), Point(1, 0))]
     assert poly2.intersection(Circle((0, -1), 1)) == [Point2D(0, -2), Point2D(0, 0)]
 
-test_intersection()
