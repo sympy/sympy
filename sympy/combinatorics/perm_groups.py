@@ -746,8 +746,8 @@ class PermutationGroup(Basic):
         if not(self.base[:len(H.base)] == H.base):
             self._schreier_sims(base=H.base)
         orbits = H.basic_orbits[:]
-        h_transversals = [_.values() for _ in H.basic_transversals]
-        transversals = [_.values() for _ in self.basic_transversals]
+        h_transversals = [list(_.values()) for _ in H.basic_transversals]
+        transversals = [list(_.values()) for _ in self.basic_transversals]
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         def step(l, x):
