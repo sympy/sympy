@@ -3906,13 +3906,17 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         # If L has more columns than combined, then the remaining subcolumns
         # below the diagonal of L are zero.
         # The upper triangular portion of L and combined are equal.
-
         def entry_L(i, j):
             if i < j:
+                # Super diagonal entry
                 return S.Zero
             elif i == j:
                 return S.One
-            return combined[i, j]
+            elif j < combined.cols:
+                return combined[i, j]
+            # Subdiagonal entry of L with no corresponding
+            # entry in combined
+            return S.Zero
 
         L = self._new(combined.rows, combined.rows, entry_L)
 
@@ -3943,11 +3947,13 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         U is stored in the upper triangular portion of lu, that is
         lu[i ,j] = U[i, j] whenever i <= j.
         The output matrix can be visualized as:
+
         Matrix([
-        [u, u, u, u],
-        [l, u, u, u],
-        [l, l, u, u],
-        [l, l, l, u]])
+            [u, u, u, u],
+            [l, u, u, u],
+            [l, l, u, u],
+            [l, l, l, u]])
+
         where l represents a subdiagonal entry of the L factor, and u
         represents an entry from the upper triangular entry of the U
         factor.
@@ -3994,39 +4000,29 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
-            # Search for pivot. Prefer entry that iszeropivot determines
-            # is nonzero, over entry that iszeropivot cannot guarantee
-            # is  zero.
             candidate_pivot_row = None
             while pivot_col != self.cols:
-                for r in range(pivot_row, self.rows):
-                    iszeropivot = iszerofunc(lu[r, pivot_col])
-                    if iszeropivot is None and candidate_pivot_row is None:
-                        # iszerofunc could not determine if
-                        # lu[r, pivot_col] is zero.
-                        # Save this row in case we don't
-                        # find a nonzero entry during the search
-                        # of this column
-                        candidate_pivot_row = r
-                    elif iszeropivot is False:
-                        # iszerofunc determined that
-                        # lu[r, pivot_col] is zero.
-                        # Use this entry as the pivot
-                        candidate_pivot_row = r
-                        break
-                    elif iszeropivot is True:
-                        lu[r, pivot_col] = S.Zero
-                if candidate_pivot_row is None:
-                    # There is no nonzero pivot in this column.
-                    # Exited search within column because
-                    # iszeropivot() returned False for each
-                    # entry
+
+                row_offset,\
+                pivot_val,\
+                assumed_nonzero,\
+                newly_determined =\
+                    _find_reasonable_pivot(lu[pivot_row:, pivot_col],
+                                           iszerofunc=iszerofunc,
+                                           simpfunc=_simplify)
+
+                if newly_determined is not None:
+                    for offset, simplified_val in newly_determined:
+                        lu[pivot_row + offset, pivot_col] = simplified_val
+
+                if pivot_val is None:
+                    # No non-zero pivot in this column, so restart pivot
+                    # search in the next column.
                     pivot_col += 1
-                else:
-                    # lu[r, pivot_col] is either non-zero,
-                    # or iszeropivot could not determine that it is
-                    # zero.
-                    break
+                    continue
+
+                candidate_pivot_row = pivot_row + row_offset
+                break
 
             if rankcheck and pivot_col != pivot_row:
                 # All entries including and below the pivot position are
@@ -4039,11 +4035,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                                  " number of rows or columns."
                                  " Pass keyword argument"
                                  " rankcheck=False to compute"
-                                 " the LU decomposition of this matrix."
-                                 " This behavior is deprecated since sympy"
-                                 " 1.1.")
+                                 " the LU decomposition of this matrix.")
 
-            elif candidate_pivot_row is None and iszeropivot:
+            elif candidate_pivot_row is None and pivot_val is None:
                 # If candidate_pivot_row is None and iszeropivot is True
                 # after pivot search has completed, then the submatrix
                 # below and to the right of (pivot_row, pivot_col) is
@@ -4066,7 +4060,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
                 # Swap pivot row of U with candidate pivot row.
                 for col in range(pivot_col, lu.cols):
-                    lu[pivot_row, col], lu[candidate_pivot_row, col] = \
+                    lu[pivot_row, col], lu[candidate_pivot_row, col] =\
                         lu[candidate_pivot_row, col], lu[pivot_row, col]
 
             for row in range(pivot_row + 1, lu.rows):
@@ -4077,7 +4071,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
                 # Add multiple of pivot row to row below it.
                 # Two loops to handle case where pivot_col > pivot_row
-
+                # Employing slicing instead of a loop here raises
+                # NotImplementedError: Cannot add Zero to MutableSparseMatrix
+                # in sympy/matrices/tests/test_sparse.py.
                 col_start =\
                     pivot_row + 1 if pivot_row == pivot_col else pivot_col
                 for col in range(col_start, lu.cols):
