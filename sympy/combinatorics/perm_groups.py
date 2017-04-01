@@ -692,17 +692,19 @@ class PermutationGroup(Basic):
         if H.order() == 1:
             return self._elements
 
-        self._schreier_sims(base=H.base) #so that G.base is an extension of H.base
+        self._schreier_sims(base=H.base) # make G.base an extension of H.base
 
         base = self.base
         base_ordering = _base_ordering(base, self.degree)
         identity = Permutation(self.degree - 1)
 
         transversals = self.basic_transversals[:]
-        # transversals is a list of dictionaries. Get rid of the keys so that it is a list
-        # of lists and sort each list in the increasing order of base[l]^x
+        # transversals is a list of dictionaries. Get rid of the keys
+        # so that it is a list of lists and sort each list in
+        # the increasing order of base[l]^x
         for l, t in enumerate(transversals):
-            transversals[l] = sorted(t.values(), key = lambda x: base_ordering[base[l]^x])
+            transversals[l] = sorted(t.values(),
+                                key = lambda x: base_ordering[base[l]^x])
 
         orbits = H.basic_orbits
         h_stabs = H.basic_stabilizers
@@ -710,9 +712,10 @@ class PermutationGroup(Basic):
 
         indices = [x.order()//y.order() for x, y in zip(g_stabs, h_stabs)]
 
-        # T^(l) should be a right transversal of H^(l) in G^(l) for 1<=l<=len(base)
-        # While H^(l) is the trivial group, T^(l) contains all the elements of G^(l)
-        # so we might just as well start with l = len(h_stabs)-1
+        # T^(l) should be a right transversal of H^(l) in G^(l) for
+        # 1<=l<=len(base). While H^(l) is the trivial group, T^(l)
+        # contains all the elements of G^(l) so we might just as well
+        # start with l = len(h_stabs)-1
         T = g_stabs[len(h_stabs)]._elements
         t_len = len(T)
         l = len(h_stabs)-1
@@ -736,13 +739,13 @@ class PermutationGroup(Basic):
         return T
 
     def _coset_representative(self, g, H):
-        """Return the representative of gH from the transversal that
+        """Return the representative of Hg from the transversal that
         would be computed by `self.coset_transversal(H)`.
 
         """
         if H.order() == 1:
             return g
-        #The base of self must be an extension of H.base.
+        # The base of self must be an extension of H.base.
         if not(self.base[:len(H.base)] == H.base):
             self._schreier_sims(base=H.base)
         orbits = H.basic_orbits[:]
@@ -763,10 +766,12 @@ class PermutationGroup(Basic):
         return step(0, g)
 
     def coset_table(self, H):
-        """Return the standardised (right) coset table of self in H as a list of lists.
+        """Return the standardised (right) coset table of self in H as
+        a list of lists.
         """
-        #Maybe this should be made to return an instance of CosetTable from fp_groups.py
-        #but the class would need to be changed first to be compatible with PermutationGroups
+        # Maybe this should be made to return an instance of CosetTable
+        # from fp_groups.py but the class would need to be changed first
+        # to be compatible with PermutationGroups
 
         from itertools import chain, product
         if not H.is_subgroup(self):
@@ -774,8 +779,8 @@ class PermutationGroup(Basic):
         T = self.coset_transversal(H)
         n = len(T)
 
-        A = list(chain.from_iterable((gen, gen**-1) \
-                for gen in self.generators))
+        A = list(chain.from_iterable((gen, gen**-1)
+                    for gen in self.generators))
 
         table = []
         for i in range(n):
@@ -785,8 +790,8 @@ class PermutationGroup(Basic):
 
 
         # standardize (this is the same as the algorithm used in fp_groups)
-        # If CosetTable is made compatible with PermutationGroups, this should
-        # be replaced by table.standardize()
+        # If CosetTable is made compatible with PermutationGroups, this
+        # should be replaced by table.standardize()
         A = range(len(A))
         gamma = 1
         for alpha, a in product(range(n), A):
