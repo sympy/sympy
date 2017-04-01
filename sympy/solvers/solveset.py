@@ -1403,7 +1403,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> substitution([x + y - 1, y - x**2 + 5], [x, y])
     {(-3, 4), (2, -1)}
 
-    * Returns both real and complex solution
+    * Returns both real and complex solutions
 
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
@@ -1951,8 +1951,8 @@ def nonlinsolve(system, *symbols):
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
     be dependent on at least one symbol. Returns both real solution
-    and complex solution(If system have). The possible number of solutions
-    is zero, one or infinite.
+    and complex solutions. There will be zero, one or an infinite number of
+    solutions.
 
     Parameters
     ==========
@@ -2157,3 +2157,34 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
         return result
+
+
+def nonlinsolve_real(eqs, *syms):
+    """Return a set of solutions to the equations where
+    no result is a number with a non-zero imaginary part.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solveset import nonlinsolve, nonlinsolve_real
+    >>> from sympy.abc import x, y
+
+    >>> nonlinsolve((x**2-y, x**2-y**2+4), (x, y))
+    {(-sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (-sqrt(-sqrt(17)/2 + 1/2), -sqrt(17)/2 + 1/2),
+    (sqrt(-sqrt(17)/2 + 1/2), -sqrt(17)/2 + 1/2)}
+
+    >>> nonlinsolve_real((x**2 - y, x**2 - y**2 + 4), (x, y))
+    {(-sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2),
+    (sqrt(1/2 + sqrt(17)/2), 1/2 + sqrt(17)/2)}
+    >>>
+    """
+    from sympy.geometry.util import number_hasimaginary
+    sol = nonlinsolve(eqs, *syms)
+    ok = []
+    for i in sol:
+        if any(number_hasimaginary(i) for i in i):
+            continue
+        ok.append(i)
+    return set(ok)

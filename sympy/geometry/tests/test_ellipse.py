@@ -120,8 +120,9 @@ def test_ellipse_geom():
     assert Circle(Point(5, 5), 2).tangent_lines(Point(3, 3)) == \
         [Line(Point(3, 3), Point(4, 3)), Line(Point(3, 3), Point(3, 4))]
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
-        [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
-     Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
+        [Line(Point(-2*sqrt(2) + 5, 5), Point(-sqrt(2) + 5, sqrt(2) +
+        5)), Line(Point(-2*sqrt(2) + 5, 5), Point(-sqrt(2) + 5, -sqrt(2)
+        + 5))]
 
     # for numerical calculations, we shouldn't demand exact equality,
     # so only test up to the desired precision
@@ -139,9 +140,11 @@ def test_ellipse_geom():
         [Line(Point(0, 0), Point(1, 0))]
     assert e.normal_lines((0, 1)) == \
         [Line(Point(0, 0), Point(0, 1))]
-    assert line_list_close(e.normal_lines(Point(1, 1), 2), [
+    L = [
         Line(Point(-51/26, -1/5), Point(-25/26, 17/83)),
-        Line(Point(28/29, -7/8), Point(57/29, -9/2))], 2)
+        Line(Point(28/29, 7/8), Point(57/29, 9/2)),
+        ]
+    assert line_list_close(e.normal_lines(Point(1, 1), 2), L, 2)
     # test the failure of Poly.intervals and checks a point on the boundary
     p = Point(sqrt(3), S.Half)
     assert p in e
@@ -181,13 +184,13 @@ def test_ellipse_geom():
     l2 = Line(Point(-5, -1), Point(5, -1))
     l3 = Line(Point(-1, -1), Point(1, 1))
     l4 = Line(Point(-10, 0), Point(0, 10))
-    pts_c1_l3 = [Point(sqrt(2)/2, sqrt(2)/2), Point(-sqrt(2)/2, -sqrt(2)/2)]
+    pts_c1_l3 = [Point(-sqrt(2)/2, -sqrt(2)/2), Point(sqrt(2)/2, sqrt(2)/2)]
 
     assert intersection(e2, l4) == []
     assert intersection(c1, Point(1, 0)) == [Point(1, 0)]
     assert intersection(c1, l1) == [Point(1, 0)]
     assert intersection(c1, l2) == [Point(0, -1)]
-    assert intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
+    assert intersection(c1, l3) == pts_c1_l3
     assert intersection(c1, c2) == [Point(0, 1), Point(1, 0)]
     assert intersection(c1, c3) == [Point(sqrt(2)/2, sqrt(2)/2)]
     assert e1.intersection(l1) == [Point(1, 0)]
@@ -202,7 +205,9 @@ def test_ellipse_geom():
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(3, 0), 1)) == [Point(2, 0)]
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
-    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
+    # without the S(999) this triggers error of issue #12345
+    assert intersection(Ellipse(Point(0, 0), 5, 17),
+        Ellipse(Point(4, 0), S(999)/1000, 0.2)) == []
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
@@ -232,12 +237,20 @@ def test_ellipse_geom():
     assert elip.tangent_lines(Point(3, 0)) == \
         [Line(Point(3, 0), Point(3, -12))]
 
+def test_ellipse2():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    y1 = Symbol('y1', real=True)
+    p1 = Point(0, 0)
+    c1 = Circle(p1, 1)
     e1 = Ellipse(Point(0, 0), 5, 10)
     e2 = Ellipse(Point(2, 1), 4, 8)
+    e3 = Ellipse(p1, y1, y1)
     a = 53/17
     c = 2*sqrt(3991)/17
     ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
-    assert e1.intersection(e2) == ans
+    got = e1.intersection(e2)
+    assert got == ans
     e2 = Ellipse(Point(x, y), 4, 8)
     c = sqrt(3991)
     ans = [Point(-c/68 + a, 2*c/17 + a/2), Point(c/68 + a, -2*c/17 + a/2)]
@@ -338,3 +351,19 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+
+
+@slow
+def test_ellipse_box_test():
+    from time import time
+    from sympy.solvers.solveset import nonlinsolve
+    a, b = (Ellipse(Point(-5, -8), 6, 1), Ellipse(Point(-1, 1), 5, 2))
+    t = time()
+    ok = a.intersection(b)
+    box = time() - t
+    x = Symbol('x')
+    y = Symbol('y')
+    t = time()
+    ok = nonlinsolve((a.equation(x, y), b.equation(x, y)), (x, y))
+    nobox = time() - t
+    assert nobox/box > 2  # it should be significantly faster
