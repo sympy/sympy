@@ -3451,7 +3451,7 @@ def test_pretty_sets():
 
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
-    ascii_str = '{x | x in Interval(-oo, oo, True, True) and sin(x) = 0}'
+    ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
     ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
@@ -5553,7 +5553,7 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == 'S.Reals \ S.Naturals'
+    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
     assert pretty(S.Reals - S.Naturals0) == 'S.Reals \ S.Naturals'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
