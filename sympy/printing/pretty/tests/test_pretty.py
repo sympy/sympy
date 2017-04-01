@@ -5557,7 +5557,7 @@ def test_issue_7180():
 def test_pretty_Complement():
     assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == 'S.Reals \ S.Naturals'
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ S.Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
 
 
