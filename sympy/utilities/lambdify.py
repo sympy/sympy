@@ -423,12 +423,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 names.append('arg_' + str(n))
 
     # Create lambda function.
-    valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
-    result = valid_identifier_regex.match(str(expr))
-    if result is None:
-        dummify = True
-    else:
-        dummify = False
+    dummify = print_dummify(expr)
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
 
@@ -456,6 +451,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     func.__doc__ = ("Created with lambdify. Signature:\n\n{sig}\n\n"
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
+
+def print_dummify(expr):
+    valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
+    result = valid_identifier_regex.match(str(expr))
+    if result is None:
+        dummify = True
+    else:
+        dummify = False
+    return dummify
 
 def _module_present(modname, modlist):
     if modname in modlist:
