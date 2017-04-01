@@ -689,19 +689,16 @@ class Polygon(GeometrySet):
         [Point2D(0, 0)]
         """
         intersection_result = []
-        if isinstance(o, Polygon):
-            for side in self.sides:
-                for side1 in o.sides:
-                    intersection_result.extend(side.intersection(side1))
-        else:
-            for side in self.sides:
-                intersection_result.extend(side.intersection(o))
+        k = o.sides if isinstance(o, Polygon) else [o]
+        for side in self.sides:
+            for side1 in k:
+                intersection_result.extend(side.intersection(side1))
+
         intersection_result = list(uniq(intersection_result))
+        points = [entity for entity in intersection_result if isinstance(entity, Point)]
+        segments = [entity for entity in intersection_result if isinstance(entity, Segment)]
 
-        points = [object for object in intersection_result if isinstance(object, Point)]
-        segments = [object for object in intersection_result if isinstance(object, Segment)]
-
-        if points != [] and segments != []:
+        if points and segments:
             points_in_segments = list(uniq([point for point in points for segment in segments if point in segment]))
             if points_in_segments:
                 for i in points_in_segments:
@@ -709,6 +706,7 @@ class Polygon(GeometrySet):
             return list(ordered(segments + points))
         else:
             return list(ordered(intersection_result))
+
 
     def distance(self, o):
         """
