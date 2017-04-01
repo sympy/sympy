@@ -7,7 +7,7 @@ from sympy import (
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
-    MatrixProperties, MatrixOperations)
+    MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -49,7 +49,23 @@ def eye_Operations(n):
 def zeros_Operations(n):
     return OperationsOnlyMatrix(n, n, lambda i, j: 0)
 
+class ArithmeticOnlyMatrix(_MinimalMatrix, MatrixArithmetic):
+    pass
 
+def eye_Arithmetic(n):
+    return ArithmeticOnlyMatrix(n, n, lambda i, j: int(i == j))
+
+def zeros_Arithmetic(n):
+    return ArithmeticOnlyMatrix(n, n, lambda i, j: 0)
+
+class DeterminantOnlyMatrix(_MinimalMatrix, MatrixDeterminant):
+    pass
+
+def eye_Determinant(n):
+    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
+
+def zeros_Determinant(n):
+    return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
 
 
 def test__MinimalMatrix():
@@ -326,6 +342,8 @@ def test_is_zero():
 
 def test_values():
     assert set(PropertiesOnlyMatrix(2,2,[0,1,2,3]).values()) == set([1,2,3])
+    x = Symbol('x', real=True)
+    assert set(PropertiesOnlyMatrix(2,2,[x,0,0,1]).values()) == set([x,1])
 
 
 # OperationsOnlyMatrix tests
@@ -341,6 +359,13 @@ def test_adjoint():
     ans = OperationsOnlyMatrix([[0, 1], [-I, 0]])
     assert ans.adjoint() == Matrix(dat)
 
+def test_as_real_imag():
+    m1 = OperationsOnlyMatrix(2,2,[1,2,3,4])
+    m3 = OperationsOnlyMatrix(2,2,[1+S.ImaginaryUnit,2+2*S.ImaginaryUnit,3+3*S.ImaginaryUnit,4+4*S.ImaginaryUnit])
+
+    a,b = m3.as_real_imag()
+    assert a == m1
+    assert b == m1
 
 def test_conjugate():
     M = OperationsOnlyMatrix([[0, I, 5],
@@ -455,3 +480,201 @@ def test_xreplace():
            Matrix([[1, 5], [5, 4]])
     assert OperationsOnlyMatrix([[x, 2], [x + y, 4]]).xreplace({x: -1, y: -2}) == \
            Matrix([[-1, 2], [-3, 4]])
+
+
+# ArithmeticOnlyMatrix tests
+def test_add():
+    m = ArithmeticOnlyMatrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
+    assert m + m == ArithmeticOnlyMatrix([[2, 4, 6], [2*x, 2*y, 2*x], [4*y, -100, 2*z*x]])
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    raises(ShapeError, lambda: m + n)
+
+def test_multiplication():
+    a = ArithmeticOnlyMatrix((
+        (1, 2),
+        (3, 1),
+        (0, 6),
+    ))
+
+    b = ArithmeticOnlyMatrix((
+        (1, 2),
+        (3, 0),
+    ))
+
+    raises(ShapeError, lambda: b*a)
+    raises(TypeError, lambda: a*{})
+
+    c = a*b
+    assert c[0, 0] == 7
+    assert c[0, 1] == 2
+    assert c[1, 0] == 6
+    assert c[1, 1] == 6
+    assert c[2, 0] == 18
+    assert c[2, 1] == 0
+
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
+
+    h = a.multiply_elementwise(c)
+    assert h == matrix_multiply_elementwise(a, c)
+    assert h[0, 0] == 7
+    assert h[0, 1] == 4
+    assert h[1, 0] == 18
+    assert h[1, 1] == 6
+    assert h[2, 0] == 0
+    assert h[2, 1] == 0
+    raises(ShapeError, lambda: a.multiply_elementwise(b))
+
+    c = b * Symbol("x")
+    assert isinstance(c, ArithmeticOnlyMatrix)
+    assert c[0, 0] == x
+    assert c[0, 1] == 2*x
+    assert c[1, 0] == 3*x
+    assert c[1, 1] == 0
+
+    c2 = x * b
+    assert c == c2
+
+    c = 5 * b
+    assert isinstance(c, ArithmeticOnlyMatrix)
+    assert c[0, 0] == 5
+    assert c[0, 1] == 2*5
+    assert c[1, 0] == 3*5
+    assert c[1, 1] == 0
+
+    try:
+        eval('c = 5 @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert isinstance(c, ArithmeticOnlyMatrix)
+        assert c[0, 0] == 5
+        assert c[0, 1] == 2*5
+        assert c[1, 0] == 3*5
+        assert c[1, 1] == 0
+
+def test_power():
+    raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
+
+    A = ArithmeticOnlyMatrix([[2, 3], [4, 5]])
+    assert (A**5)[:] == (6140, 8097, 10796, 14237)
+    A = ArithmeticOnlyMatrix([[2, 1, 3], [4, 2, 4], [6, 12, 1]])
+    assert (A**3)[:] == (290, 262, 251, 448, 440, 368, 702, 954, 433)
+    assert A**0 == eye(3)
+    assert A**1 == A
+    assert (ArithmeticOnlyMatrix([[2]]) ** 100)[0, 0] == 2**100
+    assert ArithmeticOnlyMatrix([[1, 2], [3, 4]])**Integer(2) == ArithmeticOnlyMatrix([[7, 10], [15, 22]])
+
+def test_neg():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert -n == ArithmeticOnlyMatrix(1, 2, [-1, -2])
+
+def test_sub():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert n - n == ArithmeticOnlyMatrix(1, 2, [0, 0])
+
+def test_div():
+    n = ArithmeticOnlyMatrix(1, 2, [1, 2])
+    assert n/2 == ArithmeticOnlyMatrix(1, 2, [1/2, 2/2])
+
+
+# DeterminantOnlyMatrix tests
+def test_det():
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    raises(NonSquareMatrixError, lambda: a.det())
+
+    z = zeros_Determinant(2)
+    ey = eye_Determinant(2)
+    assert z.det() == 0
+    assert ey.det() == 1
+
+    x = Symbol('x')
+    a = DeterminantOnlyMatrix(0,0,[])
+    b = DeterminantOnlyMatrix(1,1,[5])
+    c = DeterminantOnlyMatrix(2,2,[1,2,3,4])
+    d = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,8])
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    # the method keyword for `det` doesn't kick in until 4x4 matrices,
+    # so there is no need to test all methods on smaller ones
+
+    assert a.det() == 1
+    assert b.det() == 5
+    assert c.det() == -2
+    assert d.det() == 3
+    assert e.det() == 4*x - 24
+    assert e.det(method='bareiss') == 4*x - 24
+    assert e.det(method='berkowitz') == 4*x - 24
+
+def test_adjugate():
+    x = Symbol('x')
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    adj = Matrix([
+        [   4,         -8,         4,         0],
+        [  76, -14*x - 68,  14*x - 8, -4*x + 24],
+        [-122, 17*x + 142, -21*x + 4,  8*x - 48],
+        [  48,  -4*x - 72,       8*x, -4*x + 24]])
+    assert e.adjugate() == adj
+    assert e.adjugate(method='bareiss') == adj
+    assert e.adjugate(method='berkowitz') == adj
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    raises(NonSquareMatrixError, lambda: a.adjugate())
+
+def test_cofactor_and_minors():
+    x = Symbol('x')
+    e = DeterminantOnlyMatrix(4,4,[x,1,2,3,4,5,6,7,2,9,10,11,12,13,14,14])
+
+    m = Matrix([
+        [ x,  1,  3],
+        [ 2,  9, 11],
+        [12, 13, 14]])
+    cm = Matrix([
+        [ 4,         76,       -122,        48],
+        [-8, -14*x - 68, 17*x + 142, -4*x - 72],
+        [ 4,   14*x - 8,  -21*x + 4,       8*x],
+        [ 0,  -4*x + 24,   8*x - 48, -4*x + 24]])
+    sub = Matrix([
+            [x, 1,  2],
+            [4, 5,  6],
+            [2, 9, 10]])
+
+    assert e.minor_submatrix(1,2) == m
+    assert e.minor_submatrix(-1,-1) == sub
+    assert e.minor(1,2) == -17*x - 142
+    assert e.cofactor(1,2) == 17*x + 142
+    assert e.cofactor_matrix() == cm
+    assert e.cofactor_matrix(method="bareiss") == cm
+    assert e.cofactor_matrix(method="berkowitz") == cm
+
+    raises(ValueError, lambda: e.cofactor(4,5))
+    raises(ValueError, lambda: e.minor(4,5))
+    raises(ValueError, lambda: e.minor_submatrix(4,5))
+
+    a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
+    assert a.minor_submatrix(0,0) == Matrix([[5, 6]])
+
+    raises(ValueError, lambda: DeterminantOnlyMatrix(0,0,[]).minor_submatrix(0,0))
+    raises(NonSquareMatrixError, lambda: a.cofactor(0,0))
+    raises(NonSquareMatrixError, lambda: a.minor(0,0))
+    raises(NonSquareMatrixError, lambda: a.cofactor_matrix())
+
+def test_charpoly():
+    x, y = Symbol('x'), Symbol('y')
+
+    m = DeterminantOnlyMatrix(3,3,[1,2,3,4,5,6,7,8,9])
+
+    assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
+    assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
+    assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)

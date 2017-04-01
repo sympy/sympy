@@ -74,13 +74,14 @@ class StrPrinter(Printer):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+    def _print_Not(self, expr):
+        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
+
     def _print_And(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
@@ -571,6 +572,9 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
+        if rv.startswith('+'):
+            # e.g., +inf -> inf
+            rv = rv[1:]
         return rv
 
     def _print_Relational(self, expr):
@@ -687,8 +691,8 @@ class StrPrinter(Printer):
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
 
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quantity(self, expr):
+        return "%s" % expr.name
 
     def _print_Dimension(self, expr):
         return str(expr)

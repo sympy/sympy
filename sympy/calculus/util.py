@@ -1,4 +1,4 @@
-from sympy import Order, S, log, limit, lcm_list, pi
+from sympy import Order, S, log, limit, lcm_list, pi, Abs
 from sympy.core.basic import Basic
 from sympy.core import Add, Mul, Pow
 from sympy.logic.boolalg import And
@@ -57,17 +57,21 @@ def continuous_domain(f, symbol, domain):
 
     try:
         sings = S.EmptySet
-        for atom in f.atoms(Pow):
-            predicate, denom = _has_rational_power(atom, symbol)
-            if predicate and denom == 2:
-                sings = solveset(1/f, symbol, domain)
-                break
+        if f.has(Abs):
+            sings = solveset(1/f, symbol, domain)
         else:
-            sings = Intersection(solveset(1/f, symbol), domain)
+            for atom in f.atoms(Pow):
+                predicate, denom = _has_rational_power(atom, symbol)
+                if predicate and denom == 2:
+                    sings = solveset(1/f, symbol, domain)
+                    break
+            else:
+                sings = Intersection(solveset(1/f, symbol), domain)
+
 
     except:
         raise NotImplementedError("Methods for determining the continuous domains"
-                                  " of this function has not been developed.")
+                                  " of this function have not been developed.")
 
     return domain - sings
 

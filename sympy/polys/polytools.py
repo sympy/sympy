@@ -6577,8 +6577,7 @@ class GroebnerBasis(Basic):
         from sympy.polys.rings import PolyRing
         ring = PolyRing(opt.gens, opt.domain, opt.order)
 
-        for i, poly in enumerate(polys):
-            polys[i] = ring.from_dict(poly.rep.to_dict())
+        polys = [ring.from_dict(poly.rep.to_dict()) for poly in polys if poly]
 
         G = _groebner(polys, ring, method=opt.method)
         G = [Poly._from_dict(g, opt) for g in G]

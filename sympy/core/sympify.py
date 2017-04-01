@@ -145,7 +145,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> _clash1
     {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
     >>> sympify('I & Q', _clash1)
-    And(I, Q)
+    I & Q
 
     Strict
     ------
@@ -255,6 +255,23 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             raise SympifyError(a)
         else:
             return a
+
+    #Support for basic numpy datatypes
+    if type(a).__module__ == 'numpy':
+        import numpy as np
+        if np.isscalar(a):
+            if not isinstance(a, np.floating):
+                return sympify(np.asscalar(a))
+            else:
+                try:
+                    from sympy.core.numbers import Float
+                    prec = np.finfo(a).nmant
+                    a = str(list(np.reshape(np.asarray(a),
+                                            (1, np.size(a)))[0]))[1:-1]
+                    return Float(a, precision=prec)
+                except NotImplementedError:
+                    raise SympifyError('Translation for numpy float : %s '
+                                       'is not implemented' % a)
 
     try:
         return converter[cls](a)

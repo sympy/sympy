@@ -364,7 +364,7 @@ def solve(f, *symbols, **flags):
         - transcendental
         - piecewise combinations of the above
         - systems of linear and polynomial equations
-        - sytems containing relational expressions.
+        - systems containing relational expressions.
 
     Input is formed as:
 
@@ -450,19 +450,27 @@ def solve(f, *symbols, **flags):
     * boolean or univariate Relational
 
         >>> solve(x < 3)
-        And(-oo < x, x < 3)
+        (-oo < x) & (x < 3)
+
 
     * to always get a list of solution mappings, use flag dict=True
 
         >>> solve(x - 3, dict=True)
         [{x: 3}]
-        >>> solve([x - 3, y - 1], dict=True)
+        >>> sol = solve([x - 3, y - 1], dict=True)
+        >>> sol
         [{x: 3, y: 1}]
+        >>> sol[0][x]
+        3
+        >>> sol[0][y]
+        1
+
 
     * to get a list of symbols and set of solution(s) use flag set=True
 
         >>> solve([x**2 - 3, y - 1], set=True)
         ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
+
 
     * single expression and single symbol that is in the expression
 
@@ -821,7 +829,7 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     for i, fi in enumerate(f):
         if isinstance(fi, Equality):
-            if 'ImmutableMatrix' in [type(a).__name__ for a in fi.args]:
+            if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 f[i] = fi.lhs - fi.rhs
             else:
                 f[i] = Add(fi.lhs, -fi.rhs, evaluate=False)
@@ -1329,6 +1337,9 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
+            if m in set([S.NegativeInfinity, S.ComplexInfinity, S.Infinity]):
+                result = set()
+                break
             soln = _solve(m, symbol, **flags)
             result.update(set(soln))
         result = list(result)
@@ -1383,7 +1394,7 @@ def _solve(f, *symbols, **flags):
         # first see if it really depends on symbol and whether there
         # is only a linear solution
         f_num, sol = solve_linear(f, symbols=symbols)
-        if f_num is S.Zero:
+        if f_num is S.Zero or sol is S.NaN:
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
@@ -2003,7 +2014,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dnewn_dxi is S.NaN:
                 break
             if xi not in dnewn_dxi.free_symbols:
-                vi = -(newn.subs(xi, 0))/dnewn_dxi
+                vi = -1/dnewn_dxi*(newn.subs(xi, 0))
                 if dens is None:
                     dens = _simple_dens(eq, symbols)
                 if not any(checksol(di, {xi: vi}, minimal=True) is True
@@ -2448,8 +2459,8 @@ def inv_quick(M):
     is small.
     """
     from sympy.matrices import zeros
-    if any(i.has(Symbol) for i in M):
-        if all(i.has(Symbol) for i in M):
+    if not all(i.is_Number for i in M):
+        if not any(i.is_Number for i in M):
             det = lambda _: det_perm(_)
         else:
             det = lambda _: det_minor(_)
@@ -2651,6 +2662,14 @@ def nsolve(*args, **kwargs):
     that supports matrices. For more information on the syntax, please see the
     docstring of lambdify.
 
+    If the keyword arguments contain 'dict'=True (default is False) nsolve
+    will return a list (perhaps empty) of solution mappings. This might be
+    especially useful if you want to use nsolve as a fallback to solve since
+    using the dict argument for both methods produces return values of
+    consistent type structure. Please note: to keep this consistency with
+    solve, the solution will be returned in a list even though nsolve
+    (currently at least) only finds one solution at a time.
+
     Overdetermined systems are supported.
 
     >>> from sympy import Symbol, nsolve
@@ -2682,6 +2701,13 @@ def nsolve(*args, **kwargs):
     0.73908513321516064165531208767387340401341175890076
     >>> cos(_)
     0.73908513321516064165531208767387340401341175890076
+
+    To solve for complex roots of real functions, a nonreal initial point
+    must be specified:
+
+    >>> from sympy import I
+    >>> nsolve(x**2 + 2, I)
+    1.4142135623731*I
 
     mpmath.findroot is used and you can find there more extensive
     documentation, especially concerning keyword parameters and
@@ -2741,15 +2767,24 @@ def nsolve(*args, **kwargs):
     else:
         prec = None
 
+    # keyword argument to return result as a dictionary
+    as_dict = kwargs.pop('dict', False)
+
     # interpret arguments
     if len(args) == 3:
         f = args[0]
         fargs = args[1]
         x0 = args[2]
+        if iterable(fargs) and iterable(x0):
+            if len(x0) != len(fargs):
+                raise TypeError('nsolve expected exactly %i guess vectors, got %i'
+                                % (len(fargs), len(x0)))
     elif len(args) == 2:
         f = args[0]
         fargs = None
         x0 = args[1]
+        if iterable(f):
+            raise TypeError('nsolve expected 3 arguments, got 2')
     elif len(args) < 2:
         raise TypeError('nsolve expected at least 2 arguments, got %i'
                         % len(args))
@@ -2780,7 +2815,10 @@ def nsolve(*args, **kwargs):
         # e.g., issue 11768
 
         f = lambdify(fargs, f, modules)
-        return Float(findroot(f, x0, **kwargs))
+        x = sympify(findroot(f, x0, **kwargs))
+        if as_dict:
+            return [dict([(fargs, x)])]
+        return x
 
     if len(fargs) > f.cols:
         raise NotImplementedError(filldedent('''
@@ -2799,6 +2837,8 @@ def nsolve(*args, **kwargs):
     J = lambdify(fargs, J, modules)
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
+    if as_dict:
+        return [dict(zip(fargs, [sympify(xi) for xi in x]))]
     return Matrix(x)
 
 

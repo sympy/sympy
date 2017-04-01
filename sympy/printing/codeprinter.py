@@ -40,7 +40,8 @@ class CodePrinter(StrPrinter):
 
         super(CodePrinter, self).__init__(settings=settings)
 
-        self.reserved_words = set()
+        if not hasattr(self, 'reserved_words'):
+            self.reserved_words = set()
 
     def doprint(self, expr, assign_to=None):
         """
@@ -440,6 +441,7 @@ class CodePrinter(StrPrinter):
     _print_list = _print_not_supported
     _print_Matrix = _print_not_supported
     _print_ImmutableMatrix = _print_not_supported
+    _print_ImmutableDenseMatrix = _print_not_supported
     _print_MutableDenseMatrix = _print_not_supported
     _print_MatrixBase = _print_not_supported
     _print_DeferredVector = _print_not_supported

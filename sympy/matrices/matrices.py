@@ -23,6 +23,8 @@ from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
 from sympy.core.decorators import call_highest_priority
+from sympy.core.decorators import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from types import FunctionType
 
@@ -236,7 +238,7 @@ class MatrixShaping(MatrixRequired):
         return self._eval_col_insert(pos, other)
 
     def col_join(self, other):
-        """Concatenates two matrices along self's last and other's first row
+        """Concatenates two matrices along self's last and other's first row.
 
         Examples
         ========
@@ -639,7 +641,7 @@ class MatrixProperties(MatrixRequired):
     def _eval_is_upper_hessenberg(self):
         return all(self[i, j].is_zero
                    for i in range(2, self.rows)
-                   for j in range(i - 1))
+                   for j in range(min(self.cols, (i - 1))))
 
     def _eval_values(self):
         return [i for i in self if not i.is_zero]
@@ -1110,7 +1112,7 @@ class MatrixProperties(MatrixRequired):
         """
         return all(self[i, j].is_zero
                    for i in range(1, self.rows)
-                   for j in range(i))
+                   for j in range(min(i, self.cols)))
 
     @property
     def is_zero(self):
@@ -1155,6 +1157,15 @@ class MatrixOperations(MatrixRequired):
     def _eval_adjoint(self):
         return self.transpose().conjugate()
 
+    def _eval_applyfunc(self, f):
+        out = self._new(self.rows, self.cols, [f(x) for x in self])
+        return out
+
+    def _eval_as_real_imag(self):
+        from sympy.functions.elementary.complexes import re, im
+
+        return (self.applyfunc(re), self.applyfunc(im))
+
     def _eval_conjugate(self):
         return self.applyfunc(lambda x: x.conjugate())
 
@@ -1189,8 +1200,11 @@ class MatrixOperations(MatrixRequired):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
-        return out
+        return self._eval_applyfunc(f)
+
+    def as_real_imag(self):
+        """Returns a tuple containing the (real, imaginary) part of matrix."""
+        return self._eval_as_real_imag()
 
     def conjugate(self):
         """Return the by-element conjugation.
@@ -1425,42 +1439,620 @@ class MatrixOperations(MatrixRequired):
     _eval_simplify = simplify
 
 
-class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
+class MatrixArithmetic(MatrixRequired):
+    """Provides basic matrix arithmetic operations.
+    Should not be instantiated directly."""
+
+    _op_priority = 10.01
+
+    def _eval_add(self, other):
+        return self._new(self.rows, self.cols,
+                         lambda i, j: self[i, j] + other[i, j])
+
+    def _eval_matrix_mul(self, other):
+        def entry(i, j):
+            try:
+                return sum(self[i,k]*other[k,j] for k in range(self.cols))
+            except TypeError:
+                # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                # They don't work with `sum` because `sum` tries to add `0`
+                # initially, and for a matrix, that is a mix of a scalar and
+                # a matrix, which raises a TypeError. Fall back to a
+                # block-matrix-safe way to multiply if the `sum` fails.
+                ret = self[i, 0]*other[0, j]
+                for k in range(1, self.cols):
+                    ret += self[i, k]*other[k, j]
+                return ret
+
+        return self._new(self.rows, other.cols, entry)
+
+    def _eval_matrix_mul_elementwise(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
+
+    def _eval_matrix_rmul(self, other):
+        def entry(i, j):
+            return sum(other[i,k]*self[k,j] for k in range(other.cols))
+        return self._new(other.rows, self.cols, entry)
+
+    def _eval_pow_by_recursion(self, num):
+        if num == 1:
+            return self
+        if num % 2 == 1:
+            return self * self._eval_pow_by_recursion(num - 1)
+        ret = self._eval_pow_by_recursion(num // 2)
+        return ret * ret
+
+    def _eval_scalar_mul(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other)
+
+    def _eval_scalar_rmul(self, other):
+        return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
+
+    # python arithmetic functions
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        """Return self + other, raising ShapeError if shapes don't match."""
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape'):
+            if self.shape != other.shape:
+                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                    self.shape, other.shape))
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            # call the highest-priority class's _eval_add
+            a, b = self, other
+            if a.__class__ != classof(a, b):
+                b, a = a, b
+            return a._eval_add(b)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_add(self, other)
+
+        raise TypeError('cannot add %s and %s' % type(self), type(other))
+
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        return self * (S.One / other)
+
+    @call_highest_priority('__rmatmul__')
+    def __matmul__(self, other):
+        return self.__mul__(other)
+
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        """Return self*other where other is either a scalar or a matrix
+        of compatible dimensions.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
+        True
+        >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> A*B
+        Matrix([
+        [30, 36, 42],
+        [66, 81, 96]])
+        >>> B*A
+        Traceback (most recent call last):
+        ...
+        ShapeError: Matrices size mismatch.
+        >>>
+
+        See Also
+        ========
+
+        matrix_multiply_elementwise
+        """
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[1] != other.shape[0]:
+                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                    self.shape, other.shape))
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            return self._eval_matrix_mul(other)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_mul(self, other)
+
+        try:
+            return self._eval_scalar_mul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
+
+    def __neg__(self):
+        return self._eval_scalar_mul(-1)
+
+    @call_highest_priority('__rpow__')
+    def __pow__(self, num):
+        if not self.rows == self.cols:
+            raise NonSquareMatrixError()
+        try:
+            a = self
+            num = sympify(num)
+            if num.is_Number and num % 1 == 0:
+                if a.rows == 1:
+                    return a._new([[a[0]**num]])
+                if num == 0:
+                    return self._new(self.rows, self.cols, lambda i, j: int(i == j))
+                if num < 0:
+                    num = -num
+                    a = a.inv()
+                # When certain conditions are met,
+                # Jordan block algorithm is faster than
+                # computation by recursion.
+                elif a.rows == 2 and num > 100000:
+                    try:
+                        return a._matrix_pow_by_jordan_blocks(num)
+                    except AttributeError:
+                        pass
+                return a._eval_pow_by_recursion(num)
+            elif isinstance(num, (Expr, float)):
+                return a._matrix_pow_by_jordan_blocks(num)
+            else:
+                raise TypeError(
+                    "Only SymPy expressions or integers are supported as exponent for matrices")
+        except AttributeError:
+            raise TypeError("Don't know how to raise {} to {}".format(self.__class__, num))
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return self + other
+
+    @call_highest_priority('__matmul__')
+    def __rmatmul__(self, other):
+        return self.__rmul__(other)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        other = _matrixify(other)
+        # matrix-like objects can have shapes.  This is
+        # our first sanity check.
+        if hasattr(other, 'shape') and len(other.shape) == 2:
+            if self.shape[0] != other.shape[1]:
+                raise ShapeError("Matrix size mismatch.")
+
+        # honest sympy matrices defer to their class's routine
+        if getattr(other, 'is_Matrix', False):
+            return other._new(other.as_mutable() * self)
+        # Matrix-like objects can be passed to CommonMatrix routines directly.
+        if getattr(other, 'is_MatrixLike', False):
+            return MatrixArithmetic._eval_matrix_rmul(self, other)
+
+        try:
+            return self._eval_scalar_rmul(other)
+        except TypeError:
+            pass
+
+        raise TypeError('Cannot multiply %s and %s' % type(self), type(other))
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, a):
+        return (-self) + a
+
+    @call_highest_priority('__rsub__')
+    def __sub__(self, a):
+        return self + (-a)
+
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def multiply_elementwise(self, other):
+        """Return the Hadamard product (elementwise product) of A and B
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
+        Matrix([
+        [  0, 10, 200],
+        [300, 40,   5]])
+
+        See Also
+        ========
+
+        cross
+        dot
+        multiply
+        """
+        if self.shape != other.shape:
+            raise ShapeError("Matrix shapes must agree {} != {}".format(self.shape, other.shape))
+
+        return self._eval_matrix_mul_elementwise(other)
+
+
+class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
+    """Provides basic matrix determinant operations.
+    Should not be instantiated directly."""
+
+    def _eval_berkowitz_toeplitz_matrix(self):
+        """Return (A,T) where T the Toeplitz matrix used in the Berkowitz algorithm
+        corresponding to `self` and A is the first principal submatrix."""
+
+        # the 0 x 0 case is trivial
+        if self.rows == 0 and self.cols == 0:
+            return self._new(1,1, [S.One])
+
+        #
+        # Partition self = [ a_11  R ]
+        #                  [ C     A ]
+        #
+
+        a, R = self[0,0],   self[0, 1:]
+        C, A = self[1:, 0], self[1:,1:]
+
+        #
+        # The Toeplitz matrix looks like
+        #
+        #  [ 1                                     ]
+        #  [ -a         1                          ]
+        #  [ -RC       -a        1                 ]
+        #  [ -RAC     -RC       -a       1         ]
+        #  [ -RA**2C -RAC      -RC      -a       1 ]
+        #  etc.
+
+        # Compute the diagonal entries.
+        # Because multiplying matrix times vector is so much
+        # more efficient than matrix times matrix, recursively
+        # compute -R * A**n * C.
+        diags = [C]
+        for i in range(self.rows - 2):
+            diags.append(A * diags[i])
+        diags = [(-R*d)[0, 0] for d in diags]
+        diags = [S.One, -a] + diags
+
+        def entry(i,j):
+            if j > i:
+                return S.Zero
+            return diags[i - j]
+
+        toeplitz = self._new(self.cols + 1, self.rows, entry)
+        return (A, toeplitz)
+
+    def _eval_berkowitz_vector(self):
+        """ Run the Berkowitz algorithm and return a vector whose entries
+            are the coefficients of the characteristic polynomial of `self`.
+
+            Given N x N matrix, efficiently compute
+            coefficients of characteristic polynomials of 'self'
+            without division in the ground domain.
+
+            This method is particularly useful for computing determinant,
+            principal minors and characteristic polynomial when 'self'
+            has complicated coefficients e.g. polynomials. Semi-direct
+            usage of this algorithm is also important in computing
+            efficiently sub-resultant PRS.
+
+            Assuming that M is a square matrix of dimension N x N and
+            I is N x N identity matrix, then the Berkowitz vector is
+            an N x 1 vector whose entries are coefficients of the
+            polynomial
+
+                           charpoly(M) = det(t*I - M)
+
+            As a consequence, all polynomials generated by Berkowitz
+            algorithm are monic.
+
+           For more information on the implemented algorithm refer to:
+
+           [1] S.J. Berkowitz, On computing the determinant in small
+               parallel time using a small number of processors, ACM,
+               Information Processing Letters 18, 1984, pp. 147-150
+
+           [2] M. Keber, Division-Free computation of sub-resultants
+               using Bezout matrices, Tech. Report MPI-I-2006-1-006,
+               Saarbrucken, 2006
+        """
+
+        # handle the trivial cases
+        if self.rows == 0 and self.cols == 0:
+            return self._new(1, 1, [S.One])
+        elif self.rows == 1 and self.cols == 1:
+            return self._new(2, 1, [S.One, -self[0,0]])
+
+        submat, toeplitz = self._eval_berkowitz_toeplitz_matrix()
+        return toeplitz * submat._eval_berkowitz_vector()
+
+    def _eval_det_bareiss(self):
+        """Compute matrix determinant using Bareiss' fraction-free
+        algorithm which is an extension of the well known Gaussian
+        elimination method. This approach is best suited for dense
+        symbolic matrices and will result in a determinant with
+        minimal number of fractions. It means that less term
+        rewriting is needed on resulting formulae.
+
+        TODO: Implement algorithm for sparse matrices (SFF),
+        http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
+        """
+
+        # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead
+        def _find_pivot(l):
+            for pos,val in enumerate(l):
+                if val:
+                    return (pos, val, None, None)
+            return (None, None, None, None)
+
+
+        # Recursively implimented Bareiss' algorithm as per Deanna Richelle Leggett's
+        # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+        def bareiss(mat, cumm=1):
+            if mat.rows == 0:
+                return S.One
+            elif mat.rows == 1:
+                return mat[0, 0]
+
+            # find a pivot and extract the remaining matrix
+            # XXX should use `_find_reasonable_pivot`.  Blocked by issue #12362
+            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0])
+            if pivot_pos == None:
+                return S.Zero
+
+            # if we have a valid pivot, we'll do a "row swap", so keep the
+            # sign of the det
+            sign = (-1) ** (pivot_pos % 2)
+
+            # we want every row but the pivot row and every column
+            rows = list(i for i in range(mat.rows) if i != pivot_pos)
+            cols = list(range(mat.cols))
+            tmp_mat = mat.extract(rows, cols)
+
+            def entry(i, j):
+                ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
+                if not ret.is_Atom:
+                    cancel(ret)
+                return ret
+
+            return sign*bareiss(self._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+
+        return cancel(bareiss(self))
+
+    def _eval_det_berkowitz(self):
+        """ Use the Berkowitz algorithm to compute the determinant."""
+        berk_vector = self._eval_berkowitz_vector()
+        return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
+
+    def _eval_det_lu(self):
+        """ Use LU the decomposition to compute the determinant."""
+        try:
+            l, u, p = self.LUdecomposition()
+        except ValueError:
+            # if there is a value error in the LU decomposition, it means the matrix
+            # wasn't invertible
+            return S.Zero
+
+        # get the sign of the determinant
+        det = (-1) ** (len(p) % 2)
+        # multiply by the diagonal entries
+        for k in range(self.rows):
+            det *= l[k, k] * u[k, k]
+
+        return det
+
+    def adjugate(self, method="berkowitz"):
+        """Returns the adjugate, or classical adjoint, of
+        a matrix.  That is, the transpose of the matrix of cofactors.
+
+
+        http://en.wikipedia.org/wiki/Adjugate
+
+        See Also
+        ========
+
+        cofactor_matrix
+        transpose
+        """
+        return self.cofactor_matrix(method).transpose()
+
+    def charpoly(self, x=Dummy('lambda'), simplify=_simplify):
+        """Computes characteristic polynomial det(x*I - self) where I is
+        the identity matrix.
+
+        A PurePoly is returned, so using different variables for ``x`` does
+        not affect the comparison or the polynomials:
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x, y
+        >>> A = Matrix([[1, 3], [2, 0]])
+        >>> A.charpoly(x) == A.charpoly(y)
+        True
+
+        Specifying ``x`` is optional; a Dummy with name ``lambda`` is used by
+        default (which looks good when pretty-printed in unicode):
+
+        >>> A.charpoly().as_expr()
+        _lambda**2 - _lambda - 6
+
+        No test is done to see that ``x`` doesn't clash with an existing
+        symbol, so using the default (``lambda``) or your own Dummy symbol is
+        the safest option:
+
+        >>> A = Matrix([[1, 2], [x, 0]])
+        >>> A.charpoly().as_expr()
+        _lambda**2 - _lambda - 2*x
+        >>> A.charpoly(x).as_expr()
+        x**2 - 3*x
+
+        Notes
+        =====
+
+        The Samuelson-Berkowitz algorithm is used to compute
+        the characteristic polynomial efficiently and without any
+        division operations.  Thus the characteristic polynomial over any
+        commutative ring without zero divisors can be computed.
+
+        See Also
+        ========
+
+        det
+        """
+        berk_vector = self._eval_berkowitz_vector()
+        return PurePoly([simplify(a) for a in berk_vector], x)
+
+    def cofactor(self, i, j, method="berkowitz"):
+        """Calculate the cofactor of an element.
+
+        See Also
+        ========
+
+        cofactor_matrix
+        minor
+        minor_submatrix
+        """
+
+        if self.rows != self.cols or self.rows < 1:
+            raise NonSquareMatrixError()
+
+        return (-1)**((i + j) % 2) * self.minor(i, j, method)
+
+    def cofactor_matrix(self, method="berkowitz"):
+        """Return a matrix containing the cofactor of each element.
+
+        See Also
+        ========
+
+        cofactor
+        minor
+        minor_submatrix
+        adjugate
+        """
+
+        if self.rows != self.cols or self.rows < 1:
+            raise NonSquareMatrixError()
+
+        return self._new(self.rows, self.cols,
+                         lambda i, j: self.cofactor(i, j, method))
+
+    def det(self, method="bareiss"):
+        """Computes the determinant of a matrix.  If the matrix
+        is at most 3x3, a hard-coded formula is used.
+        Otherwise, the determinant using the method `method`.
+
+
+        Possible values for "method":
+          bareis
+          berkowitz
+          lu
+        """
+
+        # sanitize `method`
+        method = method.lower()
+        if method == "bareis":
+            SymPyDeprecationWarning(
+                feature="Using 'bareis' to compute matrix determinant",
+                useinstead="'bareiss'",
+                issue=12363, deprecated_since_version="1.1").warn()
+            method = "bareiss"
+        if method == "det_lu":
+            SymPyDeprecationWarning(
+                feature="Using 'det_lu' to compute matrix determinant",
+                useinstead="'lu'",
+                deprecated_since_version="1.1").warn()
+            method = "lu"
+        if method not in ("bareiss", "berkowitz", "lu"):
+            raise ValueError("Determinant method '%s' unrecognized" % method)
+
+        # if methods were made internal and all determinant calculations
+        # passed through here, then these lines could be factored out of
+        # the method routines
+        if self.rows != self.cols:
+            raise NonSquareMatrixError()
+
+        n = self.rows
+        if n == 0:
+            return S.One
+        elif n == 1:
+            return self[0,0]
+        elif n == 2:
+            return self[0, 0] * self[1, 1] - self[0, 1] * self[1, 0]
+        elif n == 3:
+            return  (self[0, 0] * self[1, 1] * self[2, 2]
+                   + self[0, 1] * self[1, 2] * self[2, 0]
+                   + self[0, 2] * self[1, 0] * self[2, 1]
+                   - self[0, 2] * self[1, 1] * self[2, 0]
+                   - self[0, 0] * self[1, 2] * self[2, 1]
+                   - self[0, 1] * self[1, 0] * self[2, 2])
+
+        if method == "bareiss":
+            return self._eval_det_bareiss()
+        elif method == "berkowitz":
+            return self._eval_det_berkowitz()
+        elif method == "lu":
+            return self._eval_det_lu()
+
+    def minor(self, i, j, method="berkowitz"):
+        """Return the (i,j) minor of `self`.  That is,
+        return the determinant of the matrix obtained by deleting
+        the `i`th row and `j`th column from `self`.
+
+        See Also
+        ========
+
+        minor_submatrix
+        cofactor
+        det
+        """
+
+        if self.rows != self.cols or self.rows < 1:
+            raise NonSquareMatrixError()
+
+        return self.minor_submatrix(i, j).det(method=method)
+
+    def minor_submatrix(self, i, j):
+        """Return the submatrix obtained by removing the `i`th row
+        and `j`th column from `self`.
+
+        See Also
+        ========
+
+        minor
+        cofactor
+        """
+
+        if i < 0:
+            i += self.rows
+        if j < 0:
+            j += self.cols
+
+        if not 0 <= i < self.rows or not 0 <= j < self.cols:
+            raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` "
+                             "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
+
+        rows = [a for a in range(self.rows) if a != i]
+        cols = [a for a in range(self.cols) if a != j]
+        return self.extract(rows, cols)
+
+
+class MatrixBase(MatrixDeterminant, MatrixArithmetic, MatrixOperations, MatrixProperties, MatrixShaping):
     # Added just for numpy compatibility
     __array_priority__ = 11
 
     is_Matrix = True
-    is_Identity = None
     _class_priority = 3
     _sympify = staticmethod(sympify)
 
     __hash__ = None  # Mutable
 
-    def __add__(self, other):
-        """Return self + other, raising ShapeError if shapes don't match."""
-        if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.shape != B.shape:
-                raise ShapeError("Matrix size mismatch: %s + %s" % (
-                    A.shape, B.shape))
-            alst = A.tolist()
-            blst = B.tolist()
-            ret = [S.Zero] * A.rows
-            for i in range(A.shape[0]):
-                ret[i] = [j + k for j, k in zip(alst[i], blst[i])]
-            rv = classof(A, B)._new(ret)
-            if 0 in A.shape:
-                rv = rv.reshape(*A.shape)
-            return rv
-        raise TypeError('cannot add matrix and %s' % type(other))
-
     def __array__(self):
         from .dense import matrix2numpy
         return matrix2numpy(self)
-
-    def __div__(self, other):
-        return self * (S.One / other)
 
     def __getattr__(self, attr):
         if attr in ('diff', 'integrate', 'limit'):
@@ -1489,56 +2081,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def __mul__(self, other):
-        """Return self*other where other is either a scalar or a matrix
-        of compatible dimensions.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
-        >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
-        True
-        >>> B = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        >>> A*B
-        Matrix([
-        [30, 36, 42],
-        [66, 81, 96]])
-        >>> B*A
-        Traceback (most recent call last):
-        ...
-        ShapeError: Matrices size mismatch.
-        >>>
-
-        See Also
-        ========
-
-        matrix_multiply_elementwise
-        """
-        if getattr(other, 'is_Matrix', False):
-            A = self
-            B = other
-            if A.cols != B.rows:
-                raise ShapeError("Matrix size mismatch: %s * %s." % (
-                    A.shape, B.shape))
-            if A.cols == 0:
-                return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
-            try:
-                blst = B.T.tolist()
-            except AttributeError:
-                # If B is a MatrixSymbol, B.T.tolist does not exist
-                return NotImplemented
-            alst = A.tolist()
-            return classof(A, B)._new(A.rows, B.cols, lambda i, j:
-            reduce(lambda k, l: k + l,
-                   [a_ik * b_kj for a_ik, b_kj in zip(alst[i], blst[j])]))
-        else:
-            return self._new(self.rows, self.cols,
-                             [i * other for i in self._mat])
-
-    def __neg__(self):
-        return -1 * self
+    # needed for python 2 compatibility
+    def __ne__(self, other):
+        return not self == other
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -1547,6 +2092,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
             l = jc[0, 0]
+            if l == 0 and (n < N - 1) != False:
+                raise ValueError("Matrix det == 0; not invertible")
+            elif l == 0 and N > 1 and n % 1 != 0:
+                raise ValueError("Non-integer power cannot be evaluated")
             for i in range(N):
                 for j in range(N-i):
                     bn = binomial(n, i)
@@ -1578,51 +2127,13 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             n //= 2
         return self._new(a)
 
-    def __pow__(self, num):
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if isinstance(num, (int, Integer)):
-            if (self.rows == 1):
-                return self._new([[self[0]**num]])
-            # When certain conditions are met,
-            # Jordan block algorithm is faster than
-            # computation by recursion.
-            elif self.rows == 2 and num > 100000:
-                try:
-                    return self._matrix_pow_by_jordan_blocks(num)
-                except AttributeError:
-                    return self._matrix_pow_by_recursion(num)
-            return self._matrix_pow_by_recursion(num)
-        elif isinstance(num, (Expr, float)):
-            return self._matrix_pow_by_jordan_blocks(num)
-        else:
-            raise TypeError(
-                "Only SymPy expressions or integers are supported as exponent for matrices")
-
-    def __radd__(self, other):
-        return self + other
-
     def __repr__(self):
         return sstr(self)
-
-    def __rmul__(self, a):
-        if getattr(a, 'is_Matrix', False):
-            return self._new(a) * self
-        return self._new(self.rows, self.cols, [a * i for i in self._mat])
-
-    def __rsub__(self, a):
-        return (-self) + a
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
-
-    def __sub__(self, a):
-        return self + (-a)
-
-    def __truediv__(self, other):
-        return self.__div__(other)
 
     def _diagonalize_clear_subproducts(self):
         del self._is_symbolic
@@ -2044,23 +2555,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         """Return self + b """
         return self + b
 
-    def adjugate(self, method="berkowitz"):
-        """Returns the adjugate matrix.
-
-        Adjugate matrix is the transpose of the cofactor matrix.
-
-        http://en.wikipedia.org/wiki/Adjugate
-
-        See Also
-        ========
-
-        cofactorMatrix
-        transpose
-        berkowitz
-        """
-
-        return self.cofactorMatrix(method).T
-
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         """Computes characteristic polynomial minors using Berkowitz method.
 
@@ -2307,35 +2801,8 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky()
 
-    def cofactor(self, i, j, method="berkowitz"):
-        """Calculate the cofactor of an element.
-
-        See Also
-        ========
-
-        cofactorMatrix
-        minorEntry
-        minorMatrix
-        """
-        if (i + j) % 2 == 0:
-            return self.minorEntry(i, j, method)
-        else:
-            return -1 * self.minorEntry(i, j, method)
-
     def cofactorMatrix(self, method="berkowitz"):
-        """Return a matrix containing the cofactor of each element.
-
-        See Also
-        ========
-
-        cofactor
-        minorEntry
-        minorMatrix
-        adjugate
-        """
-        out = self._new(self.rows, self.cols, lambda i, j:
-        self.cofactor(i, j, method))
-        return out
+        return self.cofactor_matrix(method=method)
 
     def columnspace(self, simplify=False):
         """Returns list of vectors (Matrix objects) that span columnspace of self
@@ -2397,10 +2864,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             return S.Zero
         singularvalues = self.singular_values()
         return Max(*singularvalues) / Min(*singularvalues)
-
-    def as_real_imag(self):
-        """Returns a tuple containing the (real, imaginary) part of matrix."""
-        return self.as_real_imag()
 
     def copy(self):
         """
@@ -2489,8 +2952,12 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise AttributeError
         return self.H * mgamma(0)
 
+    @deprecated(useinstead="det_bareiss", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
-        """Compute matrix determinant using Bareis' fraction-free
+        return self.det_bareiss()
+
+    def det_bareiss(self):
+        """Compute matrix determinant using Bareiss' fraction-free
         algorithm which is an extension of the well known Gaussian
         elimination method. This approach is best suited for dense
         symbolic matrices and will result in a determinant with
@@ -2539,7 +3006,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                     else:
                         return S.Zero
 
-                # proceed with Bareis' fraction-free (FF)
+                # proceed with Bareiss' fraction-free (FF)
                 # form of Gaussian elimination algorithm
                 for i in range(k + 1, n):
                     for j in range(k + 1, n):
@@ -2557,7 +3024,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         return det.expand()
 
-
     def det_LU_decomposition(self):
         """Compute matrix determinant using LU decomposition
 
@@ -2574,7 +3040,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
 
         det
-        det_bareis
+        det_bareiss
         berkowitz_det
         """
         if not self.is_square:
@@ -2592,38 +3058,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             prod = prod * u[k, k] * l[k, k]
 
         return prod.expand()
-
-    def det(self, method="bareis"):
-        """Computes the matrix determinant using the method "method".
-
-        Possible values for "method":
-          bareis ... det_bareis
-          berkowitz ... berkowitz_det
-          det_LU ... det_LU_decomposition
-
-        See Also
-        ========
-
-        det_bareis
-        berkowitz_det
-        det_LU
-        """
-
-        # if methods were made internal and all determinant calculations
-        # passed through here, then these lines could be factored out of
-        # the method routines
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self:
-            return S.One
-        if method == "bareis":
-            return self.det_bareis()
-        elif method == "berkowitz":
-            return self.berkowitz_det()
-        elif method == "det_LU":
-            return self.det_LU_decomposition()
-        else:
-            raise ValueError("Determinant method '%s' unrecognized" % method)
 
     def diagonal_solve(self, rhs):
         """Solves Ax = B efficiently, where A is a diagonal Matrix,
@@ -3106,55 +3540,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             return sol, tau, free_var_index
         else:
             return sol, tau
-
-    def get_diag_blocks(self):
-        """Obtains the square sub-matrices on the main diagonal of a square matrix.
-
-        Useful for inverting symbolic matrices or solving systems of
-        linear equations which may be decoupled by having a block diagonal
-        structure.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.abc import x, y, z
-        >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
-        >>> a1, a2, a3 = A.get_diag_blocks()
-        >>> a1
-        Matrix([
-        [1,    3],
-        [y, z**2]])
-        >>> a2
-        Matrix([[x]])
-        >>> a3
-        Matrix([[0]])
-
-        """
-        sub_blocks = []
-
-        def recurse_sub_blocks(M):
-            i = 1
-            while i <= M.shape[0]:
-                if i == 1:
-                    to_the_right = M[0, i:]
-                    to_the_bottom = M[i:, 0]
-                else:
-                    to_the_right = M[:i, i:]
-                    to_the_bottom = M[i:, :i]
-                if any(to_the_right) or any(to_the_bottom):
-                    i += 1
-                    continue
-                else:
-                    sub_blocks.append(M[:i, :i])
-                    if M.shape == M[:i, :i].shape:
-                        return
-                    else:
-                        recurse_sub_blocks(M[i:, i:])
-                        return
-
-        recurse_sub_blocks(self)
-        return sub_blocks
 
     @classmethod
     def hstack(cls, *args):
@@ -4023,62 +4408,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         return rhs.__class__(b)
 
     def minorEntry(self, i, j, method="berkowitz"):
-        """Calculate the minor of an element.
-
-        See Also
-        ========
-
-        minorMatrix
-        cofactor
-        cofactorMatrix
-        """
-        if not 0 <= i < self.rows or not 0 <= j < self.cols:
-            raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
-                             "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        return self.minorMatrix(i, j).det(method)
+        return self.minor(i, j, method=method)
 
     def minorMatrix(self, i, j):
-        """Creates the minor matrix of a given element.
-
-        See Also
-        ========
-
-        minorEntry
-        cofactor
-        cofactorMatrix
-        """
-        if not 0 <= i < self.rows or not 0 <= j < self.cols:
-            raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
-                             "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
-        M = self.as_mutable()
-        M.row_del(i)
-        M.col_del(j)
-        return self._new(M)
-
-    def multiply_elementwise(self, b):
-        """Return the Hadamard product (elementwise product) of A and B
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> A.multiply_elementwise(B)
-        Matrix([
-        [  0, 10, 200],
-        [300, 40,   5]])
-
-        See Also
-        ========
-
-        cross
-        dot
-        multiply
-        """
-        from sympy.matrices import matrix_multiply_elementwise
-
-        return matrix_multiply_elementwise(self, b)
+        return self.minor_submatrix(i, j)
 
     def multiply(self, b):
         """Returns self*b
@@ -4620,48 +4953,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         rank = len(row_reduced[-1])
         return rank
 
-    def refine(self, assumptions=True):
-        """Apply refine to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol, Matrix, Abs, sqrt, Q
-        >>> x = Symbol('x')
-        >>> Matrix([[Abs(x)**2, sqrt(x**2)],[sqrt(x**2), Abs(x)**2]])
-        Matrix([
-        [ Abs(x)**2, sqrt(x**2)],
-        [sqrt(x**2),  Abs(x)**2]])
-        >>> _.refine(Q.real(x))
-        Matrix([
-        [  x**2, Abs(x)],
-        [Abs(x),   x**2]])
-
-        """
-        return self.applyfunc(lambda x: refine(x, assumptions))
-
-    def replace(self, F, G, map=False):
-        """Replaces Function F in Matrix entries with Function G.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols, Function, Matrix
-        >>> F, G = symbols('F, G', cls=Function)
-        >>> M = Matrix(2, 2, lambda i, j: F(i+j)) ; M
-        Matrix([
-        [F(0), F(1)],
-        [F(1), F(2)]])
-        >>> N = M.replace(F,G)
-        >>> N
-        Matrix([
-        [G(0), G(1)],
-        [G(1), G(2)]])
-        """
-        M = self[:, :]
-
-        return M.applyfunc(lambda x: x.replace(F, G, map))
-
     def rref(self, iszerofunc=_iszero, simplify=False):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
@@ -4726,40 +5017,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
-
-    @property
-    def shape(self):
-        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import zeros
-        >>> M = zeros(2, 3)
-        >>> M.shape
-        (2, 3)
-        >>> M.rows
-        2
-        >>> M.cols
-        3
-        """
-        return (self.rows, self.cols)
-
-    def simplify(self, ratio=1.7, measure=count_ops):
-        """Apply simplify to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x, y
-        >>> from sympy import sin, cos
-        >>> from sympy.matrices import SparseMatrix
-        >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
-        Matrix([[x*sin(y)**2 + x*cos(y)**2]])
-        >>> _.simplify()
-        Matrix([[x]])
-        """
-        return self.applyfunc(lambda x: x.simplify(ratio, measure))
 
     def singular_values(self):
         """Compute the singular values of a Matrix
@@ -4944,10 +5201,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    __matmul__ = __mul__
-
-    __rmatmul__ = __rmul__
-
     def upper_triangular_solve(self, rhs):
         """Solves Ax = B, where A is an upper triangular matrix.
 
@@ -5046,10 +5299,6 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         kls = type(args[0])
         return reduce(kls.col_join, args)
 
-    _eval_simplify = simplify
-
-    charpoly = berkowitz_charpoly
-
 
 def classof(A, B):
     """
@@ -5065,7 +5314,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
     """
     try:
         if A._class_priority > B._class_priority:
@@ -5114,7 +5363,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     where pivot_offset is the index of the pivot, pivot_val is
     the (possibly simplified) value of the pivot, assumed_nonzero
     is True if an assumption that the pivot was non-zero
-    was made without being probed, and newly_determined are
+    was made without being proved, and newly_determined are
     elements that were simplified during the process of pivot
     finding."""
 
@@ -5301,3 +5550,37 @@ class _MinimalMatrix(object):
     @property
     def shape(self):
         return (self.rows, self.cols)
+
+
+class _MatrixWrapper(object):
+    """Wrapper class providing the minimum functionality
+    for a matrix-like object: .rows, .cols, .shape, indexability,
+    and iterability.  CommonMatrix math operations should work
+    on matrix-like objects.  For example, wrapping a numpy
+    matrix in a MatrixWrapper allows it to be passed to CommonMatrix.
+    """
+    is_MatrixLike = True
+
+    def __init__(self, mat, shape=None):
+        self.mat = mat
+        self.rows, self.cols = mat.shape if shape is None else shape
+
+    def __getattr__(self, attr):
+        """Most attribute access is passed straight through
+        to the stored matrix"""
+        return getattr(self.mat, attr)
+
+    def __getitem__(self, key):
+        return self.mat.__getitem__(key)
+
+
+def _matrixify(mat):
+    """If `mat` is a Matrix or is matrix-like,
+    return a Matrix or MatrixWrapper object.  Otherwise
+    `mat` is passed through without modification."""
+    if getattr(mat, 'is_Matrix', False):
+        return mat
+    if hasattr(mat, 'shape'):
+        if len(mat.shape) == 2:
+            return _MatrixWrapper(mat)
+    return mat

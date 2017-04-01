@@ -256,20 +256,6 @@ class NDimArray(object):
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
-        out_str = ''
-
-        # forming output string
-        for i, el in enumerate(self):
-
-            out_str += str(el) + '  '
-            chidx = i+1
-            for sh in reversed(self.shape):
-                if chidx % sh == 0:
-                    out_str += '\n'
-                    chidx //= sh
-
-        return out_str
-
     def __repr__(self):
         return self.__str__()
 

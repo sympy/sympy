@@ -1469,7 +1469,7 @@ class Intersection(Set):
         args = flatten(args)
 
         if len(args) == 0:
-            return S.EmptySet
+            return S.UniversalSet
 
         # args can't be ordered for Partition see issue #9608
         if 'Partition' not in [type(a).__name__ for a in args]:

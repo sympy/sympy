@@ -991,5 +991,21 @@ class Add(Expr, AssocOp):
         from sympy.series.limitseq import difference_delta as dd
         return self.func(*[dd(a, n, step) for a in self.args])
 
+    @property
+    def _mpc_(self):
+        """
+        Convert self to an mpmath mpc if possible
+        """
+        from sympy.core.numbers import I, Float
+        re_part, rest = self.as_coeff_Add()
+        im_part, imag_unit = rest.as_coeff_Mul()
+        if not imag_unit == I:
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Add to mpc. Must be of the form Number + Number*I")
+
+        return (Float(re_part)._mpf_, Float(im_part)._mpf_)
+
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

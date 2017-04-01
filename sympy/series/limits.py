@@ -4,10 +4,14 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.compatibility import string_types
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.special.gamma_functions import gamma
 from sympy.series.order import Order
 from .gruntz import gruntz
-
+from sympy.core.exprtools import factor_terms
+from sympy.simplify.ratsimp import ratsimp
+from sympy.polys import PolynomialError
 
 def limit(e, z, z0, dir="+"):
     """
@@ -47,7 +51,6 @@ def limit(e, z, z0, dir="+"):
 
 def heuristics(e, z, z0, dir):
     rv = None
-
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
         if isinstance(rv, Limit):
@@ -67,8 +70,13 @@ def heuristics(e, z, z0, dir):
         if r:
             rv = e.func(*r)
             if rv is S.NaN:
-                return
-
+                try:
+                    rat_e = ratsimp(e)
+                except PolynomialError:
+                    return
+                if rat_e is S.NaN or rat_e == e:
+                    return
+                return limit(rat_e, z, z0, dir)
     return rv
 
 
@@ -146,11 +154,8 @@ class Limit(Expr):
 
         if e.is_Mul:
             if abs(z0) is S.Infinity:
-                # XXX todo: this should probably be stated in the
-                # negative -- i.e. to exclude expressions that should
-                # not be handled this way but I'm not sure what that
-                # condition is; when ok is True it means that the leading
-                # term approach is going to succeed (hopefully)
+                e = factor_terms(e)
+                e = e.rewrite(fibonacci, GoldenRatio)
                 ok = lambda w: (z in w.free_symbols and
                                 any(a.is_polynomial(z) or
                                     any(z in m.free_symbols and m.is_polynomial(z)
