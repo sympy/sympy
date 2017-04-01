@@ -18,7 +18,7 @@ from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
-from sympy.geometry import Ray, Segment
+from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
@@ -642,17 +642,21 @@ class Ellipse(GeometrySet):
             else:
                 return []
 
-        elif isinstance(o, (Segment, Ray)):
+        elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
             result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             return list(ordered([Point(i) for i in result if i in o]))
 
-        elif isinstance(o, (Ellipse, Line)):
+        elif isinstance(o, (Ellipse, Line2D)):
             if o == self:
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
                 return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+        elif isinstance(o, LinearEntity3D):
+                raise TypeError('Entity must be two dimensional, not three dimensional')
+        else:
+            raise TypeError('Wrong type of argument were put')
 
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?

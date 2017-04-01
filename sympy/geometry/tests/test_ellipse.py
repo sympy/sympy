@@ -203,6 +203,8 @@ def test_ellipse_geom():
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
+    raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0,0,1))))
+    raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
