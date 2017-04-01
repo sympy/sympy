@@ -11,12 +11,12 @@ m = Symbol('m')
 def test_DiagonalMatrix():
     x = MatrixSymbol('x', n, m)
     D = DiagonalMatrix(x)
-    assert D.size is None
+    assert D.diagonal_length is None
     assert D.shape == (n, m)
 
     x = MatrixSymbol('x', n, n)
     D = DiagonalMatrix(x)
-    assert D.size == n
+    assert D.diagonal_length == n
     assert D.shape == (n, n)
     assert D[1, 2] == 0
     assert D[1, 1] == x[1, 1]
@@ -32,7 +32,7 @@ def test_DiagonalMatrix():
 
     x = MatrixSymbol('x', n, 3)
     D = DiagonalMatrix(x)
-    assert D.size == 3
+    assert D.diagonal_length == 3
     assert D.shape == (n, 3)
     assert D[2, m] == KroneckerDelta(2, m)*x[2, m]
     assert D[3, m] == 0
@@ -40,7 +40,7 @@ def test_DiagonalMatrix():
 
     x = MatrixSymbol('x', 3, n)
     D = DiagonalMatrix(x)
-    assert D.size == 3
+    assert D.diagonal_length == 3
     assert D.shape == (3, n)
     assert D[m, 2] == KroneckerDelta(m, 2)*x[m, 2]
     assert D[m, 3] == 0
@@ -48,7 +48,7 @@ def test_DiagonalMatrix():
 
     x = MatrixSymbol('x', n, m)
     D = DiagonalMatrix(x)
-    assert D.size is None
+    assert D.diagonal_length is None
     assert D.shape == (n, m)
     assert D[m, 4] != 0
 
@@ -66,13 +66,13 @@ def test_DiagonalOf():
     x = MatrixSymbol('x', n, n)
     d = DiagonalOf(x)
     assert d.shape == (n, 1)
-    assert d.size == n
+    assert d.diagonal_length == n
     assert d[2, 0] == d[2] == x[2, 2]
 
     x = MatrixSymbol('x', n, m)
     d = DiagonalOf(x)
     assert d.shape == (None, 1)
-    assert d.size is None
+    assert d.diagonal_length is None
     assert d[2, 0] == d[2] == x[2, 2]
 
     d = DiagonalOf(MatrixSymbol('x', 4, 3))

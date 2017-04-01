@@ -6,9 +6,12 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
 class DiagonalMatrix(MatrixExpr):
-    """DiagonalMatrix(M) will create a create a matrix expression that
-    behaves as though all off-diagonal elements `M[i, j]` where `i != j`
-    are zero.
+    """DiagonalMatrix(M) will create a matrix expression that
+    behaves as though all off-diagonal elements,
+    `M[i, j]` where `i != j`, are zero.
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, DiagonalMatrix, Symbol
     >>> n = Symbol('n', integer=True)
@@ -19,19 +22,19 @@ class DiagonalMatrix(MatrixExpr):
     >>> D[1, 1]
     x[1, 1]
 
-    The size of the diagonal -- the lesser of the two dimensions of `M` --
-    is accessed through the `size` property:
+    The length of the diagonal -- the lesser of the two dimensions of `M` --
+    is accessed through the `diagonal_length` property:
 
-    >>> D.size
+    >>> D.diagonal_length
     2
-    >>> DiagonalMatrix(MatrixSymbol('x', n + 1, n)).size
+    >>> DiagonalMatrix(MatrixSymbol('x', n + 1, n)).diagonal_length
     n
 
     When one of the dimensions is symbolic the other will be treated as
     though it is smaller:
 
     >>> tall = DiagonalMatrix(MatrixSymbol('x', n, 3))
-    >>> tall.size
+    >>> tall.diagonal_length
     3
     >>> tall[10, 1]
     0
@@ -39,7 +42,7 @@ class DiagonalMatrix(MatrixExpr):
     When the size of the diagonal is not known, a value of None will
     be returned:
 
-    >>> DiagonalMatrix(MatrixSymbol('x', n, m)).size is None
+    >>> DiagonalMatrix(MatrixSymbol('x', n, m)).diagonal_length is None
     True
 
     """
@@ -48,7 +51,7 @@ class DiagonalMatrix(MatrixExpr):
     shape = property(lambda self: self.arg.shape)
 
     @property
-    def size(self):
+    def diagonal_length(self):
         r, c = self.shape
         if r.is_Integer and c.is_Integer:
             m = min(r, c)
@@ -66,10 +69,10 @@ class DiagonalMatrix(MatrixExpr):
         return m
 
     def _entry(self, i, j):
-        if self.size is not None:
-            if Ge(i, self.size) is S.true:
+        if self.diagonal_length is not None:
+            if Ge(i, self.diagonal_length) is S.true:
                 return S.Zero
-            elif Ge(j, self.size) is S.true:
+            elif Ge(j, self.diagonal_length) is S.true:
                 return S.Zero
         eq = Eq(i, j)
         if eq is S.true:
@@ -80,9 +83,12 @@ class DiagonalMatrix(MatrixExpr):
 
 
 class DiagonalOf(MatrixExpr):
-    """DiagonalOf(M) will create a create a matrix expression that
-    is equal to the diagonal of M, represented as a single column
-    matrix.
+    """DiagonalOf(M) will create a matrix expression that
+    is equivalent to the diagonal of `M`, represented as
+    a single column matrix.
+
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, DiagonalOf, Symbol
     >>> n = Symbol('n', integer=True)
@@ -99,24 +105,24 @@ class DiagonalOf(MatrixExpr):
     True
 
     The length of the diagonal -- the lesser of the two dimensions of `M` --
-    is accessed through the `size` property:
+    is accessed through the `diagonal_length` property:
 
-    >>> diag.size
+    >>> diag.diagonal_length
     2
-    >>> DiagonalOf(MatrixSymbol('x', n + 1, n)).size
+    >>> DiagonalOf(MatrixSymbol('x', n + 1, n)).diagonal_length
     n
 
     When only one of the dimensions is symbolic the other will be
     treated as though it is smaller:
 
     >>> dtall = DiagonalOf(MatrixSymbol('x', n, 3))
-    >>> dtall.size
+    >>> dtall.diagonal_length
     3
 
     When the size of the diagonal is not known, a value of None will
     be returned:
 
-    >>> DiagonalOf(MatrixSymbol('x', n, m)).size is None
+    >>> DiagonalOf(MatrixSymbol('x', n, m)).diagonal_length is None
     True
 
     """
@@ -140,7 +146,7 @@ class DiagonalOf(MatrixExpr):
         return m, S.One
 
     @property
-    def size(self):
+    def diagonal_length(self):
         return self.shape[0]
 
     def _entry(self, i, j):
