@@ -1258,7 +1258,7 @@ class Mul(Expr, AssocOp):
     def _eval_is_negative(self):
         if self.args[0] == -1:
             return (-self).is_positive  # remove -1
-        return self._eval_pos_neg(-1)     
+        return self._eval_pos_neg(-1)
     
     def _eval_is_odd(self):
         
