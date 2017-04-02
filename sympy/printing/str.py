@@ -44,6 +44,16 @@ class StrPrinter(Printer):
         else:
             return str(expr)
 
+    def _print_Reals(self,expr):
+        return "S.Reals"
+
+    def _print_Complexes(self,expr):
+        return "S.Complexes"
+
+    def _print_Naturals(self,expr):
+        return "S.Naturals"
+
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
