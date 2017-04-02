@@ -801,7 +801,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    S.Naturals
+    S.Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}

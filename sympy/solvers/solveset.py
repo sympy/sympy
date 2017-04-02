@@ -74,7 +74,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     >>> invert_complex(exp(x), y, x)
     (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), S.Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection(Interval(-oo, oo, True, True), {log(y)}))
+    (x, Intersection(S.Reals, {log(y)}))
 
     When does exp(x) == 1?
 

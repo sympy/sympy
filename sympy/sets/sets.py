@@ -233,7 +233,7 @@ class Set(Basic):
 
         >>> from sympy import S, EmptySet
         >>> S.Reals.symmetric_difference(EmptySet())
-        Interval(-oo, oo, True, True)
+        S.Reals
 
         References
         ==========
@@ -517,7 +517,7 @@ class Set(Basic):
         ========
         >>> from sympy import S, Interval
         >>> S.Reals.closure
-        Interval(-oo, oo, True, True)
+        S.Reals
         >>> Interval(0, 1).closure
         Interval(0, 1)
         """
