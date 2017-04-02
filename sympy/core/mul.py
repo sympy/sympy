@@ -1259,9 +1259,9 @@ class Mul(Expr, AssocOp):
         if self.args[0] == -1:
             return (-self).is_positive  # remove -1
         return self._eval_pos_neg(-1)
-    
+
     def _eval_is_odd(self):
-        
+
         #First we check to see if the expression as a whole is an integer because
         #!integer implies !odd.  If is_integer, then proceed. Since we are using 
         #.as_coeff_mul(), there are two cases: either all
@@ -1280,10 +1280,10 @@ class Mul(Expr, AssocOp):
         #in the denom against the factors of 2 in the symbols which are in the num.  Once we 
         #evaluate the denom, then we need to evaluate the symbols that make up the rest of the 
         #expression.  If more factors of 2 in the num, then even.  Else, not enough info, so None.
-        
+
         from sympy.simplify.radsimp import radsimp, fraction
         from sympy.ntheory import factorint
-        
+
         is_integer = self.is_integer
 
         if is_integer:
@@ -1296,7 +1296,7 @@ class Mul(Expr, AssocOp):
                     elif arg.is_even == None:
                         r = None
                 return r
-                
+    
             else:
                 numer,denom = fraction(coeff)
                 if numer % 2 == 0:
