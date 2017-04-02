@@ -483,8 +483,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        sequence_positive = solveset(sequence_term >= 0, sym, S.Reals).sup == S.Infinity
-        sequence_decreasing = solveset(sequence_term.diff() <= 0, sym, S.Reals).sup == S.Infinity
+        sequence_positive = solveset(sequence_term >= 0, sym, interval).sup == S.Infinity
+        solve_decreasing = solveset(sequence_term.diff() <= 0, sym, interval)
+        sequence_decreasing = solve_decreasing.is_Interval and solve_decreasing.sup == S.Infinity
         if sequence_positive and sequence_decreasing:
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             try:
