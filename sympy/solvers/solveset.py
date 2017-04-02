@@ -1116,7 +1116,7 @@ def linear_eq_to_matrix(equations, *symbols):
     return A, b
 
 
-def linsolve(system, *symbols):
+def linsolve(system, *symbols, **kwargs):
     r"""
     Solve system of N linear equations with M variables, which
     means both under - and overdetermined systems are supported.
@@ -1125,6 +1125,8 @@ def linsolve(system, *symbols):
     solutions are represented parametrically in terms of given
     symbols. For unique solution a FiniteSet of ordered tuple
     is returned.
+
+    For output as a dictionary,set out_dict = 'true'
 
     All Standard input formats are supported:
     For the given set of Equations, the respective input types
@@ -1314,9 +1316,14 @@ def linsolve(system, *symbols):
         for s in sol:
             solution.append(simplify(s))
 
+    #temporary variable to store solution as a tuple
+    temp_solution = tuple(solution)
     # Return solutions
     solution = FiniteSet(tuple(solution))
-    return solution
+    if ('out_dict' in kwargs and kwargs['out_dict'] == 'true'):
+        return dict(zip(symbols,temp_solution))
+    else:
+        return solution
 
 
 
