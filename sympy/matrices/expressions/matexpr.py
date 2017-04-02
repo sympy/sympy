@@ -10,6 +10,7 @@ from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+from sympy.utilities.misc import filldedent
 
 
 def _sympifyit(arg, retval=None):
@@ -225,7 +226,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                (0 <= i) != False and (i < self.rows) != False and
+                (self.rows is None or
+                (0 <= i) != False and (i < self.rows) != False) and
                 (0 <= j) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
@@ -245,9 +247,11 @@ class MatrixExpr(Basic):
         elif isinstance(key, (int, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
-            if not (isinstance(rows, Integer) and isinstance(cols, Integer)):
-                raise IndexError("Single index only supported for "
-                                 "non-symbolic matrix shapes.")
+            # allow single indexing if number of columns is known
+            if not isinstance(cols, Integer):
+                raise IndexError(filldedent('''
+                    Single indexing is only supported when the number
+                    of columns is known.'''))
             key = sympify(key)
             i = key // cols
             j = key % cols
@@ -256,8 +260,9 @@ class MatrixExpr(Basic):
             else:
                 raise IndexError("Invalid index %s" % key)
         elif isinstance(key, (Symbol, Expr)):
-                raise IndexError("Single index only supported for "
-                                 "non-symbolic indices.")
+                raise IndexError(filldedent('''
+                    Only integers may be used when addressing the matrix
+                    with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def as_explicit(self):

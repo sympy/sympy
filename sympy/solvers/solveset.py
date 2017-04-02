@@ -58,7 +58,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     in the complex domain, having infinitely many branches.)
 
     If you are working with real values only (or you are not sure which
-    function to use) you should probably use set the domain to
+    function to use) you should probably set the domain to
     ``S.Reals`` (or use `invert\_real` which does that automatically).
 
 

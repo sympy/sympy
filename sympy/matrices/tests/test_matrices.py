@@ -1214,6 +1214,8 @@ def test_is_upper():
     assert a.is_upper is True
     a = Matrix([[1], [2], [3]])
     assert a.is_upper is False
+    a = zeros(4, 2)
+    assert a.is_upper is True
 
 
 def test_is_lower():
@@ -1865,6 +1867,9 @@ def test_hessenberg():
 
     A = Matrix([[3, 4, 1], [2, 4, 5], [3, 1, 2]])
     assert not A.is_upper_hessenberg
+
+    A = zeros(5, 2)
+    assert A.is_upper_hessenberg
 
 
 def test_cholesky():
