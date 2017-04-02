@@ -274,7 +274,6 @@ class CompositeMorphism(Morphism):
         normalised_components = Tuple()
 
         for current, following in zip(components, components[1:]):
-            
             if not isinstance(current, Morphism) or \
                     not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")
