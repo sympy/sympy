@@ -483,10 +483,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        inequality = Derivative(sequence_term).doit() <= 0
-        solution_inequality = solveset(inequality, sym, S.Reals)
-        condition2 = solution_inequality.is_Interval and solution_inequality.right == upper_limit
-        if is_decreasing(sequence_term, interval) or condition2:
+        sequence_positive = solveset(sequence_term >= 0, sym, S.Reals).sup == S.Infinity
+        sequence_decreasing = solveset(sequence_term.diff() <= 0, sym, S.Reals).sup == S.Infinity
+        if sequence_positive and sequence_decreasing:
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             try:
                 integral_val_evaluated = integral_val.doit()
