@@ -1010,9 +1010,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         if not isinstance(dat, numpy.ndarray):
             return dat
 
-        if dat.ndim == 0:
+        if dat.rank() == 0:
             return dat[()]
-        elif dat.ndim == 1 and dat.size == 1:
+        elif dat.rank() == 1 and dat.size == 1:
             return dat[0]
         return dat
 
@@ -1043,7 +1043,8 @@ class _TensorDataLazyEvaluator(CantSympify):
             srch = (key.component,) + signature
             if srch in self._substitutions_dict_tensmul:
                 return self._substitutions_dict_tensmul[srch]
-            return self.data_from_tensor(key)
+            array_list = [self.data_from_tensor(key)]
+            return self.data_contract_dum(array_list, key.dum, key.ext_rank)
 
         if isinstance(key, TensMul):
             tensmul_args = key.args
@@ -1066,7 +1067,6 @@ class _TensorDataLazyEvaluator(CantSympify):
             return coeff*data_result
 
         if isinstance(key, TensAdd):
-            sumvar = S.Zero
             data_list = []
             free_args_list = []
             for arg in key.args:
@@ -1082,23 +1082,24 @@ class _TensorDataLazyEvaluator(CantSympify):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
 
+            sum_list = []
             #numpy = import_module("numpy")
             from .array import permutedims
             for data, free_args in zip(data_list, free_args_list):
                 if len(free_args) < 2:
-                    sumvar += data
+                    sum_list.append(data)
                 else:
                     free_args_pos = {y: x for x, y in enumerate(free_args)}
                     axes = [free_args_pos[arg] for arg in key.free_args]
                     #sumvar += numpy.transpose(data.tolist(), axes)
-                    sumvar += permutedims(data, axes)
-            return sumvar
+                    sum_list.append(permutedims(data, axes))
+            return reduce(lambda x, y: x+y, sum_list)
 
         return None
 
     def data_contract_dum(self, ndarray_list, dum, ext_rank):
-        from .array import tensorproduct, tensorcontraction, Array
-        arrays = list(map(Array, ndarray_list))
+        from .array import tensorproduct, tensorcontraction, MutableDenseNDimArray
+        arrays = list(map(MutableDenseNDimArray, ndarray_list))
         prodarr = tensorproduct(*arrays)
         return tensorcontraction(prodarr, *dum)
 
@@ -1146,7 +1147,7 @@ class _TensorDataLazyEvaluator(CantSympify):
         return tensorhead, newdata
 
     def _check_permutations_on_data(self, tens, data):
-        import numpy
+        from .array import permutedims
 
         if isinstance(tens, TensorHead):
             rank = tens.rank
@@ -1169,9 +1170,9 @@ class _TensorDataLazyEvaluator(CantSympify):
             # the order of a permutation is the number of times to get the
             # identity by applying that permutation.
             for i in range(gener.order()-1):
-                data_swapped = numpy.transpose(data_swapped, permute_axes)
+                data_swapped = permutedims(data_swapped, permute_axes)
                 # if any value in the difference array is non-zero, raise an error:
-                if (last_data - sign_change*data_swapped).any():
+                if any(last_data - sign_change*data_swapped):
                     raise ValueError("Component data symmetry structure error")
                 last_data = data_swapped
 
@@ -1261,29 +1262,44 @@ class _TensorDataLazyEvaluator(CantSympify):
         self._substitutions_dict_tensmul[metric, False, False] = inverse_transpose
         # now mixed cases, these are identical to the unit matrix if the metric
         # is symmetric.
-        m = Matrix(data)
-        invt = Matrix(inverse_transpose)
+        m = data.tomatrix()
+        invt = inverse_transpose.tomatrix()
         self._substitutions_dict_tensmul[metric, True, False] = m * invt
         self._substitutions_dict_tensmul[metric, False, True] = invt * m
 
     @staticmethod
     def _flip_index_by_metric(data, metric, pos):
-        numpy = import_module('numpy')
+        from .array import tensorproduct, tensorcontraction, permutedims, MutableDenseNDimArray, NDimArray
 
-        data = numpy.tensordot(
-                metric,
-                data,
-                (1, pos))
-        return numpy.rollaxis(data, 0, pos+1)
+        mdim = metric.rank()
+        ddim = data.rank()
+
+        if pos == 0:
+            data = tensorcontraction(
+                tensorproduct(
+                    metric,
+                    data
+                ),
+                (1, mdim+pos)
+            )
+        else:
+            data = tensorcontraction(
+                tensorproduct(
+                    data,
+                    metric
+                ),
+                (pos, ddim)
+            )
+        return data
 
     @staticmethod
     def inverse_matrix(ndarray):
-        m = Matrix(ndarray).inv()
+        m = ndarray.tomatrix().inv()
         return _TensorDataLazyEvaluator.parse_data(m)
 
     @staticmethod
     def inverse_transpose_matrix(ndarray):
-        m = Matrix(ndarray).inv().T
+        m = ndarray.tomatrix().inv().T
         return _TensorDataLazyEvaluator.parse_data(m)
 
     @staticmethod
@@ -1294,7 +1310,6 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         It uses the metric matrix to lower values of covariant indices.
         """
-        numpy = import_module('numpy')
         # change the ndarray values according covariantness/contravariantness of the indices
         # use the metric
         for i, indx in enumerate(indices):
@@ -1306,26 +1321,11 @@ class _TensorDataLazyEvaluator(CantSympify):
                     _TensorDataLazyEvaluator.inverse_matrix(indx.tensor_index_type.data),
                     i
                 )
-
-        if len(dum) > 0:
-            ### perform contractions ###
-            axes1 = []
-            axes2 = []
-            for i, indx1 in enumerate(indices):
-                try:
-                    nd = indices[:i].index(-indx1)
-                except ValueError:
-                    continue
-                axes1.append(nd)
-                axes2.append(i)
-
-            for ax1, ax2 in zip(axes1, axes2):
-                data = numpy.trace(data, axis1=ax1, axis2=ax2)
         return data
 
     @staticmethod
     def _sort_data_axes(old, new):
-        numpy = import_module('numpy')
+        from .array import permutedims
 
         new_data = old.data.copy()
 
@@ -1336,7 +1336,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             for j in range(i, len(old_free)):
                 if old_free[j] == new_free[i]:
                     old_free[i], old_free[j] = old_free[j], old_free[i]
-                    new_data = numpy.swapaxes(new_data, i, j)
+                    new_data = permutedims(new_data, (i, j))
                     break
         return new_data
 
@@ -1366,18 +1366,13 @@ class _TensorDataLazyEvaluator(CantSympify):
         [[1 2]
          [4 7]]
         """
-        numpy = import_module('numpy')
+        from .array import MutableDenseNDimArray
 
-        if (numpy is not None) and (not isinstance(data, numpy.ndarray)):
+        if not isinstance(data, MutableDenseNDimArray):
             if len(data) == 2 and hasattr(data[0], '__call__'):
-
-                def fromfunction_sympify(*x):
-                    return sympify(data[0](*x))
-
-                data = numpy.fromfunction(fromfunction_sympify, data[1])
+                data = MutableDenseNDimArray(data[0], data[1])
             else:
-                vsympify = numpy.vectorize(sympify)
-                data = vsympify(numpy.array(data))
+                data = MutableDenseNDimArray(data)
         return data
 
 _tensor_data_substitution_dict = _TensorDataLazyEvaluator()
@@ -1698,18 +1693,19 @@ class TensorIndexType(Basic):
         # This assignment is a bit controversial, should metric components be assigned
         # to the metric only or also to the TensorIndexType object? The advantage here
         # is the ability to assign a 1D array and transform it to a 2D diagonal array.
-        numpy = import_module('numpy')
+        from .array import MutableDenseNDimArray
+
         data = _TensorDataLazyEvaluator.parse_data(data)
-        if data.ndim > 2:
+        if data.rank() > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
-        if data.ndim == 1:
+        if data.rank() == 1:
             if self.dim is not None:
                 nda_dim = data.shape[0]
                 if nda_dim != self.dim:
                     raise ValueError("Dimension mismatch")
 
             dim = data.shape[0]
-            newndarray = numpy.zeros((dim, dim), dtype=object)
+            newndarray = MutableDenseNDimArray.zeros(dim, dim)
             for i, val in enumerate(data):
                 newndarray[i, i] = val
             data = newndarray
@@ -2495,14 +2491,16 @@ class TensorHead(Basic):
     def __pow__(self, other):
         if self.data is None:
             raise ValueError("No power on abstract tensors.")
-        numpy = import_module('numpy')
+        from .array import tensorproduct, tensorcontraction
         metrics = [_.data for _ in self.args[1].args[0]]
 
         marray = self.data
+        marraydim = marray.rank()
         for metric in metrics:
-            marray = numpy.tensordot(marray, numpy.tensordot(metric, marray, (1, 0)), (0, 0))
-        pow2 = marray[()]
-        return pow2 ** (Rational(1, 2) * other)
+            marray = tensorproduct(marray, metric, marray)
+            marray = tensorcontraction(marray, (0, marraydim), (marraydim+1, marraydim+2))
+
+        return marray ** (Rational(1, 2) * other)
 
     @property
     def data(self):
@@ -2518,7 +2516,7 @@ class TensorHead(Basic):
             del _tensor_data_substitution_dict[self]
 
     def __iter__(self):
-        return self.data.flatten().__iter__()
+        return self.data.__iter__()
 
     def _components_data_full_destroy(self):
         """
@@ -2603,22 +2601,19 @@ class TensExpr(Basic):
     def __pow__(self, other):
         if self.data is None:
             raise ValueError("No power without ndarray data.")
-        numpy = import_module('numpy')
+        from .array import tensorproduct, tensorcontraction
         free = self.free
-
         marray = self.data
+        mdim = marray.rank()
         for metric in free:
-            marray = numpy.tensordot(
+            marray = tensorcontraction(
+                tensorproduct(
                 marray,
-                numpy.tensordot(
-                    metric[0].tensor_index_type.data,
-                    marray,
-                    (1, 0)
-                ),
-                (0, 0)
+                metric[0].tensor_index_type.data,
+                marray),
+                (0, mdim), (mdim+1, mdim+2)
             )
-        pow2 = marray[()]
-        return pow2 ** (Rational(1, 2) * other)
+        return marray ** (Rational(1, 2) * other)
 
     def __rpow__(self, other):
         raise NotImplementedError
@@ -3391,7 +3386,7 @@ class Tensor(TensExpr):
 
     # TODO: put this into TensExpr?
     def __iter__(self):
-        return self.data.flatten().__iter__()
+        return self.data.__iter__()
 
     # TODO: put this into TensExpr?
     def __getitem__(self, item):
@@ -4328,7 +4323,7 @@ class TensMul(TensExpr):
     def __iter__(self):
         if self.data is None:
             raise ValueError("No iteration on abstract tensors")
-        return (self.data.flatten()).__iter__()
+        return self.data.__iter__()
 
 
 def canon_bp(p):

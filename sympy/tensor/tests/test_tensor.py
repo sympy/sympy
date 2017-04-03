@@ -1444,6 +1444,11 @@ def test_noncommuting_components():
     assert vtp.data == a**2 + b**2 + c**2 + d**2
     assert vtp.data != a**2 + 2*b*c + d**2
 
+    vtp2 = V1(i1, i2)*V1(-i2, -i1)
+
+    assert vtp2.data == a**2 + b*c + c*b + d**2
+    assert vtp2.data != a**2 + 2*b*c + d**2
+
     Vc = (b * V1(i1, -i1)).data
     assert Vc.expand() == b * a + b * d
 
@@ -1476,6 +1481,7 @@ def test_valued_assign_numpy_ndarray():
     # test on multi-indexed tensors.
     random_4x4_data = [[(i**3-3*i**2)%(j+7) for i in range(4)] for j in range(4)]
     AB(-i0, -i1).data = random_4x4_data
+
     for i in range(4):
         for j in range(4):
             assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
@@ -1529,7 +1535,6 @@ def test_valued_canon_bp_swapaxes():
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
     e1 = A(i1)*A(i0)
-    e1.data[0, 1] = 44
     e2 = e1.canon_bp()
     assert e2 == A(i0)*A(i1)
     for i in range(4):
