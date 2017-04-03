@@ -30,7 +30,7 @@ def solve_poly_inequality(poly, rel):
     [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
-    [(-oo, -1), (-1, 1), (1, oo)]
+    [Interval(-oo, -1, True, True), Interval(-1, 1, True, True), Interval(1, oo, True, True)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
     [{-1}, {1}]
@@ -120,7 +120,7 @@ def solve_poly_inequalities(polys):
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
     ... Poly(-x**2 + 1), ">")))
-    (-oo, -sqrt(3)) U (-1, 1) U (sqrt(3), oo)
+    Union(Interval(-oo, -sqrt(3), True, True), Interval(-1, 1, True, True), Interval(sqrt(3), oo, True, True))
     """
     from sympy import Union
     return Union(*[solve_poly_inequality(*p) for p in polys])
@@ -144,7 +144,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
     ... ((Poly(-x + 1), Poly(1, x)), '>=')]])
-    (-oo, 0) U (0, 1]
+    Union(Interval(-oo, 0, True, True), Interval(0, 1, True))
 
     See Also
     ========
@@ -427,14 +427,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
-    (-oo, -2] U [2, oo)
+    Union(Interval(-oo, -2, True), Interval(2, oo, False, True))
 
     >>> domain = Interval(0, S.Infinity)
     >>> solve_univariate_inequality(x**2 >= 4, x, False, domain)
-    [2, oo)
+    Interval(2, oo, False, True)
 
     >>> solve_univariate_inequality(sin(x) > 0, x, relational=False)
-    (0, pi)
+    Interval(0, pi, True, True)
 
     """
     from sympy.calculus.util import (continuous_domain, periodicity,
