@@ -3860,7 +3860,10 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero, rankcheck=False):
+    def LUdecomposition(self,
+                        iszerofunc=_iszero,
+                        simpfunc=_simplify,
+                        rankcheck=False):
         """Returns (L, U, perm) where L is a lower triangular matrix with unit
         diagonal, U is an upper triangular matrix, and perm is a list of row
         swap index pairs. If A is the original matrix, then
@@ -3868,7 +3871,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
 
         See documentation for LUCombined for details about the keyword argument
-        iszerofunc and rankcheck.
+        iszerofunc, simpfunc, and rankcheck.
 
         Examples
         ========
@@ -3929,6 +3932,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
     def LUdecomposition_Simple(self,
                                iszerofunc=_iszero,
+                               simpfunc=_simplify,
                                rankcheck=False):
         """Compute an lu decomposition of m x n matrix A, where P*A = L*U
 
@@ -3963,10 +3967,20 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         matrix P such that P*A = L*U can be computed by
         soP=eye(A.row).permuteFwd(perm).
 
-        iszerofunc is a callable that returns a boolean indicating if its input
-        is zero.
-        If iszerofunc may return None if it cannot determine if its input is
-        zero.
+        The pivot search algorithm employs the functions iszerofunc() and
+        simplfy().
+        The algorithm first looks for a nonzero pivot by calling
+        iszerofunc() on each of the candidate pivots.
+        iszerofunc() returns a boolean, or None if it cannot determine if
+        its input is zero.
+        If the pivot search cannot find a guaranteed nonzero pivot,
+        then it repeats the search by calling simplify() and then iszerofunc()
+        on each candidate pivot.
+        The pivot search algorithm can dominate the total runtime when the
+        input matrix has symbolic entries and the default simplification
+        is used.
+        See the documentation for _find_reasonable_pivot() for a more detailed
+        description of the search algorithm.
 
         The keyword argument rankcheck determines if this function raises a
         ValueError when passed a matrix whose rank is strictly less than
@@ -4009,7 +4023,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                 newly_determined =\
                     _find_reasonable_pivot(lu[pivot_row:, pivot_col],
                                            iszerofunc=iszerofunc,
-                                           simpfunc=_simplify)
+                                           simpfunc=simpfunc)
 
                 if newly_determined is not None:
                     for offset, simplified_val in newly_determined:
