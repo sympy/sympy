@@ -128,8 +128,8 @@ For example, ``cos(x) + 1`` is equal to ``cos(x).__add__(1)`` is equal to
 ``Add(cos(x), Integer(1))``
 
 This works becauses Python allows you to override the behavior of built-in
-operations ``+, *, -, /`` etc. by defining methods with names ``__add__``,
-``__mul__`` etc, so ``cos(x) + 1`` is reduced to ``cos(x).__add__(1)``.
+operations ``+, *, -, /`` etc., by defining methods with names ``__add__``,
+``__mul__`` etc., so ``cos(x) + 1`` is evaluated as ``cos(x).__add__(1)``.
 
 Then, in the ``__add__``, ``__mul__`` methods defined for SymPy objects, new
 ``Add`` or ``Mul`` objects are constructed. Python types are also converted to
@@ -141,7 +141,7 @@ Similarly, ``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
 
 Note that ``2/cos(x)`` calls ``cos(x).__rdiv__(2)`` instead of
 ``(2).__div__(cos(x))`` because ``2`` (type ``int``) does not know how to
-divide ``cos(x)``.
+be divided by ``cos(x)``.
 (Note: In Python 3, ``__div__`` is replaced by ``__truediv__``
 and ``__rdiv__`` is replaced by ``__rtruediv__``.)
 
