@@ -7,6 +7,7 @@ from mpmath import lu_solve
 #now works only for SU(2), but since all the other functions can be
 #used for every SU(n) group, i will have to write only a new generator
 #here
+
 def SU_generator(n,str):
     generator=[]
     list_of_generators=[]
@@ -19,7 +20,8 @@ def SU_generator(n,str):
         return generator
     if (str=='gen_matrix'):
         return gen_matrix
-  #simple SU(n) group constructor
+    
+#simple SU(n) group constructor
 def SU(n):
     generator=[]
     generator=SU_generator(n,'generator')
@@ -36,6 +38,7 @@ def SU_with_coefficients(n, list_of_coefficients):
     for i in range(n*n-1):
         ans=ans+list_of_coefficients[i]*generator[i]
     return ans
+
 #Example no.1
 #Simple SU(2) group
 SU(2)
@@ -69,5 +72,3 @@ is_SU([[0,1],[1,0]],2)
 
 #links:
 #https://en.wikipedia.org/wiki/Special_unitary_group
-
-
