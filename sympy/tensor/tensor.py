@@ -1082,7 +1082,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     def data_contract_dum(self, ndarray_list, dum, ext_rank):
         numpy = import_module("numpy")
         # create a list marking the dummy index connection:
-        dum_pos = [None]*ext_rank
+        dum_pos = {} #list(range(ext_rank))
         for i in dum:
             dum_pos[i[0]] = i[1]
             dum_pos[i[1]] = i[0]
@@ -1092,7 +1092,7 @@ class _TensorDataLazyEvaluator(CantSympify):
             # axes to contract:
             axes1 = []
             axes2 = []
-            for i, p in enumerate(dum_pos):
+            for i, p in dum_pos.items():
                 if i >= current_pos:
                     # do not examine future contractions:
                     break
@@ -1105,10 +1105,11 @@ class _TensorDataLazyEvaluator(CantSympify):
                     axes1.append(i)
                     axes2.append(p - arr1.ndim)
 
-            for i in reversed(axes1):
-                dum_pos.pop(i)
-            for i in reversed(axes2):
-                dum_pos.pop(i - arr1.ndim)
+            #for i in reversed(axes1):
+                #dum_pos.pop(i)
+                #del dum_pos[i]
+            #for i in reversed(axes2):
+                #dum_pos.pop(i - arr1.ndim)
 
             return numpy.tensordot(
                 arr1,
@@ -1116,6 +1117,9 @@ class _TensorDataLazyEvaluator(CantSympify):
                 (axes1, axes2)
             )
 
+        prodarr = reduce(lambda x, y: numpy.tensordot(x, y, 0), ndarray_list)
+        p2 = numpy.tensordot(prodarr, numpy.array(1), axes=tuple(zip(*dum)))
+        return p2
         return reduce(product_arrays, ndarray_list)
 
     def data_tensorhead_from_tensmul(self, data, tensmul, tensorhead):
