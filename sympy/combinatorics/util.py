@@ -8,9 +8,9 @@ rmul = Permutation.rmul
 _af_new = Permutation._af_new
 
 ############################################
-###
-### Utilities for computational group theory
-###
+#
+# Utilities for computational group theory
+#
 ############################################
 
 
@@ -29,6 +29,7 @@ def _base_ordering(base, degree):
 
     A list ``base_ordering`` such that ``base_ordering[point]`` is the
     number of ``point`` in the ordering.
+
     Examples
     ========
 
@@ -81,10 +82,10 @@ def _check_cycles_alt_sym(perm):
 
     >>> from sympy.combinatorics.util import _check_cycles_alt_sym
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> a = Permutation([[0,1,2,3,4,5,6,7,8,9,10], [11, 12]])
+    >>> a = Permutation([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12]])
     >>> _check_cycles_alt_sym(a)
     False
-    >>> b = Permutation([[0,1,2,3,4,5,6], [7,8,9,10]])
+    >>> b = Permutation([[0, 1, 2, 3, 4, 5, 6], [7, 8, 9, 10]])
     >>> _check_cycles_alt_sym(b)
     True
 
@@ -148,12 +149,12 @@ def _distribute_gens_by_base(base, gens):
     >>> D = DihedralGroup(3)
     >>> D.schreier_sims()
     >>> D.strong_gens
-    [Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)]
+    [(0 1 2), (0 2), (1 2)]
     >>> D.base
     [0, 1]
     >>> _distribute_gens_by_base(D.base, D.strong_gens)
-    [[Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)],
-     [Permutation(1, 2)]]
+    [[(0 1 2), (0 2), (1 2)],
+     [(1 2)]]
 
     See Also
     ========
@@ -177,6 +178,7 @@ def _distribute_gens_by_base(base, gens):
     for i in range(max_stab_index + 1, base_len):
         stabs[i].append(_af_new(list(range(degree))))
     return stabs
+
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
@@ -216,12 +218,7 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     >>> D.schreier_sims()
     >>> _handle_precomputed_bsgs(D.base, D.strong_gens,
     ... basic_orbits=D.basic_orbits)
-    ([{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},
-    {1: Permutation(2), 2: Permutation(1, 2)}],
-    [[0, 1, 2], [1, 2]], [[Permutation(0, 1, 2),
-                           Permutation(0, 2),
-                           Permutation(1, 2)],
-                          [Permutation(1, 2)]])
+    ([{0: (2), 1: (0 1 2), 2: (0 2)}, {1: (2), 2: (1 2)}], [[0, 1, 2], [1, 2]], [[(0 1 2), (0 2), (1 2)], [(1 2)]])
 
     See Also
     ========
@@ -279,9 +276,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     >>> S.schreier_sims()
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _orbits_transversals_from_bsgs(S.base, strong_gens_distr)
-    ([[0, 1, 2], [1, 2]],
-    [{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2, 1)},
-    {1: Permutation(2), 2: Permutation(1, 2)}])
+    ([[0, 1, 2], [1, 2]], [{0: (2), 1: (0 1 2), 2: (0 2 1)}, {1: (2), 2: (1 2)}])
 
     See Also
     ========
@@ -379,6 +374,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                     res.remove(gen)
     return res
 
+
 def _strip(g, base, orbits, transversals):
     """
     Attempt to decompose a permutation using a (possibly partial) BSGS
@@ -420,7 +416,7 @@ def _strip(g, base, orbits, transversals):
     >>> S.schreier_sims()
     >>> g = Permutation([0, 2, 3, 1, 4])
     >>> _strip(g, S.base, S.basic_orbits, S.basic_transversals)
-    (Permutation(4), 5)
+    ((4), 5)
 
     Notes
     =====
@@ -456,6 +452,7 @@ def _strip(g, base, orbits, transversals):
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
+
 def _strip_af(h, base, orbits, transversals, j):
     """
     optimized _strip, with h, transversals and result in array form
@@ -475,6 +472,7 @@ def _strip_af(h, base, orbits, transversals, j):
             return False, base_len + 1
         h = _af_rmul(_af_invert(u), h)
     return h, base_len + 1
+
 
 def _strong_gens_from_distr(strong_gens_distr):
     """
@@ -500,10 +498,10 @@ def _strong_gens_from_distr(strong_gens_distr):
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
     >>> S.strong_gens
-    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]
+    [(0 1 2), (2)(0 1), (1 2)]
     >>> strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)
     >>> _strong_gens_from_distr(strong_gens_distr)
-    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]
+    [(0 1 2), (2)(0 1), (1 2)]
 
     See Also
     ========

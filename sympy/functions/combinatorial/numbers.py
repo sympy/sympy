@@ -19,6 +19,8 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.memoization import recurrence_memo
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -30,7 +32,6 @@ def _product(a, b):
         p *= k
     return p
 
-from sympy.utilities.memoization import recurrence_memo
 
 
 # Dummy symbol used for computing polynomial sequences
@@ -111,6 +112,12 @@ class fibonacci(Function):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
+
+    def _eval_rewrite_as_GoldenRatio(self,n):
+        return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
+
 
 class lucas(Function):
     """
@@ -151,12 +158,15 @@ class lucas(Function):
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
+    def _eval_rewrite_as_sqrt(self, n):
+        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                           Bernoulli numbers                                #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class bernoulli(Function):
     r"""
@@ -994,7 +1004,6 @@ class genocchi(Function):
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
         return (n - 8).is_zero
-
 
 
 #######################################################################

@@ -19,9 +19,10 @@ def test_Add():
 
 
 def test_Function():
-    assert precedence(sin(x)) == PRECEDENCE["Atom"]
-    assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]
+    assert precedence(sin(x)) == PRECEDENCE["Func"]
 
+def test_Derivative():
+    assert precedence(Derivative(x, y)) == PRECEDENCE["Atom"]
 
 def test_Integral():
     assert precedence(Integral(x, y)) == PRECEDENCE["Atom"]

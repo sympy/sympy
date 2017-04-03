@@ -327,8 +327,8 @@ class TIDS(CantSympify):
         dum = TIDS._check_matrix_indices(f_free, g_free, nc1)
 
         # find out which free indices of f and g are contracted
-        free_dict1 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in f_free])
-        free_dict2 = dict([(i if i.is_up else -i, (pos, cpos, i)) for i, pos, cpos in g_free])
+        free_dict1 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in f_free}
+        free_dict2 = {i if i.is_up else -i: (pos, cpos, i) for i, pos, cpos in g_free}
         free_names = set(free_dict1.keys()) & set(free_dict2.keys())
         # find the new `free` and `dum`
 
@@ -1067,60 +1067,40 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         if isinstance(key, TensAdd):
             sumvar = S.Zero
-            data_list = [i.data for i in key.args]
+            data_list = []
+            free_args_list = []
+            for arg in key.args:
+                if isinstance(arg, TensExpr):
+                    data_list.append(arg.data)
+                    free_args_list.append([x[0] for x in arg.free])
+                else:
+                    data_list.append(arg)
+                    free_args_list.append([])
             if all([i is None for i in data_list]):
                 return None
             if any([i is None for i in data_list]):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
-            for i in data_list:
-                sumvar += i
+
+            #numpy = import_module("numpy")
+            from .array import permutedims
+            for data, free_args in zip(data_list, free_args_list):
+                if len(free_args) < 2:
+                    sumvar += data
+                else:
+                    free_args_pos = {y: x for x, y in enumerate(free_args)}
+                    axes = [free_args_pos[arg] for arg in key.free_args]
+                    #sumvar += numpy.transpose(data.tolist(), axes)
+                    sumvar += permutedims(data, axes)
             return sumvar
 
         return None
 
     def data_contract_dum(self, ndarray_list, dum, ext_rank):
-        numpy = import_module("numpy")
-        # create a list marking the dummy index connection:
-        dum_pos = {} #list(range(ext_rank))
-        for i in dum:
-            dum_pos[i[0]] = i[1]
-            dum_pos[i[1]] = i[0]
-
-        def product_arrays(arr1, arr2):
-            current_pos = arr1.ndim + arr2.ndim
-            # axes to contract:
-            axes1 = []
-            axes2 = []
-            for i, p in dum_pos.items():
-                if i >= current_pos:
-                    # do not examine future contractions:
-                    break
-
-                # if p < current_pos, there is a dummy pair to contract.
-                # if p > i, it has already been included.
-                if p > i and p < current_pos:
-                    #dum_pos.pop(i - len(axes1))
-                    #dum_pos.pop(p - len(axes1) - 1)
-                    axes1.append(i)
-                    axes2.append(p - arr1.ndim)
-
-            #for i in reversed(axes1):
-                #dum_pos.pop(i)
-                #del dum_pos[i]
-            #for i in reversed(axes2):
-                #dum_pos.pop(i - arr1.ndim)
-
-            return numpy.tensordot(
-                arr1,
-                arr2,
-                (axes1, axes2)
-            )
-
-        prodarr = reduce(lambda x, y: numpy.tensordot(x, y, 0), ndarray_list)
-        p2 = numpy.tensordot(prodarr, numpy.array(1), axes=tuple(zip(*dum)))
-        return p2
-        return reduce(product_arrays, ndarray_list)
+        from .array import tensorproduct, tensorcontraction, Array
+        arrays = list(map(Array, ndarray_list))
+        prodarr = tensorproduct(*arrays)
+        return tensorcontraction(prodarr, *dum)
 
     def data_tensorhead_from_tensmul(self, data, tensmul, tensorhead):
         """
@@ -1234,7 +1214,8 @@ class _TensorDataLazyEvaluator(CantSympify):
         numpy = import_module('numpy')
 
         def ikey(x):
-            return x[1:]
+            # sort by component number , then by position in component
+            return x[2], x[1]
 
         free1 = free1[:]
         free2 = free2[:]
@@ -2355,6 +2336,7 @@ class TensorHead(Basic):
     Let's define `F`, an antisymmetric tensor, we have to assign an
     antisymmetric matrix to it, because `[[2]]` stands for the Young tableau
     representation of an antisymmetric set of two elements:
+
     >>> F = tensorhead('A', [Lorentz, Lorentz], [[2]])
     >>> F(-i0, -i1).data = [
     ... [0, Ex/c, Ey/c, Ez/c],
@@ -2927,6 +2909,7 @@ class TensAdd(TensExpr):
             args2 = [x for x in args if not isinstance(x, TensExpr)]
             t1 = TensMul.from_data(Add(*args2), [], [], [])
             args = [t1] + args1
+
         a = []
         for x in args:
             if isinstance(x, TensAdd):

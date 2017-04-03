@@ -6,6 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.pretty import pretty
+from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorType, TensorIndex, tensor_mul, TensAdd, \
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensorsymmetry, tensorhead, \
@@ -1204,11 +1205,8 @@ def test_hash():
 
 ### TEST VALUED TENSORS ###
 
-numpy = import_module('numpy')
 
 def _get_valued_base_test_variables():
-    if numpy is None:
-        return
 
     minkowski = Matrix((
         (1, 0, 0, 0),
@@ -1267,10 +1265,9 @@ def _get_valued_base_test_variables():
     return (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
             n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4)
 
+
 def test_valued_tensor_iter():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
+
 
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
@@ -1293,10 +1290,6 @@ def test_valued_tensor_iter():
 
 
 def test_valued_tensor_covariant_contravariant_elements():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1310,10 +1303,6 @@ def test_valued_tensor_covariant_contravariant_elements():
 
 
 def test_valued_tensor_get_matrix():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1334,10 +1323,6 @@ def test_valued_tensor_get_matrix():
 
 
 def test_valued_tensor_contraction():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1362,10 +1347,6 @@ def test_valued_tensor_contraction():
 
 
 def test_valued_tensor_self_contraction():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1374,10 +1355,6 @@ def test_valued_tensor_self_contraction():
 
 
 def test_valued_tensor_pow():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1388,10 +1365,6 @@ def test_valued_tensor_pow():
 
 
 def test_valued_tensor_expressions():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1432,10 +1405,6 @@ def test_valued_tensor_expressions():
 
 
 def test_valued_tensor_add_scalar():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1457,10 +1426,6 @@ def test_valued_tensor_add_scalar():
 
 
 def test_noncommuting_components():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1484,10 +1449,6 @@ def test_noncommuting_components():
 
 
 def test_valued_non_diagonal_metric():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1496,22 +1457,18 @@ def test_valued_non_diagonal_metric():
 
 
 def test_valued_assign_numpy_ndarray():
-    numpy = import_module("numpy")
-    if numpy is None:
-        skip("numpy not installed.")
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
     # this is needed to make sure that a numpy.ndarray can be assigned to a
     # tensor.
     arr = [E+1, px-1, py, pz]
-    A.data = numpy.array(arr)
+    A.data = Array(arr)
     for i in range(4):
             assert A(i0).data[i] == arr[i]
 
     qx, qy, qz = symbols('qx qy qz')
-    A(-i0).data = numpy.array([E, qx, qy, qz])
+    A(-i0).data = Array([E, qx, qy, qz])
     for i in range(4):
         assert A(i0).data[i] == [E, -qx, -qy, -qz][i]
         assert A.data[i] == [E, -qx, -qy, -qz][i]
@@ -1536,10 +1493,6 @@ def test_valued_assign_numpy_ndarray():
 
 
 def test_valued_metric_inverse():
-    numpy = import_module("numpy")
-    if numpy is None:
-        return
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1572,10 +1525,6 @@ def test_valued_metric_inverse():
 
 
 def test_valued_canon_bp_swapaxes():
-    numpy = import_module("numpy")
-    if numpy is None:
-        return
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
@@ -1604,10 +1553,6 @@ def test_pprint():
 
 
 def test_valued_components_with_wrong_symmetry():
-    numpy = import_module("numpy")
-    if numpy is None:
-        return
-
     IT = TensorIndexType('IT', dim=3)
     i0, i1, i2, i3 = tensor_indices('i0:4', IT)
     IT.data = [1, 1, 1]
@@ -1639,10 +1584,6 @@ def test_valued_components_with_wrong_symmetry():
 
 
 def test_issue_10972_TensMul_data():
-    numpy = import_module('numpy')
-    if numpy is None:
-        return
-
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
 
@@ -1660,19 +1601,15 @@ def test_issue_10972_TensMul_data():
               [-1, 0]]
 
     mul_1 = F(mu, alpha) * u(-alpha) * F(nu, beta) * u(-beta)
-    assert (mul_1.data == numpy.array([[0, 0], [0, 1]])).all()
+    assert (mul_1.data == Array([[0, 0], [0, 1]]))
 
     mul_2 = F(mu, alpha) * F(nu, beta) * u(-alpha) * u(-beta)
-    assert (mul_2.data == mul_1.data).all()
+    assert (mul_2.data == mul_1.data)
 
-    assert ((mul_1 + mul_1).data == 2 * mul_1.data).all()
+    assert ((mul_1 + mul_1).data == 2 * mul_1.data)
 
 
 def test_TensMul_data():
-    numpy = import_module('numpy')
-    if numpy is None:
-        return
-
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='L', dim=4)
     Lorentz.data = [-1, 1, 1, 1]
 
@@ -1696,20 +1633,20 @@ def test_TensMul_data():
     E = F(mu, nu) * u(-nu)
 
     assert ((E(mu) * E(nu)).data ==
-            numpy.array([[0, 0, 0, 0],
+            Array([[0, 0, 0, 0],
                          [0, Ex ** 2, Ex * Ey, Ex * Ez],
                          [0, Ex * Ey, Ey ** 2, Ey * Ez],
                          [0, Ex * Ez, Ey * Ez, Ez ** 2]])
-            ).all()
+            )
 
-    assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data).all()
+    assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data)
 
     assert ((F(mu, alpha) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
             - (E(mu) * E(nu)).data
-            ).all()
+            )
     assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
             (E(mu) * E(nu)).data
-            ).all()
+            )
 
     S2 = TensorType([Lorentz] * 2, tensorsymmetry([1] * 2))
     g = S2('g')
@@ -1719,24 +1656,20 @@ def test_TensMul_data():
     perp = u(mu) * u(nu) + g(mu, nu)
 
     mul_1 = u(-mu) * perp(mu, nu)
-    assert (mul_1.data == numpy.array([0, 0, 0, 0])).all()
+    assert (mul_1.data == Array([0, 0, 0, 0]))
 
     mul_2 = u(-mu) * perp(mu, alpha) * perp(nu, beta)
-    assert (mul_2.data == numpy.zeros(shape=(4, 4, 4))).all()
+    assert (mul_2.data == Array.zeros(4, 4, 4))
 
     Fperp = perp(mu, alpha) * perp(nu, beta) * F(-alpha, -beta)
-    assert (Fperp.data[0, :] == numpy.array([0, 0, 0, 0])).all()
-    assert (Fperp.data[:, 0] == numpy.array([0, 0, 0, 0])).all()
+    assert (Fperp.data[0, :] == Array([0, 0, 0, 0]))
+    assert (Fperp.data[:, 0] == Array([0, 0, 0, 0]))
 
     mul_3 = u(-mu) * Fperp(mu, nu)
-    assert (mul_3.data == numpy.array([0, 0, 0, 0])).all()
+    assert (mul_3.data == Array([0, 0, 0, 0]))
 
 
 def test_issue_11020_TensAdd_data():
-    numpy = import_module('numpy')
-    if numpy is None:
-        return
-
     Lorentz = TensorIndexType('Lorentz', metric=False, dummy_fmt='i', dim=2)
     Lorentz.data = [-1, 1]
 
@@ -1754,19 +1687,19 @@ def test_issue_11020_TensAdd_data():
     u.data = [1, 0]
 
     add_1 = g(b, c) * g(d, i0) * u(-i0) - g(b, c) * u(d)
-    assert (add_1.data == numpy.zeros(shape=(2, 2, 2))).all()
+    assert (add_1.data == Array.zeros(2, 2, 2))
     # Now let us replace index `d` with `a`:
     add_2 = g(b, c) * g(a, i0) * u(-i0) - g(b, c) * u(a)
-    assert (add_2.data == numpy.zeros(shape=(2, 2, 2))).all()
+    assert (add_2.data == Array.zeros(2, 2, 2))
 
     # some more tests
     # perp is tensor orthogonal to u^\mu
     perp = u(a) * u(b) + g(a, b)
     mul_1 = u(-a) * perp(a, b)
-    assert (mul_1.data == numpy.array([0, 0])).all()
+    assert (mul_1.data == Array([0, 0]))
 
     mul_2 = u(-c) * perp(c, a) * perp(d, b)
-    assert (mul_2.data == numpy.zeros(shape=(2, 2, 2))).all()
+    assert (mul_2.data == Array.zeros(2, 2, 2))
 
 
 def test_index_iteration():

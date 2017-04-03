@@ -33,8 +33,8 @@ class Prufer(Basic):
         """Returns Prufer sequence for the Prufer object.
 
         This sequence is found by removing the highest numbered vertex,
-        recording the node it was attached to, and continuuing until only
-        two verices remain. The Prufer sequence is the list of recorded nodes.
+        recording the node it was attached to, and continuing until only
+        two vertices remain. The Prufer sequence is the list of recorded nodes.
 
         Examples
         ========
@@ -207,7 +207,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - http://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
+        - https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========

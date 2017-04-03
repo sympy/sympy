@@ -1,11 +1,10 @@
 from sympy import S, Integral, sin, cos, pi, sqrt, symbols
-from sympy.physics.vector import (Dyadic, Point, ReferenceFrame, \
-                                  Vector)
-from sympy.physics.vector import (cross, dot, express, \
-                                  time_derivative, kinematic_equations, \
-                                  outer, partial_velocity, \
-                                  get_motion_params)
-from sympy.physics.vector.functions import dynamicsymbols
+from sympy.physics.vector import Dyadic, Point, ReferenceFrame, Vector
+from sympy.physics.vector.functions import (cross, dot, express,
+                                            time_derivative,
+                                            kinematic_equations, outer,
+                                            partial_velocity,
+                                            get_motion_params, dynamicsymbols)
 from sympy.utilities.pytest import raises
 
 Vector.simp = True
@@ -465,3 +464,10 @@ def test_partial_velocity():
             [[- r*L.y, r*L.x, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [0, 0, 0, L.x, cos(q2)*L.y - sin(q2)*L.z],
             [L.x, L.y, L.z, 0, 0]])
+
+    # Make sure that partial velocities can be computed regardless if the
+    # orientation between frames is defined or not.
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    v = u4 * A.x + u5 * B.y
+    assert partial_velocity((v, ), (u4, u5), A) == [[A.x, B.y]]

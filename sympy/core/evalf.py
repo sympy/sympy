@@ -30,6 +30,7 @@ from sympy.utilities.iterables import is_sequence
 LG10 = math.log(10, 2)
 rnd = round_nearest
 
+
 def bitcount(n):
     return mpmath_bitcount(int(n))
 
@@ -108,20 +109,28 @@ def fastlog(x):
     return x[2] + x[3]
 
 
-def pure_complex(v):
+def pure_complex(v, or_real=False):
     """Return a and b if v matches a + I*b where b is not zero and
-    a and b are Numbers, else None.
+    a and b are Numbers, else None. If `or_real` is True then 0 will
+    be returned for `b` if `v` is a real number.
 
     >>> from sympy.core.evalf import pure_complex
-    >>> from sympy import Tuple, I
-    >>> a, b = Tuple(2, 3)
+    >>> from sympy import sqrt, I, S
+    >>> a, b, surd = S(2), S(3), sqrt(2)
     >>> pure_complex(a)
+    >>> pure_complex(a, or_real=True)
+    (2, 0)
+    >>> pure_complex(surd)
     >>> pure_complex(a + b*I)
     (2, 3)
     >>> pure_complex(I)
     (0, 1)
     """
     h, t = v.as_coeff_Add()
+    if not t:
+        if or_real:
+            return h, t
+        return
     c, i = t.as_coeff_Mul()
     if i is S.ImaginaryUnit:
         return h, c
@@ -200,10 +209,18 @@ def complex_accuracy(result):
 
 def get_abs(expr, prec, options):
     re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
+
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
-        return libmp.mpc_abs((re, im), prec), None, re_acc, None
+        if expr.is_number:
+            abs_expr, _, acc, _ = evalf(abs(N(expr, prec + 2)),
+                                        prec + 2, options)
+            return abs_expr, None, acc, None
+        else:
+            if 'subs' in options:
+                return libmp.mpc_abs((re, im), prec), None, re_acc, None
+            return abs(expr), None, prec, None
     elif re:
         return mpf_abs(re), None, re_acc, None
     else:
@@ -290,7 +307,7 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     Note: this function either gives the exact result or signals failure.
     """
-    import sympy
+    from sympy.functions.elementary.complexes import re, im
     # The expression is likely less than 2^30 or so
     assumed_size = 30
     ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
@@ -317,10 +334,31 @@ def get_integer_part(expr, no, options, return_ints=False):
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
     def calc_part(expr, nexpr):
-        from sympy import Add
+        from sympy.core.add import Add
         nint = int(to_int(nexpr, rnd))
         n, c, p, b = nexpr
-        if (c != 1 and p != 0) or p < 0:
+        is_int = (p == 0)
+        if not is_int:
+            # if there are subs and they all contain integer re/im parts
+            # then we can (hopefully) safely substitute them into the
+            # expression
+            s = options.get('subs', False)
+            if s:
+                doit = True
+                from sympy.core.compatibility import as_int
+                for v in s.values():
+                    try:
+                        as_int(v)
+                    except ValueError:
+                        try:
+                            [as_int(i) for i in v.as_real_imag()]
+                            continue
+                        except (ValueError, AttributeError):
+                            doit = False
+                            break
+                if doit:
+                    expr = expr.subs(s)
+
             expr = Add(expr, -nint, evaluate=False)
             x, _, x_acc, _ = evalf(expr, 10, options)
             try:
@@ -333,16 +371,16 @@ def get_integer_part(expr, no, options, return_ints=False):
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
-    re, im, re_acc, im_acc = None, None, None, None
+    re_, im_, re_acc, im_acc = None, None, None, None
 
     if ire:
-        re, re_acc = calc_part(sympy.re(expr, evaluate=False), ire)
+        re_, re_acc = calc_part(re(expr, evaluate=False), ire)
     if iim:
-        im, im_acc = calc_part(sympy.im(expr, evaluate=False), iim)
+        im_, im_acc = calc_part(im(expr, evaluate=False), iim)
 
     if return_ints:
-        return int(to_int(re or fzero)), int(to_int(im or fzero))
-    return re, im, re_acc, im_acc
+        return int(to_int(re_ or fzero)), int(to_int(im_ or fzero))
+    return re_, im_, re_acc, im_acc
 
 
 def evalf_ceiling(expr, prec, options):
@@ -767,6 +805,9 @@ def evalf_trig(v, prec, options):
 
 def evalf_log(expr, prec, options):
     from sympy import Abs, Add, log
+    if len(expr.args)>1:
+        expr = expr.doit()
+        return evalf(expr, prec, options)
     arg = expr.args[0]
     workprec = prec + 10
     xre, xim, xacc, _ = evalf(arg, workprec, options)
@@ -782,7 +823,7 @@ def evalf_log(expr, prec, options):
 
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
-    if prec - size > workprec:
+    if prec - size > workprec and re != fzero:
         # We actually need to compute 1+x accurately, not x
         arg = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
@@ -1169,11 +1210,11 @@ def evalf_symbol(x, prec, options):
         if not '_cache' in options:
             options['_cache'] = {}
         cache = options['_cache']
-        cached, cached_prec = cache.get(x.name, (None, MINUS_INF))
+        cached, cached_prec = cache.get(x, (None, MINUS_INF))
         if cached_prec >= prec:
             return cached
         v = evalf(sympify(val), prec, options)
-        cache[x.name] = (v, prec)
+        cache[x] = (v, prec)
         return v
 
 evalf_table = None
@@ -1208,7 +1249,7 @@ def _create_evalf_table():
         Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
-        NaN : lambda x, prec, options: (fnan, None, prec, None),
+        NaN: lambda x, prec, options: (fnan, None, prec, None),
 
         exp: lambda x, prec, options: evalf_pow(
             Pow(S.Exp1, x.args[0], evaluate=False), prec, options),
@@ -1248,19 +1289,20 @@ def evalf(x, prec, options):
             # Fall back to ordinary evalf if possible
             if 'subs' in options:
                 x = x.subs(evalf_subs(prec, options['subs']))
-            re, im = x._eval_evalf(prec).as_real_imag()
+            xe = x._eval_evalf(prec)
+            re, im = xe.as_real_imag()
             if re.has(re_) or im.has(im_):
                 raise NotImplementedError
             if re == 0:
                 re = None
                 reprec = None
-            else:
+            elif re.is_number:
                 re = re._to_mpmath(prec, allow_ints=False)._mpf_
                 reprec = prec
             if im == 0:
                 im = None
                 imprec = None
-            else:
+            elif im.is_number:
                 im = im._to_mpmath(prec, allow_ints=False)._mpf_
                 imprec = prec
             r = re, im, reprec, imprec
@@ -1269,7 +1311,7 @@ def evalf(x, prec, options):
     if options.get("verbose"):
         print("### input", x)
         print("### output", to_str(r[0] or fzero, 50))
-        print("### raw", r ) # r[0], r[2]
+        print("### raw", r) # r[0], r[2]
         print()
     chop = options.get('chop', False)
     if chop:

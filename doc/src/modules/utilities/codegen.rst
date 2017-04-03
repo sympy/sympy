@@ -1,3 +1,5 @@
+.. _codegen_API:
+
 =======
 Codegen
 =======

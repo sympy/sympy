@@ -31,5 +31,5 @@ __all__.extend(medium.__all__)
 
 from . import utils
 from .utils import (refraction_angle, deviation, lens_makers_formula,
-    mirror_formula, lens_formula)
+    mirror_formula, lens_formula, hyperfocal_distance)
 __all__.extend(utils.__all__)

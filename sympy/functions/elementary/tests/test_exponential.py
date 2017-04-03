@@ -1,7 +1,8 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, conjugate,
-    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify)
+    LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
+    sin, cos, sinh, cosh, tanh, exp_polar, re, Function, simplify,
+    AccumBounds)
 
 
 def test_exp_values():
@@ -25,10 +26,10 @@ def test_exp_values():
     assert exp(3*pi*I/2) == -I
     assert exp(2*pi*I) == 1
 
-    assert exp(pi*I*2*k) == 1
-    assert exp(pi*I*2*(k + Rational(1, 2))) == -1
-    assert exp(pi*I*2*(k + Rational(1, 4))) == I
-    assert exp(pi*I*2*(k + Rational(3, 4))) == -I
+    assert refine(exp(pi*I*2*k)) == 1
+    assert refine(exp(pi*I*2*(k + Rational(1, 2)))) == -1
+    assert refine(exp(pi*I*2*(k + Rational(1, 4)))) == I
+    assert refine(exp(pi*I*2*(k + Rational(3, 4)))) == -I
 
     assert exp(log(x)) == x
     assert exp(2*log(x)) == x**2
@@ -86,8 +87,8 @@ def test_exp__as_base_exp():
 def test_exp_infinity():
     y = Symbol('y')
     assert exp(I*y) != nan
-    assert exp(I*oo) == nan
-    assert exp(-I*oo) == nan
+    assert refine(exp(I*oo)) == nan
+    assert refine(exp(-I*oo)) == nan
     assert exp(y*I*oo) != nan
 
 
@@ -167,6 +168,8 @@ def test_log_values():
 
     assert log(oo*I) == oo
     assert log(-oo*I) == oo
+    assert log(0, 2) == zoo
+    assert log(0, 5) == zoo
 
     assert exp(-log(3))**(-1) == 3
 
@@ -257,10 +260,18 @@ def test_exp_assumptions():
     assert exp(pi*rn).is_algebraic is False
 
 
+def test_exp_AccumBounds():
+    assert exp(AccumBounds(1, 2)) == AccumBounds(E, E**2)
+
+
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     z = symbols('z', zero=True)
+    x = symbols('x', infinite=True, positive=True)
+
+    assert log(z).is_positive is False
+    assert log(x).is_positive is True
     assert log(2) > 0
     assert log(1, evaluate=False).is_zero
     assert log(1 + z).is_zero
@@ -336,6 +347,10 @@ def test_log_simplify():
     x = Symbol("x", positive=True)
     assert log(x**2).expand() == 2*log(x)
     assert expand_log(log(x**(2 + log(2)))) == (2 + log(2))*log(x)
+
+
+def test_log_AccumBounds():
+    assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
 
 
 def test_lambertw():

@@ -16,6 +16,7 @@ from sympy.combinatorics import Permutation
 # TODO dummy point, literal field
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
+from sympy.tensor.array import ImmutableDenseNDimArray
 
 
 class Manifold(Basic):
@@ -52,8 +53,8 @@ class Patch(Basic):
     This object serves as a container/parent for all coordinate system charts
     that can be defined on the patch it represents.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     Define a Manifold and a Patch on that Manifold:
 
@@ -990,7 +991,7 @@ class BaseCovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
     >>> cvd(R2.x)
     1
@@ -1035,7 +1036,7 @@ class BaseCovarDerivativeOp(Expr):
         # Third step: evaluate the derivatives of the vectors
         derivs = []
         for v in vectors:
-            d = Add(*[(self._christoffel[k][wrt_vector._index][v._index]
+            d = Add(*[(self._christoffel[k, wrt_vector._index, v._index]
                        *v._coord_sys.base_vector(k))
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
@@ -1057,7 +1058,7 @@ class CovarDerivativeOp(Expr):
     >>> TP = TensorProduct
     >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     >>> ch
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
     >>> cvd(R2.x)
     x
@@ -1299,13 +1300,6 @@ def dummyfy(args, exprs):
     return d_args, d_exprs
 
 
-def list_to_tuple_rec(the_list):
-    # TODO remove in favor of tensor classes
-    if isinstance(the_list, list):
-        return tuple(list_to_tuple_rec(e) for e in the_list)
-    return the_list
-
-
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -1484,9 +1478,9 @@ def metric_to_Christoffel_1st(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((1/2, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/2, 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     matrix = twoform_to_matrix(expr)
@@ -1501,7 +1495,7 @@ def metric_to_Christoffel_1st(expr):
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Christoffel_2nd(expr):
@@ -1517,9 +1511,9 @@ def metric_to_Christoffel_2nd(expr):
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((0, 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    (((1/(2*x), 0), (0, 0)), ((0, 0), (0, 0)))
+    [[[1/(2*x), 0], [0, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_1st = metric_to_Christoffel_1st(expr)
@@ -1536,11 +1530,11 @@ def metric_to_Christoffel_2nd(expr):
     dums = coord_sys._dummies
     matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
-    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
+    christoffel = [[[Add(*[matrix[i, l]*ch_1st[l, j, k] for l in indices])
                      for k in indices]
                     for j in indices]
                    for i in indices]
-    return list_to_tuple_rec(christoffel)
+    return ImmutableDenseNDimArray(christoffel)
 
 
 def metric_to_Riemann_components(expr):
@@ -1558,24 +1552,23 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((((0, 0), (0, 0)), ((0, 0), (0, 0))), (((0, 0), (0, 0)), ((0, 0),
-     (0, 0))))
+    [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
-    >>> riemann[0]
-    (((0, 0), (0, 0)), ((0, exp(-2*r)*r), (-exp(-2*r)*r, 0)))
-    >>> riemann[1]
-    (((0, -1/r), (1/r, 0)), ((0, 0), (0, 0)))
+    >>> riemann[0, :, :, :]
+    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    >>> riemann[1, :, :, :]
+    [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    deriv_ch = [[[[d(ch_2nd[i][j][k])
+    deriv_ch = [[[[d(ch_2nd[i, j, k])
                    for d in coord_sys.base_vectors()]
                   for k in indices]
                  for j in indices]
@@ -1585,7 +1578,7 @@ def metric_to_Riemann_components(expr):
                    for mu in indices]
                   for sig in indices]
                      for rho in indices]
-    riemann_b = [[[[Add(*[ch_2nd[rho][l][mu]*ch_2nd[l][sig][nu] - ch_2nd[rho][l][nu]*ch_2nd[l][sig][mu] for l in indices])
+    riemann_b = [[[[Add(*[ch_2nd[rho, l, mu]*ch_2nd[l, sig, nu] - ch_2nd[rho, l, nu]*ch_2nd[l, sig, mu] for l in indices])
                     for nu in indices]
                    for mu in indices]
                   for sig in indices]
@@ -1595,7 +1588,7 @@ def metric_to_Riemann_components(expr):
                      for mu in indices]
                 for sig in indices]
                for rho in indices]
-    return list_to_tuple_rec(riemann)
+    return ImmutableDenseNDimArray(riemann)
 
 
 def metric_to_Ricci_components(expr):
@@ -1613,20 +1606,20 @@ def metric_to_Ricci_components(expr):
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    ((0, 0), (0, 0))
+    [[0, 0], [0, 0]]
 
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    ((1/r, 0), (0, exp(-2*r)*r))
+    [[1/r, 0], [0, exp(-2*r)*r]]
 
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
     indices = list(range(coord_sys.dim))
-    ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
+    ricci = [[Add(*[riemann[k, i, k, j] for k in indices])
               for j in indices]
              for i in indices]
-    return list_to_tuple_rec(ricci)
+    return ImmutableDenseNDimArray(ricci)

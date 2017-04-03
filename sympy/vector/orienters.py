@@ -62,7 +62,7 @@ class AxisOrienter(Orienter):
         >>> B = N.orient_new('B', (orienter, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
     @cacheit
@@ -83,9 +83,9 @@ class AxisOrienter(Orienter):
         axis = axis.to_matrix(system)
         theta = self.angle
         parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                Matrix([[0, -axis[2], axis[1]],
-                        [axis[2], 0, -axis[0]],
-                    [-axis[1], axis[0], 0]]) * sin(theta) +
+                         Matrix([[0, -axis[2], axis[1]],
+                                 [axis[2], 0, -axis[0]],
+                                 [-axis[1], axis[0], 0]]) * sin(theta) +
                          axis * axis.T)
         parent_orient = parent_orient.T
         return parent_orient
@@ -116,7 +116,7 @@ class ThreeAngleOrienter(Orienter):
         rot_order = [i.replace('Y', '2') for i in rot_order]
         rot_order = [i.replace('Z', '3') for i in rot_order]
         rot_order = ''.join(rot_order)
-        if not rot_order in approved_orders:
+        if rot_order not in approved_orders:
             raise TypeError('Invalid rot_type parameter')
         a1 = int(rot_order[0])
         a2 = int(rot_order[1])
@@ -227,7 +227,7 @@ class BodyOrienter(ThreeAngleOrienter):
         >>> body_orienter3 = BodyOrienter(0, 0, 0, 'XYX')
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
 
@@ -290,7 +290,7 @@ class SpaceOrienter(ThreeAngleOrienter):
         >>> D = C.orient_new('C', (axis_orienter3, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
 
@@ -332,11 +332,17 @@ class QuaternionOrienter(Orienter):
         Quaternion orientation orients the new CoordSysCartesian with
         Quaternions, defined as a finite rotation about lambda, a unit
         vector, by some amount theta.
+
         This orientation is described by four parameters:
+
         q0 = cos(theta/2)
+
         q1 = lambda_x sin(theta/2)
+
         q2 = lambda_y sin(theta/2)
+
         q3 = lambda_z sin(theta/2)
+
         Quaternion does not take in a rotation order.
 
         Parameters
@@ -357,7 +363,7 @@ class QuaternionOrienter(Orienter):
         >>> B = N.orient_new('B', (q_orienter, ))
 
         """
-        #Dummy initializer for docstrings
+        # Dummy initializer for docstrings
         pass
 
     @property

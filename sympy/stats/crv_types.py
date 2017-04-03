@@ -19,6 +19,8 @@ FisherZ
 Frechet
 Gamma
 GammaInverse
+Gumbel
+Gompertz
 Kumaraswamy
 Laplace
 Logistic
@@ -30,6 +32,7 @@ Pareto
 QuadraticU
 RaisedCosine
 Rayleigh
+ShiftedGompertz
 StudentT
 Triangular
 Uniform
@@ -70,6 +73,8 @@ __all__ = ['ContinuousRV',
 'Frechet',
 'Gamma',
 'GammaInverse',
+'Gompertz',
+'Gumbel',
 'Kumaraswamy',
 'Laplace',
 'Logistic',
@@ -82,6 +87,7 @@ __all__ = ['ContinuousRV',
 'RaisedCosine',
 'Rayleigh',
 'StudentT',
+'ShiftedGompertz',
 'Triangular',
 'Uniform',
 'UniformSum',
@@ -750,11 +756,13 @@ def Erlang(name, k, l):
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)
-    |- ------------------ + --------------------  for z >= 0
-    <     gamma(k + 1)          gamma(k + 1)
+    /     -2*I*pi*k                       -2*I*pi*k
+    |  k*e         *lowergamma(k, 0)   k*e         *lowergamma(k, l*z)
+    |- ----------------------------- + -------------------------------  for z >= 0
+    <           gamma(k + 1)                     gamma(k + 1)
     |
-    \                     0                       otherwise
+    |                                0                                  otherwise
+    \
 
     >>> simplify(E(X))
     k/l
@@ -1225,6 +1233,122 @@ def GammaInverse(name, a, b):
     return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
+# Gumbel distribution --------------------------------------------------------
+
+class GumbelDistribution(SingleContinuousDistribution):
+    _argnames = ('beta', 'mu')
+
+    set = Interval(-oo, oo)
+
+    def pdf(self, x):
+        beta, mu = self.beta, self.mu
+        return (1/beta)*exp(-((x-mu)/beta)+exp(-((x-mu)/beta)))
+
+def Gumbel(name, beta, mu):
+    r"""
+    Create a Continuous Random Variable with Gumbel distribution.
+
+    The density of the Gumbel distribution is given by
+
+    .. math::
+        f(x) := \exp \left( -exp \left( x + \exp \left( -x \right) \right) \right)
+
+    with ::math 'x \in [ - \inf, \inf ]'.
+
+    Parameters
+    ==========
+
+    mu: Real number, 'mu' is a location
+    beta: Real number, 'beta > 0' is a scale
+
+    Returns
+    ==========
+
+    A RandomSymbol
+
+    Examples
+    ==========
+    >>> from sympy.stats import Gumbel, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+    >>> x = Symbol("x")
+    >>> mu = Symbol("mu")
+    >>> beta = Symbol("beta", positive=True)
+    >>> X = Gumbel("x", beta, mu)
+    >>> density(X)(x)
+    exp(exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
+    .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
+
+    """
+    return rv(name, GumbelDistribution, (beta, mu))
+
+#-------------------------------------------------------------------------------
+# Gompertz distribution --------------------------------------------------------
+
+class GompertzDistribution(SingleContinuousDistribution):
+    _argnames = ('b', 'eta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(b, eta):
+        _value_check(b > 0, "b must be positive")
+        _value_check(eta > 0, "eta must be positive")
+
+    def pdf(self, x):
+        eta, b = self.eta, self.b
+        return b*eta*exp(b*x)*exp(eta)*exp(-eta*exp(b*x))
+
+def Gompertz(name, b, eta):
+    r"""
+    Create a Continuous Random Variable with Gompertz distribution.
+
+    The density of the Gompertz distribution is given by
+
+    .. math::
+        f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
+
+    with :math: 'x \in [0, \inf)'.
+
+    Parameters
+    ==========
+
+    b: Real number, 'b > 0' a scale
+    eta: Real number, 'eta > 0' a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Gompertz, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> b = Symbol("b", positive=True)
+    >>> eta = Symbol("eta", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Gompertz("x", b, eta)
+
+    >>> density(X)(z)
+    b*eta*exp(eta)*exp(b*z)*exp(-eta*exp(b*z))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Gompertz_distribution
+
+    """
+    return rv(name, GompertzDistribution, (b, eta))
+
+#-------------------------------------------------------------------------------
 # Kumaraswamy distribution -----------------------------------------------------
 
 class KumaraswamyDistribution(SingleContinuousDistribution):
@@ -1240,7 +1364,6 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         a, b = self.a, self.b
         return a * b * x**(a-1) * (1-x**a)**(b-1)
-
 
 def Kumaraswamy(name, a, b):
     r"""
@@ -1988,6 +2111,67 @@ def Rayleigh(name, sigma):
     return rv(name, RayleighDistribution, (sigma, ))
 
 #-------------------------------------------------------------------------------
+# Shifted Gompertz distribution ------------------------------------------------
+
+class ShiftedGompertzDistribution(SingleContinuousDistribution):
+    _argnames = ('b', 'eta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(b, eta):
+        _value_check(b > 0, "b must be positive")
+        _value_check(eta > 0, "eta must be positive")
+
+    def pdf(self, x):
+        b, eta = self.b, self.eta
+        return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
+
+def ShiftedGompertz(name, b, eta):
+    r"""
+    Create a continuous random variable with a Shifted Gompertz distribution.
+
+    The density of the Shifted Gompertz distribution is given by
+
+    .. math::
+        f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
+
+    with :math: 'x \in [0, \inf)'.
+
+    Parameters
+    ==========
+
+    b: Real number, 'b > 0' a scale
+    eta: Real number, 'eta > 0' a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+    >>> from sympy.stats import ShiftedGompertz, density, E, variance
+    >>> from sympy import Symbol
+
+    >>> b = Symbol("b", positive=True)
+    >>> eta = Symbol("eta", positive=True)
+    >>> x = Symbol("x")
+
+    >>> X = ShiftedGompertz("x", b, eta)
+
+    >>> density(X)(x)
+    b*(eta*(1 - exp(-b*x)) + 1)*exp(-b*x)*exp(-eta*exp(-b*x))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Shifted_Gompertz_distribution
+
+    """
+    return rv(name, ShiftedGompertzDistribution, (b, eta))
+
+#-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
 
 
@@ -2208,7 +2392,7 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)(z)
-    Piecewise((1/(-a + b), And(a <= z, z <= b)), (0, True))
+    Piecewise((1/(-a + b), (a <= z) & (z <= b)), (0, True))
 
     >>> cdf(X)(z)  # doctest: +SKIP
     -a/(-a + b) + z/(-a + b)

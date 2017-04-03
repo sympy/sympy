@@ -12,11 +12,11 @@ class TypeB(Standard_Cartan):
         return Standard_Cartan.__new__(cls, "B", n)
 
     def dimension(self):
-        """
-        Return the dimension of the vector space
-        V underlying the Lie algebra
-        Example
+        """Dimension of the vector space V underlying the Lie algebra
+
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("B3")
         >>> c.dimension()
@@ -56,8 +56,9 @@ class TypeB(Standard_Cartan):
 
         This method returns the ith simple root for the B series.
 
-        Example
+        Examples
         ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("B3")
         >>> c.simple_root(2)
@@ -79,8 +80,9 @@ class TypeB(Standard_Cartan):
         by multiplying all the positive roots by -1 we
         get the negative roots.
 
-        Example
-        ======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A3")
         >>> c.positive_roots()
@@ -124,8 +126,9 @@ class TypeB(Standard_Cartan):
         roots, (alpha[1], ...., alpha[l]).  Then the ijth
         entry of the Cartan matrix is (<alpha[i],alpha[j]>).
 
-        Example
-        =======
+        Examples
+        ========
+
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType('B4')
         >>> c.cartan_matrix()

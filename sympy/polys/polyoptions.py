@@ -117,6 +117,7 @@ class Options(dict):
     * Include --- boolean flag
     * All --- boolean flag
     * Gen --- flag
+    * Series --- boolean flag
 
     """
 
@@ -679,6 +680,16 @@ class Gen(with_metaclass(OptionType, Flag)):
             return gen
         else:
             raise OptionError("invalid argument for 'gen' option")
+
+
+class Series(with_metaclass(OptionType, BooleanOption, Flag)):
+    """``series`` flag to polynomial manipulation functions. """
+
+    option = 'series'
+
+    @classmethod
+    def default(cls):
+        return False
 
 
 class Symbols(with_metaclass(OptionType, Flag)):

@@ -4,19 +4,20 @@ from sympy import (
     Wild, acos, asin, atan, atanh, cos, cosh, diff, erf, erfinv, erfc,
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo)
+    root, simplify, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
+    E, cbrt)
 
 from sympy.core.compatibility import range
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
 
 from sympy.physics.units import cm
-from sympy.polys.rootoftools import RootOf
+from sympy.polys.rootoftools import CRootOf
 
-from sympy.utilities.pytest import slow, XFAIL, raises, skip, ON_TRAVIS
+from sympy.utilities.pytest import slow, XFAIL, SKIP, raises, skip, ON_TRAVIS
 from sympy.utilities.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
@@ -236,9 +237,9 @@ def test_quintics_1():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
-    # if one uses solve to get the roots of a polynomial that has a RootOf
+    # if one uses solve to get the roots of a polynomial that has a CRootOf
     # solution, make sure that the use of nfloat during the solve process
     # doesn't fail. Note: if you want numerical solutions to a polynomial
     # it is *much* faster to use nroots to get them than to solve the
@@ -246,14 +247,14 @@ def test_quintics_1():
     # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
     # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
     assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
-        RootOf(x**5 + 3*x**3 + 7, 0).n()
+        CRootOf(x**5 + 3*x**3 + 7, 0).n()
 
 
 
 def test_highorder_poly():
     # just testing that the uniq generator is unpacked
     sol = solve(x**6 - 2*x + 2)
-    assert all(isinstance(i, RootOf) for i in sol) and len(sol) == 6
+    assert all(isinstance(i, CRootOf) for i in sol) and len(sol) == 6
 
 
 @slow
@@ -267,7 +268,7 @@ def test_quintics_2():
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
-        assert root.func == RootOf
+        assert root.func == CRootOf
 
 
 def test_solve_rational():
@@ -501,6 +502,8 @@ def test_issue_3870():
 def test_solve_linear():
     w = Wild('w')
     assert solve_linear(x, x) == (0, 1)
+    assert solve_linear(x, exclude=[x]) == (0, 1)
+    assert solve_linear(x, symbols=[w]) == (0, 1)
     assert solve_linear(x, y - 2*x) in [(x, y/3), (y, 3*x)]
     assert solve_linear(x, y - 2*x, exclude=[x]) == (y, 3*x)
     assert solve_linear(3*x - y, 0) in [(x, y/3), (y, 3*x)]
@@ -513,10 +516,15 @@ def test_solve_linear():
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, symbols=[x]) == (0, 1)
     assert solve_linear(Eq(x, 3)) == (x, 3)
     assert solve_linear(1/(1/x - 2)) == (0, 0)
-    assert solve_linear((x + 1)*exp(-x), symbols=[x]) == (x + 1, exp(x))
+    assert solve_linear((x + 1)*exp(-x), symbols=[x]) == (x, -1)
     assert solve_linear((x + 1)*exp(x), symbols=[x]) == ((x + 1)*exp(x), 1)
-    assert solve_linear(x*exp(-x**2), symbols=[x]) == (0, 0)
+    assert solve_linear(x*exp(-x**2), symbols=[x]) == (x, 0)
     assert solve_linear(0**x - 1) == (0**x - 1, 1)
+    assert solve_linear(1 + 1/(x - 1)) == (x, 0)
+    eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
+    assert solve_linear(eq) == (0, 1)
+    eq = cos(x)**2 + sin(x)**2  # = 1
+    assert solve_linear(eq) == (0, 1)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 
@@ -743,8 +751,8 @@ def test_issue_5335():
     assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 
-@XFAIL
-def test_issue_5335_float():
+@SKIP("Hangs")
+def _test_issue_5335_float():
     # gives ZeroDivisionError: polynomial division
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
@@ -770,6 +778,7 @@ def test_polysys():
                  y - 3, x - y - 4], (y, x))
 
 
+@slow
 def test_unrad1():
     raises(NotImplementedError, lambda:
         unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
@@ -1038,10 +1047,12 @@ def test_unrad1():
         sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
         - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
     assert check(unrad(eq),
-        (s**7 - sqrt(3)*s**7*I + 102*12**(S(1)/3)*s**5 +
-        102*2**(S(2)/3)*3**(S(5)/6)*s**5*I + 1620*s**4 - 1620*sqrt(3)*s**4*I -
-        13872*18**(S(1)/3)*s**3 + 471648*s - 471648*sqrt(3)*s*I, [s, s**3 - 306*x
-        - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) + 810]))
+        (-s*(-s**6 + sqrt(3)*s**6*I - 153*2**(S(2)/3)*3**(S(1)/3)*s**4 +
+        51*12**(S(1)/3)*s**4 - 102*2**(S(2)/3)*3**(S(5)/6)*s**4*I - 1620*s**3 +
+        1620*sqrt(3)*s**3*I + 13872*18**(S(1)/3)*s**2 - 471648 +
+        471648*sqrt(3)*I), [s, s**3 - 306*x - sqrt(3)*sqrt(31212*x**2 -
+        165240*x + 61484) + 810]))
+
     assert solve(eq) == [] # not other code errors
 
 
@@ -1059,7 +1070,15 @@ def test_unrad_fail():
     # but checksol doesn't work like that
     assert solve(root(x**3 - 3*x**2, 3) + 1 - x) == [S(1)/3]
     assert solve(root(x + 1, 3) + root(x**2 - 2, 5) + 1) == [
-        -1, -1 + RootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
+        -1, -1 + CRootOf(x**5 + x**4 + 5*x**3 + 8*x**2 + 10*x + 5, 0)**3]
+
+
+def test_checksol():
+    x, y, r, t = symbols('x, y, r, t')
+    eq = r - x**2 - y**2
+    dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
+                            x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
+    assert checksol(eq, dict_var_soln) == True
 
 
 def test__invert():
@@ -1259,6 +1278,7 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
+    assert check_assumptions(1, x) == True
 
 
 def test_issue_6056():
@@ -1405,9 +1425,9 @@ def test_issue_6752():
 
 def test_issue_6792():
     assert solve(x*(x - 1)**2*(x + 1)*(x**6 - x + 1)) == [
-    -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
-    RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
-    RootOf(x**6 - x + 1, 5)]
+        -1, 0, 1, CRootOf(x**6 - x + 1, 0), CRootOf(x**6 - x + 1, 1),
+         CRootOf(x**6 - x + 1, 2), CRootOf(x**6 - x + 1, 3),
+         CRootOf(x**6 - x + 1, 4), CRootOf(x**6 - x + 1, 5)]
 
 
 def test_issues_6819_6820_6821_6248_8692():
@@ -1682,6 +1702,8 @@ def test_issue_7322():
 
 def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
+    raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
+    raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
 
 def test_issue_8587():
     f = Piecewise((2*x**2, And(S(0) < x, x < 1)), (2, True))
@@ -1695,10 +1717,10 @@ def test_high_order_multivariate():
     raises(NotImplementedError, lambda:
         solve(a*x**5 - x + 1, x, incomplete=False))
 
-    # result checking must always consider the denominator and RootOf
+    # result checking must always consider the denominator and CRootOf
     # must be checked, too
     d = x**5 - x + 1
-    assert solve(d*(1 + 1/d)) == [RootOf(d + 1, i) for i in range(5)]
+    assert solve(d*(1 + 1/d)) == [CRootOf(d + 1, i) for i in range(5)]
     d = x - 1
     assert solve(d*(2 + 1/d)) == [S.Half]
 
@@ -1770,3 +1792,74 @@ def test_issue_2840_8155():
     assert solve(2*sin(x) - 2*sin(2*x)) == [
         0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
         -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+
+
+def test_issue_9567():
+    assert solve(1 + 1/(x - 1)) == [0]
+
+
+def test_issue_11538():
+    assert solve(x + E) == [-E]
+    assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
+    assert solve(x**3 + 2*E) == [
+        -cbrt(2 * E),
+        cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
+        cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
+    assert solve([x + 4, y + E], x, y) == {x: -4, y: -E}
+    assert solve([x**2 + 4, y + E], x, y) == [
+        (-2*I, -E), (2*I, -E)]
+
+    e1 = x - y**3 + 4
+    e2 = x + y + 4 + 4 * E
+    assert len(solve([e1, e2], x, y)) == 3
+
+
+def test_issue_12114():
+    a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
+    terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
+             g - a**2 - d**2, g - b**2 - e**2, g - c**2 - f**2]
+    s = solve(terms, [a, b, c, d, e, f, g])
+    assert s == [{a: -sqrt(-f**2 - 1), b: -sqrt(-f**2 - 1),
+                  c: -sqrt(-f**2 - 1), d: f, e: f, g: -1},
+                 {a: sqrt(-f**2 - 1), b: sqrt(-f**2 - 1),
+                  c: sqrt(-f**2 - 1), d: f, e: f, g: -1},
+                 {a: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
+                  b: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
+                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
+                  b: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
+                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
+                  b: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
+                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
+                 {a: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
+                  b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
+                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
+                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+
+
+def test_inf():
+    assert solve(1 - oo*x) == []
+    assert solve(oo*x, x) == []
+    assert solve(oo*x - oo, x) == []
+
+
+def test_issue_12448():
+    f = Symbol('f')
+    fun = [f(i) for i in range(15)]
+    sym = symbols('x:15')
+    reps = dict(zip(fun, sym))
+
+    (x, y, z), c = sym[:3], sym[3:]
+    ssym = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    (x, y, z), c = fun[:3], fun[3:]
+    sfun = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    assert sfun[fun[0]].xreplace(reps).count_ops() == \
+        ssym[sym[0]].count_ops()

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import Basic, Expr, sympify
+from sympy.matrices.matrices import MatrixBase
 from .matexpr import ShapeError
 
 
@@ -39,13 +40,18 @@ class Trace(Expr):
 
     def doit(self, **kwargs):
         if kwargs.get('deep', True):
-            arg = self.arg.doit()
+            arg = self.arg.doit(**kwargs)
+            try:
+                return arg._eval_trace()
+            except (AttributeError, NotImplementedError):
+                return Trace(arg)
         else:
-            arg = self.arg
-        try:
-            return arg._eval_trace()
-        except (AttributeError, NotImplementedError):
-            return Trace(arg)
+            # _eval_trace would go too deep here
+            if isinstance(self.arg, MatrixBase):
+                return trace(self.arg)
+            else:
+                return Trace(self.arg)
+
 
     def _eval_rewrite_as_Sum(self):
         from sympy import Sum, Dummy

@@ -4,7 +4,7 @@ from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
     powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
     acos, root)
 
-from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, RootOf
+from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
@@ -14,7 +14,7 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.utilities.randtest import verify_numerically
 from sympy.core.compatibility import range
 import mpmath
@@ -74,7 +74,7 @@ def test_issue_8285():
     roots = (Poly(4*x**8 - 1, x)*Poly(x**2 + 1)).all_roots()
     assert roots == _nsort(roots)
     f = Poly(x**4 + 5*x**2 + 6, x)
-    ro = [RootOf(f, i) for i in range(4)]
+    ro = [rootof(f, i) for i in range(4)]
     roots = Poly(x**4 + 5*x**2 + 6, x).all_roots()
     assert roots == ro
     assert roots == _nsort(roots)
@@ -589,6 +589,8 @@ def test_root_factors():
     assert root_factors(8*x**2 + 12*x**4 + 6*x**6 + x**8, x, filter='Q') == \
         [x, x, x**6 + 6*x**4 + 12*x**2 + 8]
 
+
+@slow
 def test_nroots1():
     n = 64
     p = legendre_poly(n, x, polys=True)

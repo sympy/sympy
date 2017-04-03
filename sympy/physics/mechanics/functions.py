@@ -2,14 +2,15 @@ from __future__ import print_function, division
 
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
-from sympy.physics.vector import Vector, ReferenceFrame, Point, dynamicsymbols
+from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
+                                  Point, dynamicsymbols)
 from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import sympify, Matrix, Derivative, sin, cos, tan, simplify, Mul
-from sympy.core.function import AppliedUndef
-from sympy.core.basic import S
+from sympy import simplify
+from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
+                                tan, AppliedUndef, S)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -36,6 +37,10 @@ mlatex = vlatex
 
 
 def mechanics_printing(**kwargs):
+    """
+    Initializes time derivative printing for all SymPy objects in
+    mechanics module.
+    """
 
     init_vprinting(**kwargs)
 
@@ -46,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
 
     If you don't know what a Dyadic is, just treat this like the inertia
-    tensor.  Then, do the easy thing and define it in a body-fixed frame.
+    tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
     ==========
@@ -321,8 +326,8 @@ def potential_energy(*body):
     >>> a = ReferenceFrame('a')
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, M, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> potential_energy(Pa, A)
     M*g*h + g*h*m
 
@@ -379,8 +384,8 @@ def Lagrangian(frame, *body):
     >>> a.set_ang_vel(N, 10 * N.z)
     >>> I = outer(N.z, N.z)
     >>> A = RigidBody('A', Ac, a, 20, (I, Ac))
-    >>> Pa.set_potential_energy(m * g * h)
-    >>> A.set_potential_energy(M * g * h)
+    >>> Pa.potential_energy = m * g * h
+    >>> A.potential_energy = M * g * h
     >>> Lagrangian(N, Pa, A)
     -M*g*h - g*h*m + 350
 
@@ -401,15 +406,15 @@ def find_dynamicsymbols(expression, exclude=None):
     >>> x, y = dynamicsymbols('x, y')
     >>> expr = x + x.diff()*y
     >>> find_dynamicsymbols(expr)
-    set([x(t), y(t), Derivative(x(t), t)])
+    {x(t), y(t), Derivative(x(t), t)}
 
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
 
     >>> find_dynamicsymbols(expr, [x, y])
-    set([Derivative(x(t), t)])
+    {Derivative(x(t), t)}
     """
-    t_set = set([dynamicsymbols._t])
+    t_set = {dynamicsymbols._t}
     if exclude:
         if iterable(exclude):
             exclude_set = set(exclude)
@@ -454,15 +459,19 @@ def msubs(expr, *sub_dicts, **kwargs):
     the denominator. If this results in 0, simplification of the entire
     fraction is attempted. Using this selective simplification, only
     subexpressions that result in 1/0 are targeted, resulting in faster
-    performance."""
+    performance.
+
+    """
 
     sub_dict = dict_merge(*sub_dicts)
     smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
+    elif hasattr(expr, 'msubs'):
+        return expr.msubs(sub_dict)
     else:
         func = lambda expr, sub_dict: _crawl(expr, _sub_func, sub_dict)
-    if isinstance(expr, Matrix):
+    if isinstance(expr, (Matrix, Vector, Dyadic)):
         return expr.applyfunc(lambda x: func(x, sub_dict))
     else:
         return func(expr, sub_dict)
@@ -506,6 +515,7 @@ def _smart_subs(expr, sub_dict):
         If so, attempt to simplify it out. Then if node is in sub_dict,
         sub in the corresponding value."""
     expr = _crawl(expr, _tan_repl_func)
+
     def _recurser(expr, sub_dict):
         # Decompose the expression into num, den
         num, den = _fraction_decomp(expr)
@@ -551,14 +561,15 @@ def _f_list_parser(fl, ref_frame):
     """Parses the provided forcelist composed of items
     of the form (obj, force).
     Returns a tuple containing:
-        vlist: The velocity (ang_vel for Frames, vel for Points) in
+        vel_list: The velocity (ang_vel for Frames, vel for Points) in
                 the provided reference frame.
-        flist: The forces.
+        f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
     """
     def flist_iter():
-        for obj, force in fl:
+        for pair in fl:
+            obj, force = pair
             if isinstance(obj, ReferenceFrame):
                 yield obj.ang_vel_in(ref_frame), force
             elif isinstance(obj, Point):
@@ -566,6 +577,10 @@ def _f_list_parser(fl, ref_frame):
             else:
                 raise TypeError('First entry in each forcelist pair must '
                                 'be a point or frame.')
-    unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
-    vel_list, f_list = unzip(list(flist_iter()))
+
+    if not fl:
+        vel_list, f_list = (), ()
+    else:
+        unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
+        vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list

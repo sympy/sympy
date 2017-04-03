@@ -162,7 +162,9 @@ class jacobi(OrthogonalPolynomial):
                 return RisingFactorial(a + 1, n) / factorial(n)
             elif x == S.Infinity:
                 if n.is_positive:
-                    # TODO: Make sure a+b+2*n \notin Z
+                    # Make sure a+b+2*n \notin Z
+                    if (a + b + 2*n).is_integer:
+                        raise ValueError("Error. a + b + 2*n should not be an integer.")
                     return RisingFactorial(a + b + n + 1, n) * S.Infinity
         else:
             # n is a given fixed integer, evaluate into polynomial
@@ -198,7 +200,9 @@ class jacobi(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, a, b, x):
         from sympy import Sum
-        # TODO: Make sure n \in N
+        # Make sure n \in N
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = (RisingFactorial(-n, k) * RisingFactorial(a + b + n + 1, k) * RisingFactorial(a + k + 1, n - k) /
                 factorial(k) * ((1 - x)/2)**k)
@@ -931,7 +935,7 @@ class hermite(OrthogonalPolynomial):
     hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`
 
     The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`
-    with respect to the weight :math:`\exp\left(-\frac{x^2}{2}\right)`.
+    with respect to the weight :math:`\exp\left(-x^2\right)`.
 
     Examples
     ========
@@ -946,8 +950,6 @@ class hermite(OrthogonalPolynomial):
     4*x**2 - 2
     >>> hermite(n, x)
     hermite(n, x)
-    >>> diff(hermite(n,x), x)
-    2*n*hermite(n - 1, x)
     >>> diff(hermite(n,x), x)
     2*n*hermite(n - 1, x)
     >>> hermite(n, -x)
@@ -1075,6 +1077,8 @@ class laguerre(OrthogonalPolynomial):
     .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/
     """
 
+    _ortho_poly = staticmethod(laguerre_poly)
+
     @classmethod
     def eval(cls, n, x):
         if not n.is_Number:
@@ -1096,7 +1100,7 @@ class laguerre(OrthogonalPolynomial):
                 raise ValueError(
                     "The index n must be nonnegative integer (got %r)" % n)
             else:
-                return laguerre_poly(n, x, 0)
+                return cls._eval_at_order(n, x)
 
     def fdiff(self, argindex=2):
         if argindex == 1:
@@ -1111,7 +1115,9 @@ class laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # TODO: Should make sure n is in N_0
+        # Make sure n \in N_0
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
@@ -1227,7 +1233,9 @@ class assoc_laguerre(OrthogonalPolynomial):
 
     def _eval_rewrite_as_polynomial(self, n, x):
         from sympy import Sum
-        # TODO: Should make sure n is in N_0
+        # Make sure n \in N_0
+        if n.is_negative or n.is_integer is False:
+            raise ValueError("Error: n should be a non-negative integer.")
         k = Dummy("k")
         kern = RisingFactorial(
             -n, k) / (gamma(k + alpha + 1) * factorial(k)) * x**k

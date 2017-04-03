@@ -52,7 +52,7 @@ firstauthor = "Ondřej Čertík"
 authors = AUTHORS[AUTHORS.find(firstauthor):].strip().split('\n')
 
 # People who don't want to be listed in AUTHORS
-authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>"]
+authors_skip = ["Kirill Smelkov <kirr@landau.phys.spbu.ru>", "Sergey B Kirpichev <skirpichev@gmail.com>"]
 
 predate_git = 0
 
@@ -60,10 +60,8 @@ exit1 = False
 
 print(blue(filldedent("""Read the text at the top of AUTHORS and the text at
 the top of .mailmap for information on how to fix the below errors.  If
-someone is missing from AUTHORS, add them where they would have been if they
-were added after their first pull request was merged (checkout the merge
-commit from the first pull request and see who is at the end of the AUTHORS
-file at that commit.)""")))
+someone is missing from AUTHORS, use the ./bin/update_authors.py script to add
+them.""")))
 
 print()
 print(yellow("People who are in AUTHORS but not in git:"))
@@ -104,8 +102,7 @@ if git_count != adjusted_authors_count:
 else:
     print()
     print(green(filldedent("""Congratulations. The AUTHORS and .mailmap files
-appear to be up to date. You should now verify that doc/src/aboutus has %s
-people.""" % authors_count)))
+appear to be up to date. There are %s authors.""" % authors_count)))
 
 if exit1:
     print()

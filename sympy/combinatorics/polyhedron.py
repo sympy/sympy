@@ -66,7 +66,7 @@ class Polyhedron(Basic):
         Here we construct the Polyhedron object for a tetrahedron.
 
         >>> corners = [w, x, y, z]
-        >>> faces = [(0,1,2), (0,2,3), (0,3,1), (1,2,3)]
+        >>> faces = [(0, 1, 2), (0, 2, 3), (0, 3, 1), (1, 2, 3)]
 
         Next, allowed transformations of the polyhedron must be given. This
         is given as permutations of vertices.
@@ -78,13 +78,13 @@ class Polyhedron(Basic):
         permutation, Permutation(range(4)), is not included since it does
         not change the orientation of the vertices.)
 
-        >>> pgroup = [Permutation([[0,1,2], [3]]), \
-                      Permutation([[0,1,3], [2]]), \
-                      Permutation([[0,2,3], [1]]), \
-                      Permutation([[1,2,3], [0]]), \
-                      Permutation([[0,1], [2,3]]), \
-                      Permutation([[0,2], [1,3]]), \
-                      Permutation([[0,3], [1,2]])]
+        >>> pgroup = [Permutation([[0, 1, 2], [3]]), \
+                      Permutation([[0, 1, 3], [2]]), \
+                      Permutation([[0, 2, 3], [1]]), \
+                      Permutation([[1, 2, 3], [0]]), \
+                      Permutation([[0, 1], [2, 3]]), \
+                      Permutation([[0, 2], [1, 3]]), \
+                      Permutation([[0, 3], [1, 2]])]
 
         The Polyhedron is now constructed and demonstrated:
 
@@ -176,7 +176,7 @@ class Polyhedron(Basic):
         ---------------------------
 
         It is not necessary to enter any permutations, nor is necessary to
-        enter a complete set of transforations. In fact, for a polyhedron,
+        enter a complete set of transformations. In fact, for a polyhedron,
         all configurations can be constructed from just two permutations.
         For example, the orientations of a tetrahedron can be generated from
         an axis passing through a vertex and face and another axis passing
@@ -234,15 +234,17 @@ class Polyhedron(Basic):
 
         To rotate the square with a single permutation we can do:
 
-        >>> square.rotate(square.pgroup[0]); square.corners
+        >>> square.rotate(square.pgroup[0])
+        >>> square.corners
         (1, 3, 2, 4)
 
         To use more than one permutation (or to use one permutation more
         than once) it is more convenient to use the make_perm method:
 
-        >>> p011 = square.pgroup.make_perm([0,1,1]) # diag flip + 2 rotations
+        >>> p011 = square.pgroup.make_perm([0, 1, 1]) # diag flip + 2 rotations
         >>> square.reset() # return to initial orientation
-        >>> square.rotate(p011); square.corners
+        >>> square.rotate(p011)
+        >>> square.corners
         (4, 2, 3, 1)
 
         Thinking outside the box
@@ -294,7 +296,7 @@ class Polyhedron(Basic):
 
             4 faces:
 
-            (0,1,2) (0,2,3) (0,3,1) (1,2,3)
+            (0, 1, 2) (0, 2, 3) (0, 3, 1) (1, 2, 3)
 
         cube, cube_faces
         ----------------
@@ -306,9 +308,9 @@ class Polyhedron(Basic):
 
             6 faces:
 
-            (0,1,2,3)
-            (0,1,5,4) (1,2,6,5) (2,3,7,6) (0,3,7,4)
-            (4,5,6,7)
+            (0, 1, 2, 3)
+            (0, 1, 5, 4) (1, 2, 6, 5) (2, 3, 7, 6) (0, 3, 7, 4)
+            (4, 5, 6, 7)
 
         octahedron, octahedron_faces
         ----------------------------
@@ -321,8 +323,8 @@ class Polyhedron(Basic):
 
             8 faces:
 
-            (0,1,2) (0,2,3) (0,3,4) (0,1,4)
-            (1,2,5) (2,3,5) (3,4,5) (1,4,5)
+            (0, 1, 2) (0, 2, 3) (0, 3, 4) (0, 1, 4)
+            (1, 2, 5) (2, 3, 5) (3, 4, 5) (1, 4, 5)
 
         dodecahedron, dodecahedron_faces
         --------------------------------
@@ -336,11 +338,10 @@ class Polyhedron(Basic):
 
             12 faces:
 
-            (0,1,2,3,4)
-            (0,1,6,10,5) (1,2,7,11,6) (2,3,8,12,7) (3,4,9,13,8) (0,4,9,14,5)
-            (5,10,16,15,14) (
-                6,10,16,17,11) (7,11,17,18,12) (8,12,18,19,13) (9,13,19,15,14)
-            (15,16,17,18,19)
+            (0, 1, 2, 3, 4) (0, 1, 6, 10, 5) (1, 2, 7, 11, 6)
+            (2, 3, 8, 12, 7) (3, 4, 9, 13, 8) (0, 4, 9, 14, 5)
+            (5, 10, 16, 15, 14) (6, 10, 16, 17, 11) (7, 11, 17, 18, 12)
+            (8, 12, 18, 19, 13) (9, 13, 19, 15, 14)(15, 16, 17, 18, 19)
 
         icosahedron, icosahedron_faces
         ------------------------------
@@ -354,10 +355,13 @@ class Polyhedron(Basic):
 
             20 faces:
 
-            (0,1,2) (0,2,3) (0,3,4) (0,4,5) (0,1,5)
-            (1,2,6) (2,3,7) (3,4,8) (4,5,9) (1,5,10)
-            (2,6,7) (3,7,8) (4,8,9) (5,9,10) (1,6,10)
-            (6,7,11,) (7,8,11) (8,9,11) (9,10,11) (6,10,11)
+            (0, 1, 2) (0, 2, 3) (0, 3, 4)
+            (0, 4, 5) (0, 1, 5) (1, 2, 6)
+            (2, 3, 7) (3, 4, 8) (4, 5, 9)
+            (1, 5, 10) (2, 6, 7) (3, 7, 8)
+            (4, 8, 9) (5, 9, 10) (1, 6, 10)
+            (6, 7, 11) (7, 8, 11) (8, 9, 11)
+            (9, 10, 11) (6, 10, 11)
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> cube.edges
@@ -538,7 +542,7 @@ class Polyhedron(Basic):
         A non-physical "rotation" that is not prohibited by this method:
 
         >>> cube.reset()
-        >>> cube.rotate(Permutation([[1,2]], size=8))
+        >>> cube.rotate(Permutation([[1, 2]], size=8))
         >>> cube.corners
         (0, 2, 1, 3, 4, 5, 6, 7)
 
@@ -633,9 +637,9 @@ def _pgroup_calcs():
     ... tetrahedron, cube, octahedron, dodecahedron, icosahedron)
     ...
     >>> polyhedra = (tetrahedron, cube, octahedron, dodecahedron, icosahedron)
-    >>> [h.pgroup.is_group() for h in polyhedra]
+    >>> [h.pgroup.is_group for h in polyhedra]
     ...
-    [False, False, False, False, False]
+    [True, True, True, True, True]
 
     Although tests in polyhedron's test suite check that powers of the
     permutations in the groups generate all permutations of the vertices
@@ -652,7 +656,7 @@ def _pgroup_calcs():
     ...             perms.add(p)
     ...
     ...     perms = [Permutation(p) for p in perms]
-    ...     assert PermutationGroup(perms).is_group()
+    ...     assert PermutationGroup(perms).is_group
 
     In addition to doing the above, the tests in the suite confirm that the
     faces are all present after the application of each permutation.
@@ -801,8 +805,8 @@ def _pgroup_calcs():
 
     icosahedron_faces = [
         [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 1, 5],
-        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9 ],
-        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6 ],
+        [1, 6, 7], [1, 2, 7], [2, 7, 8], [2, 3, 8], [3, 8, 9],
+        [3, 4, 9], [4, 9, 10 ], [4, 5, 10], [5, 6, 10], [1, 5, 6],
         [6, 7, 11], [7, 8, 11], [8, 9, 11], [9, 10, 11], [6, 10, 11]]
 
     icosahedron = Polyhedron(

@@ -1,7 +1,7 @@
 from sympy.utilities.pytest import raises
 from sympy import (symbols, Function, Integer, Matrix, Abs,
-    Rational, Float, S, WildFunction, ImmutableMatrix, sin, true, false, ones,
-    Symbol, Dummy, Wild)
+    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
+    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild)
 from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
@@ -48,9 +48,9 @@ def test_Function():
     sT(sin, "sin")
 
 def test_Geometry():
-    sT(Point(0, 0), "Point(Integer(0), Integer(0))")
+    sT(Point(0, 0), "Point2D(Integer(0), Integer(0))")
     sT(Ellipse(Point(0, 0), 5, 1),
-       "Ellipse(Point(Integer(0), Integer(0)), Integer(5), Integer(1))")
+       "Ellipse(Point2D(Integer(0), Integer(0)), Integer(5), Integer(1))")
     # TODO more tests
 
 
@@ -80,7 +80,7 @@ def test_list():
 
 
 def test_Matrix():
-    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableMatrix, "ImmutableMatrix")]:
+    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableDenseMatrix, "ImmutableDenseMatrix")]:
         sT(cls([[x**+1, 1], [y, x + y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 
@@ -101,12 +101,23 @@ def test_Rational():
 
 
 def test_Float():
-    sT(Float('1.23', prec=3), "Float('1.22998', prec=3)")
-    sT(Float('1.23456789', prec=9), "Float('1.23456788994', prec=9)")
-    sT(Float('1.234567890123456789', prec=19),
-       "Float('1.234567890123456789013', prec=19)")
-    sT(Float(
-        '0.60038617995049726', 15), "Float('0.60038617995049726', prec=15)")
+    sT(Float('1.23', dps=3), "Float('1.22998', precision=13)")
+    sT(Float('1.23456789', dps=9), "Float('1.23456788994', precision=33)")
+    sT(Float('1.234567890123456789', dps=19),
+       "Float('1.234567890123456789013', precision=66)")
+    sT(Float('0.60038617995049726', dps=15),
+       "Float('0.60038617995049726', precision=53)")
+
+    sT(Float('1.23', precision=13), "Float('1.22998', precision=13)")
+    sT(Float('1.23456789', precision=33),
+       "Float('1.23456788994', precision=33)")
+    sT(Float('1.234567890123456789', precision=66),
+       "Float('1.234567890123456789013', precision=66)")
+    sT(Float('0.60038617995049726', precision=53),
+       "Float('0.60038617995049726', precision=53)")
+
+    sT(Float('0.60038617995049726', 15),
+       "Float('0.60038617995049726', precision=53)")
 
 
 def test_Symbol():
@@ -166,6 +177,11 @@ def test_Mul():
     sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
 
+def test_AlgebraicNumber():
+    a = AlgebraicNumber(sqrt(2))
+    sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
+    a = AlgebraicNumber(root(-2, 3))
+    sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
 
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"

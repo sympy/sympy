@@ -17,6 +17,10 @@ class AskIntegerHandler(CommonHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_integer
+
+    @staticmethod
     def _number(expr, assumptions):
         # helper method
         try:
@@ -80,10 +84,6 @@ class AskIntegerHandler(CommonHandler):
         return False
 
     @staticmethod
-    def Float(expr, assumptions):
-        return int(expr) == expr
-
-    @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
@@ -99,6 +99,11 @@ class AskRationalHandler(CommonHandler):
     Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
     """
+
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_rational
 
     @staticmethod
     def Add(expr, assumptions):
@@ -157,6 +162,11 @@ class AskRationalHandler(CommonHandler):
 
 class AskIrrationalHandler(CommonHandler):
 
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_irrational
+
     @staticmethod
     def Basic(expr, assumptions):
         _real = ask(Q.real(expr), assumptions)
@@ -174,6 +184,10 @@ class AskRealHandler(CommonHandler):
     Handler for Q.real
     Test that an expression belongs to the field of real numbers
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_real
 
     @staticmethod
     def _number(expr, assumptions):
@@ -380,6 +394,10 @@ class AskComplexHandler(CommonHandler):
     """
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_complex
+
+    @staticmethod
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
@@ -403,6 +421,10 @@ class AskImaginaryHandler(CommonHandler):
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        return expr.is_imaginary
 
     @staticmethod
     def _number(expr, assumptions):

@@ -105,7 +105,7 @@ The class `Integral` represents an unevaluated integral and has some methods tha
 
 TODO and Bugs
 -------------
-There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?labels=Integration
+There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=label%3AIntegration
 
 Numeric Integrals
 =================

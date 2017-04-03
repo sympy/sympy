@@ -50,8 +50,8 @@ class MatAdd(MatrixExpr):
         return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
-        from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
+        from .trace import trace
+        return Add(*[trace(arg) for arg in self.args]).doit()
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
@@ -89,12 +89,12 @@ def merge_explicit(matadd):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatAdd(A, B, C)
     >>> pprint(X)
-    A + [1  0] + [1  2]
-        [    ]   [    ]
+        [1  0]   [1  2]
+    A + [    ] + [    ]
         [0  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    A + [2  2]
-        [    ]
+        [2  2]
+    A + [    ]
         [3  5]
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))

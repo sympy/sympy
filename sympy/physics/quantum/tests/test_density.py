@@ -10,7 +10,7 @@ from sympy.physics.quantum.cartesian import XKet, PxKet, PxOp, XOp
 from sympy.physics.quantum.spin import JzKet
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.functions import sqrt
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
@@ -208,6 +208,7 @@ def test_eval_trace():
     assert t.doit() == 1
 
 
+@slow
 def test_fidelity():
     #test with kets
     up = JzKet(S(1)/2, S(1)/2)

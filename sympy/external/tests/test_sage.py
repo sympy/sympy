@@ -209,6 +209,7 @@ def test_integral():
 
 @XFAIL
 def test_integral_failing():
+    # Note: sage may attempt to turn this into Integral(x, (x, x, 0))
     check_expression("Integral(x, (x, 0))", "x", only_from_sympy=True)
     check_expression("Integral(x*y, (x,), (y, 0))", "x,y", only_from_sympy=True)
     check_expression("Integral(x*y, (x, 0, 1), (y, 0))", "x,y", only_from_sympy=True)

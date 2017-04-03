@@ -320,6 +320,7 @@ class IntegerPartition(Basic):
 
         If the value that the partion should sum to is given first, a check
         will be made to see n error will be raised if there is a discrepancy:
+
         >>> IntegerPartition(10, [5, 4, 3, 1])
         Traceback (most recent call last):
         ...

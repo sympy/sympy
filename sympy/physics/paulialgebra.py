@@ -11,7 +11,8 @@ References
 
 from __future__ import print_function, division
 
-from sympy import Symbol, I
+from sympy import Symbol, I, Mul, Pow, Add
+from sympy.physics.quantum import TensorProduct
 
 __all__ = ['evaluate_pauli_product']
 
@@ -154,12 +155,50 @@ def evaluate_pauli_product(arg):
     >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
     '''
-    tmp = arg.as_coeff_mul()
-    sigma_product = 1
-    com_product = 1
-    for el in tmp[1]:
-        if isinstance(el, Pauli):
-            sigma_product *= el
+    start = arg
+    end = arg
+
+    if isinstance(arg, Pow) and isinstance(arg.args[0], Pauli):
+        if arg.args[1].is_odd:
+            return arg.args[0]
         else:
-            com_product *= el
-    return (tmp[0]*sigma_product*com_product)
+            return 1
+
+    if isinstance(arg, Add):
+        return Add(*[evaluate_pauli_product(part) for part in arg.args])
+
+    if isinstance(arg, TensorProduct):
+        return TensorProduct(*[evaluate_pauli_product(part) for part in arg.args])
+
+    elif not(isinstance(arg, Mul)):
+        return arg
+
+    while ((not(start == end)) | ((start == arg) & (end == arg))):
+        start = end
+
+        tmp = start.as_coeff_mul()
+        sigma_product = 1
+        com_product = 1
+        keeper = 1
+
+        for el in tmp[1]:
+            if isinstance(el, Pauli):
+                sigma_product *= el
+            elif not(el.is_commutative):
+                if isinstance(el, Pow) and isinstance(el.args[0], Pauli):
+                    if el.args[1].is_odd:
+                        sigma_product *= el.args[0]
+                elif isinstance(el, TensorProduct):
+                    keeper = keeper*sigma_product*\
+                        TensorProduct(
+                            *[evaluate_pauli_product(part) for part in el.args]
+                        )
+                    sigma_product = 1
+                else:
+                    keeper = keeper*sigma_product*el
+                    sigma_product = 1
+            else:
+                com_product *= el
+        end = (tmp[0]*keeper*sigma_product*com_product)
+        if end == arg: break
+    return end

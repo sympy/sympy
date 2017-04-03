@@ -454,7 +454,7 @@ that it's correct:
     [5]
 
 There's also a nice Gram-Schmidt orthogonalizer which will take a set of
-vectors and orthogonalize then with respect to another another. There is an
+vectors and orthogonalize them with respect to another. There is an
 optional argument which specifies whether or not the output should also be
 normalized, it defaults to ``False``. Let's take some vectors and orthogonalize
 them - one normalized and one not:

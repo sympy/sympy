@@ -81,3 +81,15 @@ ImageSet
 ^^^^^^^^
 .. autoclass:: ImageSet
    :members:
+
+Range
+^^^^^
+.. autoclass:: Range
+   :members:
+
+ComplexRegion
+^^^^^^^^^^^^^
+.. autoclass:: ComplexRegion
+   :members:
+
+.. autofunction:: normalize_theta_set

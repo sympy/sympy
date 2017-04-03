@@ -9,15 +9,14 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise
-from sympy.utilities.pytest import raises
+from sympy import hyper, I, S, meijerg, Piecewise, Tuple
 from sympy.abc import z, a, b, c
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.utilities.randtest import verify_numerically as tn
-from sympy.utilities.pytest import XFAIL, slow
 from sympy.core.compatibility import range
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar)
+                   gamma, sqrt, pi, erf, exp_polar, Rational)
 
 
 def test_branch_bug():
@@ -49,8 +48,13 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if not numerical:
         return True
     repl = {}
-    for n, a in enumerate(r.free_symbols - set([z])):
-        repl[a] = randcplx(n)/div
+    randsyms = r.free_symbols - {z}
+    while randsyms:
+        # Only randomly generated parameters are checked.
+        for n, a in enumerate(randsyms):
+            repl[a] = randcplx(n)/div
+        if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
+            break
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
         [a, b, c, d] = [2, -2, 3, -1]
@@ -89,6 +93,7 @@ def test_polynomial():
     assert hyperexpand(hyper([-2], [-1], z)) == oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
     assert can_do([-5, -2, randcplx(), randcplx()], [-10, randcplx()])
+    assert hyperexpand(hyper((-1, 1), (-2,), z)) == 1 + z/2
 
 
 def test_hyperexpand_bases():
@@ -140,6 +145,7 @@ def randcplx(offset=-1):
     return _randrat() + I*_randrat() + I*(1 + offset)
 
 
+@slow
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
@@ -333,11 +339,12 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
+    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
         repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 
+@slow
 def test_meijerg_expand():
     from sympy import combsimp, simplify
     # from mpmath docs
@@ -397,6 +404,11 @@ def test_meijerg_expand():
     assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == hyper(
         (a,), (a + 1, a + 1), z*exp_polar(I*pi))*z**a*gamma(a)/gamma(a + 1)**2
 
+    # Test place option
+    f = meijerg(((0, 1), ()), ((S(1)/2,), (0,)), z**2)
+    assert hyperexpand(f) == sqrt(pi)/sqrt(1 + z**(-2))
+    assert hyperexpand(f, place=0) == sqrt(pi)*z/sqrt(z**2 + 1)
+
 
 def test_meijerg_lookup():
     from sympy import uppergamma, Si, Ci
@@ -431,6 +443,7 @@ def test_meijerg_expand_fail():
     assert can_do_meijer([S.Half], [], [-a, a], [0])
 
 
+@slow
 def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
@@ -463,9 +476,9 @@ def test_meijerg():
     bm = [b1, b2 + 1]
     niq, ops = reduce_order_meijer(G_Function(an, ap, bm, bq))
     assert niq.an == (a1,)
-    assert set(niq.ap) == set([a3, a4])
+    assert set(niq.ap) == {a3, a4}
     assert niq.bm == (b1,)
-    assert set(niq.bq) == set([b3, b4])
+    assert set(niq.bq) == {b3, b4}
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
 
@@ -500,6 +513,7 @@ def test_meijerg_shift_operators():
         s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
 
 
+@slow
 def test_meijerg_confluence():
     def t(m, a, b):
         from sympy import sympify, Piecewise
@@ -538,6 +552,15 @@ def test_meijerg_confluence():
     assert u([1, 1], [], [], [0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0, 0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
+
+
+def test_meijerg_with_Floats():
+    # see issue #10681
+    from sympy import RR
+    f = meijerg(((3.0, 1), ()), ((S(3)/2,), (0,)), z)
+    a = -2.3632718012073
+    g = a*z**(S(3)/2)*hyper((-0.5, S(3)/2), (S(5)/2,), z*exp_polar(I*pi))
+    assert RR.almosteq((hyperexpand(f)/g).n(), 1.0, 1e-12)
 
 
 def test_lerchphi():
@@ -819,7 +842,6 @@ def test_prudnikov_8():
                         assert can_do([a, b], [c, d])
 
 
-@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -853,7 +875,6 @@ def test_prudnikov_10():
     assert can_do([-S(1)/2], [S(1)/2, S(1)/2])  # shine-integral shi
 
 
-@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a + S.Half], [2*a, b, 2*a - b])
@@ -887,6 +908,7 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+@slow
 def test_prudnikov_2F1():
     h = S.Half
     # Elliptic integrals
@@ -1009,3 +1031,10 @@ def test_prudnikov_fail_other():
 def test_bug():
     h = hyper([-1, 1], [z], -1)
     assert hyperexpand(h) == (z + 1)/z
+
+
+def test_omgissue_203():
+    h = hyper((-5, -3, -4), (-6, -6), 1)
+    assert hyperexpand(h) == Rational(1, 30)
+    h = hyper((-6, -7, -5), (-6, -6), 1)
+    assert hyperexpand(h) == -Rational(1, 6)

@@ -148,7 +148,7 @@ def _sqrt_match(p):
     >>> _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
     """
-    from sympy.simplify.simplify import split_surds
+    from sympy.simplify.radsimp import split_surds
 
     p = _mexpand(p)
     if p.is_Number:
@@ -266,7 +266,7 @@ def _sqrtdenest_rec(expr):
     >>> _sqrtdenest_rec(sqrt(w))
     -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
     """
-    from sympy.simplify.simplify import radsimp, split_surds, rad_rationalize
+    from sympy.simplify.radsimp import radsimp, rad_rationalize, split_surds
     if not expr.is_Pow:
         return sqrtdenest(expr)
     if expr.base < 0:
@@ -487,7 +487,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
     >>> sqrt_biquadratic_denest(z, a, b, r, d2)
     sqrt(2) + sqrt(sqrt(2) + 2) + 2
     """
-    from sympy.simplify.simplify import radsimp, rad_rationalize
+    from sympy.simplify.radsimp import radsimp, rad_rationalize
     if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:
         return None
     for x in (a, b, r):

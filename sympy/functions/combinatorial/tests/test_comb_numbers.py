@@ -11,6 +11,8 @@ from sympy.functions import (
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, raises
 
+from sympy.core.numbers import GoldenRatio
+
 x = Symbol('x')
 
 
@@ -64,6 +66,15 @@ def test_fibonacci():
     n = Dummy('n')
     assert fibonacci(n).limit(n, S.Infinity) == S.Infinity
     assert lucas(n).limit(n, S.Infinity) == S.Infinity
+
+    assert fibonacci(n).rewrite(sqrt) == \
+        2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
+    assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
+    assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
+        fibonacci(10)
+    assert lucas(n).rewrite(sqrt) == \
+        (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
+    assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
 
 
 def test_bell():
