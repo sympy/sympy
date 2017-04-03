@@ -33,7 +33,7 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 import itertools
-from sympy import Matrix, Rational, product, prod
+from sympy import Matrix, Rational, prod
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, sympify, Add, S
@@ -42,8 +42,6 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify
-from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices import eye
 
 
@@ -1006,13 +1004,13 @@ class _TensorDataLazyEvaluator(CantSympify):
         if dat is None:
             return None
 
-        numpy = import_module("numpy")
-        if not isinstance(dat, numpy.ndarray):
+        from .array import NDimArray
+        if not isinstance(dat, NDimArray):
             return dat
 
         if dat.rank() == 0:
             return dat[()]
-        elif dat.rank() == 1 and dat.size == 1:
+        elif dat.rank() == 1 and len(dat) == 1:
             return dat[0]
         return dat
 
@@ -1083,7 +1081,6 @@ class _TensorDataLazyEvaluator(CantSympify):
                                  "data with tensors without components data")
 
             sum_list = []
-            #numpy = import_module("numpy")
             from .array import permutedims
             for data, free_args in zip(data_list, free_args_list):
                 if len(free_args) < 2:
@@ -1091,7 +1088,6 @@ class _TensorDataLazyEvaluator(CantSympify):
                 else:
                     free_args_pos = {y: x for x, y in enumerate(free_args)}
                     axes = [free_args_pos[arg] for arg in key.free_args]
-                    #sumvar += numpy.transpose(data.tolist(), axes)
                     sum_list.append(permutedims(data, axes))
             return reduce(lambda x, y: x+y, sum_list)
 
@@ -1210,36 +1206,6 @@ class _TensorDataLazyEvaluator(CantSympify):
     def __contains__(self, key):
         return key in self._substitutions_dict
 
-    @staticmethod
-    def _contract_ndarray(free1, free2, ndarray1, ndarray2):
-        numpy = import_module('numpy')
-
-        def ikey(x):
-            # sort by component number , then by position in component
-            return x[2], x[1]
-
-        free1 = free1[:]
-        free2 = free2[:]
-        free1.sort(key=ikey)
-        free2.sort(key=ikey)
-        self_free = [_[0] for _ in free1]
-        axes1 = []
-        axes2 = []
-        for jpos, jindex in enumerate(free2):
-            if -jindex[0] in self_free:
-                nidx = self_free.index(-jindex[0])
-            else:
-                continue
-            axes1.append(nidx)
-            axes2.append(jpos)
-
-        contracted_ndarray = numpy.tensordot(
-            ndarray1,
-            ndarray2,
-            (axes1, axes2)
-        )
-        return contracted_ndarray
-
     def add_metric_data(self, metric, data):
         """
         Assign data to the ``metric`` tensor. The metric tensor behaves in an
@@ -1348,10 +1314,9 @@ class _TensorDataLazyEvaluator(CantSympify):
         _TensorDataLazyEvaluator._substitutions_dict[new_tensmul] = sorted_compo()
 
     @staticmethod
-    @doctest_depends_on(modules=('numpy',))
     def parse_data(data):
         """
-        Transform ``data`` to a numpy ndarray. The parameter ``data`` may
+        Transform ``data`` to array. The parameter ``data`` may
         contain data in various formats, e.g. nested lists, sympy ``Matrix``,
         and so on.
 
@@ -1360,11 +1325,10 @@ class _TensorDataLazyEvaluator(CantSympify):
 
         >>> from sympy.tensor.tensor import _TensorDataLazyEvaluator
         >>> _TensorDataLazyEvaluator.parse_data([1, 3, -6, 12])
-        [1 3 -6 12]
+        [1, 3, -6, 12]
 
         >>> _TensorDataLazyEvaluator.parse_data([[1, 2], [4, 7]])
-        [[1 2]
-         [4 7]]
+        [[1, 2], [4, 7]]
         """
         from .array import MutableDenseNDimArray
 
@@ -1543,7 +1507,6 @@ class _TensorManager(object):
 TensorManager = _TensorManager()
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name and its metric.
@@ -1625,10 +1588,7 @@ class TensorIndexType(Basic):
     >>> Lorentz
     TensorIndexType(Lorentz, 0)
     >>> Lorentz.data
-    [[1 0 0 0]
-    [0 -1 0 0]
-    [0 0 -1 0]
-    [0 0 0 -1]]
+    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]
     """
 
     def __new__(cls, name, metric=False, dim=None, eps_dim=None,
@@ -1807,7 +1767,6 @@ class TensorIndexType(Basic):
             del _tensor_data_substitution_dict[delta]
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensorIndex(Basic):
     """
     Represents an abstract tensor index.
@@ -1946,7 +1905,6 @@ def tensor_indices(s, typ):
     return tilist
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensorSymmetry(Basic):
     """
     Monoterm symmetry of a tensor
@@ -2094,7 +2052,6 @@ def tensorsymmetry(*args):
     return TensorSymmetry(Tuple(base, sgs))
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensorType(Basic):
     """
     Class of tensor types.
@@ -2217,7 +2174,6 @@ def tensorhead(name, typ, sym, comm=0):
     return th
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensorHead(Basic):
     r"""
     Tensor head of the tensor
@@ -2283,37 +2239,25 @@ class TensorHead(Basic):
     To view the data, just type:
 
     >>> A.data
-    [[0 1 2 3]
-     [2 3 4 5]
-     [4 5 6 7]
-     [6 7 8 9]]
+    [[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 7], [6, 7, 8, 9]]
 
     Turning to a tensor expression, covariant indices get the corresponding
     components data corrected by the metric:
 
     >>> A(i0, -i1).data
-    [[0 -1 -2 -3]
-     [2 -3 -4 -5]
-     [4 -5 -6 -7]
-     [6 -7 -8 -9]]
+    [[0, -1, -2, -3], [2, -3, -4, -5], [4, -5, -6, -7], [6, -7, -8, -9]]
 
     >>> A(-i0, -i1).data
-    [[0 -1 -2 -3]
-     [-2 3 4 5]
-     [-4 5 6 7]
-     [-6 7 8 9]]
+    [[0, -1, -2, -3], [-2, 3, 4, 5], [-4, 5, 6, 7], [-6, 7, 8, 9]]
 
     while if all indices are contravariant, the ``ndarray`` remains the same
 
     >>> A(i0, i1).data
-     [[0 1 2 3]
-     [2 3 4 5]
-     [4 5 6 7]
-     [6 7 8 9]]
+    [[0, 1, 2, 3], [2, 3, 4, 5], [4, 5, 6, 7], [6, 7, 8, 9]]
 
     When all indices are contracted and components data are added to the tensor,
-    accessing the data will return a scalar, no numpy object. In fact, numpy
-    ndarrays are dropped to scalars if they contain only one element.
+    accessing the data will return a scalar, no array object. In fact, arrays
+    are dropped to scalars if they contain only one element.
 
     >>> A(i0, -i0)
     A(L_0, -L_0)
@@ -2344,23 +2288,16 @@ class TensorHead(Basic):
     tensor:
 
     >>> F(i0, i1).data
-    [[0 -E_x/c -E_y/c -E_z/c]
-     [E_x/c 0 -B_z B_y]
-     [E_y/c B_z 0 -B_x]
-     [E_z/c -B_y B_x 0]]
+    [[0, -E_x/c, -E_y/c, -E_z/c], [E_x/c, 0, -B_z, B_y], [E_y/c, B_z, 0, -B_x], [E_z/c, -B_y, B_x, 0]]
 
     and the mixed contravariant-covariant form:
 
     >>> F(i0, -i1).data
-    [[0 E_x/c E_y/c E_z/c]
-     [E_x/c 0 B_z -B_y]
-     [E_y/c -B_z 0 B_x]
-     [E_z/c B_y -B_x 0]]
+    [[0, E_x/c, E_y/c, E_z/c], [E_x/c, 0, B_z, -B_y], [E_y/c, -B_z, 0, B_x], [E_z/c, B_y, -B_x, 0]]
 
-    To convert the numpy's ndarray to a sympy matrix, just cast:
+    To convert the darray to a SymPy matrix, just cast:
 
-    >>> from sympy import Matrix
-    >>> Matrix(F.data)
+    >>> F.data.tomatrix()
     Matrix([
     [    0, -E_x/c, -E_y/c, -E_z/c],
     [E_x/c,      0,   -B_z,    B_y],
@@ -2382,9 +2319,9 @@ class TensorHead(Basic):
     The contravariant and covariant components are, respectively:
 
     >>> P(i0).data
-    [E p_x p_y p_z]
+    [E, p_x, p_y, p_z]
     >>> P(-i0).data
-    [E -p_x -p_y -p_z]
+    [E, -p_x, -p_y, -p_z]
 
     The contraction of a 1-index tensor by itself is usually indicated by a
     power by two:
@@ -2543,7 +2480,6 @@ def _get_argtree_pos(expr, pos):
     return expr
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensExpr(Basic):
     """
     Abstract base class for tensor expressions
@@ -2655,7 +2591,6 @@ class TensExpr(Basic):
         indstruc = _IndexStructure.from_indices(*indices)
         return self._set_new_index_structure(indstruc)
 
-    @doctest_depends_on(modules=('numpy',))
     def get_matrix(self):
         """
         Returns ndarray components data as a matrix, if components data are
@@ -2780,7 +2715,6 @@ class TensExpr(Basic):
         return recursor(self, ())
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensAdd(TensExpr):
     """
     Sum of tensors
@@ -3168,7 +3102,6 @@ class TensAdd(TensExpr):
         return self.data.flatten().__iter__()
 
 
-@doctest_depends_on(modules=('numpy',))
 class Tensor(TensExpr):
     """
     Base tensor class, i.e. this represents a tensor, the single unit to be
@@ -3501,7 +3434,6 @@ class Tensor(TensExpr):
         return self.contract_metric(metric)
 
 
-@doctest_depends_on(modules=('numpy',))
 class TensMul(TensExpr):
     """
     Product of tensors

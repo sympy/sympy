@@ -149,7 +149,6 @@ class NDimArray(object):
         else:
             shape = ()
             iterable = (iterable,)
-            #raise TypeError("Data type not understood")
 
         if isinstance(shape, (int, Integer)):
             shape = (shape,)
