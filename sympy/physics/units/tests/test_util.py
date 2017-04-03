@@ -2,8 +2,9 @@
 
 from __future__ import division
 
-from sympy import Add, Pow, Mul, sin
+from sympy import Add, Pow, Mul, sin, Tuple
 from sympy.physics.units import coulomb
+from sympy.physics.units import joule
 from sympy.physics.units import mile, speed_of_light, meter, second, minute, hour, day
 from sympy.physics.units import centimeter
 from sympy.physics.units import inch
@@ -12,7 +13,7 @@ from sympy.physics.units import kilometer
 from sympy.physics.units import length
 from sympy.physics.units import newton
 from sympy.physics.units import steradian
-from sympy.physics.units import time
+from sympy.physics.units import time, gram
 from sympy.physics.units.util import dim_simplify, convert_to
 
 
@@ -67,3 +68,12 @@ def test_convert_to_quantities():
     assert convert_to(2*kilometer/hour + 3*mile/hour, meter/second) == 53344*meter/(28125*second)
     assert convert_to(2*kilometer/hour + 3*mile/hour, centimeter/second) == 213376*centimeter/(1125*second)
     assert convert_to(steradian, coulomb) == steradian
+
+
+def test_convert_to_tuples_of_quantities():
+    assert convert_to(speed_of_light, [meter, second])
+    assert convert_to(speed_of_light, (meter, second))
+    assert convert_to(speed_of_light, Tuple(meter, second))
+    assert convert_to(joule, [meter, kilogram, second]) == kilogram*meter**2/second**2
+    assert convert_to(joule, [centimeter, gram, second]) == 10000000*centimeter**2*gram/second**2
+    assert convert_to(299792458*meter/second, [speed_of_light]) == speed_of_light

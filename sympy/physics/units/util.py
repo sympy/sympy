@@ -6,8 +6,10 @@ Several methods to simplify expressions involving unit objects.
 
 from __future__ import division
 
+import collections
+
 from sympy.physics.units.quantities import Quantity
-from sympy import Add, Mul, Pow, Function, Rational
+from sympy import Add, Mul, Pow, Function, Rational, Tuple
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension
 
@@ -43,6 +45,16 @@ def dim_simplify(expr):
     raise ValueError("Cannot be simplifed: %s", expr)
 
 
+def _convert_to_multiple_quantities(expr, quantities):
+    from .unitsystem import UnitSystem
+    unitsystem = UnitSystem(quantities, list(expr.atoms(Quantity)))
+    assert unitsystem.is_consistent
+    subs_dict = {}
+    for i in expr.atoms(Quantity):
+        subs_dict[i] = unitsystem.print_unit_base(i)
+    return expr.subs(subs_dict)
+
+
 def convert_to(expr, quantity):
     """
     Convert `expr` to the same expression with all of its units and quantities
@@ -70,6 +82,8 @@ def convert_to(expr, quantity):
     >>> convert_to(atomic_mass_constant, gram)
     1.66053904e-24*gram
     """
+    if isinstance(quantity, (collections.Iterable, Tuple)):
+        return _convert_to_multiple_quantities(expr, quantity)
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
