@@ -437,7 +437,9 @@ def translate(s, a, b=None, c=None):
     mr = {}
     if a is None:
         if c is not None:
-            raise TypeError('Called translate with 4 arguments and a second argument of None, expected 3 arguments if second argument is None')
+            raise TypeError('Called translate with 4 arguments and a second '
+                            'argument of None, expected 3 arguments if second '
+                            'argument is None')
         if not b:
             return s
         c = b
