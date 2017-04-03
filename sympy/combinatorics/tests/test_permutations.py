@@ -339,6 +339,7 @@ def test_args():
     assert Permutation([[1], [4, 2]], size=1) == Permutation([0, 1, 4, 3, 2])
     assert Permutation(
         [[1], [4, 2]], size=6) == Permutation([0, 1, 4, 3, 2, 5])
+    assert Permutation([[0, 1], [0, 2]]) == Permutation(0, 1, 2)
     assert Permutation([], size=3) == Permutation([0, 1, 2])
     assert Permutation(3).list(5) == [0, 1, 2, 3, 4]
     assert Permutation(3).list(-1) == []
