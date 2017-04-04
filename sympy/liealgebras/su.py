@@ -5,7 +5,7 @@ from sympy.matrices import zeros, ones, Matrix, randMatrix, matrices
 #used for every SU(n) group, i will have to write only a new generator
 #here
 
-def SU_generator(n, request):
+def su_generator(n, request):
     generator = []
     list_of_generators = []
     if (n == 2):
@@ -19,18 +19,18 @@ def SU_generator(n, request):
         return gen_matrix
 
 #simple SU(n) group constructor
-def SU(n):
+def su(n):
     generator = []
-    generator = SU_generator(n, 'generator')
+    generator = su_generator(n, 'generator')
     ans = zeros(n,n)
     for i in range(n*n-1):
         ans = ans+generator[i]
     return ans
 
 #SU(n) group generator with coefficients for group generator
-def SU_with_coefficients(n, list_of_coefficients):
+def su_with_coefficients(n, list_of_coefficients):
     generator = []
-    generator = SU_generator(n, 'generator')
+    generator = su_generator(n, 'generator')
     ans = zeros(n, n)
     for i in range(n*n-1):
         ans = ans+list_of_coefficients[i]*generator[i]
@@ -38,16 +38,16 @@ def SU_with_coefficients(n, list_of_coefficients):
 
 #Example no.1
 #Simple SU(2) group
-SU(2)
+su(2)
 
 #Example no.2
 #SU(2) group with coefficient for every generation matrix
-SU_with_coefficients(2,[1,2,3])
+su_with_coefficients(2,[1,2,3])
 
 #function which takes matrix of the group and gives answer, is it SU(n)
 #or not
-def is_SU(given_matrix, matrix_size):
-    gen_matrix = SU_generator(matrix_size,'gen_matrix')
+def is_su(given_matrix, matrix_size):
+    gen_matrix = su_generator(matrix_size,'gen_matrix')
     test_row = gen_matrix.row(-1)
     gen_matrix.row_del(-1)
     eq_answer = []
@@ -65,7 +65,7 @@ def is_SU(given_matrix, matrix_size):
 
 #Example no.3
 #We will look if matrix[[0,1],[1,0]] is matrix of  SU(2)
-is_SU([[0,1],[1,0]],2)
+is_su([[0,1],[1,0]],2)
 
 #links:
 #https://en.wikipedia.org/wiki/Special_unitary_group
