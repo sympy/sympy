@@ -160,7 +160,7 @@ class DifferentialExtension(object):
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts',)
+        'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=False):
         """
@@ -217,14 +217,16 @@ class DifferentialExtension(object):
         # (e.g., we pull out a constant from an exponential)
         self.f = f
         self.x = x
-        self.reset(dummy=dummy)
+        # setting the default value 'dummy'
+        self.dummy = dummy
+        self.reset()
         exp_new_extension, log_new_extension = True, True
         if rewrite_complex:
             rewritables = {
                 (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
                 (asin, acos, acot, atan): log,
             }
-        #rewrite the trigonometric components
+        # rewrite the trigonometric components
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
         else:
@@ -328,8 +330,7 @@ class DifferentialExtension(object):
                         # without first manually rewriting it as exp(x*log(x))
                         self.newf = self.newf.xreplace({old: new})
                         self.backsubs += [(new, old)]
-                        log_new_extension = self._log_part([log(i.base)],
-                            dummy=dummy)
+                        log_new_extension = self._log_part([log(i.base)])
                         exps = update(exps, self.newf.atoms(exp), lambda i:
                             i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
                         continue
@@ -385,16 +386,16 @@ class DifferentialExtension(object):
             logs = sorted(set(logs), key=default_sort_key)
 
             if handle_first == 'exp' or not log_new_extension:
-                exp_new_extension = self._exp_part(exps, dummy=dummy)
+                exp_new_extension = self._exp_part(exps)
                 if exp_new_extension is None:
                     # reset and restart
                     self.f = self.newf
-                    self.reset(dummy=dummy)
+                    self.reset()
                     exp_new_extension = True
                     continue
 
             if handle_first == 'log' or not exp_new_extension:
-                log_new_extension = self._log_part(logs, dummy=dummy)
+                log_new_extension = self._log_part(logs)
 
         self.fa, self.fd = frac_in(self.newf, self.t)
         self._auto_attrs()
@@ -422,7 +423,7 @@ class DifferentialExtension(object):
         self.d = self.D[self.level]
         self.case = self.cases[self.level]
 
-    def _exp_part(self, exps, dummy=False):
+    def _exp_part(self, exps):
         """
         Try to build an exponential extension.
 
@@ -516,7 +517,7 @@ class DifferentialExtension(object):
                 self.E_K.append(len(self.T) - 1)
                 self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
                     self.t, expand=False))
-                if dummy:
+                if self.dummy:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
@@ -529,7 +530,7 @@ class DifferentialExtension(object):
             return None
         return new_extension
 
-    def _log_part(self, logs, dummy=False):
+    def _log_part(self, logs):
         """
         Try to build a logarithmic extension.
 
@@ -570,7 +571,7 @@ class DifferentialExtension(object):
                 self.L_K.append(len(self.T) - 1)
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
-                if dummy:
+                if self.dummy:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
@@ -604,8 +605,7 @@ class DifferentialExtension(object):
             "'backsubs': %s, 'E_K': %s, 'E_args': %s, 'L_K': %s, 'L_args': %s}" % \
             (tuple(self._important_attrs[i] for i in range(10)))
 
-
-    def reset(self, dummy=False):
+    def reset(self):
         """
         Reset self to an initial state.  Used by __init__.
         """
@@ -614,7 +614,7 @@ class DifferentialExtension(object):
         self.D = [Poly(1, self.x)]
         self.level = -1
         self.L_K, self.E_K, self.L_args, self.E_args = [], [], [], []
-        if dummy:
+        if self.dummy:
             self.ts = numbered_symbols('t', cls=Dummy)
         else:
             # For testing
@@ -1673,8 +1673,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, dummy=True, \
-            rewrite_complex=rewrite_complex)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
+            dummy=True, rewrite_complex=rewrite_complex)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
