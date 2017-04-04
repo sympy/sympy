@@ -167,7 +167,13 @@ def _invert_real(f, g_ys, symbol):
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if numer == S.One or numer == - S.One:
-                    return _invert_real(base, res, symbol)
+                    if denom % 2 == 0:
+                        base_positive = solveset(base>=0, symbol, S.Reals)
+                        res = imageset(Lambda(n, real_root(n, expo)), g_ys.intersect(Interval.Ropen(S(0), S.Infinity)))
+                        inversion = _invert_real(base, res, symbol)
+                        return (inversion[0], inversion[1].intersect(base_positive))
+                    else:
+                        return _invert_real(base, res, symbol)
                 else:
                     if numer % 2 == 0:
                         n = Dummy('n')
