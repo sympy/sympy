@@ -26,9 +26,8 @@
 
 """
 from sympy import S, Mul, eye, trace
-from sympy.functions.elementary.exponential import exp
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
-    TensMul, TensAdd, tensor_mul, get_lines, Tensor, tensorhead
+    TensMul, TensAdd, tensor_mul, Tensor, tensorhead
 from sympy.core.compatibility import range
 
 
@@ -213,7 +212,7 @@ def _simplify_single_line(expression):
     """
     t1, t2 = extract_type_tens(expression, GammaMatrix)
     if t1 != 1:
-        t1 = _kahane_simplify(t1)
+        t1 = kahane_simplify(t1)
     res = t1*t2
     return res
 
@@ -331,7 +330,7 @@ def _gamma_trace1(*a):
            g(ind0, ind2)*g(ind1, ind3) + g(ind0, ind3)*g(ind1, ind2))
 
 
-def _kahane_simplify(expression):
+def kahane_simplify(expression):
     r"""
     This function cancels contracted elements in a product of four
     dimensional gamma matrices, resulting in an expression equal to the given
@@ -371,28 +370,28 @@ def _kahane_simplify(expression):
     has to be handled separately
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex
-    >>> from sympy.physics.hep.gamma_matrices import _kahane_simplify
+    >>> from sympy.physics.hep.gamma_matrices import kahane_simplify
     >>> from sympy.tensor.tensor import tensor_indices
     >>> i0, i1, i2 = tensor_indices('i0:3', LorentzIndex)
     >>> ta = G(i0)*G(-i0)
-    >>> _kahane_simplify(ta)
+    >>> kahane_simplify(ta)
     Matrix([
     [4, 0, 0, 0],
     [0, 4, 0, 0],
     [0, 0, 4, 0],
     [0, 0, 0, 4]])
     >>> tb = G(i0)*G(i1)*G(-i0)
-    >>> _kahane_simplify(tb)
+    >>> kahane_simplify(tb)
     -2*GammaMatrix(i1)
     >>> t = G(i0)*G(-i0)
-    >>> _kahane_simplify(t)
+    >>> kahane_simplify(t)
     Matrix([
     [4, 0, 0, 0],
     [0, 4, 0, 0],
     [0, 0, 4, 0],
     [0, 0, 0, 4]])
     >>> t = G(i0)*G(-i0)
-    >>> _kahane_simplify(t)
+    >>> kahane_simplify(t)
     Matrix([
     [4, 0, 0, 0],
     [0, 4, 0, 0],
@@ -402,7 +401,7 @@ def _kahane_simplify(expression):
     If there are no contractions, the same expression is returned
 
     >>> tc = G(i0)*G(i1)
-    >>> _kahane_simplify(tc)
+    >>> kahane_simplify(tc)
     GammaMatrix(i0)*GammaMatrix(i1)
 
     References
@@ -415,7 +414,7 @@ def _kahane_simplify(expression):
     if isinstance(expression, Mul):
         return expression
     if isinstance(expression, TensAdd):
-        return TensAdd(*[_kahane_simplify(arg) for arg in expression.args])
+        return TensAdd(*[kahane_simplify(arg) for arg in expression.args])
 
     if isinstance(expression, Tensor):
         return expression

@@ -1207,7 +1207,6 @@ def test_hash():
 
 
 def _get_valued_base_test_variables():
-
     minkowski = Matrix((
         (1, 0, 0, 0),
         (0, -1, 0, 0),
@@ -1267,8 +1266,6 @@ def _get_valued_base_test_variables():
 
 
 def test_valued_tensor_iter():
-
-
     (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
      n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 

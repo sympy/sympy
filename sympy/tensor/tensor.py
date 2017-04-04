@@ -1624,21 +1624,21 @@ class TensorIndexType(Basic):
         return obj
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
     def auto_right(self):
         if not hasattr(self, '_auto_right'):
             self._auto_right = TensorIndex("auto_right", self)
         return self._auto_right
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
     def auto_left(self):
         if not hasattr(self, '_auto_left'):
             self._auto_left = TensorIndex("auto_left", self)
         return self._auto_left
 
     @property
-    @deprecated(useinstead="TensorIndex", deprecated_since_version="0.7.6")
+    @deprecated(useinstead="TensorIndex", deprecated_since_version="1.1")
     def auto_index(self):
         if not hasattr(self, '_auto_index'):
             self._auto_index = TensorIndex("auto_index", self)
