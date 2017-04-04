@@ -238,6 +238,9 @@ def test_Permutation_subclassing():
             else:
                 return super(CustomPermutation, self).__eq__(other)
 
+        def __hash__(self):
+            return super(CustomPermutation, self).__hash__()
+
     p = CustomPermutation([1, 2, 3, 0])
     q = Permutation([1, 2, 3, 0])
 
