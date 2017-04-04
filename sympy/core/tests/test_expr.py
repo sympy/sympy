@@ -1769,6 +1769,10 @@ def test_issue_10161():
     x = symbols('x', real=True)
     assert x*abs(x)*abs(x) == x**3
 
+def test_issue_1112():
+    x = Symbol('x', positive=False)
+    assert (x > 0) is S.false
+    assert (I > 0) is False
 
 def test_issue_10755():
     x = symbols('x')
