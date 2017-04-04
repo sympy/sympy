@@ -222,6 +222,9 @@ def test_arithmetic():
     assert type(a) == type(b) == type(c1) == type(c2) == type(d1) == type(d2) \
         == type(e1) == type(e2) == type(e3) == type(f1)
 
+    z0 = -a
+    assert z0 == ImmutableDenseNDimArray([-3 for i in range(9)], (3, 3))
+
 
 def test_higher_dimenions():
     m3 = ImmutableDenseNDimArray(range(10, 34), (2, 3, 4))

@@ -271,7 +271,7 @@ By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
 source code generators that write routines with multiple instructions. The
 return value is a three-tuple containing: (i) a set of number symbols that must
-be defined as 'Fortran parameters', (ii) a list functions that can not be
+be defined as 'Fortran parameters', (ii) a list functions that cannot be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
@@ -340,6 +340,20 @@ Octave (and Matlab) Code printing
    .. autoattribute:: OctaveCodePrinter.printmethod
 
 .. autofunction:: sympy.printing.octave.octave_code
+
+Rust code printing
+------------------
+
+.. module:: sympy.printing.rust
+
+.. autodata:: sympy.printing.rust.known_functions
+
+.. autoclass:: sympy.printing.rust.RustCodePrinter
+   :members:
+
+   .. autoattribute:: RustCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.rust.rust_code
 
 Theano Code printing
 --------------------

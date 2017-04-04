@@ -778,7 +778,7 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('Both interval ends cannot be None.')
 
         if a == b:
-            return 0;
+            return 0
 
         if a is None:
             A = 0
@@ -3324,6 +3324,7 @@ class UnevaluatedExpr(Expr):
     """
 
     def __new__(cls, arg, **kwargs):
+        arg = _sympify(arg)
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 

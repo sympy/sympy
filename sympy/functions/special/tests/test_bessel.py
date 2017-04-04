@@ -81,10 +81,11 @@ def test_rewrite():
     # complex-valued, whereas SBFs are defined only for integer orders)
     order = nu
     for f in (besselj, bessely):
-        assert yn(order, z) == yn(order, z).rewrite(f)
-        assert jn(order, z) == jn(order, z).rewrite(f)
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
+
+    assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S(1)/2, z)/2
+    assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S(1)/2, z)/2
 
     # for integral orders rewriting SBFs w.r.t bessel[jy] is allowed
     N = Symbol('n', integer=True)

@@ -709,7 +709,7 @@ def test_solveset_complex_exp():
 def test_solve_complex_log():
     assert solveset_complex(log(x), x) == FiniteSet(1)
     assert solveset_complex(1 - log(a + 4*x**2), x) == \
-        FiniteSet(-sqrt(-a/4 + E/4), sqrt(-a/4 + E/4))
+        FiniteSet(-sqrt(-a + E)/2, sqrt(-a + E)/2)
 
 
 def test_solve_complex_sqrt():
@@ -1528,3 +1528,9 @@ def test_issue_11534():
     soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
     assert solveset(eq, x, S.Reals) == soln
     assert solveset(eq2, x, S.Reals) == soln
+
+def test_issue_12478():
+    expr = sqrt(x - 2) + 2
+    soln = solveset_real(expr, x)
+
+    assert soln == S.EmptySet

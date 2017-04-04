@@ -156,11 +156,11 @@ def test_Integral():
 
 def test_Interval():
     a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "[0, a]"
-    assert str(Interval(0, a, False, False)) == "[0, a]"
-    assert str(Interval(0, a, True, False)) == "(0, a]"
-    assert str(Interval(0, a, False, True)) == "[0, a)"
-    assert str(Interval(0, a, True, True)) == "(0, a)"
+    assert str(Interval(0, a)) == "Interval(0, a)"
+    assert str(Interval(0, a, False, False)) == "Interval(0, a)"
+    assert str(Interval(0, a, True, False)) == "Interval(0, a, True)"
+    assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
+    assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
 
 
 def test_AccumBounds():
@@ -574,9 +574,10 @@ def test_tuple():
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
-def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 5560
+
+def test_Quantity_str():
+    assert str(second) == "second"
+    assert str(joule) == "joule"
 
 
 def test_wild_str():
@@ -741,11 +742,11 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+    assert str(Complement(S.Reals, S.Naturals)) == 'S.Reals \\ S.Naturals'
 
 def test_SymmetricDifference():
-    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
-           'SymmetricDifference([2, 3], [3, 4])'
+    assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
+           'SymmetricDifference(Interval(2, 3), Interval(3, 4))'
 
 
 def test_UnevaluatedExpr():

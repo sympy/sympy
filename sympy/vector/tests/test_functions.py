@@ -162,7 +162,7 @@ def test_matrix_to_vector():
 
 def test_orthogonalize():
     C = CoordSysCartesian('C')
-    a, b = symbols('a b', integer=True);
+    a, b = symbols('a b', integer=True)
     i, j, k = C.base_vectors()
     v1 = i + 2*j
     v2 = 2*i + 3*j

@@ -4,7 +4,7 @@ Immutable Matrices
 .. module:: sympy
 
 The standard :class:`Matrix` class in SymPy is mutable. This is important for
-performance reasons but means that standard matrices can not interact well with
+performance reasons but means that standard matrices cannot interact well with
 the rest of SymPy. This is because the :class:`Basic` object, from which most
 SymPy classes inherit, is immutable.
 

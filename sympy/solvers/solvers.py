@@ -2430,7 +2430,7 @@ def det_minor(M):
         return M[0, 0]*M[1, 1] - M[1, 0]*M[0, 1]
     else:
         return sum([(1, -1)[i % 2]*Add(*[M[0, i]*d for d in
-            Add.make_args(det_minor(M.minorMatrix(0, i)))])
+            Add.make_args(det_minor(M.minor_submatrix(0, i)))])
             if M[0, i] else S.Zero for i in range(n)])
 
 
@@ -2459,8 +2459,8 @@ def inv_quick(M):
     is small.
     """
     from sympy.matrices import zeros
-    if any(i.has(Symbol) for i in M):
-        if all(i.has(Symbol) for i in M):
+    if not all(i.is_Number for i in M):
+        if not any(i.is_Number for i in M):
             det = lambda _: det_perm(_)
         else:
             det = lambda _: det_minor(_)
@@ -2475,7 +2475,7 @@ def inv_quick(M):
     for i in range(n):
         s = s1 = -s1
         for j in range(n):
-            di = det(M.minorMatrix(i, j))
+            di = det(M.minor_submatrix(i, j))
             ret[j, i] = s*di/d
             s = -s
     return ret

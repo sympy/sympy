@@ -21,7 +21,7 @@ happen to be :math:`(3, 4, 5)`. Moreover, this would also mean that
 the coordinates of :math:`N`'s origin with respect to :math:`M`
 would be :math:`(-3, -4, -5)`.
 
-This can be achieved programatically as follows -
+This can be achieved programmatically as follows -
 
   >>> from sympy.vector import CoordSysCartesian
   >>> N = CoordSysCartesian('N')
@@ -74,7 +74,7 @@ it.
 
   >>> B = A.orient_new_axis('B', theta, A.k)
 
-This initialzes :math:`B` with the required orientation information with
+This initializes :math:`B` with the required orientation information with
 respect to :math:`A`.
 
 ``CoordSysCartesian`` provides the following direct orientation methods
@@ -247,7 +247,7 @@ Coordinate variables, if present in a vector/scalar/dyadic expression,
 can also be re-expressed in a given coordinate system, by setting the
 ``variables`` keyword argument of ``express`` to ``True``.
 
-The above mentioned example, done programatically, would look like
+The above mentioned example, done programmatically, would look like
 this -
 
   >>> R = N.locate_new('R', N.i + 2*N.j + 3*N.k)

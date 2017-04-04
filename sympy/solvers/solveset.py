@@ -58,7 +58,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     in the complex domain, having infinitely many branches.)
 
     If you are working with real values only (or you are not sure which
-    function to use) you should probably use set the domain to
+    function to use) you should probably set the domain to
     ``S.Reals`` (or use `invert\_real` which does that automatically).
 
 
@@ -72,14 +72,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers()))
+    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), S.Integers))
     >>> invert_real(exp(x), y, x)
-    (x, Intersection((-oo, oo), {log(y)}))
+    (x, Intersection(S.Reals, {log(y)}))
 
     When does exp(x) == 1?
 
     >>> invert_complex(exp(x), 1, x)
-    (x, ImageSet(Lambda(_n, 2*_n*I*pi), Integers()))
+    (x, ImageSet(Lambda(_n, 2*_n*I*pi), S.Integers))
     >>> invert_real(exp(x), 1, x)
     (x, {0})
 
@@ -98,10 +98,14 @@ def _invert(f_x, y, x, domain=S.Complexes):
         raise ValueError("y should be independent of x ")
 
     if domain.is_subset(S.Reals):
-        x, s = _invert_real(f_x, FiniteSet(y), x)
+        x1, s = _invert_real(f_x, FiniteSet(y), x)
     else:
-        x, s = _invert_complex(f_x, FiniteSet(y), x)
-    return x, s.intersection(domain) if isinstance(s, FiniteSet) else s
+        x1, s = _invert_complex(f_x, FiniteSet(y), x)
+
+    if not isinstance(s, FiniteSet) or x1 == f_x:
+        return x1, s
+
+    return x1, s.intersection(domain)
 
 
 invert_complex = _invert
@@ -163,7 +167,13 @@ def _invert_real(f, g_ys, symbol):
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if numer == S.One or numer == - S.One:
-                    return _invert_real(base, res, symbol)
+                    if denom % 2 == 0:
+                        base_positive = solveset(base>=0, symbol, S.Reals)
+                        res = imageset(Lambda(n, real_root(n, expo)), g_ys.intersect(Interval.Ropen(S(0), S.Infinity)))
+                        inversion = _invert_real(base, res, symbol)
+                        return (inversion[0], inversion[1].intersect(base_positive))
+                    else:
+                        return _invert_real(base, res, symbol)
                 else:
                     if numer % 2 == 0:
                         n = Dummy('n')
@@ -578,11 +588,11 @@ def solve_decomposition(f, symbol, domain):
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
               3*pi
-    {2*n*pi + ---- | n in Integers()}
+    {2*n*pi + ---- | n in S.Integers}
                2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers()} U {pi*(2*n + 1) - 2 | n in Integers()}
+    {2*n*pi - 2 | n in S.Integers} U {pi*(2*n + 1) - 2 | n in S.Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -820,11 +830,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> x = Symbol('x')
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in Integers()}
+    {2*n*I*pi | n in S.Integers}
 
     >>> x = Symbol('x', real=True)
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
-    {2*n*I*pi | n in Integers()}
+    {2*n*I*pi | n in S.Integers}
 
     * If you want to use `solveset` to solve the equation in the
       real domain, provide a real domain. (Using `solveset\_real`
@@ -841,17 +851,17 @@ def solveset(f, symbol=None, domain=S.Complexes):
     but there may be some slight difference:
 
     >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers()} \ {0}) U ({2*n*pi + pi | n in Integers()} \ {0})
+    ({2*n*pi | n in S.Integers} \ {0}) U ({2*n*pi + pi | n in S.Integers} \ {0})
 
     >>> p = Symbol('p', positive=True)
     >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers()} U {2*n*pi + pi | n in Integers()}
+    {2*n*pi | n in S.Integers} U {2*n*pi + pi | n in S.Integers}
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
 
     >>> solveset(exp(x) > 1, x, R)
-    (0, oo)
+    Interval(0, oo, True, True)
 
     """
     f = sympify(f)
@@ -1405,19 +1415,19 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
+        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
     {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers()),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi +
-    Mod(-log(3), 2*I*pi)))), Integers())),
-    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), Integers()),
+    Mod(-log(3), 2*I*pi)))), S.Integers)),
+    (ImageSet(Lambda(_n, 2*_n*I*pi + Mod(-log(3), 2*I*pi)), S.Integers),
     ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi +
-        Mod(-log(3), 2*I*pi)))), Integers()))}
+        Mod(-log(3), 2*I*pi)))), S.Integers))}
 
     """
 
@@ -2028,8 +2038,8 @@ def nonlinsolve(system, *symbols):
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
     {(log(sin(2)), 2), (ImageSet(Lambda(_n, I*(2*_n*pi + pi) +
-        log(sin(2))), Integers()), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
-        Mod(log(sin(2)), 2*I*pi)), Integers()), 2)}
+        log(sin(2))), S.Integers), -2), (ImageSet(Lambda(_n, 2*_n*I*pi +
+        Mod(log(sin(2)), 2*I*pi)), S.Integers), 2)}
 
     3. If system is Non linear polynomial zero dimensional then it returns
     both solution (real and complex solutions, if present using

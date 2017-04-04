@@ -3160,34 +3160,20 @@ def test_sympy__physics__secondquant__TensorSymbol():
     assert _test_args(TensorSymbol(x))
 
 
-def test_sympy__physics__units__Unit():
-    from sympy.physics.units import Unit
-    assert _test_args(Unit("meter", "m"))
+def test_sympy__physics__units__dimensions__Dimension():
+    from sympy.physics.units.dimensions import Dimension
+    assert _test_args(Dimension("length", "L"))
 
 
-def test_sympy__physics__unitsystems__dimensions__Dimension():
-    from sympy.physics.unitsystems.dimensions import Dimension
-    assert _test_args(Dimension(name="length", symbol="L", length=1))
+def test_sympy__physics__units__quantities__Quantity():
+    from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units import length
+    assert _test_args(Quantity("dam", length, 10))
 
 
-def test_sympy__physics__unitsystems__quantities__Quantity():
-    from sympy.physics.unitsystems.quantities import Quantity
-    from sympy.physics.unitsystems.systems import mks
-    assert _test_args(Quantity(10, mks["m"]))
-
-
-def test_sympy__physics__unitsystems__units__Constant():
-    from sympy.physics.unitsystems.units import Constant
-    from sympy.physics.unitsystems.dimensions import Dimension
-    length = Dimension(length=1)
-    assert _test_args(Constant(length, abbrev="u", factor=10))
-
-
-def test_sympy__physics__unitsystems__units__Unit():
-    from sympy.physics.unitsystems.units import Unit
-    from sympy.physics.unitsystems.dimensions import Dimension
-    length = Dimension(length=1)
-    assert _test_args(Unit(length, abbrev="u", factor=10))
+def test_sympy__physics__units__prefixes__Prefix():
+    from sympy.physics.units.prefixes import Prefix
+    assert _test_args(Prefix('kilo', 'k', 3))
 
 
 def test_sympy__core__numbers__AlgebraicNumber():
@@ -3340,15 +3326,6 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
 
-
-@XFAIL
-def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
-    # This test fails, this class can be reconstructed from the *args
-    # of an instance using `TensorHead(*args)`
-    from sympy.physics.hep.gamma_matrices import GammaMatrixHead, Lorentz
-    from sympy.tensor.tensor import tensor_indices
-    i = tensor_indices('i', Lorentz)
-    assert _test_args(GammaMatrixHead())
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
