@@ -717,9 +717,30 @@ class ProductSet(Set):
 
     @property
     def is_iterable(self):
+        """
+        A property method which tests whether a set is iterable or not.
+        Returns True if set is iterable, otherwise returns False.
+
+        Examples
+        ========
+
+        >>> from sympy import FiniteSet, Interval, ProductSet
+        >>> I = Interval(0, 1)
+        >>> A = FiniteSet(1, 2, 3, 4, 5)
+        >>> I.is_iterable
+        False
+        >>> A.is_iterable
+        True
+
+        """
         return all(set.is_iterable for set in self.sets)
 
     def __iter__(self):
+        """
+        A method which implements is_iterable property method.
+        If self.is_iterable returns True (both constituent sets are iterable),
+        then return the Cartesian Product. Otherwise, raise TypeError.
+        """
         if self.is_iterable:
             return product(*self.sets)
         else:
