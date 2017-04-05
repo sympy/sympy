@@ -1746,10 +1746,10 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
-        c should be a Rational multiplied by any terms of the Mul that are
+        c should be a Rational multiplied by any factors of the Mul that are
         independent of deps.
 
-        args should be a tuple of all other terms of m; args is empty
+        args should be a tuple of all other factors of m; args is empty
         if self is a Number or if self is independent of deps (when given).
 
         This should be used when you don't know if self is a Mul or not but
