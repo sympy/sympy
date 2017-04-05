@@ -181,10 +181,10 @@ class CoordSysCartesian(Basic):
         return iter([self.i, self.j, self.k])
 
     def __getattr__(self, name):
-        if name in vector_name_list:
+        if vector_name_list and name in vector_name_list:
             name = vector_alias.get(name)
             return getattr(self, name)
-        elif name in variable_name_list:
+        elif variable_name_list and name in variable_name_list:
             name = variable_alias.get(name)
             return getattr(self, name)
         else:
