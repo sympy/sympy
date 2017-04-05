@@ -77,10 +77,10 @@ def _simple_dens(f, symbols):
     return dens
 
 
-def denoms(eq, symbols=None):
+def denoms(eq, *symbols):
     """Return (recursively) set of all denominators that appear in eq
-    that contain any symbol in iterable ``symbols``; if ``symbols`` is
-    None (default) then all denominators will be returned.
+    that contain any symbol in ``symbols``; if ``symbols`` are not
+    provided then all denominators will be returned.
 
     Examples
     ========
@@ -100,6 +100,12 @@ def denoms(eq, symbols=None):
 
     >>> denoms(x/2 + y/z)
     {2, z}
+
+    If `symbols` are provided then only denominators containing
+    those symbols will be returned
+
+    >>> denoms(1/x + 1/y + 1/z, y, z)
+    {y, z}
     """
 
     pot = preorder_traversal(eq)
@@ -112,6 +118,9 @@ def denoms(eq, symbols=None):
             dens.add(d)
     if not symbols:
         return dens
+    elif len(symbols) == 1:
+        if iterable(symbols[0]):
+            symbols = symbols[0]
     rv = []
     for d in dens:
         free = d.free_symbols

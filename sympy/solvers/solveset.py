@@ -519,7 +519,7 @@ def _solve_radical(f, symbol, solveset_solver):
     eq, cov = unrad(f)
     if not cov:
         result = solveset_solver(eq, symbol) - \
-            Union(*[solveset_solver(g, symbol) for g in denoms(f, [symbol])])
+            Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
     else:
         y, yeq = cov
         if not solveset_solver(y - I, y):
