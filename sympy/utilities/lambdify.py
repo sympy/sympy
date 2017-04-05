@@ -455,11 +455,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 def print_dummify(expr):
     """
     Returns the value of dummify to be used. This function either returns True or False.
-    >>> from sympy.utilities import print_dummify
+    >>> from sympy.utilities.lambdify import print_dummify
     >>> print_dummify(x + y**2)
     True
-    
-    """ 
+
+    """
     valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
     result = valid_identifier_regex.match(str(expr))
     return result is None
