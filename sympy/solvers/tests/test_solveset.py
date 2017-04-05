@@ -25,7 +25,9 @@ from sympy.core.containers import Dict
 from sympy.solvers.solveset import (
     solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
     linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve, solvify)
+    solveset, solve_decomposition, substitution, nonlinsolve, solvify,
+    _is_finite_with_finite_vars)
+
 
 a = Symbol('a', real=True)
 b = Symbol('b', real=True)
@@ -1534,3 +1536,11 @@ def test_issue_12478():
     soln = solveset_real(expr, x)
 
     assert soln == S.EmptySet
+
+
+def test__is_finite_with_finite_vars():
+    f = _is_finite_with_finite_vars
+    # issue 12482
+    assert all(f(1/x) is None for x in (
+        Dummy(), Dummy(real=True), Dummy(complex=True)))
+    assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0

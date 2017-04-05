@@ -313,10 +313,14 @@ def _is_finite_with_finite_vars(f, domain=S.Complexes):
     """
     def assumptions(s):
         A = s.assumptions0
-        if A.get('finite', None) is None:
-            A['finite'] = True
-        A.setdefault('complex', True)
-        A.setdefault('real', domain.is_subset(S.Reals))
+        A.setdefault('finite', A.get('finite', True))
+        if domain.is_subset(S.Reals):
+            # if this gets set it will make complex=True, too
+            A.setdefault('real', True)
+        else:
+            # don't change 'real' because being complex implies
+            # nothing about being real
+            A.setdefault('complex', True)
         return A
 
     reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
