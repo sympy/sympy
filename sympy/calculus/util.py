@@ -13,24 +13,26 @@ from sympy.utilities import filldedent
 
 def continuous_domain(f, symbol, domain):
     """
-    Returns the intervals in the given domain for which the function is continuous.
+    Returns the intervals in the given domain for which the function
+    is continuous.
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
 
     Examples
     ========
+
     >>> from sympy import Symbol, S, tan, log, pi, sqrt
     >>> from sympy.sets import Interval
     >>> from sympy.calculus.util import continuous_domain
     >>> x = Symbol('x')
     >>> continuous_domain(1/x, x, S.Reals)
-    (-oo, 0) U (0, oo)
+    Union(Interval(-oo, 0, True, True), Interval(0, oo, True, True))
     >>> continuous_domain(tan(x), x, Interval(0, pi))
-    [0, pi/2) U (pi/2, pi]
+    Union(Interval(0, pi/2, False, True), Interval(pi/2, pi, True))
     >>> continuous_domain(sqrt(x - 2), x, Interval(-5, 5))
-    [2, 5]
+    Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
-    (1/2, oo)
+    Interval(1/2, oo, True, True)
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
@@ -90,17 +92,17 @@ def function_range(f, symbol, domain):
     >>> from sympy.calculus.util import function_range
     >>> x = Symbol('x')
     >>> function_range(sin(x), x, Interval(0, 2*pi))
-    [-1, 1]
+    Interval(-1, 1)
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
-    (-oo, oo)
+    Interval(-oo, oo, True, True)
     >>> function_range(1/x, x, S.Reals)
-    (-oo, oo)
+    Interval(-oo, oo, True, True)
     >>> function_range(exp(x), x, S.Reals)
-    (0, oo)
+    Interval(0, oo, True, True)
     >>> function_range(log(x), x, S.Reals)
-    (-oo, oo)
+    Interval(-oo, oo, True, True)
     >>> function_range(sqrt(x), x , Interval(-5, 9))
-    [0, 3]
+    Interval(0, 3)
 
     """
     from sympy.solvers.solveset import solveset
@@ -185,19 +187,18 @@ def not_empty_in(finset_intersection, *syms):
     >>> from sympy import FiniteSet, Interval, not_empty_in, oo
     >>> from sympy.abc import x
     >>> not_empty_in(FiniteSet(x/2).intersect(Interval(0, 1)), x)
-    [0, 2]
+    Interval(0, 2)
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
-    [-sqrt(2), -1] U [1, 2]
+    Union(Interval(-sqrt(2), -1), Interval(1, 2))
     >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
-    (-2, -1] U [2, oo)
+    Union(Interval(-2, -1, True), Interval(2, oo, False, True))
     """
 
     # TODO: handle piecewise defined functions
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
-        raise ValueError("A Symbol or a tuple of symbols must be given "
-                         "as the third parameter")
+        raise ValueError("One or more symbols must be given in syms.")
 
     if finset_intersection.is_EmptySet:
         return EmptySet()

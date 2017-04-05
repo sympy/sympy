@@ -12,7 +12,7 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1845,3 +1845,30 @@ def test_inf():
     assert solve(1 - oo*x) == []
     assert solve(oo*x, x) == []
     assert solve(oo*x - oo, x) == []
+
+
+def test_issue_12448():
+    f = Symbol('f')
+    fun = [f(i) for i in range(15)]
+    sym = symbols('x:15')
+    reps = dict(zip(fun, sym))
+
+    (x, y, z), c = sym[:3], sym[3:]
+    ssym = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    (x, y, z), c = fun[:3], fun[3:]
+    sfun = solve([c[4*i]*x + c[4*i + 1]*y + c[4*i + 2]*z + c[4*i + 3]
+        for i in range(3)], (x, y, z))
+
+    assert sfun[fun[0]].xreplace(reps).count_ops() == \
+        ssym[sym[0]].count_ops()
+
+
+def test_denoms():
+    assert denoms(x/2 + 1/y) == set([2, y])
+    assert denoms(x/2 + 1/y, y) == set([y])
+    assert denoms(x/2 + 1/y, [y]) == set([y])
+    assert denoms(1/x + 1/y + 1/z, [x, y]) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, x, y) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, set([x, y])) == set([x, y])

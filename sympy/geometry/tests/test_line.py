@@ -668,8 +668,7 @@ def test_symbolic_intersect():
     # Issue 7814.
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
-    assert line.intersection(circle) == [
-        Point(x - sqrt(y ** 2 - z ** 2), z), Point(x + sqrt(y ** 2 - z ** 2), z)]
+    assert line.intersection(circle) == [Point(x + sqrt((y - z) * (y + z)), z), Point(x - sqrt((y - z) * (y + z)), z)]
 
 
 def test_issue_2941():
