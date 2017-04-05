@@ -35,7 +35,7 @@ from sympy.core.compatibility import reduce, range
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
-    dom = f.get_domain()
+    dom = f.domain
 
     if not dom.is_Numerical:
         if dom.is_Composite:
@@ -55,7 +55,7 @@ def roots_quadratic(f):
     """
 
     a, b, c = f.all_coeffs()
-    dom = f.get_domain()
+    dom = f.domain
 
     def _sqrt(d):
         # remove squares from square root since both will be represented
@@ -717,7 +717,7 @@ def _integer_basis(poly):
             return div
 
 
-def preprocess_roots(poly):
+def preprocess_roots(poly, extension=None):
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
@@ -727,10 +727,10 @@ def preprocess_roots(poly):
         return coeff, poly
 
     poly = poly.primitive()[1]
-    poly = poly.retract()
+    poly = poly.retract(extension=extension)
 
     # TODO: This is fragile. Figure out how to make this independent of construct_domain().
-    if poly.get_domain().is_Poly and all(c.is_term for c in poly.rep.coeffs()):
+    if poly.domain.is_Poly and all(c.is_term for c in poly.rep.coeffs()):
         poly = poly.inject()
 
         strips = list(zip(*poly.monoms()))
@@ -772,7 +772,7 @@ def preprocess_roots(poly):
         if gens:
             poly = poly.eject(*gens)
 
-    if poly.is_univariate and poly.get_domain().is_ZZ:
+    if poly.is_univariate and poly.domain.is_ZZ:
         basis = _integer_basis(poly)
 
         if basis is not None:
@@ -796,9 +796,9 @@ def roots(f, *gens, **flags):
     a list of the polynomial's coefficients), returns a dictionary
     with its roots and their multiplicities.
 
-    Only roots expressible via radicals will be returned.  To get
-    a complete set of roots use RootOf class or numerical methods
-    instead. By default cubic and quartic formulas are used in
+    If only roots expressible via radicals are desired, set the flag
+    `extension=None` otherwise a complete set of roots is returned.
+    By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
     set ``cubics=False`` or ``quartics=False`` respectively. If cubic
     roots are real but are expressed in terms of complex numbers
@@ -820,17 +820,17 @@ def roots(f, *gens, **flags):
     Examples
     ========
 
-    >>> from sympy import Poly, roots
+    >>> from sympy import Poly, roots, S, I, sqrt
     >>> from sympy.abc import x, y
 
     >>> roots(x**2 - 1, x)
     {-1: 1, 1: 1}
 
-    >>> p = Poly(x**2-1, x)
+    >>> p = Poly(x**2 - 1, x)
     >>> roots(p)
     {-1: 1, 1: 1}
 
-    >>> p = Poly(x**2-y, x, y)
+    >>> p = Poly(x**2 - y, x, y)
 
     >>> roots(Poly(p, x))
     {-sqrt(y): 1, sqrt(y): 1}
@@ -841,6 +841,28 @@ def roots(f, *gens, **flags):
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
 
+    Filtering of the results can be handled with the `filter` keyword:
+        'Z', integer
+        'Q', rational
+        'R', real
+        'I', imaginary
+        'C', complex
+
+    >>> roots(Poly((x - S.Half)*(x - 2)*(x - sqrt(2)), x), filter='Z')
+    {2: 1}
+
+    # TODO what is it that extension is actually controlling?
+    # does the docstring need to be modified? The first and last look
+    # like they are expressed in terms of radicals -- what am I missing?
+
+    >>> p = Poly(x**4 - 3*x**3 + x**2*(-3*sqrt(2) + 1) + 2*sqrt(2)*x + 2, x)
+    >>> len(roots(p))
+    4
+    >>> roots(p, extension=None)
+    {}
+
+    >>> roots(Poly((x - sqrt(1 + sqrt(2)))*(x - 1), x), extension=None)
+    {1: 1, sqrt(1 + sqrt(2)): 1}
 
     References
     ==========
@@ -859,6 +881,7 @@ def roots(f, *gens, **flags):
     multiple = flags.pop('multiple', False)
     filter = flags.pop('filter', None)
     predicate = flags.pop('predicate', None)
+    extension = flags.pop('extension', True)
 
     if isinstance(f, list):
         if gens:
@@ -974,9 +997,14 @@ def roots(f, *gens, **flags):
     else:
         zeros = {S(0): k}
 
-    coeff, f = preprocess_roots(f)
+    if f.domain.is_Composite:
+        coeff, f = preprocess_roots(f,
+        extension=None)
+    else:
+        coeff, f = preprocess_roots(f,
+        extension=extension)  # does the calling program need to know what val was used for extension, e.g. so it can simplify result if extension=True?
 
-    if auto and f.get_domain().has_Ring:
+    if auto and f.domain.has_Ring:
         f = f.to_field()
 
     rescale_x = None
@@ -985,7 +1013,7 @@ def roots(f, *gens, **flags):
     result = {}
 
     if not f.is_ground:
-        if not f.get_domain().is_Exact:
+        if not f.domain.is_Exact:
             for r in f.nroots():
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
@@ -1001,7 +1029,7 @@ def roots(f, *gens, **flags):
                     _update_dict(result, r, 1)
             else:
                 if len(factors) == 1 and factors[0][1] == 1:
-                    if f.get_domain().is_EX:
+                    if f.domain.is_EX:
                         res = to_rational_coeffs(f)
                         if res:
                             if res[0] is None:

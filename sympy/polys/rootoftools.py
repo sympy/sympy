@@ -133,7 +133,7 @@ class ComplexRootOf(RootOf):
         elif index < 0:
             index += degree
 
-        dom = poly.get_domain()
+        dom = poly.domain
 
         if not dom.is_Exact:
             poly = poly.to_exact()
@@ -144,7 +144,7 @@ class ComplexRootOf(RootOf):
             return roots[index]
 
         coeff, poly = preprocess_roots(poly)
-        dom = poly.get_domain()
+        dom = poly.domain
 
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
@@ -533,13 +533,13 @@ class ComplexRootOf(RootOf):
     @classmethod
     def _preprocess_roots(cls, poly):
         """Take heroic measures to make ``poly`` compatible with ``CRootOf``."""
-        dom = poly.get_domain()
+        dom = poly.domain
 
         if not dom.is_Exact:
             poly = poly.to_exact()
 
         coeff, poly = preprocess_roots(poly)
-        dom = poly.get_domain()
+        dom = poly.domain
 
         if not dom.is_ZZ:
             raise NotImplementedError(
