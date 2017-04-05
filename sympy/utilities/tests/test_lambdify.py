@@ -43,6 +43,7 @@ def test_single_arg():
 def test_print_dummify():
     assert print_dummify(r'32v2?g#Gmw845h$Wb53wi\phi') == True
     assert print_dummify(x + y**2) == True
+    assert print_dummify(x) == False
 
 def test_list_args():
     f = lambdify([x, y], x + y)
