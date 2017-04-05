@@ -455,7 +455,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 def print_dummify(expr):
     """
     Returns the value of dummify to be used. This function either returns True or False.
-    >>> from sympy.utilities import print_dummify
+    >>> sympy.utilities.lambdify import print_dummify
     >>> print_dummify(x + y**2)
     True
     
