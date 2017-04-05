@@ -50,13 +50,12 @@ class CoordSysCartesian(Basic):
 
         """
 
-        global vector_name_list, variable_name_list, vector_alias, variable_alias
         name = str(name)
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
-        vector_name_list = vector_names
-        variable_name_list = variable_names
+        CoordSysCartesian.vector_name_list = vector_names
+        CoordSysCartesian.variable_name_list = variable_names
         if not isinstance(name, string_types):
             raise TypeError("name should be a string")
 
@@ -123,7 +122,7 @@ class CoordSysCartesian(Basic):
             latex_vects = [(r'\mathbf{\hat{%s}_{%s}}' % (x, name)) for
                            x in vector_names]
             pretty_vects = [(name + '_' + x) for x in vector_names]
-            vector_alias = dict(zip(vector_names, ['_i', '_j', '_k']))
+            CoordSysCartesian.vector_alias = dict(zip(vector_names, ['_i', '_j', '_k']))
 
         obj._i = BaseVector(vector_names[0], 0, obj,
                             pretty_vects[0], latex_vects[0])
@@ -145,7 +144,7 @@ class CoordSysCartesian(Basic):
             latex_scalars = [(r"\mathbf{{%s}_{%s}}" % (x, name)) for
                              x in variable_names]
             pretty_scalars = [(name + '_' + x) for x in variable_names]
-            variable_alias = dict(zip(variable_names, ['_x', '_y', '_z']))
+            CoordSysCartesian.variable_alias = dict(zip(variable_names, ['_x', '_y', '_z']))
 
         obj._x = BaseScalar(variable_names[0], 0, obj,
                             pretty_scalars[0], latex_scalars[0])
@@ -181,11 +180,11 @@ class CoordSysCartesian(Basic):
         return iter([self.i, self.j, self.k])
 
     def __getattr__(self, name):
-        if vector_name_list and name in vector_name_list:
-            name = vector_alias.get(name)
+        if CoordSysCartesian.vector_name_list and name in CoordSysCartesian.vector_name_list:
+            name = CoordSysCartesian.vector_alias.get(name)
             return getattr(self, name)
-        elif variable_name_list and name in variable_name_list:
-            name = variable_alias.get(name)
+        elif CoordSysCartesian.variable_name_list and name in CoordSysCartesian.variable_name_list:
+            name = CoordSysCartesian.variable_alias.get(name)
             return getattr(self, name)
         else:
             raise AttributeError
