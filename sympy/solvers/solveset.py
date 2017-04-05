@@ -166,21 +166,22 @@ def _invert_real(f, g_ys, symbol):
             res = imageset(Lambda(n, real_root(n, expo)), g_ys)
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
-                if numer == S.One or numer == - S.One:
+                if numer is S.One or numer is S.NegativeOne:
                     if denom % 2 == 0:
-                        base_positive = solveset(base>=0, symbol, S.Reals)
-                        res = imageset(Lambda(n, real_root(n, expo)), g_ys.intersect(Interval.Ropen(S(0), S.Infinity)))
-                        inversion = _invert_real(base, res, symbol)
-                        return (inversion[0], inversion[1].intersect(base_positive))
+                        base_positive = solveset(base >= 0, symbol, S.Reals)
+                        res = imageset(Lambda(n, real_root(n, expo)
+                            ), g_ys.intersect(
+                            Interval.Ropen(S.Zero, S.Infinity)))
+                        _inv, _set = _invert_real(base, res, symbol)
+                        return (_inv, _set.intersect(base_positive))
                     else:
                         return _invert_real(base, res, symbol)
-                else:
-                    if numer % 2 == 0:
+                elif numer % 2 == 0:
                         n = Dummy('n')
                         neg_res = imageset(Lambda(n, -n), res)
                         return _invert_real(base, res + neg_res, symbol)
-                    else:
-                        return _invert_real(base, res, symbol)
+                else:
+                    return _invert_real(base, res, symbol)
             else:
                 if not base.is_positive:
                     raise ValueError("x**w where w is irrational is not "
