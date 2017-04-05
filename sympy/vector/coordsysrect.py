@@ -187,7 +187,7 @@ class CoordSysCartesian(Basic):
             name = CoordSysCartesian.variable_alias.get(name)
             return getattr(self, name)
         else:
-            raise AttributeError
+            raise AttributeError("%r object has no attribute %r" %(self.__class__.__name__, name))
 
     @property
     def origin(self):
