@@ -456,6 +456,7 @@ def print_dummify(expr):
     """
     Returns the value of dummify to be used. This function either returns True or False.
     >>> from sympy.utilities.lambdify import print_dummify
+    >>> from sympy.abc import x, y
     >>> print_dummify(x + y**2)
     True
 
