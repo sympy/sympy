@@ -914,20 +914,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
                 setting domain=S.Reals'''))
         try:
             result = solve_univariate_inequality(
-            f, symbol, relational=False) - _invalid_solutions(
-            f, symbol, domain)
+            f, symbol, domain=domain, relational=False)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
 
     return _solveset(f, symbol, domain, _check=True)
-
-
-def _invalid_solutions(f, symbol, domain):
-    bad = S.EmptySet
-    for d in denoms(f):
-        bad += _solveset(d, symbol, domain, _check=False)
-    return bad
 
 
 def solveset_real(f, symbol):

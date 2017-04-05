@@ -1531,11 +1531,38 @@ def test_issue_11534():
     assert solveset(eq, x, S.Reals) == soln
     assert solveset(eq2, x, S.Reals) == soln
 
-def test_issue_12478():
-    expr = sqrt(x - 2) + 2
-    soln = solveset_real(expr, x)
 
-    assert soln == S.EmptySet
+def test_issue_10477():
+    assert solveset((x**2 + 4*x - 3)/x < 2, x, S.Reals) == \
+        Union(Interval.open(-oo, -3), Interval.open(0, 1))
+
+
+def test_issue_10671():
+    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    i = Interval(1, 10)
+    assert solveset((1/x).diff(x) < 0, x, i) == i
+
+
+def test_issue_11064():
+    eq = x + sqrt(x**2 - 5)
+    assert solveset(eq > 0, x, S.Reals) == \
+        Interval(sqrt(5), oo)
+    assert solveset(eq < 0, x, S.Reals) == \
+        Interval(-oo, -sqrt(5))
+
+
+def test_issue_12478():
+    eq = sqrt(x - 2) + 2
+    soln = solveset_real(eq, x)
+    assert soln is S.EmptySet
+    assert solveset(eq < 0, x, S.Reals) is S.EmptySet
+    assert solveset(eq > 0, x, S.Reals) == Interval(2, oo)
+
+
+def test_issue_12429():
+    eq = solveset(log(x)/x <= 0, x, S.Reals)
+    sol = Interval.Lopen(0, 1)
+    assert eq == sol
 
 
 def test__is_finite_with_finite_vars():
