@@ -510,8 +510,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     return S.false
 
             try:
-                discontinuities = domain.boundary - FiniteSet(
-                    domain.inf, domain.sup)
+                discontinuities = set(domain.boundary -
+                    FiniteSet(domain.inf, domain.sup))
                 # remove points that are not between inf and sup of domain
                 critical_points = FiniteSet(*(solns + singularities + list(
                     discontinuities))).intersection(
@@ -535,8 +535,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
                 if x in singularities:
                     singularities.remove(x)
-                elif include_x:
-                    sol_sets.append(FiniteSet(x))
+                else:
+                    if x in discontinuities:
+                        discontinuities.remove(x)
+                        _valid = valid(x)
+                    else:  # it's a solution
+                        _valid = include_x
+                    if _valid:
+                        sol_sets.append(FiniteSet(x))
 
                 start = end
 

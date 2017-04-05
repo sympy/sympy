@@ -366,7 +366,7 @@ def test_issue_10268():
 def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
-        Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
+        Piecewise((S.EmptySet, n < 0), (Interval(-n, n), True))
 
 
 def test_issue_10671_12466():
