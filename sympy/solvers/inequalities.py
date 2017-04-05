@@ -481,16 +481,15 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 domain = Interval(0, period, False, True)
 
         if rv is None:
-            singularities = []
-            for d in denoms(e):
-                singularities.extend(solvify(d, gen, domain))
-            if not continuous:
-                domain = continuous_domain(e, gen, domain)
             solns = solvify(e, gen, domain)
-
             if solns is None:
                 raise NotImplementedError(filldedent('''The inequality cannot be
                     solved using solve_univariate_inequality.'''))
+            singularities = []
+            for d in denoms(expr, gen):
+                singularities.extend(solvify(d, gen, domain))
+            if not continuous:
+                domain = continuous_domain(e, gen, domain)
 
             include_x = expr.func(0, 0)
 
@@ -510,61 +509,66 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                         return expr.func(v, 0)
                     return S.false
 
-            start = domain.inf
-            sol_sets = [S.EmptySet]
             try:
-                discontinuities = domain.boundary - FiniteSet(domain.inf, domain.sup)
-                critical_points = set(solns + singularities + list(discontinuities))
+                discontinuities = set(domain.boundary -
+                    FiniteSet(domain.inf, domain.sup))
+                # remove points that are not between inf and sup of domain
+                critical_points = FiniteSet(*(solns + singularities + list(
+                    discontinuities))).intersection(
+                    Interval(domain.inf, domain.sup,
+                    domain.inf not in domain, domain.sup not in domain))
                 reals = _nsort(critical_points, separated=True)[0]
-
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
+            sol_sets = [S.EmptySet]
+
+            start = domain.inf
             if valid(start) and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
                 end = x
 
-                if end in [S.NegativeInfinity, S.Infinity]:
-                    if valid(S(0)):
-                        sol_sets.append(Interval(start, S.Infinity, True, True))
-                        break
-
-                pt = ((start + end)/2 if start is not S.NegativeInfinity else
-                    (end/2 if end.is_positive else
-                    (2*end if end.is_negative else
-                    end - 1)))
-                if valid(pt):
+                if valid(_pt(start, end)):
                     sol_sets.append(Interval(start, end, True, True))
 
                 if x in singularities:
                     singularities.remove(x)
-                elif include_x:
-                    sol_sets.append(FiniteSet(x))
+                else:
+                    if x in discontinuities:
+                        discontinuities.remove(x)
+                        _valid = valid(x)
+                    else:  # it's a solution
+                        _valid = include_x
+                    if _valid:
+                        sol_sets.append(FiniteSet(x))
 
                 start = end
 
             end = domain.sup
+            if valid(end) and end.is_finite:
+                sol_sets.append(FiniteSet(end))
 
-            # in case start == -oo then there were no solutions so we just
-            # check a point between -oo and oo (e.g. 0) else pick a point
-            # past the last solution (which is start after the end of the
-            # for-loop above
-            pt = (0 if start is S.NegativeInfinity else
-                (start/2 if start.is_negative else
-                (2*start if start.is_positive else
-                start + 1)))
-
-            if pt >= end:
-                pt = (start + end)/2
-
-            if valid(pt):
-                sol_sets.append(Interval(start, end, True, True))
+            if valid(_pt(start, end)):
+                sol_sets.append(Interval.open(start, end))
 
             rv = Union(*sol_sets).subs(gen, _gen)
 
     return rv if not relational else rv.as_relational(_gen)
+
+
+def _pt(start, end):
+    """Return a point between start and end"""
+    if start.is_infinite and end.is_infinite:
+        pt = S.Zero
+    elif end.is_infinite:
+        pt = start + 1
+    elif start.is_infinite:
+        pt = end - 1
+    else:
+        pt = (start + end)/2
+    return pt
 
 
 def _solve_inequality(ie, s):

@@ -12,7 +12,7 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
-    det_quick, det_perm, det_minor, _simple_dens, check_assumptions
+    det_quick, det_perm, det_minor, _simple_dens, check_assumptions, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -1863,3 +1863,12 @@ def test_issue_12448():
 
     assert sfun[fun[0]].xreplace(reps).count_ops() == \
         ssym[sym[0]].count_ops()
+
+
+def test_denoms():
+    assert denoms(x/2 + 1/y) == set([2, y])
+    assert denoms(x/2 + 1/y, y) == set([y])
+    assert denoms(x/2 + 1/y, [y]) == set([y])
+    assert denoms(1/x + 1/y + 1/z, [x, y]) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, x, y) == set([x, y])
+    assert denoms(1/x + 1/y + 1/z, set([x, y])) == set([x, y])
