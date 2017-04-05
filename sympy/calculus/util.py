@@ -13,12 +13,14 @@ from sympy.utilities import filldedent
 
 def continuous_domain(f, symbol, domain):
     """
-    Returns the intervals in the given domain for which the function is continuous.
+    Returns the intervals in the given domain for which the function
+    is continuous.
     This method is limited by the ability to determine the various
     singularities and discontinuities of the given function.
 
     Examples
     ========
+
     >>> from sympy import Symbol, S, tan, log, pi, sqrt
     >>> from sympy.sets import Interval
     >>> from sympy.calculus.util import continuous_domain
@@ -196,8 +198,7 @@ def not_empty_in(finset_intersection, *syms):
     # TODO: handle transcendental functions
     # TODO: handle multivariate functions
     if len(syms) == 0:
-        raise ValueError("A Symbol or a tuple of symbols must be given "
-                         "as the third parameter")
+        raise ValueError("One or more symbols must be given in syms.")
 
     if finset_intersection.is_EmptySet:
         return EmptySet()
