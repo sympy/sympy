@@ -44,16 +44,16 @@ def _invert(f_x, y, x, domain=S.Complexes):
     the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
     Here, ``y`` is not necessarily a symbol.
 
-    The ``set_h`` contains the functions along with the information
-    about their domain in which they are valid, through set
-    operations. For instance, if ``y = Abs(x) - n``, is inverted
-    in the real domain, then, the ``set_h`` doesn't simply return
-    `{-n, n}`, as the nature of `n` is unknown; rather it will return:
+    The ``set_h`` contains the functions, along with the information
+    about the domain in which they are valid, through set
+    operations. For instance, if ``y = Abs(x) - n`` is inverted
+    in the real domain, then ``set_h`` is not simply
+    `{-n, n}` as the nature of `n` is unknown; rather, it is:
     `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
 
-    By default, the complex domain is used but note that inverting even
-    seemingly simple functions like ``exp(x)`` can give very different
-    result in the complex domain than are obtained in the real domain.
+    By default, the complex domain is used which means that inverting even
+    seemingly simple functions like ``exp(x)`` will give very different
+    results from those obtained in the real domain.
     (In the case of ``exp(x)``, the inversion via ``log`` is multi-valued
     in the complex domain, having infinitely many branches.)
 
