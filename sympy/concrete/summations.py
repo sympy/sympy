@@ -13,7 +13,7 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
+from sympy.solvers import solve, solveset
 from sympy.series.limits import limit
 from sympy.series.order import O
 from sympy.core.compatibility import range
@@ -483,7 +483,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
+        sequence_positive = solveset(sequence_term >= 0, sym, interval).sup == S.Infinity
+        solve_decreasing = solveset(sequence_term.diff() <= 0, sym, interval)
+        sequence_decreasing = solve_decreasing.is_Interval and solve_decreasing.sup == S.Infinity
+        if sequence_positive and sequence_decreasing:
             integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
             try:
                 integral_val_evaluated = integral_val.doit()
