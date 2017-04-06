@@ -355,3 +355,10 @@ def test_is_tangent():
     assert c1.is_tangent(Ray((-5, -2), (-15, -20))) is False
     assert c1.is_tangent(Ray((-3, -2), (-15, -20))) is False
     assert c1.is_tangent(Ray((9, 20), (9, -20))) is True
+    assert e1.is_tangent(Segment((2, 2), (-7, 7))) is False
+    assert e1.is_tangent(Segment((0, 0), (1, 2))) is False
+    assert c1.is_tangent(Segment((0, 0), (-5, -2))) is False
+    assert e1.is_tangent(Segment((3, 0), (12, 12))) is False
+    assert e1.is_tangent(Segment((12, 12), (3, 0))) is False
+    assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
+    assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True

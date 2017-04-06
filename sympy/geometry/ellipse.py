@@ -732,7 +732,9 @@ class Ellipse(GeometrySet):
             for segment in segments:
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
-                    if any([intersect[0] in i for i in segment.points]):
+                    if not any([intersect[0] in i for i in segment.points])\
+                            and ((all(self.encloses_point(i) for i in segment.points)) or
+                                     (all(not self.encloses_point(i) for i in segment.points))):
                         any_interect = True
                         continue
                     else:
