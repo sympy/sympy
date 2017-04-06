@@ -8,7 +8,6 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import symbols
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -22,12 +21,11 @@ from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
-from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point2D
+from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
 from .util import _symbol, idiff
 
@@ -700,16 +698,12 @@ class Ellipse(GeometrySet):
         elif isinstance(o, Ellipse):
             intersect = self.intersection(o)
             if isinstance(intersect, Ellipse):
-                return False
-            elif len(intersect) == 1:
-                if (self.tangent_lines(intersect[0])[0]).equals((o.tangent_lines(intersect[0])[0])):
+                return True
+            elif intersect:
+                if all([(self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect]):
                     return True
                 else:
                     return False
-            elif len(intersect) == 2 and \
-                    ((self.bounds[0] == o.bounds[0] and self.bounds[2] == self.bounds[2]) or
-                         (self.bounds[1] == o.bounds[1] and self.bounds[3] == self.bounds[3])):
-                return True
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -727,21 +721,22 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, (Segment2D, Polygon)):
-            any_interect = False
+            any_intersect = False
             segments = o.sides if isinstance(o, Polygon) else [o]
             for segment in segments:
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
                     if not any([intersect[0] in i for i in segment.points])\
-                            and ((all(self.encloses_point(i) for i in segment.points)) or
-                                     (all(not self.encloses_point(i) for i in segment.points))):
-                        any_interect = True
+                                   and all(not self.encloses_point(i) for i in segment.points):
+                        any_intersect = True
                         continue
                     else:
                         return False
                 else:
-                    return any_interect
-            return any_interect
+                    return any_intersect
+            return any_intersect
+        elif isinstance(o, (LinearEntity3D, Point3D)):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
             raise NotImplementedError("Unknown argument type")
 

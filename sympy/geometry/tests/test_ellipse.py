@@ -104,7 +104,7 @@ def test_ellipse_geom():
     assert e2.is_tangent(Line(p1_3, p2 + Point(half, 1)))
     assert c1.is_tangent(Line(p1_1, Point(0, sqrt(2))))
     assert e1.is_tangent(Line(Point(0, 0), Point(1, 1))) is False
-    assert c1.is_tangent(e1) is False
+    assert c1.is_tangent(e1) is True
     assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) is True
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
@@ -346,8 +346,7 @@ def test_is_tangent():
     c1 = Circle(Point(2, -2), 7)
     assert e1.is_tangent(Point(0, 0)) is False
     assert e1.is_tangent(Point(3, 0)) is False
-    assert e1.is_tangent(e1) is False
-    assert e1.is_tangent(c1) is False
+    assert e1.is_tangent(e1) is True
     assert e1.is_tangent(Ellipse((0, 0), 3, 2)) is True
     assert c1.is_tangent(Ellipse((2, -2), 7, 1)) is True
     assert c1.is_tangent(Circle((11, -2), 2)) is True
@@ -362,3 +361,19 @@ def test_is_tangent():
     assert e1.is_tangent(Segment((12, 12), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True
+    assert e1.is_tangent(Line((0, 0), (1, 1))) is False
+    assert e1.is_tangent(Line((-3, 0), (-2.99, -0.001))) is False
+    assert e1.is_tangent(Line((-3, 0), (-3, 1))) is True
+    assert e1.is_tangent(Polygon((0, 0), (5, 5), (5, -5))) is False
+    assert e1.is_tangent(Polygon((-100, -50), (-40, -334), (-70, -52))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (3, 0), (0, 1))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (3, 0), (0, 5))) is False
+    assert e1.is_tangent(Polygon((-3, 0), (0, -5), (3, 0), (0, 5))) is False
+    assert e1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is True
+    assert c1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is False
+    assert e1.is_tangent(Polygon((0, 0), (3, 0), (7, 7), (0, 5))) is False
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (6, 5))) is True
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (0, -5), (0, 5))) is False
+    assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
+    raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
+    raises(NotImplementedError, lambda: e1.is_tangent(Rational(5)))
