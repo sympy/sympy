@@ -69,13 +69,10 @@ def _get_conversion_matrix_for_expr(expr, target_units):
 
     canon_dim_units = sorted(canon_dim_units)
 
-    def get_unit_matrix_to_canon(unit_deps):
-        return [unit_deps.get(i, 0) for i in canon_dim_units]
+    camat = Matrix([[i.get_dimensional_dependencies(mark_dimensionless=True).get(j, 0)  for i in target_dims] for j in canon_dim_units])
+    exprmat = Matrix([dim_dependencies.get(k, 0) for k in canon_dim_units])
 
-    camat = Matrix([get_unit_matrix_to_canon(i.get_dimensional_dependencies(mark_dimensionless=True)) for i in target_dims])
-    exprmat = Matrix([[dim_dependencies.get(k, 0) for k in canon_dim_units]])
-
-    res_exponents = camat.T.solve_least_squares(exprmat.T, method=None)
+    res_exponents = camat.solve_least_squares(exprmat, method=None)
     return res_exponents
 
 
