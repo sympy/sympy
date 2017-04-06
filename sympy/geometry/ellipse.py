@@ -720,7 +720,7 @@ class Ellipse(GeometrySet):
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
-                if intersect[0] != o.source:
+                if intersect[0] != o.source and not self.encloses_point(o.source):
                     return True
                 else:
                     return False

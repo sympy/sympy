@@ -340,3 +340,18 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+
+def test_is_tangent():
+    e1 = Ellipse(Point(0,0), 3, 5)
+    c1 = Circle(Point(2, -2), 7)
+    assert e1.is_tangent(Point(0, 0)) is False
+    assert e1.is_tangent(Point(3, 0)) is False
+    assert e1.is_tangent(e1) is False
+    assert e1.is_tangent(c1) is False
+    assert e1.is_tangent(Ellipse((0, 0), 3, 2)) is True
+    assert c1.is_tangent(Ellipse((2, -2), 7, 1)) is True
+    assert c1.is_tangent(Circle((11, -2), 2)) is True
+    assert c1.is_tangent(Circle((7, -2), 2)) is True
+    assert c1.is_tangent(Ray((-5, -2), (-15, -20))) is False
+    assert c1.is_tangent(Ray((-3, -2), (-15, -20))) is False
+    assert c1.is_tangent(Ray((9, 20), (9, -20))) is True
