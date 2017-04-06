@@ -25,7 +25,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root, Application
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
-                        Union, ConditionSet, ImageSet, Complement)
+                        Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set
 from sympy.matrices import Matrix
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
@@ -184,11 +184,58 @@ def _invert_real(f, g_ys, symbol):
                             symbol)
 
     if isinstance(f, Abs):
-        pos = Interval(0, S.Infinity)
-        neg = Interval(S.NegativeInfinity, 0)
-        return _invert_real(f.args[0],
-                    Union(imageset(Lambda(n, n), g_ys).intersect(pos),
-                          imageset(Lambda(n, -n), g_ys).intersect(neg)), symbol)
+        conditions = S.EmptySet
+        condition_interval = Interval(0, oo)
+
+        if f.is_positive:
+            f_n = f
+        else:
+            f_n = f.args[0]
+        lhs, values = _invert_real(f_n, Union(imageset(Lambda(n, n), g_ys),
+                                   imageset(Lambda(n, -n), g_ys)), symbol)
+
+        if isinstance(values, ConditionSet):
+            values_condition = values.condition.args[0]
+            if not any(condition_atom.has(symbol) for condition_atom in
+                       values_condition.args[0].args):
+                condition_base_set = g_ys
+                if values_condition.args[1] == condition_interval:
+                    condition_base_set = Union(condition_base_set,
+                                               values_condition.args[0])
+                    condition = Contains(condition_base_set, condition_interval,
+                                         evaluate=False)
+                    conditions = FiniteSet(condition)
+                else:
+                    condition = Contains(condition_base_set, condition_interval,
+                                         evaluate=False)
+                    conditions = Union(FiniteSet(values_condition),
+                                       FiniteSet(condition))
+            else:
+                pass  # No possible usecase
+            values = values.base_set
+
+        if conditions.is_EmptySet:
+            satisfied_ys = S.EmptySet
+            for condition_atom in g_ys.args:
+                if condition_atom.is_Number:
+                    if condition_atom not in condition_interval:
+                        return symbol, S.EmptySet
+                    else:
+                        satisfied_ys = Union(FiniteSet(condition_atom),
+                                             satisfied_ys)
+                elif condition_atom.is_positive:
+                    satisfied_ys = Union(FiniteSet(condition_atom), satisfied_ys)
+                elif condition_atom.is_positive is False:
+                    return symbol, S.EmptySet
+                else:
+                    pass
+            condition_ys = g_ys - satisfied_ys
+            if condition_ys.is_EmptySet:
+                return lhs, values
+            conditions = FiniteSet(Contains(g_ys - satisfied_ys,
+                                            condition_interval, evaluate=False))
+
+        return lhs, ConditionSet(symbol, conditions, values)
 
     if f.is_Add:
         # f = g + h
