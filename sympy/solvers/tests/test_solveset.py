@@ -19,6 +19,7 @@ from sympy.functions.special.error_functions import (erf, erfc,
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import CRootOf
+from sympy.sets.contains import Contains
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
@@ -53,6 +54,7 @@ def test_invert_real():
     x = Symbol('x', real=True)
     y = Symbol('y')
     n = Symbol('n')
+
     def ireal(x, s=S.Reals):
         return Intersection(s, x)
 
@@ -62,6 +64,10 @@ def test_invert_real():
     minus_n = Intersection(Interval(-oo, 0), FiniteSet(-n))
     plus_n = Intersection(Interval(0, oo), FiniteSet(n))
     assert solveset(abs(x) - n, x, S.Reals) == Union(minus_n, plus_n)
+
+    conditions = Contains(n, Interval(0, oo), evaluate=False)
+    assert solveset(abs(x) - n, x, S.Reals) == ConditionSet(x, conditions,
+                                                            FiniteSet(n, -n))
 
     assert invert_real(exp(x), y, x) == (x, ireal(FiniteSet(log(y))))
 
@@ -81,9 +87,7 @@ def test_invert_real():
     assert invert_real(log(3*x), y, x) == (x, FiniteSet(exp(y) / 3))
     assert invert_real(log(x + 3), y, x) == (x, FiniteSet(exp(y) - 3))
 
-    minus_y = Intersection(Interval(-oo, 0), FiniteSet(-y))
-    plus_y = Intersection(Interval(0, oo), FiniteSet(y))
-    assert invert_real(Abs(x), y, x) == (x, Union(minus_y, plus_y))
+    assert invert_real(Abs(x), y, x) == (x, FiniteSet(y, -y))
 
     assert invert_real(2**x, y, x) == (x, FiniteSet(log(y)/log(2)))
     assert invert_real(2**exp(x), y, x) == (x, ireal(FiniteSet(log(log(y)/log(2)))))
@@ -97,10 +101,10 @@ def test_invert_real():
 
     assert invert_real(x**31 + x, y, x) == (x**31 + x, FiniteSet(y))
 
-    y_1 = Intersection(Interval(-1, oo), FiniteSet(y - 1))
-    y_2 = Intersection(Interval(-oo, -1), FiniteSet(-y - 1))
-    assert invert_real(Abs(x**31 + x + 1), y, x) == (x**31 + x,
-                                                     Union(y_1, y_2))
+    lhs = x**31 + x
+    conditions = Contains(y, Interval(0, oo), evaluate=False)
+    base_values =  FiniteSet(y - 1, -y - 1)
+    assert invert_real(Abs(x**31 + x + 1), y, x) == (lhs, base_values)
 
     assert invert_real(sin(x), y, x) == \
         (x, imageset(Lambda(n, n*pi + (-1)**n*asin(y)), S.Integers))
@@ -153,20 +157,10 @@ def test_invert_real():
     n = Dummy('n')
     x = Symbol('x')
 
-    h1 = Intersection(Interval(-3, oo), FiniteSet(a + b - 3),
-                      imageset(Lambda(n, -n + a - 3), Interval(-oo, 0)))
-
-    h2 = Intersection(Interval(-oo, -3), FiniteSet(-a + b - 3),
-                      imageset(Lambda(n, n - a - 3), Interval(0, oo)))
-
-    h3 = Intersection(Interval(-3, oo), FiniteSet(a - b - 3),
-                      imageset(Lambda(n, -n + a - 3), Interval(0, oo)))
-
-    h4 = Intersection(Interval(-oo, -3), FiniteSet(-a - b - 3),
-                      imageset(Lambda(n, n - a - 3), Interval(-oo, 0)))
-
-    soln = (x, Union(h1, h2, h3, h4))
-    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == soln
+    conditions = Contains((b, a + b, a - b), Interval(0, oo), evaluate=False)
+    base_values = FiniteSet(- a - b - 3, - a + b - 3, a - b - 3, a + b - 3)
+    assert invert_real(Abs(Abs(x + 3) - a) - b, 0, x) == \
+        (x, ConditionSet(x, conditions, base_values))
 
 
 def test_invert_complex():
