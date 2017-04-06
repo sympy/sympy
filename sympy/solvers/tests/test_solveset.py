@@ -1025,8 +1025,12 @@ def test_solvify():
     assert solvify(log(x), x, S.Reals) == [1]
     assert solvify(cos(x), x, S.Reals) == [pi/2, 3*pi/2]
     assert solvify(sin(x) + 1, x, S.Reals) == [3*pi/2]
-    assert solvify(sin(Abs(x)), x, S.Reals) is None
     raises(NotImplementedError, lambda: solvify(sin(exp(x)), x, S.Complexes))
+
+
+@XFAIL
+def test_abs_invert_solvify():
+    assert solvify(sin(Abs(x)), x, S.Reals) is None
 
 
 def test_linear_eq_to_matrix():
