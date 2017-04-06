@@ -9,7 +9,7 @@ from __future__ import division
 import collections
 
 from sympy.physics.units.quantities import Quantity
-from sympy import Add, Mul, Pow, Function, Rational, Tuple
+from sympy import Add, Mul, Pow, Function, Rational, Tuple, sympify
 from sympy.core.compatibility import reduce
 from sympy.physics.units.dimensions import Dimension
 
@@ -45,27 +45,54 @@ def dim_simplify(expr):
     raise ValueError("Cannot be simplifed: %s", expr)
 
 
-def _convert_to_multiple_quantities(expr, quantities):
-    from .unitsystem import UnitSystem
-    unitsystem = UnitSystem(quantities, list(expr.atoms(Quantity)))
-    assert unitsystem.is_consistent
-    subs_dict = {}
-    for i in expr.atoms(Quantity):
-        subs_dict[i] = unitsystem.print_unit_base(i)
-    return expr.subs(subs_dict)
+def _get_dimension_of_expr(expr):
+    if isinstance(expr, Mul):
+        return Mul.fromiter(_get_dimension_of_expr(i) for i in expr.args)
+    elif isinstance(expr, Pow):
+        return _get_dimension_of_expr(expr.base)**expr.exp
+    elif isinstance(expr, Quantity):
+        return expr.dimension.name
+    return 1
 
 
-def convert_to(expr, quantity):
+def _get_conversion_matrix_for_expr(expr, target_units):
+    from sympy import Matrix
+
+    expr_dim = Dimension(Quantity.get_dimensional_expr(expr))
+    dim_dependencies = expr_dim.get_dimensional_dependencies(mark_dimensionless=True)
+    target_dims = [Dimension(_get_dimension_of_expr(x)) for x in target_units]
+    canon_dim_units = {i for x in target_dims for i in x.get_dimensional_dependencies(mark_dimensionless=True)}
+    canon_expr_units = {i for i in dim_dependencies}
+
+    if not canon_expr_units.issubset(canon_dim_units):
+        return None
+
+    canon_dim_units = sorted(canon_dim_units)
+
+    def get_unit_matrix_to_canon(unit_deps):
+        return [unit_deps.get(i, 0) for i in canon_dim_units]
+
+    camat = Matrix([get_unit_matrix_to_canon(i.get_dimensional_dependencies(mark_dimensionless=True)) for i in target_dims])
+    exprmat = Matrix([[dim_dependencies.get(k, 0) for k in canon_dim_units]])
+
+    res_exponents = camat.T.solve_least_squares(exprmat.T, method=None)
+    return res_exponents
+
+
+def convert_to(expr, target_units):
     """
-    Convert `expr` to the same expression with all of its units and quantities
-    represented as factors of `quantity`, whenever the dimension is compatible.
+    Convert ``expr`` to the same expression with all of its units and quantities
+    represented as factors of ``target_units``, whenever the dimension is compatible.
+
+    ``target_units`` may be a single unit/quantity, or a collection of
+    units/quantities.
 
     Examples
     ========
 
-    >>> from sympy.physics.units import speed_of_light, meter, gram, \
-        second, day, mile, newton, kilogram, inch, centimeter, atomic_mass_constant
-    >>> from sympy.physics.units.definitions import kilometer
+    >>> from sympy.physics.units import speed_of_light, meter, gram, second, day
+    >>> from sympy.physics.units import mile, newton, kilogram, atomic_mass_constant
+    >>> from sympy.physics.units import kilometer, centimeter
     >>> from sympy.physics.units import convert_to
     >>> convert_to(mile, kilometer)
     25146*kilometer/15625
@@ -81,67 +108,44 @@ def convert_to(expr, quantity):
     3*kilogram*meter/second**2
     >>> convert_to(atomic_mass_constant, gram)
     1.66053904e-24*gram
+
+    Conversion to multiple units:
+
+    >>> convert_to(speed_of_light, [meter, second])
+    299792458*meter/second
+    >>> convert_to(3*newton, [centimeter, gram, second])
+    300000*centimeter*gram/second**2
+
+    Conversion to Planck units:
+
+    >>> from sympy.physics.units import gravitational_constant, hbar
+    >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
+    7.62950196312651e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+
     """
-    if isinstance(quantity, (collections.Iterable, Tuple)):
-        return _convert_to_multiple_quantities(expr, quantity)
+    if not isinstance(target_units, (collections.Iterable, Tuple)):
+        target_units = [target_units]
+
+    if isinstance(expr, Add):
+        return Add.fromiter(convert_to(i, target_units) for i in expr.args)
+
+    expr = sympify(expr)
+
+    if not isinstance(expr, Quantity) and expr.has(Quantity):
+        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: x.convert_to(target_units))
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
-            return reduce(lambda x, y: x*y, [get_total_scale_factor(i) for i in expr.args])
+            return reduce(lambda x, y: x * y, [get_total_scale_factor(i) for i in expr.args])
         elif isinstance(expr, Pow):
-            return get_total_scale_factor(expr.base)**expr.exp
+            return get_total_scale_factor(expr.base) ** expr.exp
         elif isinstance(expr, Quantity):
             return expr.scale_factor
-        return 1
-
-    def get_units(expr):
-        if isinstance(expr, Mul):
-            return reduce(lambda x, y: x*y, [get_units(i) for i in expr.args])
-        elif isinstance(expr, Pow):
-            return get_units(expr.base)**expr.exp
-        elif isinstance(expr, Quantity):
-            return expr
-        return 1
-
-    if isinstance(quantity, Quantity):
-        backup_quantity = None
-    else:
-        backup_quantity = quantity
-        quantity = Quantity("_temp", Dimension(Quantity.get_dimensional_expr(quantity)), get_total_scale_factor(quantity))
-
-    def _convert_to(expr, quantity):
-        if isinstance(expr, Add):
-            return Add(*[_convert_to(i, quantity) for i in expr.args])
-        elif isinstance(expr, Mul):
-            new_args = [_convert_to(i, quantity) for i in expr.args]
-            edim = Dimension(Quantity.get_dimensional_expr(expr))
-            if edim == quantity.dimension:
-                scale_factor_old = get_total_scale_factor(expr)
-                return expr / get_units(expr) * scale_factor_old / quantity.scale_factor * quantity
-            return Mul(*new_args)
-        elif isinstance(expr, Pow):
-            base = _convert_to(expr.base, quantity)
-            edim = Dimension(Quantity.get_dimensional_expr(base))**expr.exp
-            if edim == quantity.dimension:
-                scale_factor_old = get_total_scale_factor(expr)
-                return expr / get_units(expr) * scale_factor_old / quantity.scale_factor * quantity
-            return base**expr.exp
-        elif isinstance(expr, Quantity):
-            edim = Dimension(Quantity.get_dimensional_expr(expr))
-            edep1 = edim.get_dimensional_dependencies()
-            edep2 = quantity.dimension.get_dimensional_dependencies()
-            if edim == quantity.dimension:
-                return expr.scale_factor / quantity.scale_factor * quantity
-            if set(edep1.keys()) == set(edep2.keys()):
-                fracs = [Rational(v1, v2) for v1, v2 in zip(edep1.values(), edep2.values())]
-                powers = list(set(fracs))
-                if len(powers) == 1:
-                    return expr.scale_factor / quantity.scale_factor**powers[0] * quantity**powers[0]
-            else:
-                return expr
         return expr
 
-    res = _convert_to(expr, quantity)
-    if backup_quantity:
-        res = res.subs(quantity, backup_quantity)
-    return res
+    depmat = _get_conversion_matrix_for_expr(expr, target_units)
+    if depmat is None:
+        return expr
+
+    expr_scale_factor = get_total_scale_factor(expr)
+    return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
