@@ -1184,8 +1184,6 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([sin(x) - 1], [x]) == FiniteSet(tuple(soln))
     assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
 
-    soln = FiniteSet((- y, y), (y, y))
-    assert nonlinsolve([Abs(x) - y], x, y) == soln
     soln = FiniteSet((y, y))
     assert nonlinsolve([x - y, 0], x, y) == soln
     assert nonlinsolve([0, x - y], x, y) == soln
@@ -1200,6 +1198,11 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x**2 -1], sin(x)) == FiniteSet((S.EmptySet,))
     assert nonlinsolve([x**2 -1], 1) == FiniteSet((x**2,))
     assert nonlinsolve([x**2 -1], x + y) == FiniteSet((S.EmptySet,))
+
+@XFAIL
+def test_nonlinsolve_abs():
+    soln = FiniteSet((- y, y), (y, y))
+    assert nonlinsolve([Abs(x) - y], x, y) == soln
 
 
 def test_raise_exception_nonlinsolve():
