@@ -702,8 +702,6 @@ class Ellipse(GeometrySet):
             elif intersect:
                 if all([(self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect]):
                     return True
-                else:
-                    return False
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -716,8 +714,6 @@ class Ellipse(GeometrySet):
             if len(intersect) == 1:
                 if intersect[0] != o.source and not self.encloses_point(o.source):
                     return True
-                else:
-                    return False
             else:
                 return False
         elif isinstance(o, (Segment2D, Polygon)):
