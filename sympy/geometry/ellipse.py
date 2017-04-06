@@ -27,7 +27,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point
+from .point import Point, Point2D
 from .line import Line, LinearEntity
 from .util import _symbol, idiff
 
@@ -695,25 +695,51 @@ class Ellipse(GeometrySet):
         True
 
         """
-        inter = None
-        if isinstance(o, Ellipse):
-            inter = self.intersection(o)
-            if isinstance(inter, Ellipse):
+        if isinstance(o, Point2D):
+            return False
+        elif isinstance(o, Ellipse):
+            intersect = self.intersection(o)
+            if isinstance(intersect, Ellipse):
                 return False
-            return (inter is not None and len(inter) == 1
-                    and isinstance(inter[0], Point))
-        elif isinstance(o, LinearEntity):
-            inter = self.intersection(o)
-            if inter is not None and len(inter) == 1:
-                return inter[0] in o
+            elif len(intersect) == 1:
+                if (self.tangent_lines(intersect[0])[0]).equals((o.tangent_lines(intersect[0])[0])):
+                    return True
+                else:
+                    return False
+            elif len(intersect) == 2 and \
+                    ((self.bounds[0] == o.bounds[0] and self.bounds[2] == self.bounds[2]) or
+                         (self.bounds[1] == o.bounds[1] and self.bounds[3] == self.bounds[3])):
+                return True
             else:
                 return False
-        elif isinstance(o, Polygon):
-            c = 0
-            for seg in o.sides:
-                inter = self.intersection(seg)
-                c += len([True for point in inter if point in seg])
-            return c == 1
+        elif isinstance(o, Line2D):
+            if len(self.intersection(o)) == 1:
+                return True
+            else:
+                return False
+        elif isinstance(o, Ray2D):
+            intersect = self.intersection(o)
+            if len(intersect) == 1:
+                if intersect[0] != o.source:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        elif isinstance(o, (Segment2D, Polygon)):
+            any_interect = False
+            segments = o.sides if isinstance(o, Polygon) else [o]
+            for segment in segments:
+                intersect = self.intersection(segment)
+                if len(intersect) == 1:
+                    if any([intersect[0] in i for i in segment.points]):
+                        any_interect = True
+                        continue
+                    else:
+                        return False
+                else:
+                    return any_interect
+            return any_interect
         else:
             raise NotImplementedError("Unknown argument type")
 
