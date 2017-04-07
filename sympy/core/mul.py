@@ -617,6 +617,14 @@ class Mul(Expr, AssocOp):
 
         return c_part, nc_part, order_symbols
 
+    @classmethod
+    def _exec_constructor_postprocessors(cls, obj):
+        postprocessors = {getattr(i, "_constructor_postprocessor_Mul")
+                          for i in obj.args if hasattr(i, "_constructor_postprocessor_Mul")}
+        for f in postprocessors:
+            obj = f(obj)
+        return obj
+
     def _eval_power(b, e):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B

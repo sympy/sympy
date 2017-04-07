@@ -269,6 +269,13 @@ class Add(Expr, AssocOp):
             return newseq, [], None
 
     @classmethod
+    def _exec_constructor_postprocessors(cls, obj):
+        for arg in obj.args:
+            if hasattr(arg, "_constructor_postprocessor_Add"):
+                obj = arg._constructor_postprocessor_Add(obj)
+        return obj
+
+    @classmethod
     def class_key(cls):
         """Nice order of classes"""
         return 3, 1, cls.__name__

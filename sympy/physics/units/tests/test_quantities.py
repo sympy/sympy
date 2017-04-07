@@ -6,10 +6,11 @@ from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, 
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian
+    quart, inch, coulomb, millimeter, steradian, second
 from sympy.physics.units.dimensions import length, time, charge
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import PREFIXES, kilo
+from sympy.utilities.pytest import raises
 
 k = PREFIXES["k"]
 
@@ -221,3 +222,9 @@ def test_Quantity_derivative():
     assert diff(x**3*meter**2, x) == 3*x**2*meter**2
     assert diff(meter, meter) == 1
     assert diff(meter**2, meter) == 2*meter
+
+
+def test_sum_of_incompatible_quantities():
+    raises(ValueError, lambda: meter + second)
+    raises(ValueError, lambda: 2 * meter + second)
+    raises(ValueError, lambda: 2 * meter + 3 * second)
