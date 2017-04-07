@@ -164,6 +164,7 @@ from .definitions import (
     u0, magnetic_constant,
     e0, electric_constant, vacuum_permittivity,
     Z0, vacuum_impedance,
+    coulomb_constant, electric_force_constant,
     atmosphere, atmospheres, atm,
     kPa,
     bar, bars,
@@ -175,6 +176,10 @@ from .definitions import (
     quart, quarts,
     ly, lightyear, lightyears,
     au, astronomical_unit, astronomical_units,
+    planck_mass,
+    planck_time,
+    planck_temperature,
+    planck_length,
 )
 
 
