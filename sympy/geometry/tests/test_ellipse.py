@@ -157,8 +157,6 @@ def test_ellipse_geom():
     e = Ellipse((0, 0), x, 1)
     assert e.normal_lines((x + 1, 0)) == [Line(Point(0, 0), Point(1, 0))]
     raises(NotImplementedError, lambda: e.normal_lines((x + 1, 1)))
-
-
     # Properties
     major = 3
     minor = 1
@@ -285,6 +283,7 @@ def test_ellipse_geom():
     assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
     assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
+
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)
@@ -320,6 +319,7 @@ def test_transform():
     assert Circle((0, 0), 2).scale(3, 3) == \
         Circle((0, 0), 6)
 
+
 def test_bounds():
     e1 = Ellipse(Point(0,0), 3, 5)
     e2 = Ellipse(Point(2, -2), 7, 7)
@@ -329,6 +329,7 @@ def test_bounds():
     assert e2.bounds == (-5, -9, 9, 5)
     assert c1.bounds == (-5, -9, 9, 5)
     assert c2.bounds == (-2, -2, 2, 2)
+
 
 def test_reflect():
     b = Symbol('b')
@@ -340,6 +341,7 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+
 
 def test_is_tangent():
     e1 = Ellipse(Point(0,0), 3, 5)

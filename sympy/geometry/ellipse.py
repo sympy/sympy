@@ -700,20 +700,15 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                if all([(self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect]):
-                    return True
+                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
-            if len(self.intersection(o)) == 1:
-                return True
-            else:
-                return False
+            return len(self.intersection(o)) == 1
         elif isinstance(o, Ray2D):
             intersect = self.intersection(o)
             if len(intersect) == 1:
-                if intersect[0] != o.source and not self.encloses_point(o.source):
-                    return True
+                return intersect[0] != o.source and not self.encloses_point(o.source)
             else:
                 return False
         elif isinstance(o, (Segment2D, Polygon)):
@@ -722,7 +717,7 @@ class Ellipse(GeometrySet):
             for segment in segments:
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
-                    if not any([intersect[0] in i for i in segment.points])\
+                    if not any(intersect[0] in i for i in segment.points)\
                                    and all(not self.encloses_point(i) for i in segment.points):
                         any_intersect = True
                         continue
