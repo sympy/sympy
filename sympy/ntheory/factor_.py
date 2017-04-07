@@ -1591,6 +1591,10 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
+        elif x.is_Symbol:
+            pass
+        else:
+            raise TypeError("n must be a positive integer")
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
