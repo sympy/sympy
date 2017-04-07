@@ -12,6 +12,7 @@ from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
@@ -522,6 +523,12 @@ def test_issue_10295():
     sC = S(C)
     assert sC[0, 0, 0].is_integer
     assert sC[0, 0, 0] == 0
+
+    a1 = numpy.array([1, 2, 3])
+    a2 = numpy.array([i for i in range(24)])
+    a2.resize(2, 4, 3)
+    assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
+    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
 
 
 def test_Range():
