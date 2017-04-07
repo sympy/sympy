@@ -99,7 +99,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols, refine
+    from sympy import symbols
     a, b, c = symbols('a b c', positive=True)
     r = exp(-(x - a)**2)*exp(-(x - b)**2)
     e = integrate(r, (x, 0, oo), meijerg=True)
@@ -112,7 +112,7 @@ def test_recursive():
         + (2*a + 2*b + c)**2/8)/4)
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
-    assert simplify(refine(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True))) == \
+    assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 - erf(a + b + c))
 
 
@@ -643,6 +643,33 @@ def test_issue_6860():
     assert meijerint_indefinite(x**x**x, x) is None
 
 
+def test_issue_7337():
+    f = meijerint_indefinite(x*sqrt(2*x + 3), x).together()
+    assert f == sqrt(2*x + 3)*(2*x**2 + x - 3)/5
+    assert f._eval_interval(x, S(-1), S(1)) == S(2)/5
+
+
 def test_issue_8368():
     assert meijerint_indefinite(cosh(x)*exp(-x*t), x) == (
         (-t - 1)*exp(x) + (-t + 1)*exp(-x))*exp(-t*x)/2/(t**2 - 1)
+
+
+def test_issue_10211():
+    from sympy.abc import h, w
+    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+        2*sqrt(1 + w**2/h**2)/h - 2/h
+
+
+def test_issue_11806():
+    from sympy import symbols
+    y, L = symbols('y L', positive=True)
+    assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
+        2*L/(y**2*sqrt(L**2 + y**2))
+
+def test_issue_10681():
+    from sympy import RR
+    from sympy.abc import R, r
+    f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
+    g = (1.0/3)*R**1.0*r**3*hyper((-0.5, S(3)/2), (S(5)/2,),
+                                  r**2*exp_polar(2*I*pi)/R**2)
+    assert RR.almosteq((f/g).n(), 1.0, 1e-12)

@@ -186,7 +186,7 @@ Expressions can be compared using a regular python syntax::
     False
 
 We made the following decision in SymPy: ``a = Symbol("x")`` and another
-``b = Symbol("x")`` (with the same string "x") is the same thing, i.e ``a == b`` is
+``b = Symbol("x")`` (with the same string "x") is the same thing, i.e. ``a == b`` is
 ``True``. We chose ``a == b``, because it is more natural - ``exp(x) == exp(x)`` is
 also ``True`` for the same instance of ``x`` but different instances of ``exp``,
 so we chose to have ``exp(x) == exp(x)`` even for different instances of ``x``.

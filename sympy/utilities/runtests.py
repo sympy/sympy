@@ -31,7 +31,6 @@ import random
 import subprocess
 import signal
 import stat
-from inspect import isgeneratorfunction
 
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import exec_, PY3, string_types, range
@@ -45,9 +44,10 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
-import __future__
+
 # add more flags ??
-future_flags = __future__.division.compiler_flag
+future_flags = division.compiler_flag
+
 
 def _indent(s, indent=4):
     """
@@ -63,6 +63,7 @@ def _indent(s, indent=4):
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
+
 pdoctest._indent = _indent
 
 # ovverride reporter to maintain windows and python3
@@ -75,6 +76,7 @@ def _report_failure(self, out, test, example, got):
     s = self._checker.output_difference(example, got, self.optionflags)
     s = s.encode('raw_unicode_escape').decode('utf8', 'ignore')
     out(self._failure_header(test, example) + s)
+
 
 if PY3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
@@ -110,8 +112,8 @@ def get_sympy_dir():
     sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
     sympy_dir = os.path.normpath(sympy_dir)
     sys_case_insensitive = (os.path.isdir(sympy_dir) and
-                        os.path.isdir(sympy_dir.lower()) and
-                        os.path.isdir(sympy_dir.upper()))
+                            os.path.isdir(sympy_dir.lower()) and
+                            os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
 
@@ -131,8 +133,9 @@ def setup_pprint():
     init_printing(pretty_print=False)
 
 
-def run_in_subprocess_with_hash_randomization(function, function_args=(),
-    function_kwargs={}, command=sys.executable,
+def run_in_subprocess_with_hash_randomization(
+        function, function_args=(),
+        function_kwargs=None, command=sys.executable,
         module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
@@ -198,10 +201,13 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     else:
         if not force:
             return False
+
+    function_kwargs = function_kwargs or {}
+
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
                      (module, function, function, repr(function_args),
-                     repr(function_kwargs)))
+                      repr(function_kwargs)))
 
     try:
         p = subprocess.Popen([command, "-R", "-c", commandstring])
@@ -218,8 +224,9 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         return p.returncode
 
 
-def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
+def run_all_tests(test_args=(), test_kwargs=None,
+                  doctest_args=(), doctest_kwargs=None,
+                  examples_args=(), examples_kwargs=None):
     """
     Run all tests.
 
@@ -242,6 +249,10 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     """
     tests_successful = True
 
+    test_kwargs = test_kwargs or {}
+    doctest_kwargs = doctest_kwargs or {}
+    examples_kwargs = examples_kwargs or {'quiet': True}
+
     try:
         # Regular tests
         if not test(*test_args, **test_kwargs):
@@ -262,13 +273,17 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Sage tests
-        if not (sys.platform == "win32" or PY3):
+        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
+            # Only run Sage tests if 'bin/test' is present (it is missing from
+            # our release because everything in the 'bin' directory gets
+            # installed).
             dev_null = open(os.devnull, 'w')
             if subprocess.call("sage -v", shell=True, stdout=dev_null,
                                stderr=dev_null) == 0:
                 if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
+                                   "sympy/external/tests/test_sage.py",
+                    shell=True, cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -489,6 +504,7 @@ def _test(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     test_files = t.get_test_files('sympy')
 
@@ -615,6 +631,7 @@ def _doctest(*paths, **kwargs):
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/physics/gaussopt.py", # raises deprecation warning
+        "sympy/galgebra.py", # raises ImportError
     ])
 
     if import_module('numpy') is None:
@@ -673,6 +690,7 @@ def _doctest(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
+    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -1070,29 +1088,29 @@ class SymPyTests(object):
             clear_cache()
             self._count += 1
             random.seed(self._seed)
-            pytestfile = ""
-            if "XFAIL" in gl:
-                pytestfile = inspect.getsourcefile(gl["XFAIL"])
-            pytestfile2 = ""
-            if "slow" in gl:
-                pytestfile2 = inspect.getsourcefile(gl["slow"])
             disabled = gl.get("disabled", False)
             if not disabled:
                 # we need to filter only those functions that begin with 'test_'
-                # that are defined in the testing file or in the file where
-                # is defined the XFAIL decorator
-                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                    (inspect.getsourcefile(gl[f]) == filename or
-                     inspect.getsourcefile(gl[f]) == pytestfile or
-                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                # We have to be careful about decorated functions. As long as
+                # the decorator uses functools.wraps, we can detect it.
+                funcs = []
+                for f in gl:
+                    if (f.startswith("test_") and (inspect.isfunction(gl[f])
+                        or inspect.ismethod(gl[f]))):
+                        func = gl[f]
+                        # Handle multiple decorators
+                        while hasattr(func, '__wrapped__'):
+                            func = func.__wrapped__
+
+                        if inspect.getsourcefile(func) == filename:
+                            funcs.append(gl[f])
                 if slow:
                     funcs = [f for f in funcs if getattr(f, '_slow', False)]
                 # Sorting of XFAILed functions isn't fixed yet :-(
                 funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
                 i = 0
                 while i < len(funcs):
-                    if isgeneratorfunction(funcs[i]):
+                    if inspect.isgeneratorfunction(funcs[i]):
                     # some tests can be generators, that return the actual
                     # test functions. We unpack it below:
                         f = funcs.pop(i)

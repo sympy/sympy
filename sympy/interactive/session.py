@@ -4,7 +4,6 @@ from __future__ import print_function, division
 
 from distutils.version import LooseVersion as V
 
-from sympy.core.compatibility import range
 from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
@@ -40,6 +39,9 @@ def _make_message(ipython=True, quiet=False, source=None):
     import sys
     import os
 
+    if quiet:
+        return ""
+
     python_version = "%d.%d.%d" % sys.version_info[:3]
 
     if ipython:
@@ -60,26 +62,25 @@ def _make_message(ipython=True, quiet=False, source=None):
     args = shell_name, sympy_version, python_version, ARCH, ', '.join(info)
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args
 
-    if not quiet:
-        if source is None:
-            source = preexec_source
+    if source is None:
+        source = preexec_source
 
-        _source = ""
+    _source = ""
 
-        for line in source.split('\n')[:-1]:
-            if not line:
-                _source += '\n'
-            else:
-                _source += '>>> ' + line + '\n'
-
-        doc_version = sympy_version
-        if 'dev' in doc_version:
-            doc_version = "dev"
+    for line in source.split('\n')[:-1]:
+        if not line:
+            _source += '\n'
         else:
-            doc_version = "%s.%s.%s/" % tuple(doc_version.split('.')[:3])
+            _source += '>>> ' + line + '\n'
 
-        message += '\n' + verbose_message % {'source': _source,
-                                             'version': doc_version}
+    doc_version = sympy_version
+    if 'dev' in doc_version:
+        doc_version = "dev"
+    else:
+        doc_version = "%s/" % doc_version
+
+    message += '\n' + verbose_message % {'source': _source,
+                                         'version': doc_version}
 
     return message
 
@@ -415,15 +416,11 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
-            if V(IPython.__version__) >= '0.11':
-                try:
-                    ip = get_ipython()
-                except NameError:
-                    ip = None
-            else:
-                ip = IPython.ipapi.get()
-                if ip:
-                    ip = ip.IP
+            try:
+                from IPython import get_ipython
+                ip = get_ipython()
+            except ImportError:
+                ip = None
         in_ipython = bool(ip)
         if ipython is None:
             ipython = in_ipython
@@ -432,9 +429,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = init_python_session()
         mainloop = ip.interact
     else:
-        if ip is None:
-            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
-                auto_int_to_Integer=auto_int_to_Integer)
+        ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+            auto_int_to_Integer=auto_int_to_Integer)
 
         if V(IPython.__version__) >= '0.11':
             # runsource is gone, use run_cell instead, which doesn't
@@ -471,9 +467,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
     message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
-        mainloop(message)
+        print(message)
+        mainloop()
         sys.exit('Exiting ...')
     else:
-        ip.write(message)
+        print(message)
         import atexit
-        atexit.register(lambda ip: ip.write("Exiting ...\n"), ip)
+        atexit.register(lambda: print("Exiting ...\n"))

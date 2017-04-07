@@ -6,7 +6,6 @@ from sympy.core.mul import prod
 from sympy.core.logic import fuzzy_not
 from sympy.utilities.iterables import (has_dups, default_sort_key)
 from sympy.core.compatibility import range
-from sympy.functions.elementary.complexes import Abs
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -441,6 +440,10 @@ class KroneckerDelta(Function):
     @staticmethod
     def _latex_no_arg(printer):
         return r'\delta'
+
+    @property
+    def indices(self):
+        return self.args[0:2]
 
     def _sage_(self):
         import sage.all as sage

@@ -12,7 +12,7 @@ from sympy.core.compatibility import integer_types
 from sympy.utilities.misc import debug
 
 
-def _init_python_printing(stringify_func):
+def _init_python_printing(stringify_func, **settings):
     """Setup printing in Python interactive session. """
     import sys
     from sympy.core.compatibility import builtins
@@ -27,7 +27,7 @@ def _init_python_printing(stringify_func):
         """
         if arg is not None:
             builtins._ = None
-            print(stringify_func(arg))
+            print(stringify_func(arg, **settings))
             builtins._ = arg
 
     sys.displayhook = _displayhook
@@ -35,7 +35,7 @@ def _init_python_printing(stringify_func):
 
 def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
-                           latex_printer):
+                           latex_printer, **settings):
     """Setup printing in IPython interactive session. """
     try:
         from IPython.lib.latextools import latex_to_png
@@ -102,22 +102,33 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         If o is a container type, this is True if and only if every element of
         o can be printed with LaTeX.
         """
-        from sympy import Basic
-        from sympy.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        if isinstance(o, (list, tuple, set, frozenset)):
-            return all(_can_print_latex(i) for i in o)
-        elif isinstance(o, dict):
-            return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
-        elif isinstance(o, bool):
+
+        try:
+            from sympy import Basic
+            from sympy.matrices import MatrixBase
+            from sympy.physics.vector import Vector, Dyadic
+            from sympy.tensor.array import NDimArray
+            # If you're adding another type, make sure you add it to printable_types
+            # later in this file as well
+
+            if isinstance(o, (list, tuple, set, frozenset)):
+               return all(_can_print_latex(i) for i in o)
+            elif isinstance(o, dict):
+               return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+            elif isinstance(o, bool):
+               return False
+            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
+            # to use here, than these explicit imports.
+            elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic, NDimArray)):
+               return True
+            elif isinstance(o, (float, integer_types)) and print_builtin:
+               return True
             return False
-        # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-        # to use here, than these explicit imports.
-        elif isinstance(o, (Basic, MatrixBase, Vector, Dyadic)):
-            return True
-        elif isinstance(o, (float, integer_types)) and print_builtin:
-            return True
-        return False
+        except RuntimeError:
+            return False
+            # This is in case maximum recursion depth is reached.
+            # Since RecursionError is for versions of Python 3.5+
+            # so this is to guard against RecursionError for older versions.
 
     def _print_latex_png(o):
         """
@@ -125,14 +136,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         distribution, falling back to matplotlib rendering
         """
         if _can_print_latex(o):
-            s = latex(o, mode=latex_mode)
+            s = latex(o, mode=latex_mode, **settings)
             try:
                 return _preview_wrapper(s)
             except RuntimeError as e:
                 debug('preview failed with:', repr(e),
                       ' Falling back to matplotlib backend')
                 if latex_mode != 'inline':
-                    s = latex(o, mode='inline')
+                    s = latex(o, mode='inline', **settings)
                 return _matplotlib_wrapper(s)
 
     def _print_latex_matplotlib(o):
@@ -140,7 +151,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by mathtext
         """
         if _can_print_latex(o):
-            s = latex(o, mode='inline')
+            s = latex(o, mode='inline', **settings)
             return _matplotlib_wrapper(s)
 
     def _print_latex_text(o):
@@ -148,7 +159,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function to generate the latex representation of sympy expressions.
         """
         if _can_print_latex(o):
-            s = latex(o, mode='plain')
+            s = latex(o, mode='plain', **settings)
             s = s.replace(r'\dag', r'\dagger')
             s = s.strip('$')
             return '$$%s$$' % s
@@ -176,8 +187,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
         from sympy.physics.vector import Vector, Dyadic
+        from sympy.tensor.array import NDimArray
+
         printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic] + list(integer_types)
+                frozenset, dict, Vector, Dyadic, NDimArray] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -241,7 +254,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None):
+                  latex_printer=None, **settings):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -307,8 +320,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     pretty_printer: function, optional, default=None
         A custom pretty printer. This should mimic sympy.printing.pretty().
     latex_printer: function, optional, default=None
-        A custom LaTeX printer. This should mimic sympy.printing.latex()
-        This should mimic sympy.printing.latex().
+        A custom LaTeX printer. This should mimic sympy.printing.latex().
 
     Examples
     ========
@@ -413,8 +425,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if in_ipython:
+        mode_in_settings = settings.pop("mode", None)
+        if mode_in_settings:
+            debug("init_printing: Mode is not able to be set due to internals"
+                  "of IPython printing")
         _init_ipython_printing(ip, stringify_func, use_latex, euler,
                                forecolor, backcolor, fontsize, latex_mode,
-                               print_builtin, latex_printer)
+                               print_builtin, latex_printer, **settings)
     else:
-        _init_python_printing(stringify_func)
+        _init_python_printing(stringify_func, **settings)

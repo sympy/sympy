@@ -143,6 +143,10 @@ def test_ndim_array_converting():
         assert dense_array[i] == matrix[i]
     assert matrix.shape == dense_array.shape
 
+    assert MutableDenseNDimArray(matrix) == dense_array
+    assert MutableDenseNDimArray(matrix.as_immutable()) == dense_array
+    assert MutableDenseNDimArray(matrix.as_mutable()) == dense_array
+
     sparse_array = MutableSparseNDimArray([1, 2, 3, 4], (2, 2))
     alist = sparse_array.tolist()
 
@@ -154,6 +158,10 @@ def test_ndim_array_converting():
     for i in range(len(sparse_array)):
         assert sparse_array[i] == matrix[i]
     assert matrix.shape == sparse_array.shape
+
+    assert MutableSparseNDimArray(matrix) == sparse_array
+    assert MutableSparseNDimArray(matrix.as_immutable()) == sparse_array
+    assert MutableSparseNDimArray(matrix.as_mutable()) == sparse_array
 
 
 def test_converting_functions():
@@ -218,6 +226,9 @@ def test_arithmetic():
 
     assert type(a) == type(b) == type(c1) == type(c2) == type(d1) == type(d2) \
         == type(e1) == type(e2) == type(e3) == type(f1)
+
+    z0 = -a
+    assert z0 == MutableDenseNDimArray([-3 for i in range(9)], (3, 3))
 
 
 def test_higher_dimenions():

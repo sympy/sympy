@@ -37,6 +37,7 @@ class Symbol(AtomicExpr, Boolean):
     __slots__ = ['name']
 
     is_Symbol = True
+    is_symbol = True
 
     @property
     def _diff_wrt(self):
@@ -173,7 +174,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def free_symbols(self):
-        return set([self])
+        return {self}
 
 
 class Dummy(Symbol):
@@ -354,8 +355,8 @@ def symbols(names, **args):
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
         [a, b, c]
-        >>> symbols(set(['a', 'b', 'c']))
-        set([a, b, c])
+        >>> symbols({'a', 'b', 'c'})
+        {a, b, c}
 
     If an iterable container is needed for a single symbol, set the ``seq``
     argument to ``True`` or terminate the symbol name with a comma::

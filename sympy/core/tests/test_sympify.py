@@ -1,16 +1,18 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi)
+    Function, I, S, N, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
+    Pow, Or, true, false, Abs, pi, Range)
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY
+from sympy.core.compatibility import exec_, HAS_GMPY, PY3
+from sympy.sets import FiniteSet, EmptySet
+from sympy.external import import_module
 
 import mpmath
 
@@ -155,7 +157,6 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(set(['.3', '.2']), rational=True) == set(ans)
     assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
     assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
@@ -416,7 +417,7 @@ def test_issue_3982():
     a = [3, 2.0]
     assert sympify(a) == [Integer(3), Float(2.0)]
     assert sympify(tuple(a)) == Tuple(Integer(3), Float(2.0))
-    assert sympify(set(a)) == set([Integer(3), Float(2.0)])
+    assert sympify(set(a)) == FiniteSet(Integer(3), Float(2.0))
 
 
 def test_S_sympify():
@@ -483,19 +484,21 @@ def test_issue_6540_6552():
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
 
+
 def test_issue_6046():
-    assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
+    assert str(S("Q & C", locals=_clash1)) == 'C & Q'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec_("from sympy.abc import Q, C", locals)
-    assert str(S('C&Q', locals)) == 'And(C, Q)'
+    assert str(S('C&Q', locals)) == 'C & Q'
 
 
 def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
+
 
 def test_issue_10295():
     if not numpy:
@@ -519,3 +522,72 @@ def test_issue_10295():
     sC = S(C)
     assert sC[0, 0, 0].is_integer
     assert sC[0, 0, 0] == 0
+
+
+def test_Range():
+    # Only works in Python 3 where range returns a range type
+    if PY3:
+        builtin_range = range
+    else:
+        builtin_range = xrange
+
+    assert sympify(builtin_range(10)) == Range(10)
+    assert _sympify(builtin_range(10)) == Range(10)
+
+
+def test_sympify_set():
+    n = Symbol('n')
+    assert sympify({n}) == FiniteSet(n)
+    assert sympify(set()) == EmptySet()
+
+
+def test_numpy():
+    from sympy.utilities.pytest import skip
+    np = import_module('numpy')
+
+
+    def equal(x, y):
+        return x == y and type(x) == type(y)
+
+    if not np:
+        skip('numpy not installed.Abort numpy tests.')
+
+    assert sympify(np.bool_(1)) is S(True)
+    assert equal(
+        sympify(np.int_(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.intc(1234567891)), S(1234567891))
+    assert equal(
+        sympify(np.intp(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.int8(-123)), S(-123))
+    assert equal(sympify(np.int16(-12345)), S(-12345))
+    assert equal(sympify(np.int32(-1234567891)), S(-1234567891))
+    assert equal(
+        sympify(np.int64(-1234567891234567891)), S(-1234567891234567891))
+    assert equal(sympify(np.uint8(123)), S(123))
+    assert equal(sympify(np.uint16(12345)), S(12345))
+    assert equal(sympify(np.uint32(1234567891)), S(1234567891))
+    assert equal(
+        sympify(np.uint64(1234567891234567891)), S(1234567891234567891))
+    assert equal(sympify(np.float32(1.123456)), Float(1.123456, precision=24))
+    assert equal(sympify(np.float64(1.1234567891234)),
+                Float(1.1234567891234, precision=53))
+    assert equal(sympify(np.complex64(1 + 2j)), S(1.0 + 2.0*I))
+    assert equal(sympify(np.complex128(1 + 2j)), S(1.0 + 2.0*I))
+
+    try:
+        assert equal(sympify(np.float96(1.123456789)),
+                    Float(1.123456789, precision=80))
+    except AttributeError:  #float96 does not exist on all platforms
+        pass
+
+    try:
+        assert equal(sympify(np.float128(1.123456789123)),
+                    Float(1.123456789123, precision=80))
+    except AttributeError:  #float128 does not exist on all platforms
+        pass
+
+
+@XFAIL
+def test_sympify_rational_numbers_set():
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)

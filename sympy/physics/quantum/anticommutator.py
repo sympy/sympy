@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import S, Expr, Mul, Integer
-from sympy.core.compatibility import u
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.operator import Operator
@@ -135,7 +134,7 @@ class AntiCommutator(Expr):
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u(',')))))
+        pform = prettyForm(*pform.right((prettyForm(u','))))
         pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
         pform = prettyForm(*pform.parens(left='{', right='}'))
         return pform

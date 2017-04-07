@@ -18,6 +18,14 @@ def test_sparse_matrix():
     ))
     assert SparseMatrix(a) == a
 
+    from sympy.matrices import MutableSparseMatrix, MutableDenseMatrix
+    a = MutableSparseMatrix([])
+    b = MutableDenseMatrix([1, 2])
+    assert a.row_join(b) == b
+    assert a.col_join(b) == b
+    assert type(a.row_join(b)) == type(a)
+    assert type(a.col_join(b)) == type(a)
+
     # test element assignment
     a = SparseMatrix((
         (1, 0),
@@ -64,6 +72,18 @@ def test_sparse_matrix():
     assert c[1, 1] == 6
     assert c[2, 0] == 18
     assert c[2, 1] == 0
+
+    try:
+        eval('c = a @ b')
+    except SyntaxError:
+        pass
+    else:
+        assert c[0, 0] == 7
+        assert c[0, 1] == 2
+        assert c[1, 0] == 6
+        assert c[1, 1] == 6
+        assert c[2, 0] == 18
+        assert c[2, 1] == 0
 
     x = Symbol("x")
 
@@ -332,12 +352,12 @@ def test_sparse_matrix():
     assert not a.is_symmetric(simplify=False)
 
     # test_cofactor
-    assert sparse_eye(3) == sparse_eye(3).cofactorMatrix()
+    assert sparse_eye(3) == sparse_eye(3).cofactor_matrix()
     test = SparseMatrix([[1, 3, 2], [2, 6, 3], [2, 3, 6]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         SparseMatrix([[27, -6, -6], [-12, 2, 3], [-3, 1, 0]])
     test = SparseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert test.cofactorMatrix() == \
+    assert test.cofactor_matrix() == \
         SparseMatrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
 
     # test_jacobian

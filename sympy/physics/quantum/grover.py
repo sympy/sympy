@@ -11,7 +11,7 @@ Todo:
 from __future__ import print_function, division
 
 from sympy import floor, pi, sqrt, sympify, eye
-from sympy.core.compatibility import u, range
+from sympy.core.compatibility import range
 from sympy.core.numbers import NegativeOne
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
@@ -90,8 +90,8 @@ class OracleGate(Gate):
         |3>
     """
 
-    gate_name = u('V')
-    gate_name_latex = u('V')
+    gate_name = u'V'
+    gate_name_latex = u'V'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -195,8 +195,8 @@ class WGate(Gate):
 
     """
 
-    gate_name = u('W')
-    gate_name_latex = u('W')
+    gate_name = u'W'
+    gate_name_latex = u'W'
 
     @classmethod
     def _eval_args(cls, args):

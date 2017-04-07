@@ -4,7 +4,7 @@ from sympy import (
     Expr, factor, Function, I, Integral, integrate, Interval, Lambda,
     LambertW, log, Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify,
     sin, tan, sqrt, sstr, Sum, Symbol, symbols, sympify, trigsimp, Tuple, nan,
-    And, Eq, Ne, re, im, polar_lift, meijerg,
+    And, Eq, Ne, re, im, polar_lift, meijerg, SingularityFunction
 )
 from sympy.functions.elementary.complexes import periodic_argument
 from sympy.integrals.risch import NonElementaryIntegral
@@ -80,11 +80,11 @@ def test_basics():
 
     assert integrate(t**2, (t, x, 2*x)).diff(x) == 7*x**2
 
-    assert Integral(x, x).atoms() == set([x])
-    assert Integral(f(x), (x, 0, 1)).atoms() == set([S(0), S(1), x])
+    assert Integral(x, x).atoms() == {x}
+    assert Integral(f(x), (x, 0, 1)).atoms() == {S(0), S(1), x}
 
-    assert diff_test(Integral(x, (x, 3*y))) == set([y])
-    assert diff_test(Integral(x, (a, 3*y))) == set([x, y])
+    assert diff_test(Integral(x, (x, 3*y))) == {y}
+    assert diff_test(Integral(x, (a, 3*y))) == {x, y}
 
     assert integrate(x, (x, oo, oo)) == 0 #issue 8171
     assert integrate(x, (x, -oo, -oo)) == 0
@@ -111,13 +111,13 @@ def test_diff_wrt():
 
 def test_basics_multiple():
 
-    assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == set([x])
-    assert diff_test(Integral(x, (x, 5*y), (y, x, 2*x))) == set([x])
-    assert diff_test(Integral(x, (x, 5*y), (y, y, 2*x))) == set([x, y])
-    assert diff_test(Integral(y, y, x)) == set([x, y])
-    assert diff_test(Integral(y*x, x, y)) == set([x, y])
-    assert diff_test(Integral(x + y, y, (y, 1, x))) == set([x])
-    assert diff_test(Integral(x + y, (x, x, y), (y, y, x))) == set([x, y])
+    assert diff_test(Integral(x, (x, 3*x, 5*y), (y, x, 2*x))) == {x}
+    assert diff_test(Integral(x, (x, 5*y), (y, x, 2*x))) == {x}
+    assert diff_test(Integral(x, (x, 5*y), (y, y, 2*x))) == {x, y}
+    assert diff_test(Integral(y, y, x)) == {x, y}
+    assert diff_test(Integral(y*x, x, y)) == {x, y}
+    assert diff_test(Integral(x + y, y, (y, 1, x))) == {x}
+    assert diff_test(Integral(x + y, (x, x, y), (y, y, x))) == {x, y}
 
 
 def test_conjugate_transpose():
@@ -447,6 +447,34 @@ def test_failing_integrals():
     assert NS(Integral(sin(x + x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
 
 
+def test_integrate_SingularityFunction():
+    in_1 = SingularityFunction(x, a, 3) + SingularityFunction(x, 5, -1)
+    out_1 = SingularityFunction(x, a, 4)/4 + SingularityFunction(x, 5, 0)
+    assert integrate(in_1, x) == out_1
+
+    in_2 = 10*SingularityFunction(x, 4, 0) - 5*SingularityFunction(x, -6, -2)
+    out_2 = 10*SingularityFunction(x, 4, 1) - 5*SingularityFunction(x, -6, -1)
+    assert integrate(in_2, x) == out_2
+
+    in_3 = 2*x**2*y -10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(y, 10, -2)
+    out_3_1 = 2*x**3*y/3 - 2*x*SingularityFunction(y, 10, -2) - 5*SingularityFunction(x, -4, 8)/4
+    out_3_2 = x**2*y**2 - 10*y*SingularityFunction(x, -4, 7) - 2*SingularityFunction(y, 10, -1)
+    assert integrate(in_3, x) == out_3_1
+    assert integrate(in_3, y) == out_3_2
+
+    assert Integral(in_3, x) == Integral(in_3, x)
+    assert Integral(in_3, x).doit() == out_3_1
+
+    in_4 = 10*SingularityFunction(x, -4, 7) - 2*SingularityFunction(x, 10, -2)
+    out_4 = 5*SingularityFunction(x, -4, 8)/4 - 2*SingularityFunction(x, 10, -1)
+    assert integrate(in_4, (x, -oo, x)) == out_4
+
+    assert integrate(SingularityFunction(x, 5, -1), x) == SingularityFunction(x, 5, 0)
+    assert integrate(SingularityFunction(x, 0, -1), (x, -oo, oo)) == 1
+    assert integrate(5*SingularityFunction(x, 5, -1), (x, -oo, oo)) == 5
+    assert integrate(SingularityFunction(x, 5, -1) * f(x), (x, -oo, oo)) == f(5)
+
+
 def test_integrate_DiracDelta():
     # This is here to check that deltaintegrate is being called, but also
     # to test definite integrals. More tests are in test_deltafunctions.py
@@ -725,24 +753,24 @@ def test_is_number():
 
 def test_symbols():
     from sympy.abc import x, y, z
-    assert Integral(0, x).free_symbols == set([x])
-    assert Integral(x).free_symbols == set([x])
-    assert Integral(x, (x, None, y)).free_symbols == set([y])
-    assert Integral(x, (x, y, None)).free_symbols == set([y])
-    assert Integral(x, (x, 1, y)).free_symbols == set([y])
-    assert Integral(x, (x, y, 1)).free_symbols == set([y])
-    assert Integral(x, (x, x, y)).free_symbols == set([x, y])
-    assert Integral(x, x, y).free_symbols == set([x, y])
+    assert Integral(0, x).free_symbols == {x}
+    assert Integral(x).free_symbols == {x}
+    assert Integral(x, (x, None, y)).free_symbols == {y}
+    assert Integral(x, (x, y, None)).free_symbols == {y}
+    assert Integral(x, (x, 1, y)).free_symbols == {y}
+    assert Integral(x, (x, y, 1)).free_symbols == {y}
+    assert Integral(x, (x, x, y)).free_symbols == {x, y}
+    assert Integral(x, x, y).free_symbols == {x, y}
     assert Integral(x, (x, 1, 2)).free_symbols == set()
-    assert Integral(x, (y, 1, 2)).free_symbols == set([x])
+    assert Integral(x, (y, 1, 2)).free_symbols == {x}
     # pseudo-free in this case
-    assert Integral(x, (y, z, z)).free_symbols == set([x, z])
-    assert Integral(x, (y, 1, 2), (y, None, None)).free_symbols == set([x, y])
-    assert Integral(x, (y, 1, 2), (x, 1, y)).free_symbols == set([y])
+    assert Integral(x, (y, z, z)).free_symbols == {x, z}
+    assert Integral(x, (y, 1, 2), (y, None, None)).free_symbols == {x, y}
+    assert Integral(x, (y, 1, 2), (x, 1, y)).free_symbols == {y}
     assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
     assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
     assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).free_symbols == \
-        set([x])
+        {x}
 
 
 def test_is_zero():
@@ -781,9 +809,11 @@ def test_issue_4403():
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
     x = Symbol('x', real=True)
-    y = Symbol('y', nonzero=True, real=True)
+    y = Symbol('y', positive=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
-        1/(y**2*sqrt(1 + y**2/x**2))
+        x/(y**2*sqrt(x**2 + y**2))
+    # If y is real and nonzero, we get x*Abs(y)/(y**3*sqrt(x**2 + y**2)),
+    # which results from sqrt(1 + x**2/y**2) = sqrt(x**2 + y**2)/|y|.
 
 
 def test_issue_4403_2():
@@ -991,7 +1021,6 @@ def test_issue_4487():
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
-@XFAIL
 def test_issue_4215():
     x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
@@ -1068,7 +1097,6 @@ def test_issue_4492():
         ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
             (8*sqrt(-x**2 + 5)), True))
 
-@XFAIL
 def test_issue_2708():
     # This test needs to use an integration function that can
     # not be evaluated in closed form.  Update as needed.
@@ -1076,7 +1104,11 @@ def test_issue_2708():
     integral_f = NonElementaryIntegral(f, (z, 2, 3))
     assert Integral(f, (z, 2, 3)).doit() == integral_f
     assert integrate(f + exp(z), (z, 2, 3)) == integral_f - exp(2) + exp(3)
-
+    assert integrate(2*f + exp(z), (z, 2, 3)) == \
+        2*integral_f - exp(2) + exp(3)
+    assert integrate(exp(1.2*n*s*z*(-t + z)/t), (z, 0, x)) == \
+        1.0*NonElementaryIntegral(exp(-1.2*n*s*z)*exp(1.2*n*s*z**2/t),
+                                  (z, 0, x))
 
 def test_issue_8368():
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
@@ -1124,6 +1156,11 @@ def test_issue_7130():
     integrand = (cos(pi*i*x/L)**2 / (a + b*x)).rewrite(exp)
     assert x not in integrate(integrand, (x, 0, L)).free_symbols
 
+def test_issue_10567():
+    a, b, c, t = symbols('a b c t')
+    vt = Matrix([a*t, b, c])
+    assert integrate(vt, t) == Integral(vt, t).doit()
+    assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
 
 def test_issue_4950():
     assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
@@ -1132,3 +1169,11 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_singularities():
+    assert integrate(1/x**2, (x, -oo, oo)) == oo
+    assert integrate(1/x**2, (x, -1, 1)) == oo
+    assert integrate(1/(x - 1)**2, (x, -2, 2)) == oo
+
+    assert integrate(1/x**2, (x, 1, -1)) == -oo
+    assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo

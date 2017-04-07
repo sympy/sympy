@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, pi, sqrt
-from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle
+from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle, Parabola
 from sympy.geometry.entity import scale
 from sympy.utilities.pytest import raises
 
@@ -26,7 +26,7 @@ def test_subs():
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs((1, 2), Point(3, 4)) == Point(3, 4)
     assert Point(1, 2).subs(Point(1, 2), Point(3, 4)) == Point(3, 4)
-    assert Point(1, 2).subs(set([(1, 2)])) == Point(2, 2)
+    assert Point(1, 2).subs({(1, 2)}) == Point(2, 2)
     raises(ValueError, lambda: Point(1, 2).subs(1))
     raises(ValueError, lambda: Point(1, 1).subs((Point(1, 1), Point(1,
            2)), 1, 2))

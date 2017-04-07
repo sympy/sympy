@@ -42,18 +42,18 @@ Coordinate Systems
 
 A **coordinate system** is an abstract mathematical entity used to define
 the notion of directions and locations in n-dimensional spaces. This
-module deals with 3-dimensional spaces, with the conventional :math:`X`, 
-:math:`Y` and :math:`Z` axes defined with respect 
+module deals with 3-dimensional spaces, with the conventional :math:`X`,
+:math:`Y` and :math:`Z` axes defined with respect
 to each coordinate system.
 
-Each coordinate system also has a special reference point called the 
-'origin' defined for it. This point is used either while referring to 
-locations in 3D space, or while calculating the coordinates of 
+Each coordinate system also has a special reference point called the
+'origin' defined for it. This point is used either while referring to
+locations in 3D space, or while calculating the coordinates of
 pre-defined points with respect to the system.
 
-It is a pretty well-known concept that there is no absolute notion 
+It is a pretty well-known concept that there is no absolute notion
 of location or orientation in space. Any given coordinate system
-defines a unique 'perspective' of quantifying positions and directions. 
+defines a unique 'perspective' of quantifying positions and directions.
 Therefore, even if we assume that all systems deal with the same
 units of measurement, the expression of vectorial and scalar quantities
 differs according to the coordinate system a certain observer deals with.
@@ -62,7 +62,7 @@ Consider two points :math:`P` and :math:`Q` in space. Assuming units to
 be common throughtout, the distance between these points remains
 the same regardless of the coordinate system in which the measurements are
 being made. However, the 3-D coordinates of each of the two points, as well
-as the position vector of any of the points with respect to the other, 
+as the position vector of any of the points with respect to the other,
 do not.
 In fact, these two quantities don't make sense at all, unless they are being
 measured keeping in mind a certain location and orientation of the measurer
@@ -70,9 +70,9 @@ measured keeping in mind a certain location and orientation of the measurer
 
 Therefore, it is quite clear that the orientation and location (of the origin)
 of a coordinate system define the way different quantities will be expressed
-with respect to it.  Neither of the two properties can be measured on an 
-absolute scale, but rather with respect to another coordinate system. The 
-orientation of one system with respect to another is measured using the 
+with respect to it.  Neither of the two properties can be measured on an
+absolute scale, but rather with respect to another coordinate system. The
+orientation of one system with respect to another is measured using the
 the rotation matrix, while the relative position can be quantified via
 the position vector of one system's origin with respect to the other.
 
@@ -81,10 +81,10 @@ Fields
 
 A **field** is a vector or scalar quantity that can be
 specified everywhere in space as a function of position (Note that in general
-a field may also be dependent on time and other custom variables). Since we 
-only deal with 3D spaces in this module, a field is defined as a function of 
+a field may also be dependent on time and other custom variables). Since we
+only deal with 3D spaces in this module, a field is defined as a function of
 the :math:`x`, :math:`y` and :math:`z` coordinates corresponding
-to a location in the coordinate system. Here, :math:`x`, :math:`y` and 
+to a location in the coordinate system. Here, :math:`x`, :math:`y` and
 :math:`z` act as scalar variables defining the position of a general point.
 
 For example, temperature in 3 dimensional space (a temperature field) can be
@@ -97,7 +97,7 @@ of the location :math:`(x, y, z)` of any point in space.
 For instance, every point on the earth may be considered to be in the
 gravitational force field of the earth. We may specify the field by the
 magnitude and the direction of acceleration due to gravity
-(i.e. force per unit mass ) :math:`\vec g(x, y, z)` at every point in 
+(i.e. force per unit mass ) :math:`\vec g(x, y, z)` at every point in
 space.
 
 To give an example from electromagnetism, consider an electric potential

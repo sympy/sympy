@@ -5,7 +5,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential,
                          FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
-                         Gompertz, Kumaraswamy, Laplace, Logistic,
+                         Gompertz, Gumbel, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto,
                          QuadraticU, RaisedCosine, Rayleigh, ShiftedGompertz,
                          StudentT, Triangular, Uniform, UniformSum,
@@ -41,7 +41,7 @@ def test_single_normal():
     pdf = density(Y)
     x = Symbol('x')
     assert (pdf(x) ==
-            2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
+            2**S.Half*exp(-(mu - x)**2/(2*sigma**2))/(2*pi**S.Half*sigma))
 
     assert P(X**2 < 1) == erf(2**S.Half/2)
 
@@ -325,6 +325,13 @@ def test_gompertz():
     X = Gompertz("x", b, eta)
     assert density(X)(x) == b*eta*exp(eta)*exp(b*x)*exp(-eta*exp(b*x))
 
+def test_gumbel():
+    beta = Symbol("beta", positive=True)
+    mu = Symbol("mu")
+    x = Symbol("x")
+    X = Gumbel("x", beta, mu)
+    assert simplify(density(X)(x)) == exp((beta*exp((mu - x)/beta) + mu - x)/beta)/beta
+
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
     b = Symbol("b", positive=True)
@@ -569,15 +576,16 @@ def test_prefab_sampling():
 def test_input_value_assertions():
     a, b = symbols('a b')
     p, q = symbols('p q', positive=True)
+    m, n = symbols('m n', positive=False, real=True)
 
     raises(ValueError, lambda: Normal('x', 3, 0))
-    raises(ValueError, lambda: Normal('x', a, b))
+    raises(ValueError, lambda: Normal('x', m, n))
     Normal('X', a, p)  # No error raised
-    raises(ValueError, lambda: Exponential('x', a))
+    raises(ValueError, lambda: Exponential('x', m))
     Exponential('Ex', p)  # No error raised
     for fn in [Pareto, Weibull, Beta, Gamma]:
-        raises(ValueError, lambda: fn('x', a, p))
-        raises(ValueError, lambda: fn('x', p, a))
+        raises(ValueError, lambda: fn('x', m, p))
+        raises(ValueError, lambda: fn('x', p, n))
         fn('x', p, q)  # No error raised
 
 

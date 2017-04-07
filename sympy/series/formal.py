@@ -679,13 +679,13 @@ def solve_de(f, x, DE, order, g, k):
      Eq(Mod(k, 1), 0)), (0, True)), x, 2)
     """
     sol = None
-    syms = DE.free_symbols.difference(set([g, x]))
+    syms = DE.free_symbols.difference({g, x})
 
     if syms:
         RE = _transform_DE_RE(DE, g, k, order, syms)
     else:
         RE = hyper_re(DE, g, k)
-    if not RE.free_symbols.difference(set([k])):
+    if not RE.free_symbols.difference({k}):
         sol = _solve_hyper_RE(f, x, RE, g, k)
 
     if sol:
@@ -693,7 +693,7 @@ def solve_de(f, x, DE, order, g, k):
 
     if syms:
         DE = _transform_explike_DE(DE, g, x, order, syms)
-    if not DE.free_symbols.difference(set([x])):
+    if not DE.free_symbols.difference({x}):
         sol = _solve_explike_DE(f, x, DE, g, k)
 
     if sol:
@@ -738,7 +738,7 @@ def hyper_algorithm(f, x, k, order=4):
             sol = solve_de(f, x, DE, i, g, k)
         if sol:
             return sol
-        if not DE.free_symbols.difference(set([x])):
+        if not DE.free_symbols.difference({x}):
             des.append(DE)
 
     # If nothing works
