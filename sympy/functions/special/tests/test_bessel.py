@@ -84,6 +84,8 @@ def test_rewrite():
         assert hn1(order, z) == hn1(order, z).rewrite(f)
         assert hn2(order, z) == hn2(order, z).rewrite(f)
 
+    assert yn(order, z).rewrite(besselj) == (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S(1)/2, z)
+    assert yn(order, z).rewrite(bessely) == sqrt(pi/(2*z)) * bessely(nu + S(1)/2, z)
     assert jn(order, z).rewrite(besselj) == sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(order + S(1)/2, z)/2
     assert jn(order, z).rewrite(bessely) == (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-order - S(1)/2, z)/2
 
