@@ -531,7 +531,7 @@ class PrettyPrinter(Printer):
         for lim in expr.limits:
             if len(lim) == 3:
                 prettyUpper = self._print(lim[2])
-                prettyLower = self._print(Equality(lim[0], lim[1]))
+                prettyLower = self._print(str(lim[0]) + " = " + str(lim[1]))
             elif len(lim) == 2:
                 prettyUpper = self._print("")
                 prettyLower = self._print(Equality(lim[0], lim[1]))
