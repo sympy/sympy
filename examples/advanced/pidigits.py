@@ -72,7 +72,7 @@ def interactive():
     print("Compute digits of pi with SymPy\n")
     base = input("Which base? (2-36, 10 for decimal) \n> ")
     digits = input("How many digits? (enter a big number, say, 10000)\n> ")
-    tofile = input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
+    tofile = raw_input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
     if tofile:
         tofile = open(tofile, "w")
     calculateit(pi, base, digits, tofile)

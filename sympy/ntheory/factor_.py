@@ -1582,7 +1582,6 @@ class totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        print("TEST")
         n = sympify(n)
         if n.is_Integer:
             if n < 1:
@@ -1592,7 +1591,7 @@ class totient(Function):
             for p, k in factors.items():
                 t *= (p - 1) * p**(k - 1)
             return t
-        elif x.is_Symbol:
+        elif n.is_Symbol:
             pass
         else:
             raise TypeError("n must be a positive integer")
