@@ -1582,6 +1582,7 @@ class totient(Function):
     """
     @classmethod
     def eval(cls, n):
+        print("TEST")
         n = sympify(n)
         if n.is_Integer:
             if n < 1:
