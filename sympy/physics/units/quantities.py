@@ -101,9 +101,20 @@ class Quantity(AtomicExpr):
         return 1
 
     def _Quantity_constructor_postprocessor_Add(expr):
+        # Construction postprocessor for the addition,
+        # checks for dimension mismatches of the addends, thus preventing
+        # expressions like `meter + second` to be created.
+
         from .util import _get_dimension_of_expr
-        deset = {tuple(Dimension(_get_dimension_of_expr(i)).get_dimensional_dependencies().items())
-                 for i in expr.args if hasattr(i, "_constructor_postprocessor_dict")}
+        deset = {
+            tuple(Dimension(_get_dimension_of_expr(i)).get_dimensional_dependencies().items())
+            for i in expr.args
+            if hasattr(i, "_constructor_postprocessor_dict") and
+                i.free_symbols == set()  # do not raise if there are symbols
+                        # (free symbols could contain the units corrections)
+        }
+        # If `deset` has more than one element, then some dimensions do not
+        # match in the sum:
         if len(deset) > 1:
             raise ValueError("summation of quantities of incompatible dimensions")
         return expr

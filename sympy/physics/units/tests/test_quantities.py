@@ -191,7 +191,8 @@ def test_issue_quart():
 
 
 def test_issue_5565():
-    assert (m < s).is_Relational
+    raises(ValueError, lambda: m < s)
+    assert (m < km).is_Relational
 
 
 def test_find_unit():
