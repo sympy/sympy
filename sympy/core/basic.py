@@ -1,6 +1,6 @@
 """Base class for all the objects in SymPy"""
 from __future__ import print_function, division
-from collections import Mapping
+from collections import Mapping, defaultdict
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
@@ -1640,6 +1640,26 @@ class Basic(with_metaclass(ManagedProperties)):
                     return self._eval_rewrite(tuple(pattern), rule, **hints)
                 else:
                     return self
+
+    @classmethod
+    def _exec_constructor_postprocessors(cls, obj):
+        if '_constructor_postprocessor_dict' not in obj.__slots__:
+            return obj
+
+        clsname = obj.__class__.__name__
+        postprocessors = defaultdict(set)
+        for i in obj.args:
+            if not hasattr(i, "_constructor_postprocessor_dict"):
+                continue
+            for k, v in i._constructor_postprocessor_dict.items():
+                postprocessors[k].update(v)
+
+        for f in postprocessors.get(clsname, []):
+            obj = f(obj)
+        if len(postprocessors) > 0 and not hasattr(obj, "_constructor_postprocessor_dict"):
+            obj._constructor_postprocessor_dict = postprocessors  # collections.defaultdict(set)
+
+        return obj
 
 
 class Atom(Basic):

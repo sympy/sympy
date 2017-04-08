@@ -228,3 +228,4 @@ def test_sum_of_incompatible_quantities():
     raises(ValueError, lambda: meter + second)
     raises(ValueError, lambda: 2 * meter + second)
     raises(ValueError, lambda: 2 * meter + 3 * second)
+    raises(ValueError, lambda: 1 / second + 1 / meter)

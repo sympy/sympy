@@ -68,7 +68,7 @@ def _unevaluated_Add(*args):
 
 class Add(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ['_constructor_postprocessor_dict']
 
     is_Add = True
 
@@ -267,13 +267,6 @@ class Add(Expr, AssocOp):
             return [], newseq, None
         else:
             return newseq, [], None
-
-    @classmethod
-    def _exec_constructor_postprocessors(cls, obj):
-        for arg in obj.args:
-            if hasattr(arg, "_constructor_postprocessor_Add"):
-                obj = arg._constructor_postprocessor_Add(obj)
-        return obj
 
     @classmethod
     def class_key(cls):

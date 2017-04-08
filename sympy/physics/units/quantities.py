@@ -100,21 +100,17 @@ class Quantity(AtomicExpr):
             return expr.dimension.name
         return 1
 
-    @staticmethod
-    def _constructor_postprocessor_Mul(expr):
+    def _Quantity_constructor_postprocessor_Add(expr):
         from .util import _get_dimension_of_expr
-        # expr._dimensional_expr = _get_dimension_of_expr(expr)
-        # setattr(expr, '_constructor_postprocessor_Add', Quantity._constructor_postprocessor_Add)
-        return expr
-
-    @staticmethod
-    def _constructor_postprocessor_Add(expr):
-        from .util import _get_dimension_of_expr
-        deset = {_get_dimension_of_expr(i) for i in expr.args if i != -1}
+        deset = {tuple(Dimension(_get_dimension_of_expr(i)).get_dimensional_dependencies().items())
+                 for i in expr.args if hasattr(i, "_constructor_postprocessor_dict")}
         if len(deset) > 1:
             raise ValueError("summation of quantities of incompatible dimensions")
-        # expr._dimensional_expr = deset.pop()
         return expr
+
+    _constructor_postprocessor_dict = {
+        "Add" : {_Quantity_constructor_postprocessor_Add},
+    }
 
     @staticmethod
     def _collect_factor_and_dimension(expr):

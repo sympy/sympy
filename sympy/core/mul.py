@@ -89,7 +89,7 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
 
-    __slots__ = []
+    __slots__ = ['_constructor_postprocessor_dict']
 
     is_Mul = True
 
@@ -616,14 +616,6 @@ class Mul(Expr, AssocOp):
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         return c_part, nc_part, order_symbols
-
-    @classmethod
-    def _exec_constructor_postprocessors(cls, obj):
-        postprocessors = {getattr(i, "_constructor_postprocessor_Mul")
-                          for i in obj.args if hasattr(i, "_constructor_postprocessor_Mul")}
-        for f in postprocessors:
-            obj = f(obj)
-        return obj
 
     def _eval_power(b, e):
 

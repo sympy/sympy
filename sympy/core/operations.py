@@ -41,8 +41,6 @@ class AssocOp(Basic):
         c_part, nc_part, order_symbols = cls.flatten(args)
         is_commutative = not nc_part
         obj = cls._from_args(c_part + nc_part, is_commutative)
-
-        #obj._postprocessor_dict = {}
         obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
@@ -61,10 +59,6 @@ class AssocOp(Basic):
         if is_commutative is None:
             is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
-        return obj
-
-    @classmethod
-    def _exec_constructor_postprocessors(cls, obj):
         return obj
 
     def _new_rawargs(self, *args, **kwargs):
