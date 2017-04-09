@@ -219,3 +219,12 @@ def test_literal_evalf_is_number_is_zero_is_comparable():
     assert n.is_comparable is False
     assert n.n(2).is_comparable is False
     assert n.n(2).n(2).is_comparable
+
+def test_partition():
+    x, a, b = symbols('x, a, b')
+    expr = a + b + x
+    assert expr._partition_args(x) == {'Constant': [a, b], 'Symbol': [x]}
+    expr = cos(a)*b*sin(x)
+    assert expr._partition_args(x) == {'Constant': [b, cos(a)], 'sin': [sin(x)]}
+    assert exp(x)._partition_args(x) == {'Constant': [], 'exp': [exp(x)]}
+    assert exp(a)._partition_args(x) == {'Constant': [exp(a)]}
