@@ -694,7 +694,7 @@ class Poly(Expr):
 
         return f.per(result)
 
-    def retract(f, field=None):
+    def retract(f, field=None, extension=None):
         """
         Recalculate the ground domain of a polynomial.
 
@@ -715,7 +715,9 @@ class Poly(Expr):
 
         """
         dom, rep = construct_domain(f.as_dict(zero=True),
-            field=field, composite=f.domain.is_Composite or None)
+            field=field,
+            composite=f.domain.is_Composite or None,
+            extension=extension)
         return f.from_dict(rep, f.gens, domain=dom)
 
     def slice(f, x, m, n=None):

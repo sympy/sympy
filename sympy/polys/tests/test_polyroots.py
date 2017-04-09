@@ -462,22 +462,24 @@ def test_roots0():
     assert real_root == -2*root(cr, 3)/3 + 20/root(cr, 3)
 
     eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
-    assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
+    assert roots(eq, extension=None) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
+    assert len(roots(eq)) == 3
 
     eq = Poly(41*x**5 + 29*sqrt(2)*x**5 - 153*x**4 - 108*sqrt(2)*x**4 +
     175*x**3 + 125*sqrt(2)*x**3 - 45*x**2 - 30*sqrt(2)*x**2 - 26*sqrt(2)*x -
     26*x + 24, x, domain='EX')
-    assert roots(eq) == {-sqrt(2) + 1: 1, -2 + 2*sqrt(2): 1, -1 + sqrt(2): 1,
+    assert roots(eq, extension=None) == {-sqrt(2) + 1: 1, -2 + 2*sqrt(2): 1, -1 + sqrt(2): 1,
                          -4 + 4*sqrt(2): 1, -3 + 3*sqrt(2): 1}
 
     eq = Poly(x**3 - 2*x**2 + 6*sqrt(2)*x**2 - 8*sqrt(2)*x + 23*x - 14 +
             14*sqrt(2), x, domain='EX')
-    assert roots(eq) == {-2*sqrt(2) + 2: 1, -2*sqrt(2) + 1: 1, -2*sqrt(2) - 1: 1}
+    assert roots(eq, extension=None) == {-2*sqrt(2) + 2: 1, -2*sqrt(2) + 1: 1, -2*sqrt(2) - 1: 1}
 
-    assert roots(Poly((x + sqrt(2))**3 - 7, x, domain='EX')) == \
-        {-sqrt(2) - root(7, 3)/2 - sqrt(3)*root(7, 3)*I/2: 1,
-         -sqrt(2) - root(7, 3)/2 + sqrt(3)*root(7, 3)*I/2: 1,
+    assert roots(Poly((x + sqrt(2))**3 - 7, x, domain='EX', extension=None)) == \
+        {-sqrt(2) + root(7, 3)*(-S(1)/2 - sqrt(3)*I/2): 1,
+         -sqrt(2) + root(7, 3)*(-S(1)/2 + sqrt(3)*I/2): 1,
          -sqrt(2) + root(7, 3): 1}
+
 
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """

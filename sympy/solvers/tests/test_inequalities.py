@@ -2,7 +2,8 @@
 
 from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
+                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
+                   simplify)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -301,7 +302,13 @@ def test_trig_inequalities():
     assert isolve(cos(x) >= S.Zero, x, relational=False) == \
         Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
 
-    assert isolve(tan(x) < S.One, x, relational=False) == \
+    # /!\ without simplification this gives
+    # {0} U [0, -I*(log(sqrt(im(sqrt(-1 + I)*sqrt(1/2 - I/2))**2 +
+    #       re(sqrt(-1 + I)*sqrt(1/2 - I/2))**2)) +
+    #       I*atan(im(sqrt(-1 + I)*sqrt(1/2 - I/2))/
+    #       re(sqrt(-1 + I)*sqrt(1/2 - I/2))))) U
+    #      (pi/2, pi)
+    assert simplify(isolve(tan(x) < S.One, x, relational=False)) == \
         Union(Interval(0, pi/4, False, True), Interval(pi/2, pi, True, True))
 
     assert isolve(sin(x) <= S.Zero, x, relational=False) == \

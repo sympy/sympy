@@ -27,10 +27,12 @@ def test_solve_poly_system():
     f_2 = x + y**2 + z - 1
     f_3 = x + y + z**2 - 1
 
-    a, b = sqrt(2) - 1, -sqrt(2) - 1
-
-    assert solve_poly_system([f_1, f_2, f_3], x, y, z) == \
-        [(0, 0, 1), (0, 1, 0), (1, 0, 0), (a, a, a), (b, b, b)]
+    assert set(solve_poly_system([f_1, f_2, f_3], x, y, z)) == set(
+        [(0, 0, 1), (0, 1, 0), (1, 0, 0),
+        ((-5*sqrt(2) + 7)/(-3 + 2*sqrt(2)),
+        (-5*sqrt(2) + 7)/(-3 + 2*sqrt(2)),
+        -1 + sqrt(2)), ((-5*sqrt(2) - 7)/(2*sqrt(2) + 3),
+        (-5*sqrt(2) - 7)/(2*sqrt(2) + 3), -sqrt(2) - 1)])
 
     solution = [(1, -1), (1, 1)]
 
