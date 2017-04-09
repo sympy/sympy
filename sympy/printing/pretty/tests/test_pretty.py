@@ -4078,10 +4078,10 @@ k = 0   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = Sum(k, (k, -oo, oo))
+    expr = Sum(k**k, (k, -oo, n))
     ascii_str = \
 """\
-  oo     \n\
+  n     \n\
  ___    \n\
  \\  `   \n\
   \\    k\n\
@@ -4091,7 +4091,7 @@ k = -oo   \
 """
     ucode_str = \
 u("""\
-  oo     \n\
+  n     \n\
  ___    \n\
  ╲      \n\
   ╲    k\n\
