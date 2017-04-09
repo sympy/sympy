@@ -194,7 +194,7 @@ def test_issue_5565():
 
 
 def test_find_unit():
-    assert find_unit('coulomb') == ['coulomb', 'coulombs']
+    assert find_unit('coulomb') == ['coulomb', 'coulombs', 'coulomb_constant']
     assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs']
     assert find_unit(charge) == ['C', 'coulomb', 'coulombs']
     assert find_unit(inch) == [
@@ -204,7 +204,7 @@ def test_find_unit():
         'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter',
         'decimeters', 'kilometers', 'lightyears', 'micrometer', 'millimeter',
         'nanometers', 'picometers', 'centimeters', 'micrometers',
-        'millimeters', 'nautical_mile', 'nautical_miles', 'astronomical_unit',
+        'millimeters', 'nautical_mile', 'planck_length', 'nautical_miles', 'astronomical_unit',
         'astronomical_units']
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
