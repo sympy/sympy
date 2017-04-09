@@ -1592,10 +1592,10 @@ class totient(Function):
                 t *= (p - 1) * p**(k - 1)
             return t
         elif n.is_Symbol:
-            if n.is_integer:
-               pass
-            else:
+            if n.is_integer==False:
                raise TypeError("n must be a positive integer")
+            else:
+               pass
         else:
             raise TypeError("n must be a positive integer")
 
