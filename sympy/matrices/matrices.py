@@ -3861,9 +3861,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         return self._lower_triangular_solve(rhs)
 
     def LUdecomposition(self,
+                        rankcheck=False,
                         iszerofunc=_iszero,
-                        simpfunc=_simplify,
-                        rankcheck=False):
+                        simpfunc=None):
         """Returns (L, U, perm) where L is a lower triangular matrix with unit
         diagonal, U is an upper triangular matrix, and perm is a list of row
         swap index pairs. If A is the original matrix, then
@@ -3871,7 +3871,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
 
         See documentation for LUCombined for details about the keyword argument
-        iszerofunc, simpfunc, and rankcheck.
+        rankcheck, iszerofunc, and simpfunc.
 
         Examples
         ========
@@ -3899,8 +3899,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         LUsolve
         """
 
-        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
-                                                  rankcheck=rankcheck)
+        combined, p = self.LUdecomposition_Simple(rankcheck=rankcheck,
+                                                  iszerofunc=iszerofunc,
+                                                  simpfunc=simpfunc)
 
         # L is lower triangular self.rows x self.rows
         # U is upper triangular self.rows x self.cols
@@ -3931,9 +3932,9 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         return L, U, p
 
     def LUdecomposition_Simple(self,
+                               rankcheck=False,
                                iszerofunc=_iszero,
-                               simpfunc=_simplify,
-                               rankcheck=False):
+                               simpfunc=None):
         """Compute an lu decomposition of m x n matrix A, where P*A = L*U
 
         * L is m x m lower triangular with unit diagonal
@@ -3967,26 +3968,43 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
         matrix P such that P*A = L*U can be computed by
         soP=eye(A.row).permuteFwd(perm).
 
-        The pivot search algorithm employs the functions iszerofunc() and
-        simplfy().
-        The algorithm first looks for a nonzero pivot by calling
-        iszerofunc() on each of the candidate pivots.
-        iszerofunc() returns a boolean, or None if it cannot determine if
-        its input is zero.
-        If the pivot search cannot find a guaranteed nonzero pivot,
-        then it repeats the search by calling simplify() and then iszerofunc()
-        on each candidate pivot.
-        The pivot search algorithm can dominate the total runtime when the
-        input matrix has symbolic entries and the default simplification
-        is used.
-        See the documentation for _find_reasonable_pivot() for a more detailed
-        description of the search algorithm.
-
         The keyword argument rankcheck determines if this function raises a
         ValueError when passed a matrix whose rank is strictly less than
         min(num rows, num cols). The default behavior is to decompose a rank
         deficient matrix. Pass rankcheck=True to raise a
         ValueError instead. (This mimics the previous behavior of this function).
+
+        The keyword arguments iszerofunc and simpfunc are used by the pivot
+        search algorithm.
+        iszerofunc is a callable that returns a boolean indicating if its
+        input is zero, or None if it cannot make the determination.
+        simpfunc is a callable that simplifies its input.
+        The default is simpfunc=None, which indicate that the pivot search
+        algorithm should not attempt to simplify any candidate pivots.
+        If simpfunc fails to simplify its input, then it must return its input
+        instead of a copy.
+
+        When a matrix contains symbolic entries, the pivot search algorithm
+        differs from the case where every entry can be categorized as zero or
+        nonzero.
+        The algorithm searches column by column through the submatrix whose
+        top left entry coincides with the pivot position.
+        If it exists, the pivot is the first entry in the current search
+        column that iszerofunc guarantees is nonzero.
+        If no such candidate exists, then each candidate pivot is simplified
+        if simpfunc is not None.
+        The search is repeated, with the difference that a candidate may be
+        the pivot if `iszerofunc()` cannot guarantee that it is nonzero.
+        In the second searchm the pivot is the first candidate that
+        iszerofunc can guarantee is nonzero.
+        If no such candidate exists, then the pivot is the first candidate
+        for which iszerofunc returns None.
+        If no such candidate exists, then the search is repeated in the next
+        column to the right.
+        The pivot search algorithm differs from the one in `rref()`, which
+        relies on `_find_reasonable_pivot()`.
+        Future versions of `LUdecomposition_simple()` may use
+        `_find_reasonable_pivot()`.
 
         See Also
         ========
@@ -4014,29 +4032,84 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
 
         pivot_col = 0
         for pivot_row in range(0, lu.rows-1):
+            # Search for pivot. Prefer entry that iszeropivot determines
+            # is nonzero, over entry that iszeropivot cannot guarantee
+            # is  zero.
+            # XXX `_find_reasonable_pivot` uses slow zero testing. Blocked by bug #10279
+            # Future versions of LUdecomposition_simple can pass iszerofunc and simpfunc
+            # to _find_reasonable_pivot().
             candidate_pivot_row = None
             while pivot_col != self.cols:
+                for r in range(pivot_row, self.rows):
+                    iszeropivot = iszerofunc(lu[r, pivot_col])
+                    if iszeropivot is False:
+                        # iszerofunc determined that
+                        # lu[r, pivot_col] is non-zero.
+                        # Use this entry as the pivot
+                        candidate_pivot_row = r
+                        break
+                    if candidate_pivot_row is None and iszeropivot is None:
+                        # iszerofunc could not determine if
+                        # lu[r, pivot_col] is zero.
+                        # Save this row in case we don't
+                        # find a guaranteed nonzero pivot in this column
+                        candidate_pivot_row = r
+                    elif iszeropivot is True:
+                        lu[r, pivot_col] = S.Zero
 
-                row_offset,\
-                pivot_val,\
-                assumed_nonzero,\
-                newly_determined =\
-                    _find_reasonable_pivot(lu[pivot_row:, pivot_col],
-                                           iszerofunc=iszerofunc,
-                                           simpfunc=simpfunc)
-
-                if newly_determined is not None:
-                    for offset, simplified_val in newly_determined:
-                        lu[pivot_row + offset, pivot_col] = simplified_val
-
-                if pivot_val is None:
-                    # No non-zero pivot in this column, so restart pivot
-                    # search in the next column.
+                if iszeropivot == False:
+                    # Found a pivot is that is guaranteed by
+                    # iszeropivot to be nonzero
+                    break
+                if iszeropivot == True and candidate_pivot_row is None:
+                    # There are no nonzero pivots in this column
                     pivot_col += 1
                     continue
+                if simpfunc is None:
+                    # simpfunc is None indicates that the caller
+                    # does not want to simplify candidate pivots
+                    # that iszerofunc could not guarantee are zero
+                    # break
+                    break
+                else:
+                    # Retest candidate pivots after simplification.
+                    # If candidate_pivot_row is not pivot_row,
+                    # then the candidate pivots between pivot_row
+                    # and candidate_pivot_row are all zero,
+                    # so don't bother trying to simplify them.
+                    row_start = candidate_pivot_row
+                    candidate_pivot_row = None
+                    for r in range(row_start, self.rows):
+                        simplified = simpfunc(lu[r, pivot_col])
+                        if simplified is not lu[r, pivot_col]:
+                            lu[r, pivot_col] = simplified
+                        iszeropivot = iszerofunc(lu[r, pivot_col])
+                        if iszeropivot == False:
+                            # Newly simplified candidate pivot is
+                            # guranteed to be nonzero.
+                            candidate_pivot_row = r
+                            break
+                        if iszeropivot is None and candidate_pivot_row is None:
+                            candidate_pivot_row = r
 
-                candidate_pivot_row = pivot_row + row_offset
-                break
+                    if iszeropivot == False:
+                        # Found a pivot is that is guaranteed by
+                        # iszeropivot to be nonzero
+                        break
+                    if iszeropivot == True and candidate_pivot_row is None:
+                        # There are no nonzero pivots in this column
+                        pivot_col += 1
+                        continue
+                if iszeropivot == False:
+                    # Found a pivot is that is guaranteed by
+                    # iszeropivot to be nonzero
+                    break
+                if iszeropivot == True and candidate_pivot_row is None:
+                    # There are no nonzero pivots in this column
+                    pivot_col += 1
+                    continue
+                else:
+                    break
 
             if rankcheck and pivot_col != pivot_row:
                 # All entries including and below the pivot position are
@@ -4051,7 +4124,7 @@ class MatrixBase(MatrixOperations, MatrixProperties, MatrixShaping):
                                  " rankcheck=False to compute"
                                  " the LU decomposition of this matrix.")
 
-            elif candidate_pivot_row is None and pivot_val is None:
+            elif candidate_pivot_row is None and iszeropivot:
                 # If candidate_pivot_row is None and iszeropivot is True
                 # after pivot search has completed, then the submatrix
                 # below and to the right of (pivot_row, pivot_col) is
