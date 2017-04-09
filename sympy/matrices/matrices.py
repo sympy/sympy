@@ -2766,10 +2766,14 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         QRdecomposition
         """
 
+        from sympy.core.numbers import nan, oo, zoo
         if not self.is_square:
             raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
+        M = self._cholesky()
+        if M.has(nan) or M.has(oo) or M.has(zoo):
+            raise ValueError("Matrix must be positive-definite.")
         return self._cholesky()
 
     def columnspace(self, simplify=False):
