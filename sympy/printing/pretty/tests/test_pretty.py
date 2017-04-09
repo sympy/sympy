@@ -5555,9 +5555,9 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
+    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ Naturals0()'
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ S.Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
 
 
@@ -5571,7 +5571,7 @@ def test_pretty_SymmetricDifference():
 
 
 def test_pretty_Contains():
-    assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
+    assert pretty(Contains(x, S.Integers)) == 'Contains(x, S.Integers)'
     assert upretty(Contains(x, S.Integers)) == u'x ∈ ℤ'
 
 

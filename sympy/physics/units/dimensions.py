@@ -178,9 +178,12 @@ class Dimension(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def get_dimensional_dependencies(self):
+    def get_dimensional_dependencies(self, mark_dimensionless=False):
         name = self.name
-        return self._get_dimensional_dependencies_for_name(name)
+        dimdep = self._get_dimensional_dependencies_for_name(name)
+        if mark_dimensionless and dimdep == {}:
+            return {'dimensionless': 1}
+        return dimdep
 
     @staticmethod
     def _get_dimensional_dependencies_for_name(name):

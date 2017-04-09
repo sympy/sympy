@@ -2706,7 +2706,7 @@ class MatrixDeprecated(MatrixRequired):
 
     @deprecated(useinstead="det(method='bareiss')", issue=12363, deprecated_since_version="1.1")
     def det_bareis(self):
-        return self.det(method='bariess')
+        return self.det(method='bareiss')
 
     @deprecated(useinstead="det(method='bareiss')", issue=12389, deprecated_since_version="1.1")
     def det_bareiss(self):
@@ -2726,7 +2726,7 @@ class MatrixDeprecated(MatrixRequired):
         det
         berkowitz_det
         """
-        return self.det(method='bariess')
+        return self.det(method='bareiss')
 
     @deprecated(useinstead="det(method='lu')", issue=12389, deprecated_since_version="1.1")
     def det_LU_decomposition(self):

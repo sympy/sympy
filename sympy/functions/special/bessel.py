@@ -672,11 +672,9 @@ class jn(SphericalBesselBase):
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
 
-    @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
-    @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 

@@ -1,4 +1,4 @@
-from sympy import pi, Rational
+from sympy import pi, Rational, sqrt
 from sympy.physics.units import Quantity
 from sympy.physics.units.dimensions import length, mass, force, energy, power, pressure, frequency, time, velocity, \
     impedance, voltage, conductance, capacitance, inductance, charge, magnetic_density, magnetic_flux, current, action, \
@@ -114,7 +114,7 @@ Z0 = Quantity("WaveImpedence", impedance, 119.9169832*pi, abbrev='Z_0')
 # Reduced Planck constant
 hbar = Quantity("hbar", action, 1.05457266e-34*joule*second, abbrev="hbar")
 # Planck constant
-planck = Quantity("planck", action, 2*pi*hbar.scale_factor, abbrev="h")
+planck = Quantity("planck", action, 2*pi*hbar, abbrev="h")
 # Electronvolt
 eV = electronvolt = electronvolts = Quantity("electronvolt", energy, 1.60219e-19*joule, abbrev="eV")
 # Avogadro number
@@ -142,6 +142,8 @@ u0 = magnetic_constant = Quantity("magnetic_constant", force/current**2, 4*pi/10
 e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", capacitance/length, 1/(u0 * c**2))
 # vacuum impedance:
 Z0 = vacuum_impedance = Quantity("vacuum_impedance", impedance, u0 * c)
+# Coulomb's constant:
+coulomb_constant = electric_force_constant = Quantity("coulomb_constant", force*length**2/charge**2, 1/(4*pi*vacuum_permittivity), "k_e")
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", pressure, 101325 * pascal, "atm")
 
@@ -158,3 +160,10 @@ quart = quarts = Quantity("quart", length**3, Rational(231, 4) * inch**3)
 
 ly = lightyear = lightyears = Quantity("lightyear", length, speed_of_light*julian_year, "ly")
 au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", length, 149597870691*meter, "AU")
+
+# Planck units:
+planck_mass = Quantity("planck_mass", mass, sqrt(hbar*speed_of_light/G), "m_P")
+planck_time = Quantity("planck_time", time, sqrt(hbar*G/speed_of_light**5), "t_P")
+planck_temperature = Quantity("planck_temperature", temperature, sqrt(hbar*speed_of_light**5/G/boltzmann**2), "T_P")
+planck_length = Quantity("planck_length", length, sqrt(hbar*G/speed_of_light**3), "l_P")
+# TODO: add more from https://en.wikipedia.org/wiki/Planck_units

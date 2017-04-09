@@ -63,7 +63,8 @@ expressions to specific languages. Supported languages are C
 (:py:func:`sympy.printing.jscode.jscode`), Julia
 (:py:func:`sympy.printing.julia.julia_code`), Mathematica
 (:py:func:`sympy.printing.mathematica.mathematica_code`), Octave/Matlab
-(:py:func:`sympy.printing.octave.octave_code`), Python (print_python, which is
+(:py:func:`sympy.printing.octave.octave_code`), Rust
+(:py:func:`sympy.printing.rust.rust_code`), Python (print_python, which is
 actually more like a lightweight version of codegen for Python, and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
 (like NumPy), and theano
@@ -201,6 +202,8 @@ how it works::
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
+    >>> print(rust_code(expr, assign_to="H_is"))
+    H_is = I*S*gamma_1*gamma_2*k*(3*beta.cos().powi(2) - 1)/r.powi(3);
     >>> print(mathematica_code(expr))
     I*S*gamma_1*gamma_2*k*(3*Cos[beta]^2 - 1)/r^3
 

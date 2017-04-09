@@ -19,6 +19,7 @@ Contents
     sho.rst
     secondquant.rst
     wigner.rst
+    units/index.rst
     hep/index.rst
     vector/index.rst
     mechanics/index.rst

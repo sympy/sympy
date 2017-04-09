@@ -147,7 +147,8 @@ class NDimArray(object):
             pass
 
         else:
-            raise TypeError("Data type not understood")
+            shape = ()
+            iterable = (iterable,)
 
         if isinstance(shape, (int, Integer)):
             shape = (shape,)
@@ -335,6 +336,10 @@ class NDimArray(object):
 
     def __rdiv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
+
+    def __neg__(self):
+        result_list = [-i for i in self]
+        return type(self)(result_list, self.shape)
 
     def __eq__(self, other):
         """

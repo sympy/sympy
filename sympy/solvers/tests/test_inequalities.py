@@ -294,19 +294,19 @@ def test_solve_univariate_inequality():
 def test_trig_inequalities():
     # all the inequalities are solved in a periodic interval.
     assert isolve(sin(x) < S.Half, x, relational=False) == \
-        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, True))
+        Union(Interval(0, pi/6, False, True), Interval(5*pi/6, 2*pi, True, False))
     assert isolve(sin(x) > S.Half, x, relational=False) == \
         Interval(pi/6, 5*pi/6, True, True)
     assert isolve(cos(x) < S.Zero, x, relational=False) == \
         Interval(pi/2, 3*pi/2, True, True)
     assert isolve(cos(x) >= S.Zero, x, relational=False) == \
-        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi, False, True))
+        Union(Interval(0, pi/2), Interval(3*pi/2, 2*pi))
 
     assert isolve(tan(x) < S.One, x, relational=False) == \
-        Union(Interval(0, pi/4, False, True), Interval(pi/2, pi, True, True))
+        Union(Interval.Ropen(0, pi/4), Interval.Lopen(pi/2, pi))
 
     assert isolve(sin(x) <= S.Zero, x, relational=False) == \
-        Union(FiniteSet(S(0)), Interval(pi, 2*pi, False, True))
+        Union(FiniteSet(S(0)), Interval(pi, 2*pi))
 
     assert isolve(sin(x) <= S(1), x, relational=False) == S.Reals
     assert isolve(cos(x) < S(-2), x, relational=False) == S.EmptySet
@@ -319,11 +319,6 @@ def test_issue_9954():
     assert isolve(x**2 >= 0, x, relational=True) == S.Reals.as_relational(x)
     assert isolve(x**2 < 0, x, relational=False) == S.EmptySet
     assert isolve(x**2 < 0, x, relational=True) == S.EmptySet.as_relational(x)
-
-def test_issue_12429():
-    eq = solveset(log(x)/x<=0,x,S.Reals)
-    sol = Interval(0, 1, True)
-    assert eq == sol
 
 
 @XFAIL
@@ -367,9 +362,16 @@ def test_issue_10268():
     assert solve(log(x) < 1000) == And(S(0) < x, x < exp(1000))
 
 
-
 @XFAIL
 def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
-        Piecewise((S.EmptySet, n<S(0)), (Interval(-n, n), True))
+        Piecewise((S.EmptySet, n < 0), (Interval(-n, n), True))
+
+
+def test_issue_10671_12466():
+    assert solveset(sin(y), y, Interval(0, pi)) == FiniteSet(0, pi)
+    i = Interval(1, 10)
+    assert solveset((1/x).diff(x) < 0, x, i) == i
+    assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
+        Interval.Lopen(6, 7)
