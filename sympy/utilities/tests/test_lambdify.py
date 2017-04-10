@@ -10,7 +10,7 @@ from sympy import (
     DotProduct, Eq)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.lambdify import print_dummify
+from sympy.utilities.lambdify import should_dummify
 from sympy.utilities.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
@@ -40,10 +40,11 @@ def test_single_arg():
     f = lambdify(x, 2*x)
     assert f(1) == 2
 
-def test_print_dummify():
-    assert print_dummify(r'32v2?g#Gmw845h$Wb53wi\phi') == True
-    assert print_dummify(x + y**2) == True
-    assert print_dummify(x) == False
+def test_should_dummify():
+    assert should_dummify(r'32v2?g#Gmw845h$Wb53wi\phi') == True
+    assert should_dummify(x + y**2) == True
+    assert should_dummify(x) == False
+    assert should_dummify('and') == True
 
 def test_list_args():
     f = lambdify([x, y], x + y)
