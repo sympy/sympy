@@ -8,6 +8,7 @@ from __future__ import print_function, division
 import inspect
 import textwrap
 import re
+import keyword
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, string_types, range, builtins)
@@ -423,7 +424,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 names.append('arg_' + str(n))
 
     # Create lambda function.
-    dummify = print_dummify(expr)
+    if not should_dummify(expr):
+        dummify = False
+
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
     flat = '__flatten_args__'
 
@@ -452,18 +455,33 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
 
-def print_dummify(expr):
+def should_dummify(expr):
     """
+    Parameter:
+    ==========
+
+    expr: Represents the expression for which dummify should be checked
+
+    ==========
     Returns the value of dummify to be used. This function either returns True or False.
-    >>> from sympy.utilities.lambdify import print_dummify
+    >>> from sympy.utilities.lambdify import should_dummify
     >>> from sympy.abc import x, y
-    >>> print_dummify(x + y**2)
+    >>> should_dummify(r'32v2?g#Gmw845h$Wb53wi\phi')
     True
+    >>> should_dummify('elif')
+    True
+    >>> should_dummify(x)
+    False
 
     """
-    valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
-    result = valid_identifier_regex.match(str(expr))
-    return result is None
+    from sympy.printing.str import sstr
+    if keyword.iskeyword(sstr(expr)):
+        result = True
+        return result
+    else:
+        valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
+        result = valid_identifier_regex.match(sstr(expr))
+        return result is None
 
 def _module_present(modname, modlist):
     if modname in modlist:
