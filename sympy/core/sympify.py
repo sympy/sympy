@@ -16,7 +16,7 @@ class SympifyError(ValueError):
 
     def __str__(self):
         if self.base_exc is None:
-            return "SympifyError: %r" % (self.expr,)
+            return "%r" % (self.expr,)
 
         return ("Sympify of expression '%s' failed, because of exception being "
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
