@@ -349,12 +349,14 @@ def test_is_tangent():
     assert e1.is_tangent(Point(0, 0)) is False
     assert e1.is_tangent(Point(3, 0)) is False
     assert e1.is_tangent(e1) is True
+    assert e1.is_tangent(Ellipse((0, 0), 1, 2)) is False
     assert e1.is_tangent(Ellipse((0, 0), 3, 2)) is True
     assert c1.is_tangent(Ellipse((2, -2), 7, 1)) is True
     assert c1.is_tangent(Circle((11, -2), 2)) is True
     assert c1.is_tangent(Circle((7, -2), 2)) is True
     assert c1.is_tangent(Ray((-5, -2), (-15, -20))) is False
     assert c1.is_tangent(Ray((-3, -2), (-15, -20))) is False
+    assert c1.is_tangent(Ray((-3, -22), (15, 20))) is False
     assert c1.is_tangent(Ray((9, 20), (9, -20))) is True
     assert e1.is_tangent(Segment((2, 2), (-7, 7))) is False
     assert e1.is_tangent(Segment((0, 0), (1, 2))) is False
