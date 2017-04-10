@@ -1530,6 +1530,9 @@ class Basic(with_metaclass(ManagedProperties)):
         Return a `dict` of subexpressions which contains `var`.
         Subexpressions which doesn't contain `var` are considered to be constant.
 
+        See:
+        https://people.eecs.berkeley.edu/~fateman/papers/partition-new2.pdf
+
         Examples
         ========
 
