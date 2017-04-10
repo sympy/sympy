@@ -779,16 +779,19 @@ def convert_equals_signs(result, local_dict, global_dict):
 standard_transformations = (lambda_notation, auto_symbol, auto_number, factorial_notation)
 
 
-def stringify_expr(s, local_dict, global_dict, transformations):
+def stringify_expr(s, local_dict, global_dict, transformations, safe=True):
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
     Generally, ``parse_expr`` should be used.
     """
-
+    from ..core.sympify import UnsafeSympifyError
     tokens = []
     input_code = StringIO(s.strip())
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
+        # TODO: When f-string support is added, mark them as unsafe
+        if safe and toknum == OP and tokval == '.':
+            raise UnsafeSympifyError(s)
         tokens.append((toknum, tokval))
 
     for transform in transformations:
@@ -810,7 +813,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
+               global_dict=None, evaluate=True, safe=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -871,6 +874,12 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> b.args
     (x, 1)
 
+    When safe=True (the default), expressions with attribute access raise
+    UnsafeSympifyError. Other syntax elements may be added to this in the
+    future. This makes parsed expressions from untrusted sources
+    mostly safe (see the discussion in the :func:`sympy.core.sympify`
+    docstring).
+
     See Also
     ========
 
@@ -886,7 +895,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         global_dict = {}
         exec_('from sympy import *', global_dict)
 
-    code = stringify_expr(s, local_dict, global_dict, transformations)
+    code = stringify_expr(s, local_dict, global_dict, transformations, safe=safe)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')

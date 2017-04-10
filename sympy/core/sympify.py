@@ -22,6 +22,10 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
+class UnsafeSympifyError(SympifyError):
+    def __str__(self):
+        return "%r cannot be parsed safely" % (self.expr,)
+
 converter = {}  # See sympify docstring.
 
 class CantSympify(object):
@@ -51,8 +55,9 @@ class CantSympify(object):
     pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None):
-    """Converts an arbitrary expression to a type that can be used inside SymPy.
+        evaluate=None, safe=True):
+    """
+    Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
@@ -68,7 +73,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
-        unsanitized input.
+        unsanitized input. See the :ref:`Safety <sympify-safety>` discussion below.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -175,6 +180,32 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     19/3
     >>> sympify('2**2 / 3 + 5', evaluate=False)
     2**2/3 + 5
+
+    .. _sympify-safety:
+
+    Safety
+    ------
+
+    When parsing a string, ``sympify`` parses it, applies some
+    transformations, and uses ``eval`` to convert it to a SymPy Python object.
+    However, ``eval`` is `known
+    <https://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html>`_ to
+    be unsafe to use on untrusted arbitrary input,
+
+    If the option ``safe`` is set to ``True`` (the default), expressions that
+    are considered unsafe to parse raise ``UnsafeSympifyError``. In the
+    current implementation, this is any expression with an attribute access.
+    This avoids most (but not all) potential security issues with using
+    ``sympify`` on untrusted input. However, we cannot guarantee that there
+    are still not ways to run arbitrary code, and there may still be "safe"
+    expressions that hang or crash the interpreter. Therefore, it is still
+    highly recommended to properly sandbox your code if you will be accepting
+    arbitrary untrusted input.
+
+    >>> sympify('a.b')
+    Traceback (most recent call last):
+    ...
+    sympy.core.sympify.UnsafeSympifyError: 'a.b' cannot be parsed safely
 
     Extending
     ---------
@@ -343,7 +374,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, local_dict=locals, transformations=transformations, evaluate=evaluate)
+        expr = parse_expr(a, local_dict=locals,
+            transformations=transformations, evaluate=evaluate, safe=safe)
     except (TokenError, SyntaxError) as exc:
         raise SympifyError('could not parse %r' % a, exc)
 
