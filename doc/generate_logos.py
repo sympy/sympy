@@ -174,7 +174,7 @@ def convert_to_png(fn_source, output_dir, sizes):
                 logging.debug("return code: %s" % p.returncode)
 
 def convert_to_ico(fn_source, output_dir, sizes):
-    # firstly prepare *.png files, which will be embeded
+    # firstly prepare *.png files, which will be embedded
     # into the *.ico files.
     convert_to_png(fn_source, output_dir, sizes)
 
@@ -243,9 +243,9 @@ def get_svg_filename_from_versionkey(fn_source, ver):
 
 def searchElementById(node, Id, tagname):
     """
-    Search element by id in the all childs and descendant of node.
+    Search element by id in all the children and descendants of node.
 
-    id is lower case, not ID which is usually used for gelElementById
+    id is lower case, not ID which is usually used for getElementById
     """
     nodes = node.getElementsByTagName(tagname)
     for node in nodes:

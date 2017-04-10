@@ -1012,6 +1012,12 @@ def test_extractions():
     assert (sqrt(x)).extract_multiplicatively(x) is None
     assert (sqrt(x)).extract_multiplicatively(1/x) is None
     assert x.extract_multiplicatively(-x) is None
+    assert (-2 - 4*I).extract_multiplicatively(-2) == 1 + 2*I
+    assert (-2 - 4*I).extract_multiplicatively(3) is None
+    assert (-2*x - 4*y - 8).extract_multiplicatively(-2) == x + 2*y + 4
+    assert (-2*x*y - 4*x**2*y).extract_multiplicatively(-2*y) == 2*x**2 + x
+    assert (2*x*y + 4*x**2*y).extract_multiplicatively(2*y) == 2*x**2 + x
+    assert (-4*y**2*x).extract_multiplicatively(-3*y) is None
 
     assert ((x*y)**3).extract_additively(1) is None
     assert (x + 1).extract_additively(x) == 1
@@ -1438,7 +1444,10 @@ def test_sort_key_atomic_expr():
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 
-def test_issue_4199():
+def test_eval_interval():
+    assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
+
+    # issue 4199
     # first subs and limit gives NaN
     a = x/y
     assert a._eval_interval(x, S(0), oo)._eval_interval(y, oo, S(0)) is S.NaN
@@ -1704,6 +1713,9 @@ def test_held_expression_UnevaluatedExpr():
     assert ue2.doit() == x**2
     assert ue2.doit(deep=False) == xx
 
+    x2 = UnevaluatedExpr(2)*2
+    assert type(x2) is Mul
+    assert x2.args == (2, UnevaluatedExpr(2))
 
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as

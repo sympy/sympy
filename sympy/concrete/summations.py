@@ -13,11 +13,12 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
 from sympy.series.limits import limit
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
+from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -483,14 +484,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        if not maxima:
+            check_interval = interval
+        elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
+            check_interval = Interval(maxima.sup, interval.sup)
+            if (
+                    is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval)):
+                integral_val = Integral(
+                    sequence_term, (sym, lower_limit, upper_limit))
+                try:
+                    integral_val_evaluated = integral_val.doit()
+                    if integral_val_evaluated.is_number:
+                        return S(integral_val_evaluated.is_finite)
+                except NotImplementedError:
+                    pass
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:

@@ -225,7 +225,7 @@ Consider two univariate polynomials ``f`` and ``g``::
     >>> g = x**2 - 2
 
 We would like to reduce degrees of the numerator and the denominator of a
-rational function ``f/g``. Do do this we employ :func:`cancel` function::
+rational function ``f/g``. To do this we employ :func:`cancel` function::
 
     >>> cancel(f/g)
      3      2       2

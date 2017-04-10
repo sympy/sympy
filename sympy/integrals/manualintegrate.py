@@ -1024,7 +1024,8 @@ def eval_constanttimes(constant, other, substep, integrand, symbol):
 
 @evaluates(PowerRule)
 def eval_power(base, exp, integrand, symbol):
-    return (base ** (exp + 1)) / (exp + 1)
+    return sympy.Piecewise((sympy.log(base), sympy.Eq(exp, -1)),
+        ((base**(exp + 1))/(exp + 1), True))
 
 @evaluates(ExpRule)
 def eval_exp(base, exp, integrand, symbol):

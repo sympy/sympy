@@ -56,7 +56,7 @@ Frame - bicycle frame
 TempFrame - statically rotated frame for easier reference inertia definition
 Fork - bicycle fork
 TempFork - statically rotated frame for easier reference inertia definition
-WF - front wheel, again posses a ignorable coordinate ::
+WF - front wheel, again posses an ignorable coordinate ::
 
   >>> N = ReferenceFrame('N')
   >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])

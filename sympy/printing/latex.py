@@ -1356,8 +1356,9 @@ class LatexPrinter(Printer):
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
+    _print_ImmutableMatrix = _print_ImmutableDenseMatrix \
+                           = _print_Matrix \
+                           = _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
         return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)

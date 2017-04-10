@@ -3,9 +3,7 @@ from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         racah, dot_rot_grad_Ynm, Wigner3j, wigner_3j)
 from sympy.core.numbers import Rational
 
-# Todo: more tests should be added from:
-# http://en.wikipedia.org/wiki/Table_of_Clebsch-Gordan_coefficients
-
+# for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
 def test_clebsch_gordan_docs():
     assert clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2) == 1
@@ -20,6 +18,14 @@ def test_clebsch_gordan1():
     j = 1
     m_1 = S(1)/2
     m_2 = S(1)/2
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+
+    j_1 = S(1)/2
+    j_2 = S(1)/2
+    m = -1
+    j = 1
+    m_1 = -S(1)/2
+    m_2 = -S(1)/2
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
 
     j_1 = S(1)/2
@@ -62,7 +68,6 @@ def test_clebsch_gordan1():
     m_2 = S(1)/2
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -sqrt(2)/2
 
-
 def test_clebsch_gordan2():
     j_1 = S(1)
     j_2 = S(1)/2
@@ -103,6 +108,126 @@ def test_clebsch_gordan2():
     m_1 = 0
     m_2 = S(1)/2
     assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/sqrt(3)
+
+    j_1 = S(1)
+    j_2 = S(1)
+    m = S(2)
+    j = S(2)
+    m_1 = 1
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+
+
+    j_1 = S(1)
+    j_2 = S(1)
+    m = 1
+    j = S(2)
+    m_1 = 1
+    m_2 = 0
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+
+    j_1 = S(1)
+    j_2 = S(1)
+    m = 1
+    j = S(2)
+    m_1 = 0
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+    j_1 = S(1)
+    j_2 = S(1)
+    m = 1
+    j = 1
+    m_1 = 1
+    m_2 = 0
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+    j_1 = S(1)
+    j_2 = S(1)
+    m = 1
+    j = 1
+    m_1 = 0
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -1/sqrt(2)
+
+def test_clebsch_gordan3():
+    j_1 = S(3)/2
+    j_2 = S(3)/2
+    m = S(3)
+    j = S(3)
+    m_1 = S(3)/2
+    m_2 = S(3)/2
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+
+
+    j_1 = S(3)/2
+    j_2 = S(3)/2
+    m = S(2)
+    j = S(2)
+    m_1 = S(3)/2
+    m_2 = S(1)/2
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+    j_1 = S(3)/2
+    j_2 = S(3)/2
+    m = S(2)
+    j = S(3)
+    m_1 = S(3)/2
+    m_2 = S(1)/2
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+def test_clebsch_gordan4():
+    j_1 = S(2)
+    j_2 = S(2)
+    m = S(4)
+    j = S(4)
+    m_1 = S(2)
+    m_2 = S(2)
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+
+
+    j_1 = S(2)
+    j_2 = S(2)
+    m = S(3)
+    j = S(3)
+    m_1 = S(2)
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
+
+    j_1 = S(2)
+    j_2 = S(2)
+    m = S(2)
+    j = S(3)
+    m_1 = 1
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 0
+
+def test_clebsch_gordan5():
+    j_1 = S(5)/2
+    j_2 = S(1)
+    m = S(7)/2
+    j = S(7)/2
+    m_1 = S(5)/2
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+
+
+    j_1 = S(5)/2
+    j_2 = S(1)
+    m = S(5)/2
+    j = S(5)/2
+    m_1 = S(5)/2
+    m_2 = 0
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(5)/sqrt(7)
+
+    j_1 = S(5)/2
+    j_2 = S(1)
+    m = S(3)/2
+    j = S(3)/2
+    m_1 = S(1)/2
+    m_2 = 1
+    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(15)
 
 
 def test_wigner():

@@ -642,6 +642,8 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         strong_gens = self._strong_gens
         base = self._base
+        if not base: # e.g. if self is trivial
+            return []
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
         basic_stabilizers = []
         for gens in strong_gens_distr:
@@ -677,6 +679,137 @@ class PermutationGroup(Basic):
         if self._transversals == []:
             self.schreier_sims()
         return self._transversals
+
+    def coset_transversal(self, H):
+        """Return a transversal of the right cosets of self by its subgroup H
+        using the second method described in [1], Subsection 4.6.7
+
+        """
+
+        if not H.is_subgroup(self):
+            raise ValueError("The argument must be a subgroup")
+
+        if H.order() == 1:
+            return self._elements
+
+        self._schreier_sims(base=H.base) # make G.base an extension of H.base
+
+        base = self.base
+        base_ordering = _base_ordering(base, self.degree)
+        identity = Permutation(self.degree - 1)
+
+        transversals = self.basic_transversals[:]
+        # transversals is a list of dictionaries. Get rid of the keys
+        # so that it is a list of lists and sort each list in
+        # the increasing order of base[l]^x
+        for l, t in enumerate(transversals):
+            transversals[l] = sorted(t.values(),
+                                key = lambda x: base_ordering[base[l]^x])
+
+        orbits = H.basic_orbits
+        h_stabs = H.basic_stabilizers
+        g_stabs = self.basic_stabilizers
+
+        indices = [x.order()//y.order() for x, y in zip(g_stabs, h_stabs)]
+
+        # T^(l) should be a right transversal of H^(l) in G^(l) for
+        # 1<=l<=len(base). While H^(l) is the trivial group, T^(l)
+        # contains all the elements of G^(l) so we might just as well
+        # start with l = len(h_stabs)-1
+        T = g_stabs[len(h_stabs)]._elements
+        t_len = len(T)
+        l = len(h_stabs)-1
+        while l > -1:
+            T_next = []
+            for u in transversals[l]:
+                if u == identity:
+                    continue
+                b = base_ordering[base[l]^u]
+                for t in T:
+                    p = t*u
+                    if all([base_ordering[h^p] >= b for h in orbits[l]]):
+                        T_next.append(p)
+                    if t_len + len(T_next) == indices[l]:
+                        break
+                if t_len + len(T_next) == indices[l]:
+                    break
+            T += T_next
+            t_len += len(T_next)
+            l -= 1
+        return T
+
+    def _coset_representative(self, g, H):
+        """Return the representative of Hg from the transversal that
+        would be computed by `self.coset_transversal(H)`.
+
+        """
+        if H.order() == 1:
+            return g
+        # The base of self must be an extension of H.base.
+        if not(self.base[:len(H.base)] == H.base):
+            self._schreier_sims(base=H.base)
+        orbits = H.basic_orbits[:]
+        h_transversals = [list(_.values()) for _ in H.basic_transversals]
+        transversals = [list(_.values()) for _ in self.basic_transversals]
+        base = self.base
+        base_ordering = _base_ordering(base, self.degree)
+        def step(l, x):
+            gamma = sorted(orbits[l], key = lambda y: base_ordering[y^x])[0]
+            i = [base[l]^h for h in h_transversals[l]].index(gamma)
+            x = h_transversals[l][i]*x
+            if l < len(orbits)-1:
+                for u in transversals[l]:
+                    if base[l]^u == base[l]^x:
+                        break
+                x = step(l+1, x*u**-1)*u
+            return x
+        return step(0, g)
+
+    def coset_table(self, H):
+        """Return the standardised (right) coset table of self in H as
+        a list of lists.
+        """
+        # Maybe this should be made to return an instance of CosetTable
+        # from fp_groups.py but the class would need to be changed first
+        # to be compatible with PermutationGroups
+
+        from itertools import chain, product
+        if not H.is_subgroup(self):
+            raise ValueError("The argument must be a subgroup")
+        T = self.coset_transversal(H)
+        n = len(T)
+
+        A = list(chain.from_iterable((gen, gen**-1)
+                    for gen in self.generators))
+
+        table = []
+        for i in range(n):
+            row = [self._coset_representative(T[i]*x, H) for x in A]
+            row = [T.index(r) for r in row]
+            table.append(row)
+
+
+        # standardize (this is the same as the algorithm used in fp_groups)
+        # If CosetTable is made compatible with PermutationGroups, this
+        # should be replaced by table.standardize()
+        A = range(len(A))
+        gamma = 1
+        for alpha, a in product(range(n), A):
+            beta = table[alpha][a]
+            if beta >= gamma:
+                if beta > gamma:
+                    for x in A:
+                        z = table[gamma][x]
+                        table[gamma][x] = table[beta][x]
+                        table[beta][x] = z
+                        for i in range(n):
+                            if table[i][x] == beta:
+                                table[i][x] = gamma
+                            elif table[i][x] == gamma:
+                                table[i][x] = beta
+                gamma += 1
+                if gamma == n-1:
+                    return table
 
     def center(self):
         r"""
@@ -1061,7 +1194,7 @@ class PermutationGroup(Basic):
 
     @property
     def elements(self):
-        """Returns all the elements of the permutation group in a list
+        """Returns all the elements of the permutation group as a set
 
         Examples
         ========
@@ -1072,7 +1205,22 @@ class PermutationGroup(Basic):
         {(3), (2 3), (3)(1 2), (1 2 3), (1 3 2), (1 3)}
 
         """
-        return set(list(islice(self.generate(), None)))
+        return set(self._elements)
+
+    @property
+    def _elements(self):
+        """Returns all the elements of the permutation group as a list
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> p = PermutationGroup(Permutation(1, 3), Permutation(1, 2))
+        >>> p._elements
+        [(3), (3)(1 2), (1 3), (2 3), (1 2 3), (1 3 2)]
+
+        """
+        return list(islice(self.generate(), None))
 
     def derived_series(self):
         r"""Return the derived series for the group.
@@ -2467,7 +2615,11 @@ class PermutationGroup(Basic):
         """
         if self._transversals:
             return
-        base, strong_gens = self.schreier_sims_incremental()
+        self._schreier_sims()
+        return
+
+    def _schreier_sims(self, base=None):
+        base, strong_gens = self.schreier_sims_incremental(base=base)
         self._base = base
         self._strong_gens = strong_gens
         if not base:

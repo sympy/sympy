@@ -11,7 +11,6 @@ from mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
 
-
 class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
@@ -779,7 +778,7 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('Both interval ends cannot be None.')
 
         if a == b:
-            return 0;
+            return 0
 
         if a is None:
             A = 0
@@ -1120,11 +1119,12 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
-        When x is noncommutative, the coeff to the left (default) or right of x
-        can be returned. The keyword 'right' is ignored when x is commutative.
+        When ``x`` is noncommutative, the coefficient to the left (default) or
+        right of ``x`` can be returned. The keyword 'right' is ignored when
+        ``x`` is commutative.
 
         See Also
         ========
@@ -1746,10 +1746,10 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_mul(self, *deps, **kwargs):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
-        c should be a Rational multiplied by any terms of the Mul that are
+        c should be a Rational multiplied by any factors of the Mul that are
         independent of deps.
 
-        args should be a tuple of all other terms of m; args is empty
+        args should be a tuple of all other factors of m; args is empty
         if self is a Number or if self is independent of deps (when given).
 
         This should be used when you don't know if self is a Mul or not but
@@ -1939,6 +1939,8 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from .function import _coeff_isneg
+
         c = sympify(c)
         if self is S.NaN:
             return None
@@ -1946,15 +1948,18 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
+
         if c.is_Add:
             cc, pc = c.primitive()
             if cc is not S.One:
                 c = Mul(cc, pc, evaluate=False)
+
         if c.is_Mul:
             a, b = c.as_two_terms()
             x = self.extract_multiplicatively(a)
             if x is not None:
                 return x.extract_multiplicatively(b)
+
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1997,16 +2002,31 @@ class Expr(Basic, EvalfMixin):
                 return quotient
         elif self.is_Add:
             cs, ps = self.primitive()
-            if cs is not S.One:
-                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
+            # assert cs >= 1
+            if c.is_Number and c is not S.NegativeOne:
+                # assert c != 1 (handled at top)
+                if cs is not S.One:
+                    if c.is_negative:
+                        xc = -(cs.extract_multiplicatively(-c))
+                    else:
+                        xc = cs.extract_multiplicatively(c)
+                    if xc is not None:
+                        return xc*ps  # rely on 2-arg Mul to restore Add
+                return  # |c| != 1 can only be extracted from cs
+            if c == ps:
+                return cs
+            # check args of ps
             newargs = []
-            for arg in self.args:
+            for arg in ps.args:
                 newarg = arg.extract_multiplicatively(c)
-                if newarg is not None:
-                    newargs.append(newarg)
-                else:
-                    return None
-            return Add(*newargs)
+                if newarg is None:
+                    return  # all or nothing
+                newargs.append(newarg)
+            # args should be in same order so use unevaluated return
+            if cs is not S.One:
+                return Add._from_args([cs*t for t in newargs])
+            else:
+                return Add._from_args(newargs)
         elif self.is_Mul:
             args = list(self.args)
             for i, arg in enumerate(args):
@@ -3304,6 +3324,7 @@ class UnevaluatedExpr(Expr):
     """
 
     def __new__(cls, arg, **kwargs):
+        arg = _sympify(arg)
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
