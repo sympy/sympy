@@ -1560,18 +1560,15 @@ class Basic(with_metaclass(ManagedProperties)):
         leaves['Constant'] = []
 
         if not isinstance(self, (Mul, Add)):
-            if self.has(var):
+            if var in self.free_symbols:
                 leaves[self.__class__.__name__] = [self]
             else:
                 leaves['Constant'] = [self]
             return leaves
 
         for subexpr in self.args:
-            if subexpr.has(var):
-                try:
-                    leaves[subexpr.__class__.__name__].append(subexpr)
-                except:
-                    leaves[subexpr.__class__.__name__] = [subexpr]
+            if var in subexpr.free_symbols:
+                leaves.setdefault(subexpr.__class__.__name__, []).append(subexpr)
             else:
                 leaves['Constant'].append(subexpr)
         return leaves
