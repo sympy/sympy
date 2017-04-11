@@ -177,6 +177,10 @@ def test_domain_check():
     assert domain_check(x, x, oo) is False
     assert domain_check(0, x, oo) is False
 
+    assert domain_check(sin(x), x, 0) is True
+    assert domain_check(1/tan(x), x, pi/2) is True
+    assert domain_check(x/tan(x), x, 0) is False
+
 
 def test_is_function_class_equation():
     from sympy.abc import x, a
@@ -1573,3 +1577,11 @@ def test__is_finite_with_finite_vars():
     assert all(f(1/x) is None for x in (
         Dummy(), Dummy(real=True), Dummy(complex=True)))
     assert f(1/Dummy(real=False)) is True  # b/c it's finite but not 0
+
+
+def test_issue_12527():
+    f1 = 1/tan(x)
+    f2 = cos(x)/tan(x)**2
+
+    assert solveset(f1, x, Interval(1, 10)) == FiniteSet(pi/2, 3*pi/2, 5*pi/2)
+    assert solveset(f2, x, Interval(-2*pi, 2*pi)) == FiniteSet(-3*pi/2, -pi/2, pi/2, 3*pi/2)

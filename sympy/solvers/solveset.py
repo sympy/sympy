@@ -289,6 +289,12 @@ def domain_check(f, symbol, p):
     f, p = sympify(f), sympify(p)
     if p.is_infinite:
         return False
+
+    if _is_function_class_equation(TrigonometricFunction, f, symbol) or \
+            _is_function_class_equation(HyperbolicFunction, f, symbol):
+        orig_f = f
+        f = f.rewrite(exp)
+
     return _domain_check(f, symbol, p)
 
 
