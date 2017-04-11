@@ -107,7 +107,7 @@ def test_solve_args():
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
     assert solve(x - exp(x), x, implicit=True) == [exp(x)]
     # no symbol to solve for
-    assert solve(42) == []
+    assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
