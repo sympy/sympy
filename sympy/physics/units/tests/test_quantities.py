@@ -6,7 +6,7 @@ from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, 
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
-    quart, inch, coulomb, millimeter, steradian, second
+    quart, inch, coulomb, millimeter, steradian, second, mile, centimeter, hour
 from sympy.physics.units.dimensions import length, time, charge
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.prefixes import PREFIXES, kilo
@@ -230,3 +230,9 @@ def test_sum_of_incompatible_quantities():
     raises(ValueError, lambda: 2 * meter + second)
     raises(ValueError, lambda: 2 * meter + 3 * second)
     raises(ValueError, lambda: 1 / second + 1 / meter)
+    raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
+
+    expr = 2 * (mile + centimeter)/second + km/hour
+    assert hasattr(expr, "_constructor_postprocessor_dict")
+    for i in expr.args:
+        assert hasattr(i, "_constructor_postprocessor_dict")

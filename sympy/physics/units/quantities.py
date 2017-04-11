@@ -105,13 +105,13 @@ class Quantity(AtomicExpr):
         # checks for dimension mismatches of the addends, thus preventing
         # expressions like `meter + second` to be created.
 
-        from .util import _get_dimension_of_expr
         deset = {
-            tuple(Dimension(_get_dimension_of_expr(i)).get_dimensional_dependencies().items())
+            tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
             for i in expr.args
-            if hasattr(i, "_constructor_postprocessor_dict") and
-                i.free_symbols == set()  # do not raise if there are symbols
+            #if hasattr(i, "_constructor_postprocessor_dict") and
+            if i.free_symbols == set()  # do not raise if there are symbols
                         # (free symbols could contain the units corrections)
+            and not i.is_number
         }
         # If `deset` has more than one element, then some dimensions do not
         # match in the sum:
@@ -120,7 +120,7 @@ class Quantity(AtomicExpr):
         return expr
 
     _constructor_postprocessor_dict = {
-        "Add" : {_Quantity_constructor_postprocessor_Add},
+        "Add" : [_Quantity_constructor_postprocessor_Add],
     }
 
     @staticmethod

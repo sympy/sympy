@@ -1647,17 +1647,17 @@ class Basic(with_metaclass(ManagedProperties)):
             return obj
 
         clsname = obj.__class__.__name__
-        postprocessors = defaultdict(set)
+        postprocessors = defaultdict(list)
         for i in obj.args:
             if not hasattr(i, "_constructor_postprocessor_dict"):
                 continue
             for k, v in i._constructor_postprocessor_dict.items():
-                postprocessors[k].update(v)
+                postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
         if len(postprocessors) > 0 and not hasattr(obj, "_constructor_postprocessor_dict"):
-            obj._constructor_postprocessor_dict = postprocessors  # collections.defaultdict(set)
+            obj._constructor_postprocessor_dict = postprocessors
 
         return obj
 
