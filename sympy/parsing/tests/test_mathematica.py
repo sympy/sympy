@@ -20,6 +20,10 @@ def test_mathematica():
         '2*Sin[x+y]': '2*sin(x+y)',
         'Sin[x]+Cos[y]': 'sin(x)+cos(y)',
         'Sin[Cos[x]]': 'sin(cos(x))',
-        '2*Sqrt[x+y]': '2*sqrt(x+y)'}   # Test case from the issue 4259
+        '2*Sqrt[x+y]': '2*sqrt(x+y)', # Test case from the issue 4259
+        'x*Sin[1/x]': 'x*sin(1/x)',
+        'Sin[1/x]*x': 'x*sin(1/x)',
+        'Sin[x] Cos[Sin[x]]': 'sin(x)*cos(sin(x))'
+        }
     for e in d:
         assert mathematica(e) == sympify(d[e])
