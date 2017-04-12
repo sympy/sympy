@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -570,6 +571,8 @@ def test_issue_8245():
     assert (r < a) == True
     assert (r >= a) == False
     assert (r <= a) == True
+
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
 
 
 def test_issue_8449():

@@ -255,6 +255,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 >= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonnegative is not None and \
@@ -274,6 +277,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 <= 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_nonpositive is not None and \
@@ -293,6 +299,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 > 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_positive is not None and \
@@ -312,6 +321,9 @@ class Expr(Basic, EvalfMixin):
                 raise TypeError("Invalid comparison of complex %s" % me)
             if me is S.NaN:
                 raise TypeError("Invalid NaN comparison")
+        n2 = _n2(self, other)
+        if n2 is not None:
+            return _sympify(n2 < 0)
         if self.is_real or other.is_real:
             dif = self - other
             if dif.is_negative is not None and \
@@ -3333,6 +3345,22 @@ class UnevaluatedExpr(Expr):
             return self.args[0].doit(*args, **kwargs)
         else:
             return self.args[0]
+
+
+def _n2(a, b):
+    """Return (a - b).evalf(2) if it, a and b are comparable, else None.
+    This should only be used when a and b are already sympified.
+    """
+    if not all(i.is_number for i in (a, b)):
+        return
+    # /!\ if is very important (see issue 8245) not to
+    # use a re-evaluated number in the calculation of dif
+    a = a if a.is_Number else a.evalf(2)
+    a = b if b.is_Number else b.evalf(2)
+    if a.is_comparable and b.is_comparable:
+        dif = (a - b).evalf(2)
+        if dif.is_comparable:
+            return dif
 
 
 from .mul import Mul
