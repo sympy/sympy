@@ -182,7 +182,7 @@ class Pow(Expr):
     """
     is_Pow = True
 
-    __slots__ = ['is_commutative', '_constructor_postprocessor_dict']
+    __slots__ = ['is_commutative', '_constructor_postprocessor_mapping']
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):

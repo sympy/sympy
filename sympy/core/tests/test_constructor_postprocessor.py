@@ -4,7 +4,7 @@ from sympy import Symbol, Mul, symbols
 class SymbolInMulOnce(Symbol):
     # Test class for a symbol that can only appear once in a `Mul` expression.
 
-    _constructor_postprocessor_dict = {
+    _constructor_postprocessor_mapping = {
         "Mul": [lambda x: x],
         "Pow": [lambda x: x.base if isinstance(x.base, SymbolInMulOnce) else x],
         "Add": [lambda x: x],
@@ -20,7 +20,7 @@ class SymbolRemovesOtherSymbols(Symbol):
             return expr
         return Mul.fromiter(args)
 
-    _constructor_postprocessor_dict = {
+    _constructor_postprocessor_mapping = {
         "Mul": [postprocess],
     }
 

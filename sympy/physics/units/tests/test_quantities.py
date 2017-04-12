@@ -233,6 +233,6 @@ def test_sum_of_incompatible_quantities():
     raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
 
     expr = 2 * (mile + centimeter)/second + km/hour
-    assert hasattr(expr, "_constructor_postprocessor_dict")
+    assert hasattr(expr, "_constructor_postprocessor_mapping")
     for i in expr.args:
-        assert hasattr(i, "_constructor_postprocessor_dict")
+        assert hasattr(i, "_constructor_postprocessor_mapping")

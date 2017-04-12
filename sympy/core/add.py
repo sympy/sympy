@@ -68,7 +68,7 @@ def _unevaluated_Add(*args):
 
 class Add(Expr, AssocOp):
 
-    __slots__ = ['_constructor_postprocessor_dict']
+    __slots__ = ['_constructor_postprocessor_mapping']
 
     is_Add = True
 

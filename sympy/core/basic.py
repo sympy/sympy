@@ -1647,25 +1647,25 @@ class Basic(with_metaclass(ManagedProperties)):
 
         # This is an experimental API that introduces constructor
         # postprosessors for SymPy Core elements. If an argument of a SymPy
-        # expression has a `_constructor_postprocessor_dict` attribute, it will
+        # expression has a `_constructor_postprocessor_mapping` attribute, it will
         # be interpreted as a dictionary containing lists of postprocessing
         # functions for matching expression node names.
 
-        if '_constructor_postprocessor_dict' not in obj.__slots__:
+        if '_constructor_postprocessor_mapping' not in obj.__slots__:
             return obj
 
         clsname = obj.__class__.__name__
         postprocessors = defaultdict(list)
         for i in obj.args:
-            if not hasattr(i, "_constructor_postprocessor_dict"):
+            if not hasattr(i, "_constructor_postprocessor_mapping"):
                 continue
-            for k, v in i._constructor_postprocessor_dict.items():
+            for k, v in i._constructor_postprocessor_mapping.items():
                 postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
-        if len(postprocessors) > 0 and not hasattr(obj, "_constructor_postprocessor_dict"):
-            obj._constructor_postprocessor_dict = postprocessors
+        if len(postprocessors) > 0 and not hasattr(obj, "_constructor_postprocessor_mapping"):
+            obj._constructor_postprocessor_mapping = postprocessors
 
         return obj
 

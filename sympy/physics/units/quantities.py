@@ -108,7 +108,6 @@ class Quantity(AtomicExpr):
         deset = {
             tuple(Dimension(Quantity.get_dimensional_expr(i)).get_dimensional_dependencies().items())
             for i in expr.args
-            #if hasattr(i, "_constructor_postprocessor_dict") and
             if i.free_symbols == set()  # do not raise if there are symbols
                         # (free symbols could contain the units corrections)
             and not i.is_number
@@ -119,7 +118,7 @@ class Quantity(AtomicExpr):
             raise ValueError("summation of quantities of incompatible dimensions")
         return expr
 
-    _constructor_postprocessor_dict = {
+    _constructor_postprocessor_mapping = {
         "Add" : [_Quantity_constructor_postprocessor_Add],
     }
 
