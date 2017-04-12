@@ -1125,13 +1125,9 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__le__(self)
-        if other.is_comparable:
-            other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_gt(self._mpf_, other._as_mpf_val(self._prec))))
+        pos = (self - other).is_positive
+        if isinstance(pos, bool):
+            return pos
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1139,13 +1135,9 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__lt__(self)
-        if other.is_comparable:
-            other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_ge(self._mpf_, other._as_mpf_val(self._prec))))
+        nneg = (self - other).is_nonnegative
+        if isinstance(nneg, bool):
+            return nneg
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1153,13 +1145,10 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__ge__(self)
-        if other.is_real and other.is_number:
-            other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_lt(self._mpf_, other._as_mpf_val(self._prec))))
+
+        neg = (self - other).is_negative
+        if isinstance(neg, bool):
+            return neg
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1167,13 +1156,9 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__gt__(self)
-        if other.is_real and other.is_number:
-            other = other.evalf()
-        if isinstance(other, Number) and other is not S.NaN:
-            return _sympify(bool(
-                mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec))))
+        npos = (self - other).is_nonpositive
+        if isinstance(npos, bool):
+            return npos
         return Expr.__le__(self, other)
 
     def __hash__(self):
