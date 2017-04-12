@@ -212,6 +212,9 @@ equal by evaluating them numerically at random points.
     >>> a.equals(b)
     True
 
+
+.. _tutorial-gotchas-final-notes:
+
 Two Final Notes: ``^`` and ``/``
 ================================
 

@@ -156,11 +156,11 @@ def test_Integral():
 
 def test_Interval():
     a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "[0, a]"
-    assert str(Interval(0, a, False, False)) == "[0, a]"
-    assert str(Interval(0, a, True, False)) == "(0, a]"
-    assert str(Interval(0, a, False, True)) == "[0, a)"
-    assert str(Interval(0, a, True, True)) == "(0, a)"
+    assert str(Interval(0, a)) == "Interval(0, a)"
+    assert str(Interval(0, a, False, False)) == "Interval(0, a)"
+    assert str(Interval(0, a, True, False)) == "Interval(0, a, True)"
+    assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
+    assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
 
 
 def test_AccumBounds():
@@ -489,17 +489,19 @@ def test_Rational():
 
 
 def test_Float():
-    # NOTE prec is the whole number of decimal digits
-    assert str(Float('1.23', prec=1 + 2)) == '1.23'
-    assert str(Float('1.23456789', prec=1 + 8)) == '1.23456789'
+    # NOTE dps is the whole number of decimal digits
+    assert str(Float('1.23', dps=1 + 2)) == '1.23'
+    assert str(Float('1.23456789', dps=1 + 8)) == '1.23456789'
     assert str(
-        Float('1.234567890123456789', prec=1 + 18)) == '1.234567890123456789'
+        Float('1.234567890123456789', dps=1 + 18)) == '1.234567890123456789'
     assert str(pi.evalf(1 + 2)) == '3.14'
     assert str(pi.evalf(1 + 14)) == '3.14159265358979'
     assert str(pi.evalf(1 + 64)) == ('3.141592653589793238462643383279'
                                      '5028841971693993751058209749445923')
     assert str(pi.round(-1)) == '0.'
     assert str((pi**400 - (pi**400).round(1)).n(2)) == '-0.e+88'
+    assert str(Float(S.Infinity)) == 'inf'
+    assert str(Float(S.NegativeInfinity)) == '-inf'
 
 
 def test_Relational():
@@ -572,9 +574,10 @@ def test_tuple():
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
-def test_Unit():
-    assert str(second) == "s"
-    assert str(joule) == "kg*m**2/s**2"  # issue 5560
+
+def test_Quantity_str():
+    assert str(second) == "second"
+    assert str(joule) == "joule"
 
 
 def test_wild_str():
@@ -666,14 +669,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: And(0 < x1, x1 < oo)"
+    assert str(where(X > 0)) == "Domain: (0 < x1) & (x1 < oo)"
 
     D = Die('d1', 6)
-    assert str(where(D > 4)) == "Domain: Or(Eq(d1, 5), Eq(d1, 6))"
+    assert str(where(D > 4)) == "Domain: (Eq(d1, 5)) | (Eq(d1, 6))"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b, a < oo, b < oo)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: (0 <= a) & (0 <= b) & (a < oo) & (b < oo)"
 
 
 def test_FiniteSet():
@@ -739,11 +742,11 @@ def test_Xor():
     assert str(Xor(y, x, evaluate=False)) == "Xor(x, y)"
 
 def test_Complement():
-    assert str(Complement(S.Reals, S.Naturals)) == '(-oo, oo) \ Naturals()'
+    assert str(Complement(S.Reals, S.Naturals)) == 'S.Reals \\ S.Naturals'
 
 def test_SymmetricDifference():
-    assert str(SymmetricDifference(Interval(2,3), Interval(3,4),evaluate=False)) == \
-           'SymmetricDifference([2, 3], [3, 4])'
+    assert str(SymmetricDifference(Interval(2, 3), Interval(3, 4),evaluate=False)) == \
+           'SymmetricDifference(Interval(2, 3), Interval(3, 4))'
 
 
 def test_UnevaluatedExpr():

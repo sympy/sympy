@@ -1143,7 +1143,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         >>> from sympy.sets import Interval
         >>> i = Interval.Lopen(0, 5); i
-        (0, 5]
+        Interval(0, 5, True)
         >>> i.args
         (0, 5, True, False)
         >>> i.has(4)  # there is no "4" in the arguments
@@ -1623,7 +1623,10 @@ class Basic(with_metaclass(ManagedProperties)):
             if isinstance(args[-1], string_types):
                 rule = '_eval_rewrite_as_' + args[-1]
             else:
-                rule = '_eval_rewrite_as_' + args[-1].__name__
+                try:
+                    rule = '_eval_rewrite_as_' + args[-1].__name__
+                except:
+                    rule = '_eval_rewrite_as_' + args[-1].__class__.__name__
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)

@@ -214,6 +214,39 @@ def gradient(scalar, coord_sys):
 
     return coord_sys.delop(scalar).doit()
 
+def directional_derivative(scalar, vect):
+    """
+    Returns the directional derivative of a scalar field computed along a given vector
+    in given coordinate system.
+
+    Parameters
+    ==========
+
+    scalar : SymPy Expr
+        The scalar field to compute the gradient of
+
+    vect : Vector
+        The vector operand
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the gradient in
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, directional_derivative
+    >>> R = CoordSysCartesian('R')
+    >>> f1 = R.x*R.y*R.z
+    >>> v1 = 3*R.i + 4*R.j + R.k
+    >>> directional_derivative(f1, v1)
+    R.x*R.y + 4*R.x*R.z + 3*R.y*R.z
+    >>> f2 = 5*R.x**2*R.z
+    >>> directional_derivative(f2, v1)
+    5*R.x**2 + 30*R.x*R.z
+
+    """
+    coord_sys = vect._sys
+    return gradient(scalar, coord_sys).dot(vect).doit()
 
 def is_conservative(field):
     """

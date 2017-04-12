@@ -206,7 +206,7 @@ class Relational(Boolean, Expr, EvalfMixin):
         >>> from sympy import Symbol, Eq
         >>> x = Symbol('x', real=True)
         >>> (x > 0).as_set()
-        (0, oo)
+        Interval(0, oo, True, True)
         >>> Eq(x, 0).as_set()
         {0}
 
@@ -669,7 +669,7 @@ class GreaterThan(_Greater):
     >>> type( e )
     And
     >>> e
-    And(x < y, y < z)
+    (x < y) & (y < z)
 
     Note that this is different than chaining an equality directly via use of
     parenthesis (this is currently an open bug in SymPy [2]_):
