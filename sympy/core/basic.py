@@ -1643,6 +1643,14 @@ class Basic(with_metaclass(ManagedProperties)):
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
+        # WARNING: This API is experimental.
+
+        # This is an experimental API that introduces constructor
+        # postprosessors for SymPy Core elements. If an argument of a SymPy
+        # expression has a `_constructor_postprocessor_dict` attribute, it will
+        # be interpreted as a dictionary containing lists of postprocessing
+        # functions for matching expression node names.
+
         if '_constructor_postprocessor_dict' not in obj.__slots__:
             return obj
 

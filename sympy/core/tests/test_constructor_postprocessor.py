@@ -24,6 +24,8 @@ class SymbolRemovesOtherSymbols(Symbol):
         "Mul": [postprocess],
     }
 
+    del postprocess
+
 
 def test_constructor_postprocessors1():
     a = symbols("a")
