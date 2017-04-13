@@ -155,12 +155,13 @@ def test_Integral():
 
 
 def test_Interval():
-    a = Symbol('a', real=True)
-    assert str(Interval(0, a)) == "Interval(0, a)"
-    assert str(Interval(0, a, False, False)) == "Interval(0, a)"
-    assert str(Interval(0, a, True, False)) == "Interval(0, a, True)"
-    assert str(Interval(0, a, False, True)) == "Interval(0, a, False, True)"
-    assert str(Interval(0, a, True, True)) == "Interval(0, a, True, True)"
+    n = (S.NegativeInfinity, 1, 2, S.Infinity)
+    for i in range(len(n)):
+        for j in range(i + 1, len(n)):
+            for l in (True, False):
+                for r in (True, False):
+                    ival = Interval(n[i], n[j], l, r)
+                    assert S(str(ival)) == ival
 
 
 def test_AccumBounds():

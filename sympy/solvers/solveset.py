@@ -866,7 +866,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
       domain leads to a NotImplementedError.
 
     >>> solveset(exp(x) > 1, x, R)
-    Interval(0, oo, True, True)
+    Interval.open(0, oo)
 
     """
     f = sympify(f)
