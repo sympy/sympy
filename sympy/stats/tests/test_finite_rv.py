@@ -204,14 +204,13 @@ def test_binomial_numeric():
                 assert P(Eq(X, k)) == binomial(n, k)*p**k*(1 - p)**(n - k)
 
 
-@slow
 def test_binomial_symbolic():
-    n = 10  # Because we're using for loops, can't do symbolic n
+    n = 2  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
-    assert cancel((skewness(X) - (1-2*p)/sqrt(n*p*(1-p)))) == 0
+    assert cancel((skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p)))) == 0
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
