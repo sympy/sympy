@@ -116,8 +116,7 @@ class MatrixShaping(MatrixRequired):
 
     def _eval_col_del(self, col):
         def entry(i, j):
-            i = i - 1 if i > col else i
-            return self[i, j]
+            return self[i, j] if i <= col else self[i - 1, j]
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
@@ -2336,7 +2335,7 @@ class MatrixReductions(MatrixDeterminant):
 
     def _row_reduce(self, iszerofunc, simpfunc, normalize_last=True,
                     normalize=True, zero_above=True):
-        """Row reduce `self` and return a typle (rref_matrix,
+        """Row reduce `self` and return a tuple (rref_matrix,
         pivot_cols, swaps) where pivot_cols are the pivot columns
         and swaps are any row swaps that were used in the process
         of row reduction.
@@ -2349,7 +2348,7 @@ class MatrixReductions(MatrixDeterminant):
             zero if `iszerofunc` returns `None`
         normalize_last : indicates where all row reduction should
             happen in a fraction-free manner and then the rows are
-            normalized (so that the pivots are 1), or wheither
+            normalized (so that the pivots are 1), or whether
             rows should be normalized along the way (like the naive
             row reduction algorithm)
         normalize : whether pivot rows should be normalized so that
