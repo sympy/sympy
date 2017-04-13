@@ -11,20 +11,19 @@ class SymbolInMulOnce(Symbol):
     }
 
 
+def _postprocess_SymbolRemovesOtherSymbols(expr):
+    args = tuple(i for i in expr.args if not isinstance(i, Symbol) or isinstance(i, SymbolRemovesOtherSymbols))
+    if args == expr.args:
+        return expr
+    return Mul.fromiter(args)
+
+
 class SymbolRemovesOtherSymbols(Symbol):
     # Test class for a symbol that removes other symbols in `Mul`.
 
-    def postprocess(expr):
-        args = tuple(i for i in expr.args if not isinstance(i, Symbol) or isinstance(i, SymbolRemovesOtherSymbols))
-        if args == expr.args:
-            return expr
-        return Mul.fromiter(args)
-
     _constructor_postprocessor_mapping = {
-        "Mul": [postprocess],
+        "Mul": [_postprocess_SymbolRemovesOtherSymbols],
     }
-
-    del postprocess
 
 
 def test_constructor_postprocessors1():

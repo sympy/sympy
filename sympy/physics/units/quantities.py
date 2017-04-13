@@ -122,6 +122,8 @@ class Quantity(AtomicExpr):
         "Add" : [_Quantity_constructor_postprocessor_Add],
     }
 
+    _Quantity_constructor_postprocessor_Add = staticmethod(_Quantity_constructor_postprocessor_Add)
+
     @staticmethod
     def _collect_factor_and_dimension(expr):
 
