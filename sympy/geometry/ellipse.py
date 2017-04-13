@@ -23,7 +23,7 @@ from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
@@ -647,6 +647,9 @@ class Ellipse(GeometrySet):
             result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
             return list(ordered([Point(i) for i in result if i in o]))
 
+        elif isinstance(o, Polygon):
+            return o.intersection(self)
+
         elif isinstance(o, (Ellipse, Line2D)):
             if o == self:
                 return self
@@ -656,7 +659,7 @@ class Ellipse(GeometrySet):
         elif isinstance(o, LinearEntity3D):
                 raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
-            raise TypeError('Wrong type of argument were put')
+            raise TypeError('Intersection not handled for %s' % func_name(o))
 
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?
