@@ -1484,6 +1484,10 @@ def test_issue_6989():
         [Piecewise((-1, x > 0), (0, True))]
 
 
+def test_issue_12538():
+    assert solve(x**(1/x) - 1, x) == [1]
+
+
 def test_lambert_multivariate():
     from sympy.abc import a, x, y
     from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
