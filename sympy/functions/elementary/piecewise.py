@@ -144,12 +144,11 @@ class Piecewise(Function):
                     if c == cond and (or1 == or2 or cond != true):
                         expr = e
                         piecewise_again = True
-            cond_eval = cls.__eval_cond(cond)
-            if cond_eval is None:
-                all_conds_evaled = False
-            elif cond_eval:
+            if cond == True:
                 if all_conds_evaled:
                     return expr
+            else:
+                all_conds_evaled = False
             if len(non_false_ecpairs) != 0:
                 if non_false_ecpairs[-1].cond == cond:
                     continue
@@ -369,30 +368,30 @@ class Piecewise(Function):
                 # Part 2: remove any interval overlap.  For any conflicts, the
                 # iterval already there wins, and the incoming interval updates
                 # its bounds accordingly.
-                if self.__eval_cond(lower < int_expr[n][1]) and \
-                        self.__eval_cond(lower >= int_expr[n][0]):
+                if True == (lower < int_expr[n][1]) and \
+                        True == (lower >= int_expr[n][0]):
                     lower = int_expr[n][1]
                 elif len(int_expr[n][1].free_symbols) and \
-                        self.__eval_cond(lower >= int_expr[n][0]):
-                    if self.__eval_cond(lower == int_expr[n][0]):
+                        True == (lower >= int_expr[n][0]):
+                    if lower == int_expr[n][0]:
                         lower = int_expr[n][1]
                     else:
                         int_expr[n][1] = Min(lower, int_expr[n][1])
                 elif len(int_expr[n][0].free_symbols) and \
-                        self.__eval_cond(upper == int_expr[n][1]):
+                        upper == int_expr[n][1]:
                     upper = Min(upper, int_expr[n][0])
                 elif len(int_expr[n][1].free_symbols) and \
                         (lower >= int_expr[n][0]) != True and \
                         (int_expr[n][1] == Min(lower, upper)) != True:
                     upper = Min(upper, int_expr[n][0])
-                elif self.__eval_cond(upper > int_expr[n][0]) and \
-                        self.__eval_cond(upper <= int_expr[n][1]):
+                elif True == (upper > int_expr[n][0]) and \
+                        True == (upper <= int_expr[n][1]):
                     upper = int_expr[n][0]
                 elif len(int_expr[n][0].free_symbols) and \
-                        self.__eval_cond(upper < int_expr[n][1]):
+                        True == (upper < int_expr[n][1]):
                     int_expr[n][0] = Max(upper, int_expr[n][0])
 
-            if self.__eval_cond(lower >= upper) != True:  # Is it still an interval?
+            if (lower >= upper) != True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
             if orig_cond == targetcond:
                 # there may be more so don't return yet
@@ -525,17 +524,6 @@ class Piecewise(Function):
     _eval_is_zero = lambda self: self._eval_template_is_attr(
         'is_zero', when_multiple=False)
 
-    @classmethod
-    def __eval_cond(cls, cond):
-        """Return the truth value of the condition."""
-        from sympy.solvers.solvers import checksol
-        if cond == True:
-            return True
-        if isinstance(cond, Equality):
-            diff = cond.lhs - cond.rhs
-            if diff.is_commutative:
-                return diff.is_zero
-        return None
 
     def as_expr_set_pairs(self):
         exp_sets = []
