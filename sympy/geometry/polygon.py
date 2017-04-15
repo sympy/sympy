@@ -324,7 +324,7 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        vertices : tuple of Points
+        vertices : list of Points
 
         Notes
         =====
@@ -346,12 +346,15 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
-        (Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
-        >>> poly.args[0]
+        [Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1)]
+        >>> poly.vertices[0]
         Point2D(0, 0)
 
         """
-        return self.args
+        res=[]
+        for ver in self.args:
+            res.append(ver)
+        return res
 
     @property
     def centroid(self):
