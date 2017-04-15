@@ -6,7 +6,7 @@ from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.add import Add
+from sympy.core.add import Add, Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
@@ -1102,13 +1102,20 @@ def eval_sum_hyper(f, i_a_b):
         return Piecewise(res, (old_sum, True))
 
 def asymptotic(expr, symbol):
-    expr2 = expr.subs(symbol, 1/symbol)
-    test = True
-    i = 2
-    while test:
-        s = expr2.series(symbol, 0, i)
-        if type(s) is Add:
-            test = False
-        i += 1
+    if type(expr) is Mul:
+        tmp = [asymptotic(i, symbol) for i in expr.args]
+        result = S(1)
+        for i in tmp:
+            result = result * i
+        return result
 
-    return s.args[0].subs(symbol, 1/symbol)
+    try:
+        expr2 = expr.subs(symbol, 1/symbol)
+        s = expr2.series(symbol, 0, 10)
+        if type(s) is Add:
+            return s.subs(symbol, 1/symbol)
+        else:
+            return expr
+    except:
+        return expr
+
