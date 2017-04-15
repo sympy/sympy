@@ -425,6 +425,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
+        sequence_term = asymptotic(sequence_term, sym)
+
         order = O(sequence_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
@@ -1098,3 +1100,15 @@ def eval_sum_hyper(f, i_a_b):
                     return S.NegativeInfinity
             return None
         return Piecewise(res, (old_sum, True))
+
+def asymptotic(expr, symbol):
+    expr2 = expr.subs(symbol, 1/symbol)
+    test = True
+    i = 2
+    while test:
+        s = expr2.series(symbol, 0, i)
+        if type(s) is Add:
+            test = False
+        i += 1
+
+    return s.args[0].subs(symbol, 1/symbol)
