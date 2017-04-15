@@ -1558,9 +1558,8 @@ def _solve(f, *symbols, **flags):
                             t = Dummy('t')
                             iv = _solve(u - t, symbol, **flags)
                             new_soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
-                            if new_soln[0] == S.NaN:
-                                pass
-                            else:
+                            new_soln[:] = (val for val in new_soln if val != S.NaN)
+                            if new_soln:
                                 soln = new_soln
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
