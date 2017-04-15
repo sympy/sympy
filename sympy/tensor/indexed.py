@@ -109,7 +109,6 @@ from __future__ import print_function, division
 
 import collections
 
-from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
@@ -623,7 +622,7 @@ class Idx(Expr):
 
     @property
     def free_symbols(self):
-        return {self.label}
+        return {self}
 
     def __le__(self, other):
         if isinstance(other, Idx):
@@ -680,3 +679,8 @@ class Idx(Expr):
         if self.upper is not None and (self.upper <= other_lower) == True:
             return False
         return super(Idx, self).__gt__(other)
+
+    def _eval_subs(self, old, new):
+        if len(self.args) == 2:
+            return self.func(self.label.subs(old, new), (self.lower, self.upper))
+        return self.func(self.label.subs(old, new))

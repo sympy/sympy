@@ -29,9 +29,9 @@ def _process_limits(*symbols):
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):
                 if V.lower is None or V.upper is None:
-                    limits.append(Tuple(V.label))
+                    limits.append(Tuple(V))
                 else:
-                    limits.append(Tuple(V.label, V.lower, V.upper))
+                    limits.append(Tuple(V, V.lower, V.upper))
             else:
                 limits.append(Tuple(V))
             continue

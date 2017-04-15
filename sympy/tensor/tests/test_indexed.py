@@ -154,12 +154,12 @@ def test_Idx_func_args():
 
 def test_Idx_subs():
     i, a, b = symbols('i a b', integer=True)
-    assert Idx(i, a).subs(a, b) == Idx(i, b)
+    assert Idx(i, a).subs(a, b) == Idx(i, a)
     assert Idx(i, a).subs(i, b) == Idx(b, a)
 
-    assert Idx(i).subs(i, 2) == Idx(2)
-    assert Idx(i, a).subs(a, 2) == Idx(i, 2)
-    assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b))
+    assert Idx(i).subs(i, 2) == Idx(2) == 2
+    assert Idx(i, a).subs(a, 2) == Idx(i, a)
+    assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b)) == 2
 
 
 def test_IndexedBase_sugar():
