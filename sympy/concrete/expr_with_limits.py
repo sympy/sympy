@@ -29,9 +29,9 @@ def _process_limits(*symbols):
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):
                 if V.lower is None or V.upper is None:
-                    limits.append(Tuple(V))
+                    limits.append(Tuple(V.label))
                 else:
-                    limits.append(Tuple(V, V.lower, V.upper))
+                    limits.append(Tuple(V.label, V.lower, V.upper))
             else:
                 limits.append(Tuple(V))
             continue
@@ -54,9 +54,9 @@ def _process_limits(*symbols):
                         nlim = V[1:]
                     limits.append(Tuple(newsymbol, *nlim))
                     if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                        if V[0].lower is not None and ((nlim[0] >= V[0].lower) == False):
                             raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                        if V[0].upper is not None and ((nlim[1] <= V[0].upper) == False):
                             raise ValueError("Summation exceeds Idx upper range.")
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):

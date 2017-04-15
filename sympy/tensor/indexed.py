@@ -154,7 +154,10 @@ class Indexed(Expr):
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
-            return base[args]
+            if len(args) == 1:
+                return base[args[0]]
+            else:
+                return base[args]
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -364,12 +367,19 @@ class IndexedBase(Expr, NotIterable):
     is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
+        from sympy import MatrixBase, NDimArray
+
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
             pass
+        elif isinstance(label, (MatrixBase, NDimArray)):
+            return label
+        elif isinstance(label, collections.Iterable):
+            from sympy import ImmutableDenseNDimArray
+            return ImmutableDenseNDimArray(label)
         else:
-            label = _sympify(label)
+            label = sympify(label)
 
         if is_sequence(shape):
             shape = Tuple(*shape)
@@ -613,7 +623,7 @@ class Idx(Expr):
 
     @property
     def free_symbols(self):
-        return {self}
+        return {self.label}
 
     def __le__(self, other):
         if isinstance(other, Idx):
