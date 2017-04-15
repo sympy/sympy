@@ -2,10 +2,11 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, S, Function, diff, Tuple
 from sympy.core.relational import Equality, Relational
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
     true, false)
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import range
 
 
 class ExprCondPair(Tuple):
@@ -298,27 +299,39 @@ class Piecewise(Function):
         along the real axis corresponding to the symbol sym.  If targetcond
         is given, we return a list of (lowerbound, upperbound) pairs for
         this condition."""
+        from sympy.logic.boolalg import distribute_or_over_and
         from sympy.solvers.inequalities import _solve_inequality
+        a = _sympify(a)
+        b = _sympify(b)
+        if targetcond is not None:
+            targetcond = _sympify(targetcond)
         default = None
         int_expr = []
         expr_cond = []
         or_cond = False
+        targets = []
         or_intervals = []
         independent_expr_cond = []
-        for expr, cond in self.args:
-            if isinstance(cond, Or):
-                for cond2 in sorted(cond.args, key=default_sort_key):
-                    expr_cond.append((expr, cond2))
+        for expr, orig_cond in self.args:
+            if isinstance(orig_cond, Relational) and \
+                    sym in orig_cond.free_symbols:
+                cond = _solve_inequality(orig_cond, sym)
+            elif isinstance(orig_cond, And):
+                cond = distribute_or_over_and(orig_cond)
             else:
-                expr_cond.append((expr, cond))
+                cond = orig_cond
+            if isinstance(cond, Or):
+                for cond2 in cond.args:
+                    expr_cond.append((expr, cond2, orig_cond))
+            else:
+                expr_cond.append((expr, cond, orig_cond))
             if cond == True:
                 break
-        for expr, cond in expr_cond:
+        for expr, cond, orig_cond in expr_cond:
             if cond == True:
                 independent_expr_cond.append((expr, cond))
                 default = self.func(*independent_expr_cond)
                 break
-            orig_cond = cond
             if sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
                 continue
@@ -342,9 +355,9 @@ class Piecewise(Function):
                     cond = _solve_inequality(cond, sym)
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
-                    lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
-                elif cond.gts == sym:            # part 1a: ... that can be expanded
-                    upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
+                    lower = S.NegativeInfinity     # e.g. x <= 0 ---> -oo <= 0
+                elif cond.gts == sym:              # part 1a: ... that can be expanded
+                    upper = S.Infinity             # e.g. x >= 0 --->  oo >= 0
                 else:
                     raise NotImplementedError(
                         "Unable to handle interval evaluation of expression.")
@@ -382,7 +395,8 @@ class Piecewise(Function):
             if self.__eval_cond(lower >= upper) != True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
             if orig_cond == targetcond:
-                return [(lower, upper, None)]
+                # there may be more so don't return yet
+                targets.append((lower, upper, None))
             elif isinstance(targetcond, Or) and cond in targetcond.args:
                 or_cond = Or(or_cond, cond)
                 or_intervals.append((lower, upper, None))
@@ -395,17 +409,24 @@ class Piecewise(Function):
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
 
+        # remove overlap between intervals
         for n in range(len(int_expr)):
-            if len(int_expr[n][0].free_symbols) or len(int_expr[n][1].free_symbols):
-                if isinstance(int_expr[n][1], Min) or int_expr[n][1] == b:
+            if int_expr[n][0].free_symbols or int_expr[n][1].free_symbols:
+                right_flag = False
+                if isinstance(int_expr[n][1], Min):                        # [An, Bn=Min(*foo)]
+                    right_flag = True  # for coverage check
+                if int_expr[n][1] == b:                                    # [An, Bn=b]
+                    right_flag = True  # for coverage check
+                if right_flag:
                     newval = Min(*int_expr[n][:-1])
-                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:
-                        int_expr[n - 1][1] = newval
-                    int_expr[n][0] = newval
+                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:     # if An == Bn-1:
+                        int_expr[n - 1][1] = newval                        #   Bn-1 -> Min(An, Bn)
+                    int_expr[n][0] = newval                                # An -> Min(An, Bn)
                 else:
                     newval = Max(*int_expr[n][:-1])
-                    if n < len(int_expr) - 1 and int_expr[n][1] == int_expr[n + 1][0]:
-                        int_expr[n + 1][0] = newval
+                    not_last = n < len(int_expr) - 1
+                    if not_last and int_expr[n][1] == int_expr[n + 1][0]:  # if Bn == An+1:
+                        int_expr[n + 1][0] = newval                        #   An+1 = Max(An, Bn)
                     int_expr[n][1] = newval
 
         # Add holes to list of intervals if there is a default value,
@@ -423,15 +444,22 @@ class Piecewise(Function):
         elif (curr_low >= b) != True:
             holes.append([Min(b, curr_low), b, default])
 
-        if holes and default is not None:
-            int_expr.extend(holes)
+        if holes:
+            if default is None:
+                raise ValueError("Called interval evaluation over piecewise "
+                                 "function on undefined intervals %s" %
+                                 ", ".join([str((h[0], h[1])) for h in holes]))
             if targetcond == True:
                 return [(h[0], h[1], None) for h in holes]
-        elif holes and default is None:
-            raise ValueError("Called interval evaluation over piecewise "
-                             "function on undefined intervals %s" %
-                             ", ".join([str((h[0], h[1])) for h in holes]))
+            int_expr.extend(holes)
+            # re-sort
+            int_expr.sort(key=lambda x: x[1].sort_key(
+            ) if x[1].is_number else S.NegativeInfinity.sort_key())
+            int_expr.sort(key=lambda x: x[0].sort_key(
+            ) if x[0].is_number else S.Infinity.sort_key())
 
+        if targets:
+            return targets  # these were all that were found
         return int_expr
 
     def _eval_nseries(self, x, n, logx):

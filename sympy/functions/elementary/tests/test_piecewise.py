@@ -196,14 +196,16 @@ def test_piecewise_integrate():
 
     g = Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0), (1 + x, True))
     assert integrate(g, (x, -5, 1)) == 1
+    assert g._sort_expr_cond(x, -5, 1) == [
+        [-5, -1, 0], [-1, 0, x + 1], [0, 1, -x + 1]]
     assert integrate(g, (x, -5, y)).subs(y, 1) == 1
     assert integrate(g, (x, y, 1)).subs(y, -5) == 1
     assert integrate(g, (x, 1, -5)) == -1
     assert integrate(g, (x, 1, y)).subs(y, -5) == -1
     assert integrate(g, (x, y, -5)).subs(y, 1) == -1
-    assert integrate(g, (x, -5, y)) == Piecewise((0, y <= -1), (1, y >= 1),
+    assert integrate(g, (x, -5, y)) == Piecewise((1, y >= 1), (0, y <= -1),
         (-y**2/2 + y + 0.5, y > 0), (y**2/2 + y + 0.5, True))
-    assert integrate(g, (x, y, 1)) == Piecewise((1, y <= -1), (0, y >= 1),
+    assert integrate(g, (x, y, 1)) == Piecewise((0, y >= 1), (1, y <= -1),
         (y**2/2 - y + 0.5, y > 0), (-y**2/2 - y + 0.5, True))
 
 
