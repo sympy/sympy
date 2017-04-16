@@ -351,10 +351,8 @@ class Polygon(GeometrySet):
         Point2D(0, 0)
 
         """
-        res=[]
-        for ver in self.args:
-            res.append(ver)
-        return res
+      
+        return list(self.args)
 
     @property
     def centroid(self):
