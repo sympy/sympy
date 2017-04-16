@@ -408,26 +408,6 @@ class Piecewise(Function):
         int_expr.sort(key=lambda x: x[0].sort_key(
         ) if x[0].is_number else S.Infinity.sort_key())
 
-        # remove overlap between intervals
-        for n in range(len(int_expr)):
-            if int_expr[n][0].free_symbols or int_expr[n][1].free_symbols:
-                right_flag = False
-                if isinstance(int_expr[n][1], Min):                        # [An, Bn=Min(*foo)]
-                    right_flag = True  # for coverage check
-                if int_expr[n][1] == b:                                    # [An, Bn=b]
-                    right_flag = True  # for coverage check
-                if right_flag:
-                    newval = Min(*int_expr[n][:-1])
-                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:     # if An == Bn-1:
-                        int_expr[n - 1][1] = newval                        #   Bn-1 -> Min(An, Bn)
-                    int_expr[n][0] = newval                                # An -> Min(An, Bn)
-                else:
-                    newval = Max(*int_expr[n][:-1])
-                    not_last = n < len(int_expr) - 1
-                    if not_last and int_expr[n][1] == int_expr[n + 1][0]:  # if Bn == An+1:
-                        int_expr[n + 1][0] = newval                        #   An+1 = Max(An, Bn)
-                    int_expr[n][1] = newval
-
         # Add holes to list of intervals if there is a default value,
         # otherwise raise a ValueError.
         holes = []
@@ -459,6 +439,29 @@ class Piecewise(Function):
 
         if targets:
             return targets  # these were all that were found
+
+        # remove overlap between intervals
+        for n in range(len(int_expr)):
+            if int_expr[n][0].free_symbols or int_expr[n][1].free_symbols:
+                right_flag = False
+                if isinstance(int_expr[n][1], Min):                        # [An, Bn=Min(*foo)]
+                    right_flag = True  # for coverage check
+                if int_expr[n][1] == b:                                    # [An, Bn=b]
+                    right_flag = True  # for coverage check
+                if right_flag:
+                    newval = Min(*int_expr[n][:-1])
+                    if n > 0 and int_expr[n][0] == int_expr[n - 1][1]:     # if An == Bn-1:
+                        int_expr[n - 1][1] = newval                        #   Bn-1 -> Min(An, Bn)
+                    int_expr[n][0] = newval                                # An -> Min(An, Bn)
+                else:
+                    newval = Max(*int_expr[n][:-1])
+                    not_last = n < len(int_expr) - 1
+                    if not_last and int_expr[n][1] == int_expr[n + 1][0]:  # if Bn == An+1:
+                        int_expr[n + 1][0] = newval                        #   An+1 = Max(An, Bn)
+                    int_expr[n][1] = newval
+            elif n:
+                int_expr[n][0] = int_expr[n - 1][1]
+
         return int_expr
 
     def _eval_nseries(self, x, n, logx):
