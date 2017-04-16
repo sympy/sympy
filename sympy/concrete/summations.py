@@ -6,7 +6,7 @@ from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.add import Add
+from sympy.core.add import Add, Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
@@ -19,7 +19,6 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -424,6 +423,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.false
         except NotImplementedError:
             pass
+
+        sequence_term = asymptotic(sequence_term, sym)
 
         order = O(sequence_term, (sym, S.Infinity))
 
@@ -1098,3 +1099,35 @@ def eval_sum_hyper(f, i_a_b):
                     return S.NegativeInfinity
             return None
         return Piecewise(res, (old_sum, True))
+
+def asymptotic(expr, symbol):
+    '''Tries to perform the asymptotic of expr when
+    symbols tends to infinity
+
+    return either the asymptotic expression or the original one
+    '''
+    from sympy import simplify
+    if type(expr) is Mul:
+        # do the asymptotic for each factor
+        tmp = [asymptotic(i, symbol) for i in expr.args]
+        result = S(1)
+        for i in tmp:
+            result = result * i
+        return result
+
+    try:
+        expr = simplify(expr)
+        lim = limit(expr, symbol, S.Infinity)
+        if lim == S.Infinity:
+            return expr
+        if lim != S(0): # the asymptotic is the value of the limit
+            return lim
+        expr2 = expr.subs(symbol, 1/symbol)
+        s = expr2.series(symbol, 0, 10) # use MacLaurin expansion
+        if type(s) is Add:
+            s = s.subs(symbol, 1/symbol)
+            return s.args[0]
+        else:
+            return expr
+    except:
+        return expr
