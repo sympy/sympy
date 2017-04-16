@@ -462,12 +462,14 @@ class IndexedBase(Expr, NotIterable):
 
         Examples
         ==========
-
+        >>> from sympy.printing import ccode
+        >>> from sympy.tensor import IndexedBase, Idx
+        >>> from sympy import symbols
         >>> l, m, n, o = symbols('l m n o', integer=True)
         >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
         >>> i, j, k = Idx('i'), Idx('j'), Idx('k')
         >>> ccode(A[i, j, k])
-        'A[i*l + j*m + k*n + o]'
+        'A[l*i + m*j + n*k + o]'
 
         """
         return self._offset
