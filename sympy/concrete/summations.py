@@ -20,7 +20,6 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
 
-
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
 
@@ -1102,7 +1101,14 @@ def eval_sum_hyper(f, i_a_b):
         return Piecewise(res, (old_sum, True))
 
 def asymptotic(expr, symbol):
+    '''Tries to perform the asymptotic of expr when
+    symbols tends to infinity
+
+    return either the asymptotic expression or the original one
+    '''
+    from sympy import simplify
     if type(expr) is Mul:
+        # do the asymptotic for each factor
         tmp = [asymptotic(i, symbol) for i in expr.args]
         result = S(1)
         for i in tmp:
@@ -1110,12 +1116,18 @@ def asymptotic(expr, symbol):
         return result
 
     try:
+        expr = simplify(expr)
+        lim = limit(expr, symbol, S.Infinity)
+        if lim == S.Infinity:
+            return expr
+        if lim != S(0): # the asymptotic is the value of the limit
+            return lim
         expr2 = expr.subs(symbol, 1/symbol)
-        s = expr2.series(symbol, 0, 10)
+        s = expr2.series(symbol, 0, 10) # use MacLaurin expansion
         if type(s) is Add:
-            return s.subs(symbol, 1/symbol)
+            s = s.subs(symbol, 1/symbol)
+            return s.args[0]
         else:
             return expr
     except:
         return expr
-
