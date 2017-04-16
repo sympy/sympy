@@ -497,3 +497,49 @@ def test_S_srepr_is_identity():
     p = Piecewise((10, Eq(x, 0)), (12, True))
     q = S(srepr(p))
     assert p == q
+
+
+def test_issue_11045():
+    c = Abs(x**(-2)) > 1
+    p = Piecewise((x, c), (2, True))
+    assert p._sort_expr_cond(x, 1, 2, None) == [[1, 2, 2]]
+
+    # handle And with Or arguments
+    assert Piecewise((1, And(Or(x < 1, x > 3), x < 2)), (0, True)
+        ).integrate((x, 0, 3)) == 1
+
+    # handle updating of int_expr when there is overlap
+    assert Piecewise(
+        (1, And(5 > x, x > 1)),
+        (2, Or(x < 3, x > 7)),
+        (4, x < 8))._sort_expr_cond(x, 0, 10) == \
+        [[0, 1, 2], [1, 5, 1], [5, 7, 4], [7, 10, 2]]
+
+    # confirm _sympification or handling of targetcond
+    assert Piecewise((1, x > 1), (2, True)
+        )._sort_expr_cond(x, 0, 3, True) == [(0, 1, None)]
+    # x-independent targetcond
+    assert Piecewise((1, x > 1), (3, y < 1), (2, True)
+        )._sort_expr_cond(x, 0, 3, y < 1) == \
+        [[0, 1, Piecewise((3, y < 1), (2, True))], [1, 3, 1]]
+
+
+@XFAIL
+def test_issue_11045f():
+    # targetcond must be one of the Piecewise args
+    A = And(x < 1, x > 0)
+    B = And(S(1) > x, x > 0)
+    assert A.as_set() == B.as_set()
+    assert A != B
+    # -- it seems like the [] should be returned since there will
+    # be not match to targetcond. The object is not too be clever
+    # about matching -- the conditions should match exactly those
+    # that are in the Piecewise conditions -- but if we return []
+    # when there is a targetcond and target = [] then the test in
+    # test_integrate_returns_piecewise fails:
+    # >>> integrate(exp(x*y),(x,0,z))
+    # exp(y*z)/y - 1/y
+    # ---------------- should be -----------------------
+    # Piecewise((z, Eq(y, 0)), (exp(y*z)/y - 1/y, True))
+    assert Piecewise((1, A), (0, True)
+        )._sort_expr_cond(x, -oo, oo, B) == []
