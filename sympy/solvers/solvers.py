@@ -1555,12 +1555,15 @@ def _solve(f, *symbols, **flags):
                     u = poly.gen
                     if u != symbol:
                         try:
+                            if deg == 1:
+                                if checksol(f, symbol, soln[0]):
+                                    temp_soln = soln
                             t = Dummy('t')
                             iv = _solve(u - t, symbol, **flags)
-                            new_soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
-                            new_soln[:] = (val for val in new_soln if val != S.NaN)
-                            if new_soln:
-                                soln = new_soln
+                            soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
+                            soln[:] = (val for val in soln if val != S.NaN)
+                            if not soln:
+                                soln = temp_soln
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
                             soln = None
