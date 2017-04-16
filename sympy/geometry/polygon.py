@@ -351,7 +351,6 @@ class Polygon(GeometrySet):
         Point2D(0, 0)
 
         """
-      
         return list(self.args)
 
     @property
