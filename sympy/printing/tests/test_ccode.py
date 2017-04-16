@@ -249,7 +249,7 @@ def test_ccode_settings():
 def test_ccode_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n, m, o = symbols('n m o', integer=True)
+    s, n, m, o = symbols('s n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
 
     x = IndexedBase('x')[j]
@@ -266,7 +266,16 @@ def test_ccode_Indexed():
         assert p._print_Indexed(B) == 'B[%s]' % (i*o*m+j*o+k)
         assert p._not_c == set()
 
+        A = IndexedBase('A', shape=(5,3))[i, j]
+        assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
+        A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
+        assert p._print_Indexed(A) == 'A[%s]' % (i + 5*j)
 
+        A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
+        assert p._print_Indexed(A) == 'A[s*j + i + o]'
+
+        A = IndexedBase('A', strides=(s, m, n), offset=o)[i, j, k]
+        assert p._print_Indexed(A) == 'A[m*j + n*k + s*i + o]'
 
 def test_ccode_Indexed_without_looking_for_contraction():
     len_y = 5

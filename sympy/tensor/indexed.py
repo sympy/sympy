@@ -271,6 +271,14 @@ class Indexed(Expr):
                 undefined range: %s""" % self))
 
     @property
+    def strides(self):
+        return self.base._strides
+
+    @property
+    def offset(self):
+        return self.base._offset
+
+    @property
     def ranges(self):
         """Returns a list of tuples with lower and upper range of each index.
 
@@ -363,7 +371,7 @@ class IndexedBase(Expr, NotIterable):
     is_symbol = True
     is_Atom = True
 
-    def __new__(cls, label, shape=None, **kw_args):
+    def __new__(cls, label, shape=None, strides=None, offset=None, **kw_args):
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
@@ -376,11 +384,18 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
+        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
+               strides is None):
+            raise TypeError(filldedent("""Stride scheme not understood.
+                             Should be tuple or string('C' or 'F' : denotes
+                             row-major or column-major respectively."""))
         if shape is not None:
             obj = Expr.__new__(cls, label, shape, **kw_args)
         else:
             obj = Expr.__new__(cls, label, **kw_args)
         obj._shape = shape
+        obj._strides = strides
+        obj._offset = offset
         return obj
 
     def __getitem__(self, indices, **kw_args):
@@ -420,6 +435,42 @@ class IndexedBase(Expr, NotIterable):
 
         """
         return self._shape
+
+    @property
+    def strides(self):
+        """Returns the strided scheme for the ``IndexedBase`` object.
+
+        Normally this is a tuple denoting the number of
+        steps to take in the respective dimension when traversing
+        an array. For code generation purposes strides='C' and
+        strides='F' can also be used.
+
+        strides='C' would mean that code printer would unroll
+        in row-major order and 'F' means unroll in column major
+        order.
+
+        """
+        return self._strides
+
+    @property
+    def offset(self):
+        """Returns the offset for the ``IndexedBase`` object.
+
+        This is the value added to the resulting index when the
+        2D Indexed object is unrolled to a 1D form. Used in code
+        generation.
+
+        Examples
+        ==========
+
+        >>> l, m, n, o = symbols('l m n o', integer=True)
+        >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
+        >>> i, j, k = Idx('i'), Idx('j'), Idx('k')
+        >>> ccode(A[i, j, k])
+        'A[i*l + j*m + k*n + o]'
+
+        """
+        return self._offset
 
     @property
     def label(self):
