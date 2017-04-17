@@ -574,6 +574,12 @@ def _pt(start, end):
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
+    if s not in ie.free_symbols:
+        return ie
+    if ie.rhs == s:
+        ie = ie.reversed
+    if ie.lhs == s and s not in ie.rhs.free_symbols:
+        return ie
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)
