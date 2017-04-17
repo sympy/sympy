@@ -1575,36 +1575,26 @@ class Rational(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__le__(self)
-        expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
-                return _sympify(bool(self.p*other.q > self.q*other.p))
-            if isinstance(other, Float):
-                return _sympify(bool(mlib.mpf_gt(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__gt__(expr, other)
+        if isinstance(other, (NumberSymbol, Float)):
+            # Don't use NotImplemented here. Other places in SymPy avoid that
+            # logic to prevent symbolic inequalities from flipping.
+            return other.__lt__(self)
+        if isinstance(other, Rational):
+            return _sympify(bool(self.p*other.q > self.q*other.p))
+        return Expr.__gt__(self, other)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, NumberSymbol):
-            return other.__lt__(self)
-        expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
-                 return _sympify(bool(self.p*other.q >= self.q*other.p))
-            if isinstance(other, Float):
-                return _sympify(bool(mlib.mpf_ge(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__ge__(expr, other)
+        if isinstance(other, (NumberSymbol, Float)):
+            # Don't use NotImplemented here. Other places in SymPy avoid that
+            # logic to prevent symbolic inequalities from flipping.
+            return other.__le__(self)
+        if isinstance(other, Rational):
+            return _sympify(bool(self.p*other.q >= self.q*other.p))
+        return Expr.__ge__(self, other)
 
     def __lt__(self, other):
         try:
@@ -1613,34 +1603,26 @@ class Rational(Number):
             raise TypeError("Invalid comparison %s < %s" % (self, other))
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
-        expr = self
-        if isinstance(other, Number):
-            if isinstance(other, Rational):
-                return _sympify(bool(self.p*other.q < self.q*other.p))
-            if isinstance(other, Float):
-                return _sympify(bool(mlib.mpf_lt(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__lt__(expr, other)
+        if isinstance(other, (NumberSymbol, Float)):
+            # Don't use NotImplemented here. Other places in SymPy avoid that
+            # logic to prevent symbolic inequalities from flipping.
+            return other.__gt__(self)
+        if isinstance(other, Rational):
+            return _sympify(bool(self.p*other.q < self.q*other.p))
+        return Expr.__lt__(self, other)
 
     def __le__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        expr = self
-        if isinstance(other, NumberSymbol):
-            return other.__gt__(self)
-        elif isinstance(other, Number):
-            if isinstance(other, Rational):
-                return _sympify(bool(self.p*other.q <= self.q*other.p))
-            if isinstance(other, Float):
-                return _sympify(bool(mlib.mpf_le(
-                    self._as_mpf_val(other._prec), other._mpf_)))
-        elif other.is_number and other.is_real:
-            expr, other = Integer(self.p), self.q*other
-        return Expr.__le__(expr, other)
+        if isinstance(other, (NumberSymbol, Float)):
+            # Don't use NotImplemented here. Other places in SymPy avoid that
+            # logic to prevent symbolic inequalities from flipping.
+            return other.__ge__(self)
+        if isinstance(other, Rational):
+            return _sympify(bool(self.p*other.q <= self.q*other.p))
+        return Expr.__le__(self, other)
 
     def __hash__(self):
         return super(Rational, self).__hash__()
