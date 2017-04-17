@@ -251,9 +251,11 @@ class Piecewise(Function):
                         rep = a
                         val = e._eval_interval(sym, a, b)
                     else:
-                        raise NotImplementedError(
-                            """The evaluation of a Piecewise interval when both the lower
-                            and the upper limit are symbolic is not yet implemented.""")
+                        raise NotImplementedError(filldedent('''
+                            The evaluation of a Piecewise interval
+                            with two symbols is not yet implemented.
+                            Could not locate %s in interval %s''' %
+                            ((lower, upper), (a, b))))
                     values.append(val)
                 if len(set(values)) == 1:
                     try:
@@ -300,10 +302,12 @@ class Piecewise(Function):
         this condition."""
         from sympy.logic.boolalg import distribute_or_over_and
         from sympy.solvers.inequalities import _solve_inequality
+
         a = _sympify(a)
         b = _sympify(b)
         if targetcond is not None:
             targetcond = _sympify(targetcond)
+
         default = None
         int_expr = []
         expr_cond = []
@@ -311,37 +315,60 @@ class Piecewise(Function):
         targets = []
         or_intervals = []
         independent_expr_cond = []
-        for expr, orig_cond in self.args:
-            if isinstance(orig_cond, Relational) and \
-                    sym in orig_cond.free_symbols:
-                cond = _solve_inequality(orig_cond, sym)
-            elif isinstance(orig_cond, And):
+
+        def _solve_relational(r):
+            rv = _solve_inequality(r, sym)
+            if isinstance(rv, Relational) and \
+                    sym in rv.free_symbols and rv.args[0] != sym:
+                raise NotImplementedError(
+                    "Unable to solve relational %s for %s." % (r, sym))
+            if rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
+                rv = S.true
+            return rv
+
+        # make self and targetcond canonical wrt Relationals
+        reps = dict([(r,_solve_relational(r)) for r in self.atoms(Relational)])
+        _self = self.xreplace(reps)
+        if targetcond is not None:
+            targetcond = targetcond.xreplace(reps)
+        if not isinstance(_self, Piecewise):
+            args = [(_self, o) for _, o in self.args] + [(_self, S.true)]
+        else:
+            args = _self.args
+
+        # precondition args
+        for expr, orig_cond in args:
+            if isinstance(orig_cond, And):
                 cond = distribute_or_over_and(orig_cond)
             else:
                 cond = orig_cond
-            if isinstance(cond, Or):
-                for cond2 in cond.args:
-                    expr_cond.append((expr, cond2, orig_cond))
-            else:
-                expr_cond.append((expr, cond, orig_cond))
-            if cond == True:
-                break
-        for expr, cond, orig_cond in expr_cond:
-            if cond == True:
+
+            if cond == False:
+                pass
+            elif cond == True:
                 independent_expr_cond.append((expr, cond))
                 default = self.func(*independent_expr_cond)
                 break
-            if sym not in cond.free_symbols:
+            elif sym not in cond.free_symbols:
                 independent_expr_cond.append((expr, cond))
+                if orig_cond == targetcond:
+                    targets.append((a, b, None))
+            elif isinstance(cond, Or):
+                expr_cond.extend([(expr, o, orig_cond) for o in cond.args])
+            else:
+                expr_cond.append((expr, cond, orig_cond))
+
+        # assign ranges to each cond
+        for expr, cond, orig_cond in expr_cond:
+            if isinstance(cond, Equality):
+                lower = upper = cond.rhs
+                if targetcond == orig_cond:
+                    targets.append((lower, upper, None))
                 continue
-            elif isinstance(cond, Equality):
-                continue
-            elif isinstance(cond, And):
+            if isinstance(cond, And):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
                 for cond2 in cond.args:
-                    if sym not in [cond2.lts, cond2.gts]:
-                        cond2 = _solve_inequality(cond2, sym)
                     if cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
@@ -350,8 +377,6 @@ class Piecewise(Function):
                         raise NotImplementedError(
                             "Unable to handle interval evaluation of expression.")
             else:
-                if sym not in [cond.lts, cond.gts]:
-                    cond = _solve_inequality(cond, sym)
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity     # e.g. x <= 0 ---> -oo <= 0
@@ -359,7 +384,7 @@ class Piecewise(Function):
                     upper = S.Infinity             # e.g. x >= 0 --->  oo >= 0
                 else:
                     raise NotImplementedError(
-                        "Unable to handle interval evaluation of expression.")
+                        "Unable to handle interval evaluation of expression %s" % cond)
 
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)
@@ -393,15 +418,9 @@ class Piecewise(Function):
 
             if (lower >= upper) != True:  # Is it still an interval?
                 int_expr.append([lower, upper, expr])
-            if orig_cond == targetcond:
-                # there may be more so don't return yet
-                targets.append((lower, upper, None))
-            elif isinstance(targetcond, Or) and cond in targetcond.args:
-                or_cond = Or(or_cond, cond)
-                or_intervals.append((lower, upper, None))
-                if or_cond == targetcond:
-                    or_intervals.sort(key=lambda x: x[0])
-                    return or_intervals
+                if orig_cond == targetcond:
+                    # there may be more so don't return yet
+                    targets.append((lower, upper, None))
 
         int_expr.sort(key=lambda x: x[1].sort_key(
         ) if x[1].is_number else S.NegativeInfinity.sort_key())
@@ -437,7 +456,7 @@ class Piecewise(Function):
             int_expr.sort(key=lambda x: x[0].sort_key(
             ) if x[0].is_number else S.Infinity.sort_key())
 
-        if targets:
+        if targetcond is not None:
             return targets  # these were all that were found
 
         # remove overlap between intervals
@@ -459,7 +478,7 @@ class Piecewise(Function):
                     if not_last and int_expr[n][1] == int_expr[n + 1][0]:  # if Bn == An+1:
                         int_expr[n + 1][0] = newval                        #   An+1 = Max(An, Bn)
                     int_expr[n][1] = newval
-            elif n:
+            elif n:  # it's non-symbolic and it's not the first interval
                 int_expr[n][0] = int_expr[n - 1][1]
 
         return int_expr
@@ -472,14 +491,9 @@ class Piecewise(Function):
         return self.func(*[(e**s, c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
-        """
-        Piecewise conditions may contain bool which are not of Basic type.
-        """
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            if isinstance(c, bool):
-                pass
-            elif isinstance(c, Basic):
+            if isinstance(c, Basic):
                 c = c._subs(old, new)
             if c != False:
                 e = e._subs(old, new)

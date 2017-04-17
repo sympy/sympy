@@ -521,25 +521,35 @@ def test_issue_11045():
     # x-independent targetcond
     assert Piecewise((1, x > 1), (3, y < 1), (2, True)
         )._sort_expr_cond(x, 0, 3, y < 1) == \
-        [[0, 1, Piecewise((3, y < 1), (2, True))], [1, 3, 1]]
+        [(0, 3, None)]
 
+    # hidden false
+    assert Piecewise((1, x > 1), (2, x > x + 1), (3, True)
+        )._sort_expr_cond(x,0,1) == [[0, 1, 3]]
+    # targetcond is Eq
+    assert Piecewise((1, x > 1), (2, Eq(1, x)), (3, True)
+        )._sort_expr_cond(x, 0, 2, Eq(1, x)) == [(1, 1, None)]
+    # And has Relational needing to be solved
+    assert Piecewise((1, And(2*x > x + 1, x < 2)), (0, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 0], [1, 2, 1], [2, 3, 0]]
+    # Or has Relational needing to be solved
+    assert Piecewise((1, Or(2*x > x + 2, x < 1)), (0, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 1], [1, 2, 0], [2, 3, 1]]
+    # ignore hidden false (handled in canonicalization)
+    assert Piecewise((1, x > 1), (2, x > x + 1), (3, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 3], [1, 3, 1]]
+    # watch for false Piecewise
+    assert Piecewise((2, Eq(1 - x, x*(1/x -1)))
+        )._sort_expr_cond(x, 0, 3, True) == [(0, 3, None)]
 
-@XFAIL
-def test_issue_11045f():
-    # targetcond must be one of the Piecewise args
+    # targetcond must be an existing condition
     A = And(x < 1, x > 0)
     B = And(S(1) > x, x > 0)
     assert A.as_set() == B.as_set()
     assert A != B
-    # -- it seems like the [] should be returned since there will
-    # be not match to targetcond. The object is not too be clever
-    # about matching -- the conditions should match exactly those
-    # that are in the Piecewise conditions -- but if we return []
-    # when there is a targetcond and target = [] then the test in
-    # test_integrate_returns_piecewise fails:
-    # >>> integrate(exp(x*y),(x,0,z))
-    # exp(y*z)/y - 1/y
-    # ---------------- should be -----------------------
-    # Piecewise((z, Eq(y, 0)), (exp(y*z)/y - 1/y, True))
     assert Piecewise((1, A), (0, True)
         )._sort_expr_cond(x, -oo, oo, B) == []
+    # overlapping conditions of targetcond are recognized and ignored;
+    # the condition x > 3 will be pre-empted by the first condition
+    assert Piecewise((1, Or(x < 1, x > 2)), (2, x > 3), (3, True)
+        )._sort_expr_cond(x, 0, 4, x > 3) == []
