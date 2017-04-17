@@ -1125,9 +1125,11 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        pos = (self - other).is_positive
-        if isinstance(pos, bool):
-            return pos
+        if isinstance(other, Rational):
+            return Rational(self).__gt__(other)
+        if isinstance(other, Float):
+            max_prec = max(self._prec, other._prec)
+            return _sympify(bool(mlib.mpf_gt(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
         return Expr.__gt__(self, other)
 
     def __ge__(self, other):
@@ -1135,9 +1137,11 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        nneg = (self - other).is_nonnegative
-        if isinstance(nneg, bool):
-            return nneg
+        if isinstance(other, Rational):
+            return Rational(self).__ge__(other)
+        if isinstance(other, Float):
+            max_prec = max(self._prec, other._prec)
+            return _sympify(bool(mlib.mpf_ge(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
         return Expr.__ge__(self, other)
 
     def __lt__(self, other):
@@ -1145,10 +1149,11 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-
-        neg = (self - other).is_negative
-        if isinstance(neg, bool):
-            return neg
+        if isinstance(other, Rational):
+            return Rational(self).__lt__(other)
+        if isinstance(other, Float):
+            max_prec = max(self._prec, other._prec)
+            return _sympify(bool(mlib.mpf_lt(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
         return Expr.__lt__(self, other)
 
     def __le__(self, other):
@@ -1156,9 +1161,11 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        npos = (self - other).is_nonpositive
-        if isinstance(npos, bool):
-            return npos
+        if isinstance(other, Rational):
+            return Rational(self).__le__(other)
+        if isinstance(other, Float):
+            max_prec = max(self._prec, other._prec)
+            return _sympify(bool(mlib.mpf_le(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
         return Expr.__le__(self, other)
 
     def __hash__(self):
