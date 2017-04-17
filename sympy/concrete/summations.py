@@ -6,7 +6,8 @@ from sympy.core.function import Derivative
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.core.add import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.calculus.singularities import is_decreasing
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.special.zeta_functions import zeta
@@ -1101,13 +1102,19 @@ def eval_sum_hyper(f, i_a_b):
         return Piecewise(res, (old_sum, True))
 
 def asymptotic(expr, symbol):
-    '''Tries to perform the asymptotic of expr when
-    symbols tends to infinity
+    """Tries to obtain the asymptotic behaviour of expr when
+    symbols tends to infinity. More precisely
+    asymptotic(expr, symbol) is a non-zero expression such that
 
+    limit(expr / asymptotic(expr, symbol), symbol, S.Infinity) = 1.
+
+    For example, if
+    expr = cos(1/n) - 1,
+    then asymptotic(expr, n) returns -1/n**2
     return either the asymptotic expression or the original one
-    '''
+    """
     from sympy import simplify
-    if type(expr) is Mul:
+    if isinstance(expr, Mul):
         # do the asymptotic for each factor
         tmp = [asymptotic(i, symbol) for i in expr.args]
         result = S(1)
@@ -1124,10 +1131,10 @@ def asymptotic(expr, symbol):
             return lim
         expr2 = expr.subs(symbol, 1/symbol)
         s = expr2.series(symbol, 0, 10) # use MacLaurin expansion
-        if type(s) is Add:
+        if isinstance(s, Add):
             s = s.subs(symbol, 1/symbol)
             return s.args[0]
         else:
             return expr
-    except:
+    except Exception:
         return expr
