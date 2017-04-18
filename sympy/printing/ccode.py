@@ -172,31 +172,26 @@ class C89CodePrinter(CodePrinter):
         # calculate index for 1d array
         offset = expr.offset
         strides = expr.strides
+        indices = expr.indices
 
         if strides is None or isinstance(strides, str):
             dims = expr.shape
-            elem = S.Zero
             shift = S.One
+            temp = tuple()
             if strides == 'C' or strides is None:
                 traversal = reversed(range(expr.rank))
+                indices = indices[::-1]
             elif strides == 'F':
                 traversal = range(expr.rank)
 
             for i in traversal:
-                elem += expr.indices[i]*shift
+                temp += (shift,)
                 shift *= dims[i]
-
-            if offset is None:
-                offset = ""
-            return "%s[%s]" % (self._print(expr.base.label),
-                               self._print(elem) + str(offset))
-        elif isinstance(strides, tuple):
-            if offset is None:
-                offset = ""
-            return "%s[%s]" % (self._print(expr.base.label),
-                               str(sum([x[0]*x[1]
-                                   for x in zip(expr.indices, strides)])) +
-                               " + " + str(offset))
+            strides = temp
+        return "%s[%s]" % (self._print(expr.base.label),
+                               self._print(sum([x[0]*x[1]
+                                   for x in zip(indices, strides)])
+                                   + offset))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)

@@ -371,7 +371,7 @@ class IndexedBase(Expr, NotIterable):
     is_symbol = True
     is_Atom = True
 
-    def __new__(cls, label, shape=None, strides=None, offset=None, **kw_args):
+    def __new__(cls, label, shape=None, strides=None, offset=0, **kw_args):
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
