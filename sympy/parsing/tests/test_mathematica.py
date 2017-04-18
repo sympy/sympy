@@ -8,6 +8,7 @@ def test_mathematica():
         'Sin[x]^2': 'sin(x)**2',
         '2(x-1)': '2*(x-1)',
         '3y+8': '3*y+8',
+        '3y + 8': '3*y+8',
         'Arcsin[2x+9(4-x)^2]/x': 'asin(2*x+9*(4-x)**2)/x',
         'x+y': 'x+y',
         '355/113': '355/113',
@@ -22,8 +23,10 @@ def test_mathematica():
         'Sin[Cos[x]]': 'sin(cos(x))',
         '2*Sqrt[x+y]': '2*sqrt(x+y)', # Test case from the issue 4259
         'x*Sin[1/x]': 'x*sin(1/x)',
+        'x  Sin[1/x]': 'x*sin(1/x)',
         'Sin[1/x]*x': 'x*sin(1/x)',
-        'Sin[x] Cos[Sin[x]]': 'sin(x)*cos(sin(x))'
+        'Sin[x] Cos[Sin[x]]': 'sin(x)*cos(sin(x))',
+        'Sin[x]  Cos[x]': 'sin(x)*cos(x)'
         }
     for e in d:
         assert mathematica(e) == sympify(d[e])
