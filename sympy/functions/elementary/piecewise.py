@@ -6,6 +6,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not, Or,
     true, false)
+from sympy.utilities.misc import filldedent
 from sympy.core.compatibility import range
 
 
@@ -307,6 +308,11 @@ class Piecewise(Function):
         b = _sympify(b)
         if targetcond is not None:
             targetcond = _sympify(targetcond)
+            if not any(c == targetcond for e, c in self.args):
+                # don't let errors pass silently:
+                raise ValueError(filldedent('''
+                targetcond is expected to be
+                an existing condition of the Piecewise expression.'''))
 
         default = None
         int_expr = []
@@ -373,18 +379,15 @@ class Piecewise(Function):
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
-                    else:
-                        raise NotImplementedError(
-                            "Unable to handle interval evaluation of expression.")
-            else:
+            elif isinstance(cond, Relational):
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity     # e.g. x <= 0 ---> -oo <= 0
                 elif cond.gts == sym:              # part 1a: ... that can be expanded
                     upper = S.Infinity             # e.g. x >= 0 --->  oo >= 0
-                else:
-                    raise NotImplementedError(
-                        "Unable to handle interval evaluation of expression %s" % cond)
+            else:
+                raise NotImplementedError(
+                    "Unexpected condition: %s" % cond)
 
             # part 1b: Reduce (-)infinity to what was passed in.
             lower, upper = Max(a, lower), Min(b, upper)

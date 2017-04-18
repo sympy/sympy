@@ -538,17 +538,17 @@ def test_issue_11045():
     # ignore hidden false (handled in canonicalization)
     assert Piecewise((1, x > 1), (2, x > x + 1), (3, True)
         )._sort_expr_cond(x, 0, 3) == [[0, 1, 3], [1, 3, 1]]
-    # watch for false Piecewise
-    assert Piecewise((2, Eq(1 - x, x*(1/x -1)))
+    # watch for hidden True Piecewise
+    assert Piecewise((2, Eq(1 - x, x*(1/x - 1))), (0, True)
         )._sort_expr_cond(x, 0, 3, True) == [(0, 3, None)]
 
     # targetcond must be an existing condition
     A = And(x < 1, x > 0)
-    B = And(S(1) > x, x > 0)
+    B = And((x < 1).reversed, x > 0)
     assert A.as_set() == B.as_set()
     assert A != B
-    assert Piecewise((1, A), (0, True)
-        )._sort_expr_cond(x, -oo, oo, B) == []
+    raises(ValueError, lambda: Piecewise((1, A), (0, True)
+        )._sort_expr_cond(x, -oo, oo, B))
     # overlapping conditions of targetcond are recognized and ignored;
     # the condition x > 3 will be pre-empted by the first condition
     assert Piecewise((1, Or(x < 1, x > 2)), (2, x > 3), (3, True)

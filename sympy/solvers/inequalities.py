@@ -483,7 +483,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         if rv is None:
             solns = solvify(e, gen, domain)
             if solns is None:
-                raise NotImplementedError(filldedent('''The inequality cannot be
+                raise NotImplementedError(filldedent('''
+                    The inequality cannot be
                     solved using solve_univariate_inequality.'''))
             singularities = []
             for d in denoms(expr, gen):
