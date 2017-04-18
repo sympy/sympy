@@ -424,7 +424,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 names.append('arg_' + str(n))
 
     # Create lambda function.
-    if not should_dummify(expr):
+    if not should_dummify(expr, printer=printer):
         dummify = False
 
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
@@ -455,7 +455,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
 
-def should_dummify(expr):
+def should_dummify(expr, printer=None):
     """
     Returns the value of dummify to be used. This function either returns True or False.
 
@@ -473,13 +473,24 @@ def should_dummify(expr):
     False
 
     """
-    from sympy.printing.str import sstr
-    if keyword.iskeyword(sstr(expr)):
+    if printer is not None:
+        if inspect.isfunction(printer):
+            lambdarepr = printer
+        else:
+            if inspect.isclass(printer):
+                lambdarepr = lambda expr: printer().doprint(expr)
+            else:
+                lambdarepr = lambda expr: printer.doprint(expr)
+    else:
+        #XXX: This has to be done here because of circular imports
+        from sympy.printing.lambdarepr import lambdarepr
+
+    if keyword.iskeyword(lambdarepr(expr)):
         result = True
         return result
     else:
         valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
-        result = valid_identifier_regex.match(sstr(expr))
+        result = valid_identifier_regex.match(lambdarepr(expr))
         return result is None
 
 def _module_present(modname, modlist):
