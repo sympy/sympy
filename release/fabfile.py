@@ -17,7 +17,7 @@ fab vagrant func
 Even those functions that do not use vagrant must be run this way, because of
 the vagrant configuration at the bottom of this file.
 
-Any function that should be made avaiable from the command line needs to have
+Any function that should be made available from the command line needs to have
 the @task decorator.
 
 Save any files that should be reset between runs somewhere in the repos
