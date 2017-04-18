@@ -20,6 +20,8 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
+from sympy.functions.elementary.trigonometric import sin, atan, tan, asin
+from sympy.functions.elementary.exponential import log
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -425,7 +427,10 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         except NotImplementedError:
             pass
 
-        sequence_term = asymptotic(sequence_term, sym)
+        numer, denom = sequence_term.as_numer_denom()
+        numer = asymptotic(numer, sym)
+        denom = asymptotic(denom, sym)
+        sequence_term = numer / denom
 
         order = O(sequence_term, (sym, S.Infinity))
 
@@ -443,20 +448,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 return S.true
             if p2_series_test[p] < 1:
                 return S.false
-
-        ### ----------- root test ---------------- ###
-        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
-        lim_evaluated = lim.doit()
-        if lim_evaluated.is_number:
-            if lim_evaluated < 1:
-                return S.true
-            if lim_evaluated > 1:
-                return S.false
-
-        ### ------------- alternating series test ----------- ###
-        dict_val = sequence_term.match((-1)**(sym + p)*q)
-        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
-            return S.true
 
         ### ------------- comparison test ------------- ###
         # (1/log(n)**p) comparison
@@ -484,6 +475,27 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if n_log_test[p] > 1:
                 return S.true
             return S.false
+
+        n_log_test = order.expr.match(1/(sym**p*log(1/sym)))
+        if n_log_test is not None:
+            if n_log_test[p] > 1:
+                return S.true
+            return S.false
+
+        ### ----------- root test ---------------- ###
+        lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
+        lim_evaluated = lim.doit()
+        if lim_evaluated.is_number:
+            if lim_evaluated < 1:
+                return S.true
+            if lim_evaluated > 1:
+                return S.false
+
+        ### ------------- alternating series test ----------- ###
+        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
+            return S.true
+
 
         ### ------------- integral test -------------- ###
         maxima = solveset(sequence_term.diff(sym), sym, interval)
@@ -1123,18 +1135,26 @@ def asymptotic(expr, symbol):
         return result
 
     try:
-        expr = simplify(expr)
+        # expr = simplify(expr)
         lim = limit(expr, symbol, S.Infinity)
         if lim == S.Infinity:
             return expr
         if lim != S(0): # the asymptotic is the value of the limit
             return lim
-        expr2 = expr.subs(symbol, 1/symbol)
-        s = expr2.series(symbol, 0, 10) # use MacLaurin expansion
-        if isinstance(s, Add):
-            s = s.subs(symbol, 1/symbol)
-            return s.args[0]
-        else:
-            return expr
+        if lim == S(0) and isinstance(expr, log):
+            return asymptotic(expr.args[0] - 1, symbol)
+        if lim == S(0) and isinstance(expr, atan):
+            return asymptotic(expr.args[0], symbol)
+        if lim == S(0) and isinstance(expr, tan):
+            return asymptotic(expr.args[0], symbol)
+        if lim == S(0) and isinstance(expr, asin):
+            return asymptotic(expr.args[0], symbol)
+        if lim == S(0) and isinstance(expr, sin):
+            return asymptotic(expr.args[0], symbol)
+        expr2 = simplify(expr.subs(symbol, 1/symbol))
+        s = expr2.series(symbol, 0, None) # use MacLaurin expansion
+        s1 = next(s)
+        s1 = s1.subs(symbol, 1/symbol)
+        return s1
     except Exception:
         return expr
