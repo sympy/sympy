@@ -6,8 +6,8 @@ from __future__ import print_function, division
 import random
 import math
 
-from .primetest import isprime
-from .generate import sieve, primerange, nextprime
+from sympy.ntheory.primetest import isprime
+from sympy.ntheory.generate import sieve, primerange, nextprime
 from sympy.core import sympify
 from sympy.core.evalf import bitcount
 from sympy.core.logic import fuzzy_and
@@ -634,6 +634,64 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         # give a zero, too, so we set the range as [2, n-2]. Some references
         # say 'a' should be coprime to n, but either will detect factors.
         a = prng.randint(2, n - 2)
+
+
+def quadratic_sieve(n, a, b, verbose=False):
+    """
+    Use the Quadratic Sieve to try to extract a nontrivial
+    factor of ``n``. Either a divisor (perhaps composite), or ``None`` is
+    returned.
+
+    The value of ``a`` and ``b`` are integers in the following polynomial
+    that would be used for the sieve:
+
+    y(x) = (ax + b)**2 - n
+
+    This algorithm requires exp(sqrt(ln(n) * ln(ln(n))) steps.
+
+    Examples
+    ========
+
+
+    References
+    ==========
+    - http://mathworld.wolfram.com/QuadraticSieve.html
+
+    See Also
+    ========
+    residue_ntheory.legendre_symbol
+    """
+    # imports required (temporary)
+    from sympy import prime
+    from sympy.ntheory import legendre_symbol
+
+    factor_base = []
+
+    # set a bound for small primes to be checked for quadratic
+    # residue
+    bound = int(5 * log(n, 10)**2)
+
+    # we want at least 3 primes for which n is a quadratic residue of
+    primes_found = 0
+    num = 1
+    next_prime = prime(num)
+
+    while primes_found < 3 or next_prime < bound:
+        # check if prime is a quadratic residue of n
+        legendre = legendre_symbol(n, next_prime)
+
+        # if prime is quadratic residue
+        if legendre == 1:
+            factor_base.append(next_prime)
+            num += 1
+            next_prime = prime(num)
+
+        # if prime is a factor
+        elif legendre == 0:
+            return next_prime
+
+    # Sieve primes around floor of sqrt(n)
+    pass
 
 
 def _trial(factors, n, candidates, verbose=False):
