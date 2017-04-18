@@ -3,6 +3,7 @@ from sympy import (pi, sin, cos, Symbol, Integral, Sum, sqrt, log,
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import unset_show
+from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.pytest import skip, raises
 from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
@@ -199,7 +200,7 @@ def plot_and_save(name):
              cos(x) + 0.1*cos(x)*cos(7*x),
         0.1*sin(7*x),
         (x, 0, 2*pi))
-    p[0].line_color = lambda a: sin(4*a)
+    p[0].line_color = lambdify_(x, sin(4*x))
     p.save(tmp_file('%s_colors_3d_line_arity1' % name))
     p[0].line_color = lambda a, b: b
     p.save(tmp_file('%s_colors_3d_line_arity2' % name))
@@ -214,7 +215,7 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_surface_arity2' % name))
     p[0].surface_color = lambda a, b, c: c
     p.save(tmp_file('%s_colors_surface_arity3a' % name))
-    p[0].surface_color = lambda a, b, c: sqrt((a - 3*pi)**2 + b**2)
+    p[0].surface_color = lambdify_((x, y, z), sqrt((x - 3*pi)**2 + y**2))
     p.save(tmp_file('%s_colors_surface_arity3b' % name))
     p._backend.close()
 
@@ -224,7 +225,7 @@ def plot_and_save(name):
     p.save(tmp_file('%s_colors_param_surf_arity1' % name))
     p[0].surface_color = lambda a, b: a*b
     p.save(tmp_file('%s_colors_param_surf_arity2' % name))
-    p[0].surface_color = lambda a, b, c: sqrt(a**2 + b**2 + c**2)
+    p[0].surface_color = lambdify_((x, y, z), sqrt(x**2 + y**2 + z**2))
     p.save(tmp_file('%s_colors_param_surf_arity3' % name))
     p._backend.close()
 

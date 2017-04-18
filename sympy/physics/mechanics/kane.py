@@ -92,7 +92,7 @@ class KanesMethod(object):
     here (see the online documentation).
     Next we form FR* and FR to complete: Fr + Fr* = 0.
     We have the equations of motion at this point.
-    It makes sense to rearrnge them though, so we calculate the mass matrix and
+    It makes sense to rearrange them though, so we calculate the mass matrix and
     the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
     the mass matrix, udot is a vector of the time derivatives of the
     generalized speeds, and forcing is a vector representing "forcing" terms.
@@ -487,7 +487,7 @@ class KanesMethod(object):
 
         The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
-        dictionaries. The values may be numberic or symbolic. The more values
+        dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         As part of the deprecation cycle, the new method will not be used unless

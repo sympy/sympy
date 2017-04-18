@@ -93,7 +93,7 @@ class SeqBase(Basic):
         >>> from sympy import SeqFormula
         >>> from sympy.abc import n, m
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
-        set([m])
+        {m}
         """
         return (set(j for i in self.args for j in i.free_symbols
                    .difference(self.variables)))
@@ -419,7 +419,7 @@ class SeqExpr(SeqBase):
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
-    [0, 10]
+    Interval(0, 10)
     >>> s.length
     11
 
@@ -760,7 +760,7 @@ class SeqExprOp(SeqBase):
     >>> s.gen
     (n**2, (1, 2, 3))
     >>> s.interval
-    [5, 10]
+    Interval(5, 10)
     >>> s.length
     6
 

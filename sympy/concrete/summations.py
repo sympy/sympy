@@ -13,11 +13,12 @@ from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.polys import apart, PolynomialError
-from sympy.solvers import solve
 from sympy.series.limits import limit
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
+from sympy.solvers import solve
+from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-from sympy.tensor.indexed import Idx
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -270,33 +271,33 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         from sympy.core.function import expand
         from sympy.core.mul import Mul
 
-        #split the function into adds
+        # split the function into adds
         terms = Add.make_args(expand(self.function))
         s_t = [] # Sum Terms
         o_t = [] # Other Terms
 
         for term in terms:
             if term.has(Sum):
-                #if there is an embedded sum here
-                #it is of the form x * (Sum(whatever))
-                #hence we make a Mul out of it, and simplify all interior sum terms
+                # if there is an embedded sum here
+                # it is of the form x * (Sum(whatever))
+                # hence we make a Mul out of it, and simplify all interior sum terms
                 subterms = Mul.make_args(expand(term))
                 out_terms = []
                 for subterm in subterms:
-                    #go through each term
+                    # go through each term
                     if isinstance(subterm, Sum):
-                        #if it's a sum, simpify it
+                        # if it's a sum, simplify it
                         out_terms.append(subterm._eval_simplify())
                     else:
-                        #otherwise, add it as is
+                        # otherwise, add it as is
                         out_terms.append(subterm)
 
-                #turn it back into a Mul
+                # turn it back into a Mul
                 s_t.append(Mul(*out_terms))
             else:
                 o_t.append(term)
 
-        #next try to combine any interior sums for further simplification
+        # next try to combine any interior sums for further simplification
         result = Add(sum_combine(s_t), *o_t)
 
         return factor_sum(result, limits=self.limits)
@@ -313,7 +314,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         First Part:
         One part is the question whether all the terms are well defined, i.e.,
         they are finite in a sum and also non-zero in a product. Zero
-        is the analogy of (minus) infinity in products as :math:`e^{-\infty} = 0`.
+        is the analogy of (minus) infinity in products as
+        :math:`e^{-\infty} = 0`.
 
         Second Part:
         The second part is the question of convergence after infinities,
@@ -482,14 +484,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return S.false
 
         ### ------------- integral test -------------- ###
-        if is_decreasing(sequence_term, interval):
-            integral_val = Integral(sequence_term, (sym, lower_limit, upper_limit))
-            try:
-                integral_val_evaluated = integral_val.doit()
-                if integral_val_evaluated.is_number:
-                    return S(integral_val_evaluated.is_finite)
-            except NotImplementedError:
-                pass
+        maxima = solveset(sequence_term.diff(sym), sym, interval)
+        if not maxima:
+            check_interval = interval
+        elif isinstance(maxima, FiniteSet) and maxima.sup.is_number:
+            check_interval = Interval(maxima.sup, interval.sup)
+            if (
+                    is_decreasing(sequence_term, check_interval) or
+                    is_decreasing(-sequence_term, check_interval)):
+                integral_val = Integral(
+                    sequence_term, (sym, lower_limit, upper_limit))
+                try:
+                    integral_val_evaluated = integral_val.doit()
+                    if integral_val_evaluated.is_number:
+                        return S(integral_val_evaluated.is_finite)
+                except NotImplementedError:
+                    pass
 
         ### -------------- Dirichlet tests -------------- ###
         if order.expr.is_Mul:
@@ -600,7 +610,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         i, a, b = self.limits[0]
         if (a > b) == True:
             if a - b == 1:
-                return S.Zero,S.Zero
+                return S.Zero, S.Zero
             a, b = b + 1, a - 1
             f = -f
         s = S.Zero
@@ -1001,7 +1011,7 @@ def _eval_sum_hyper(f, i, a):
     if hs is None:
         return None
 
-    if isinstance(hs,Float):
+    if isinstance(hs, Float):
         from sympy.simplify.simplify import nsimplify
         hs = nsimplify(hs)
 

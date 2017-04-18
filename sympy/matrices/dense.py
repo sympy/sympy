@@ -4,6 +4,7 @@ import random
 from sympy import Derivative
 
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -17,7 +18,7 @@ from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.matrices.matrices import (MatrixBase,
-    ShapeError, a2idx, classof)
+                                     ShapeError, a2idx, classof)
 
 
 def _iszero(x):
@@ -31,14 +32,6 @@ class DenseMatrix(MatrixBase):
 
     _op_priority = 10.01
     _class_priority = 4
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return super(DenseMatrix, self).__add__(_force_mutable(other))
-
-    @call_highest_priority('__div__')
-    def __div__(self, other):
-        return super(DenseMatrix, self).__div__(_force_mutable(other))
 
     def __eq__(self, other):
         try:
@@ -94,6 +87,13 @@ class DenseMatrix(MatrixBase):
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
             except (TypeError, IndexError):
+                if (isinstance(i, Expr) and not i.is_number) or (isinstance(j, Expr) and not j.is_number):
+                    if ((j < 0) is True) or ((j >= self.shape[1]) is True) or\
+                       ((i < 0) is True) or ((i >= self.shape[0]) is True):
+                        raise ValueError("index out of boundary")
+                    from sympy.matrices.expressions.matexpr import MatrixElement
+                    return MatrixElement(self, i, j)
+
                 if isinstance(i, slice):
                     # XXX remove list() when PY2 support is dropped
                     i = list(range(self.rows))[i]
@@ -115,51 +115,8 @@ class DenseMatrix(MatrixBase):
                 return self._mat[key]
             return self._mat[a2idx(key)]
 
-    @call_highest_priority('__rmul__')
-    def __matmul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return super(DenseMatrix, self).__mul__(_force_mutable(other))
-
-    def __ne__(self, other):
-        return not self == other
-
-    @call_highest_priority('__rpow__')
-    def __pow__(self, other):
-        return super(DenseMatrix, self).__pow__(other)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return super(DenseMatrix, self).__radd__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmatmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
-
-    @call_highest_priority('__pow__')
-    def __rpow__(self, other):
-        raise NotImplementedError("Matrix Power not defined")
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return super(DenseMatrix, self).__rsub__(_force_mutable(other))
-
     def __setitem__(self, key, value):
         raise NotImplementedError()
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        return super(DenseMatrix, self).__sub__(_force_mutable(other))
-
-    @call_highest_priority('__truediv__')
-    def __truediv__(self, other):
-        return super(DenseMatrix, self).__truediv__(_force_mutable(other))
 
     def _cholesky(self):
         """Helper function of cholesky.
@@ -169,9 +126,9 @@ class DenseMatrix(MatrixBase):
         for i in range(self.rows):
             for j in range(i):
                 L[i, j] = (1 / L[j, j])*(self[i, j] -
-                    sum(L[i, k]*L[j, k] for k in range(j)))
+                                         sum(L[i, k]*L[j, k] for k in range(j)))
             L[i, i] = sqrt(self[i, i] -
-                    sum(L[i, k]**2 for k in range(i)))
+                           sum(L[i, k]**2 for k in range(i)))
         return self._new(L)
 
     def _diagonal_solve(self, rhs):
@@ -179,23 +136,6 @@ class DenseMatrix(MatrixBase):
         without the error checks, to be used privately.
         """
         return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
-
-    def _eval_adjoint(self):
-        return self.T.C
-
-    def _eval_conjugate(self):
-        """By-element conjugation.
-
-        See Also
-        ========
-
-        transpose: Matrix transposition
-        H: Hermite conjugation
-        D: Dirac conjugation
-        """
-        out = self._new(self.rows, self.cols,
-                lambda i, j: self[i, j].conjugate())
-        return out
 
     def _eval_determinant(self):
         return self.det()
@@ -269,51 +209,6 @@ class DenseMatrix(MatrixBase):
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
 
-    def _eval_trace(self):
-        """Calculate the trace of a square matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> eye(3).trace()
-        3
-
-        """
-        trace = 0
-        for i in range(self.cols):
-            trace += self._mat[i*self.cols + i]
-        return trace
-
-    def _eval_transpose(self):
-        """Matrix transposition.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, I
-        >>> m=Matrix(((1, 2+I), (3, 4)))
-        >>> m
-        Matrix([
-        [1, 2 + I],
-        [3,     4]])
-        >>> m.transpose()
-        Matrix([
-        [    1, 3],
-        [2 + I, 4]])
-        >>> m.T == m.transpose()
-        True
-
-        See Also
-        ========
-
-        conjugate: By-element conjugation
-        """
-        a = []
-        for i in range(self.cols):
-            a.extend(self._mat[i::self.cols])
-        return self._new(self.cols, self.rows, a)
-
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
         Without the error checks.
@@ -326,7 +221,7 @@ class DenseMatrix(MatrixBase):
                 L[i, j] = (1 / D[j, j])*(self[i, j] - sum(
                     L[i, k]*L[j, k]*D[k, k] for k in range(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2*D[k, k]
-                for k in range(i))
+                                       for k in range(i))
         return self._new(L), self._new(D)
 
     def _lower_triangular_solve(self, rhs):
@@ -340,7 +235,7 @@ class DenseMatrix(MatrixBase):
                 if self[i, i] == 0:
                     raise TypeError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                    for k in range(i))) / self[i, i]
+                                           for k in range(i))) / self[i, i]
         return self._new(X)
 
     def _upper_triangular_solve(self, rhs):
@@ -352,37 +247,13 @@ class DenseMatrix(MatrixBase):
                 if self[i, i] == 0:
                     raise ValueError("Matrix must be non-singular.")
                 X[i, j] = (rhs[i, j] - sum(self[i, k]*X[k, j]
-                    for k in range(i + 1, self.rows))) / self[i, i]
+                                           for k in range(i + 1, self.rows))) / self[i, i]
         return self._new(X)
-
-    def applyfunc(self, f):
-        """Apply a function to each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(2, 2, lambda i, j: i*2+j)
-        >>> m
-        Matrix([
-        [0, 1],
-        [2, 3]])
-        >>> m.applyfunc(lambda i: 2*i)
-        Matrix([
-        [0, 2],
-        [4, 6]])
-
-        """
-        if not callable(f):
-            raise TypeError("`f` must be callable.")
-
-        out = self._new(self.rows, self.cols, list(map(f, self._mat)))
-        return out
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix
         """
-        from .immutable import ImmutableMatrix as cls
+        from .immutable import ImmutableDenseMatrix as cls
         if self.rows and self.cols:
             return cls._new(self.tolist())
         return cls._new(self.rows, self.cols, [])
@@ -403,30 +274,6 @@ class DenseMatrix(MatrixBase):
         [3, 5]])
         """
         return Matrix(self)
-
-    def col(self, j):
-        """Elementary column selector.
-
-        Examples
-        ========
-
-        >>> from sympy import eye
-        >>> eye(2).col(0)
-        Matrix([
-        [1],
-        [0]])
-
-        See Also
-        ========
-
-        row
-        col_op
-        col_swap
-        col_del
-        col_join
-        col_insert
-        """
-        return self[:, j]
 
     def equals(self, other, failing_expression=False):
         """Applies ``equals`` to corresponding elements of the matrices,
@@ -479,97 +326,6 @@ class DenseMatrix(MatrixBase):
         mat = [cls._sympify(0)]*n*n
         mat[::n + 1] = [cls._sympify(1)]*n
         return cls._new(n, n, mat)
-
-    @property
-    def is_Identity(self):
-        if not self.is_square:
-            return False
-        if not all(self[i, i] == 1 for i in range(self.rows)):
-            return False
-        for i in range(self.rows):
-            for j in range(i + 1, self.cols):
-                if self[i, j] or self[j, i]:
-                    return False
-        return True
-
-    def reshape(self, rows, cols):
-        """Reshape the matrix. Total number of elements must remain the same.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(2, 3, lambda i, j: 1)
-        >>> m
-        Matrix([
-        [1, 1, 1],
-        [1, 1, 1]])
-        >>> m.reshape(1, 6)
-        Matrix([[1, 1, 1, 1, 1, 1]])
-        >>> m.reshape(3, 2)
-        Matrix([
-        [1, 1],
-        [1, 1],
-        [1, 1]])
-
-        """
-        if len(self) != rows*cols:
-            raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self._mat[i*cols + j])
-
-    def row(self, i):
-        """Elementary row selector.
-
-        Examples
-        ========
-
-        >>> from sympy import eye
-        >>> eye(2).row(0)
-        Matrix([[1, 0]])
-
-        See Also
-        ========
-
-        col
-        row_op
-        row_swap
-        row_del
-        row_join
-        row_insert
-        """
-        return self[i, :]
-
-    def tolist(self):
-        """Return the Matrix as a nested Python list.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, ones
-        >>> m = Matrix(3, 3, range(9))
-        >>> m
-        Matrix([
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]])
-        >>> m.tolist()
-        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        >>> ones(3, 0).tolist()
-        [[], [], []]
-
-        When there are no rows then it will not be possible to tell how
-        many columns were in the original matrix:
-
-        >>> ones(0, 3).tolist()
-        []
-
-        """
-        if not self.rows:
-            return []
-        if not self.cols:
-            return [[] for i in range(self.rows)]
-        return [self._mat[i: i + self.cols]
-            for i in range(0, len(self), self.cols)]
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -814,8 +570,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         dr, dc = rhi - rlo, chi - clo
         if shape != (dr, dc):
             raise ShapeError(filldedent("The Matrix `value` doesn't have the "
-                "same dimensions "
-                "as the in sub-Matrix given by `key`."))
+                                        "same dimensions "
+                                        "as the in sub-Matrix given by `key`."))
 
         for i in range(value.rows):
             for j in range(value.cols):
@@ -884,7 +640,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         """
         i0 = i*self.cols
         ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, list(range(self.cols))) ]
+        self._mat[i0: i0 + self.cols] = [f(x, j) for x, j in zip(ri, list(range(self.cols)))]
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -955,7 +711,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ri = self._mat[i0: i0 + self.cols]
         rk = self._mat[k0: k0 + self.cols]
 
-        self._mat[i0: i0 + self.cols] = [ f(x, y) for x, y in zip(ri, rk) ]
+        self._mat[i0: i0 + self.cols] = [f(x, y) for x, y in zip(ri, rk)]
 
     # Utility functions
 
@@ -1342,7 +1098,7 @@ def diag(*values, **kwargs):
     <class 'sympy.matrices.dense.MutableDenseMatrix'>
     >>> from sympy.matrices import ImmutableMatrix
     >>> type(diag(1, cls=ImmutableMatrix))
-    <class 'sympy.matrices.immutable.ImmutableMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
 
     See Also
     ========
@@ -1630,7 +1386,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     return m
 
 
-def wronskian(functions, var, method='bareis'):
+def wronskian(functions, var, method='bareiss'):
     """
     Compute Wronskian for [] of functions
 

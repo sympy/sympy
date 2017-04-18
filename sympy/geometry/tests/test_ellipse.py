@@ -25,6 +25,7 @@ def test_ellipse_geom():
     c1 = Circle(p1, 1)
     c2 = Circle(p2, 1)
     c3 = Circle(Point(sqrt(2), sqrt(2)), 1)
+    l1 = Line(p1, p2)
 
     # Test creation with three points
     cen, rad = Point(3*half, 2), 5*half
@@ -39,6 +40,7 @@ def test_ellipse_geom():
     assert Ellipse(None, 1, 1).center == Point(0, 0)
     assert e1 == c1
     assert e1 != e2
+    assert e1 != l1
     assert p4 in e1
     assert p2 not in e2
     assert e1.area == pi
@@ -196,7 +198,16 @@ def test_ellipse_geom():
     assert e1.intersection(Ellipse(Point(5, 0), 1, 1,)) == []
     assert e1.intersection(Point(2, 0)) == []
     assert e1.intersection(e1) == e1
-
+    assert intersection(Ellipse(Point(0, 0), 2, 1), Ellipse(Point(3, 0), 1, 2)) == [Point(2, 0)]
+    assert intersection(Circle(Point(0, 0), 2), Circle(Point(3, 0), 1)) == [Point(2, 0)]
+    assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
+    assert Circle((0, 0), 1/2).intersection(
+        Triangle((-1, 0), (1, 0), (0, 1))) == [
+        Point(-1/2, 0), Point(1/2, 0)]
+    raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0,0,1))))
+    raises(TypeError, lambda: intersection(e2, Rational(12)))
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
@@ -269,6 +280,13 @@ def test_ellipse_geom():
     assert e.rotate(pi, (1, 2)) == Ellipse(Point(2, 4), 2, 1)
     raises(NotImplementedError, lambda: e.rotate(pi/3))
 
+    # Circle rotation tests (Issue #11743)
+    # Link - https://github.com/sympy/sympy/issues/11743
+    cir = Circle(Point(1, 0), 1)
+    assert cir.rotate(pi/2) == Circle(Point(0, 1), 1)
+    assert cir.rotate(pi/3) == Circle(Point(1/2, sqrt(3)/2), 1)
+    assert cir.rotate(pi/3, Point(1, 0)) == Circle(Point(1, 0), 1)
+    assert cir.rotate(pi/3, Point(0, 1)) == Circle(Point(1/2 + sqrt(3)/2, 1/2 + sqrt(3)/2), 1)
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
@@ -305,6 +323,15 @@ def test_transform():
     assert Circle((0, 0), 2).scale(3, 3) == \
         Circle((0, 0), 6)
 
+def test_bounds():
+    e1 = Ellipse(Point(0,0), 3, 5)
+    e2 = Ellipse(Point(2, -2), 7, 7)
+    c1 = Circle(Point(2, -2), 7)
+    c2 = Circle(Point(-2, 0), Point(0, 2), Point(2, 0))
+    assert e1.bounds == (-3, -5, 3, 5)
+    assert e2.bounds == (-5, -9, 9, 5)
+    assert c1.bounds == (-5, -9, 9, 5)
+    assert c2.bounds == (-2, -2, 2, 2)
 
 def test_reflect():
     b = Symbol('b')

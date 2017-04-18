@@ -842,8 +842,6 @@ class CosetTable(DefaultPrinting):
         """
         A = self.A
         A_dict = self.A_dict
-        A_dict_inv = self.A_dict_inv
-        X = self.fp_group.generators
         table = self.table
         for x in A:
             z = table[gamma][A_dict[x]]
