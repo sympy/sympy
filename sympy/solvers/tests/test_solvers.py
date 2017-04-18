@@ -1486,6 +1486,9 @@ def test_issue_6989():
 
 def test_issue_12538():
     assert solve(x**(1/x) - 1, x) == [1]
+    assert solve(x**(2/x) - 3*x**(1/x) + 2, x) == [1, -LambertW(-log(2))/log(2)]
+    assert solve(x**(3/x) - 6*x**(2/x) + 11*x**(1/x) - 6, x) == \
+        [1, -LambertW(-log(2))/log(2), -LambertW(-log(3))/log(3)]
 
 
 def test_lambert_multivariate():

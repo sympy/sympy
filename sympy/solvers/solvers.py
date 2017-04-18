@@ -1430,7 +1430,7 @@ def _solve(f, *symbols, **flags):
             return x, 1
 
         if len(gens) > 1:
-            # If there is more than one generator, it could be that the
+            # If there are more than one generator, it could be that the
             # generators have the same base but different powers, e.g.
             #   >>> Poly(exp(x) + 1/exp(x))
             #   Poly(exp(-x) + exp(x), exp(-x), exp(x), domain='ZZ')
@@ -1555,15 +1555,17 @@ def _solve(f, *symbols, **flags):
                     u = poly.gen
                     if u != symbol:
                         try:
-                            if deg == 1:
-                                if checksol(f, symbol, soln[0]):
-                                    temp_soln = soln
                             t = Dummy('t')
                             iv = _solve(u - t, symbol, **flags)
+                            temp_soln = soln
+                            index_list = []
                             soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
-                            soln[:] = (val for val in soln if val != S.NaN)
-                            if not soln:
-                                soln = temp_soln
+                            for index, s in enumerate(soln):
+                                if s == S.NaN:
+                                    index_list.append(index)
+                            for i in index_list:
+                                if checksol(f, symbol, temp_soln[i]):
+                                    soln.append(temp_soln[i])
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
                             soln = None
