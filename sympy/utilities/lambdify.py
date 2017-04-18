@@ -457,14 +457,18 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
 def should_dummify(expr, printer=None):
     """
-    Returns the value of dummify to be used. This function either returns True or False.
+    Returns the boolean value of dummify to be used.
 
-    Parameter:
-
+    Parameter
+    ---------
     expr : Represents the expression for which dummify should be checked
+    printer : Represents the printer which is provided to this function
+
+    Examples
+    ========
 
     >>> from sympy.utilities.lambdify import should_dummify
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> should_dummify(r'32v2?g#Gmw845h$Wb53wi\phi')
     True
     >>> should_dummify('elif')
