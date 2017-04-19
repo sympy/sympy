@@ -1558,14 +1558,21 @@ def _solve(f, *symbols, **flags):
                             t = Dummy('t')
                             iv = _solve(u - t, symbol, **flags)
                             temp_soln = soln
-                            index_list = []
                             soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
-                            for index, s in enumerate(soln):
-                                if s == S.NaN:
-                                    index_list.append(index)
-                            for i in index_list:
-                                if checksol(f, symbol, temp_soln[i]):
-                                    soln.append(temp_soln[i])
+                            count_nan = 0
+                            if S.NaN in soln:
+                                count_nan = soln.count(S.NaN)
+                                # try getting a solution for the equation
+                            if count_nan != 0:
+                                # heuristic -01(check whether the root satisfies the equation)
+                                index_list = []
+                                for index, s in enumerate(soln):
+                                    if s == S.NaN:
+                                        index_list.append(index)
+                                for i in index_list:
+                                    if checksol(f, symbol, temp_soln[i]):
+                                        soln.append(temp_soln[i])
+                                        count_nan -= 1
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
                             soln = None
