@@ -12,7 +12,8 @@ from sympy.crypto.crypto import (cycle_list,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
-      decipher_bifid, bifid_square, padded_key, uniq)
+      decipher_bifid, bifid_square, padded_key, uniq, encipher_playfair,
+      decipher_playfair)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -303,3 +304,13 @@ def test_bifid():
         bifid5_square('BACDEFGHIKLMNOPQRSTUVWXYZ')
     assert bifid6_square('B0') == \
         bifid6_square('B0ACDEFGHIJKLMNOPQRSTUVWXYZ123456789')
+
+
+def test_encipher_playfair():
+    assert encipher_playfair("ABC","ABC") == "BCHC"
+    assert encipher_playfair("THEQUICKBROWNFOXJUMPEDOVERTHELAZYDOG","PLAYFAIR") == "QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO"
+
+
+def test_decipher_playfair():
+    assert decipher_playfair("BCHC","ABC") == "ABCX"
+    assert decipher_playfair("QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO","PLAYFAIR") == "THEQUICKBROWNFOXIUMPEDOVERTHELAZYDOG"

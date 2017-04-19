@@ -395,7 +395,150 @@ def encipher_substitution(msg, old, new=None):
     """
     return translate(msg, old, new)
 
+def encipher_playfair(msg,key):
+    """
+    Performs the Playfair cipher encryption on plaintext ``msg``, and
+    returns the ciphertext.
 
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import encipher_playfair, AZ
+    >>> key = "encrypt"
+    >>> msg = "meet me on monday"
+    >>> encipher_playfair(msg,key)
+    'LNNPLNMCOQYTDC'
+
+    """
+
+    msg,key,alp = _prep(msg,key,None)
+    key += alp
+    map = [0 for x in range(25)]
+    for i in range(5):
+        for j in range(5):
+            for c in key:
+                if c not in map and (c != 'J' or 'I' not in map):
+                    map[5*i + j] = c if c != 'J' else 'I'
+                    break
+
+    parse = True
+    rv = ''
+
+    for c in range(len(msg)):
+        if parse:
+            a = map.index(msg[c]) if msg[c] in map else -1
+            b = map.index(msg[c+1]) if (c < len(msg) -1 and msg[c+1] in map) else -1
+
+            if c == len(msg) - 1 or b== a:
+                b = map.index('X') 
+            else:
+                parse = False
+
+            if a == -1:
+                a = map.index('I')
+            if b == -1:
+                b = map.index('I')
+
+            ja = a % 5
+            ia = a - ja
+            jb = b % 5
+            ib = b - jb
+
+            if ja == jb:
+                rv += map[ja + ((int(ia/5) + 1) % 5)*5]
+                rv += map[jb + ((int(ib/5) + 1) % 5)*5]
+            elif ia == ib:
+                rv += map[((ja+1)%5) + ia]
+                rv += map[((jb+1)%5) + ib]
+            else:
+                rv += map[ia + jb]
+                rv += map[ib + ja]
+        else:
+            parse = True
+
+    return rv
+
+def decipher_playfair(msg,key):
+    """
+    Performs the Playfair cipher decryption on ciphertext ``msg``, and
+    returns the plaintext.
+
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import decipher_playfair, AZ
+    >>> key = "encrypt"
+    >>> msg = "LNNPLNMCOQYTDC"
+    >>> decipher_playfair(msg,key)
+    'MEETMEONMONDAY'
+
+    Notes
+    ====
+
+    Since I and J share the same space in the Playfair matrix,
+    it's impossible to unambigously decode a ciphertext. This,
+    plus the fact that Xs need to be inserted into the plaintext
+    in order to encipher it, means that decipher_playfair() 
+    isn't guaranteed to return the same plaintext as was 
+    enciphered.  The message will still be readable in most
+    cases, though.  For instance:
+    >>> from sympy.crypto.crypto import decipher_playfair, AZ
+    >>> key = "encrypt"
+    >>> msg = "jays, exes and dubbles make things look strange"
+    >>> encipher_playfair(msg,key)
+    'HBDZRUYLTCBZPZIRPQYLOTFYAGGRKMMQSHMDCBTMRU'
+    >>> ct = 'HBDZRUYLTCBZPZIRPQYLOTFYAGGRKMMQSHMDCBTMRU'
+    >>> decipher_playfair(ct,key)
+    'IAYSEXESANDXDUBXBLESMAKETHINGSLOOKSTRANGEX'
+
+    """
+
+    msg,key,alp = _prep(msg,key,None)
+    key += alp
+    map = [0 for x in range(25)]
+    for i in range(5):
+        for j in range(5):
+            for c in key:
+                if c not in map and (c != 'J' or 'I' not in map):
+                    map[5*i + j] = c if c != 'J' else 'I'
+                    break
+
+    parse = True
+    rv = ''
+    for c in range(len(msg)):
+        if parse:
+            a = map.index(msg[c]) if msg[c] in map else -1
+            b = map.index(msg[c+1]) if (c < len(msg) -1 and msg[c+1] in map) else -1
+
+            if c == len(msg) - 1 or b== a:
+                b = map.index('X') 
+            else:
+                parse = False
+
+            if a == -1:
+                a = map.index('I')
+            if b == -1:
+                b = map.index('I')
+
+            ja = a % 5
+            ia = a - ja
+            jb = b % 5
+            ib = b - jb
+
+            if ja == jb:
+                rv += map[ja + ((int(ia/5) - 1) % 5)*5]
+                rv += map[jb + ((int(ib/5) - 1) % 5)*5]
+            elif ia == ib:
+                rv += map[((ja-1)%5) + ia]
+                rv += map[((jb-1)%5) + ib]
+            else:
+                rv += map[ia + jb]
+                rv += map[ib + ja]
+        else:
+            parse = True
+
+    return rv
+    
 ######################################################################
 #################### Vigenère cipher examples ########################
 ######################################################################
