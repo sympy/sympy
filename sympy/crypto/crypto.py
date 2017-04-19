@@ -436,7 +436,7 @@ def encipher_playfair(msg,key):
     Examples
     ========
 
-    >>> from sympy.crypto.crypto import encipher_playfair, AZ
+    >>> from sympy.crypto.crypto import encipher_playfair
     >>> key = "encrypt"
     >>> msg = "meet me on monday"
     >>> encipher_playfair(msg,key)
@@ -500,7 +500,7 @@ def decipher_playfair(msg,key):
     enciphered.  The message will still be readable in most
     cases, though.  For instance:
 
-    >>> from sympy.crypto.crypto import decipher_playfair, AZ
+    >>> from sympy.crypto.crypto import encipher_playfair,decipher_playfair
     >>> key = "encrypt"
     >>> msg = "jays, exes and dubbles make things look strange"
     >>> encipher_playfair(msg,key)
