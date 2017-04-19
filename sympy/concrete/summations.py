@@ -1151,10 +1151,11 @@ def asymptotic(expr, symbol):
             return asymptotic(expr.args[0], symbol)
         if lim == S(0) and isinstance(expr, sin):
             return asymptotic(expr.args[0], symbol)
-        expr2 = simplify(expr.subs(symbol, 1/symbol))
-        s = expr2.series(symbol, 0, None) # use MacLaurin expansion
+        sym = Dummy('x', real=True)
+        expr2 = simplify(expr.subs(symbol, 1/sym))
+        s = expr2.series(sym, 0, None) # use MacLaurin expansion
         s1 = next(s)
-        s1 = s1.subs(symbol, 1/symbol)
+        s1 = s1.subs(sym, 1/symbol)
         return s1
     except Exception:
         return expr
