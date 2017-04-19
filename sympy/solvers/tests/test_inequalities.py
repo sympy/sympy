@@ -382,3 +382,5 @@ def test__solve_inequality():
         assert _solve_inequality(op(S.One, x), x).lhs == x
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
+    a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)

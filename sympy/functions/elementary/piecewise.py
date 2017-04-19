@@ -325,9 +325,12 @@ class Piecewise(Function):
         def _solve_relational(r):
             rv = _solve_inequality(r, sym)
             if isinstance(rv, Relational) and \
-                    sym in rv.free_symbols and rv.args[0] != sym:
-                raise NotImplementedError(
-                    "Unable to solve relational %s for %s." % (r, sym))
+                    sym in rv.free_symbols:
+                if rv.args[0] != sym:
+                    raise NotImplementedError(filldedent('''
+Unable to solve relational %s for %s.''' % (r, sym)))
+                if rv.rel_op == '!=':
+                    rv = Or(sym < rv.rhs, sym > rv.rhs)
             if rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
                 rv = S.true
             return rv

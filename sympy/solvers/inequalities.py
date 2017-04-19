@@ -518,7 +518,15 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     discontinuities))).intersection(
                     Interval(domain.inf, domain.sup,
                     domain.inf not in domain, domain.sup not in domain))
-                reals = _nsort(critical_points, separated=True)[0]
+                if all(r.is_number for r in critical_points):
+                    reals = _nsort(critical_points, separated=True)[0]
+                else:
+                    from sympy.utilities.iterables import sift
+                    sifted = sift(critical_points, lambda x: x.is_real)
+                    try:
+                        reals = list(sorted(sifted[True]))
+                    except TypeError:
+                        raise NotImplementedError
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 

@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
+    cos, exp, Abs, Not, Symbol, S, Ne
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
@@ -553,3 +553,15 @@ def test_issue_11045():
     # the condition x > 3 will be pre-empted by the first condition
     assert Piecewise((1, Or(x < 1, x > 2)), (2, x > 3), (3, True)
         )._sort_expr_cond(x, 0, 4, x > 3) == []
+
+    # convert Ne to Or
+    assert Piecewise((1, Ne(x, 0)), (2, True)
+        ).integrate((x, -1, 1)) == 2
+
+
+def test_issue_7305():
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True)
+    x = Symbol('x', real=True)
+    assert (exp(I*m*x)*exp(I*k*x)).integrate((x, 0, 2*pi)
+        ).simplify() == Piecewise((2*pi, Eq(k, -m)), (0, True))
