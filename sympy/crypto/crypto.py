@@ -2316,15 +2316,35 @@ mult_14 = [
     0xd7,0xd9,0xcb,0xc5,0xef,0xe1,0xf3,0xfd,0xa7,0xa9,0xbb,0xb5,0x9f,0x91,0x83,0x8d
 ]
 
-def asciify(stream):
+def asciify(stream,mode="hex"):
     out = ''
-    start = 2
-    if len(stream) % 2 == 1:
-        start = 3
-        out = chr(int(stream[2],16))
+    start = 0
+    if stream[0:2] == '0x' or stream[0:2] == '0b' :
+        start = 2
 
-    for i in range(start,len(stream),2):
-        out += chr(int(stream[i:i+2],16))
+    if mode == "hex":
+        step = 2
+        base = 16
+        if stream[0:2] == '0x':
+            start = 2
+    elif mode == "binary":
+        step = 8
+        base = 2
+    elif mode == "octal":
+        step = 4
+        base = 8
+        if stream[0] == '0':
+            start = 1
+    else:
+        raise ValueError("Invalid conversion type.")
+
+    offset = len(stream) % step
+    if offset != 0:
+        out = chr(int(stream[start:start+offset],base))
+        start += offset 
+
+    for i in range(start,len(stream),step):
+        out += chr(int(stream[i:i+step],base))
 
     return out
 
@@ -2383,7 +2403,7 @@ def expand_key(key):
                 byte = ord(t[k])
                 eb = encrypt_box[byte]
                 tt += asciify(eb)
-            t = tt
+            t = asciify(hex(int(hexify(tt),16) ^ int(hexify(expanded_key[-1*n:-1*n+4]),16)))
             expanded_key += t
         for l in range(end_rep):
             t = asciify(hex(int(hexify(t),16) ^ int(hexify(expanded_key[-1*n:-1*n+4]),16)))
@@ -2452,14 +2472,10 @@ def mix_columns(state,encrypt=True):
         out += mix_column(state[block*i:block*(i+1)],encrypt)
     return out
 
-def encipher_rijndael(msg,key,input_type="hex",output_type="hex"):
-    hkey, hmsg = key,msg
-    if input_type == 'hex':
-        if hkey[0:2] != '0x':
-            hkey = '0x' + hkey
-        if msg[0:2] != '0x':
-            hmsg = '0x' + hmsg
-        hmsg, hkey = asciify(hmsg),asciify(hkey)
+def encipher_rijndael(msg,key,mode="ECB",iv=None,msg_type="hex"):
+    hmsg, hkey = msg, key
+    if msg_type == 'hex' or msg_type == 'binary':
+        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
 
     leftover = (16 - (len(msg) % 16)) % 16
     pad = ''
@@ -2482,40 +2498,41 @@ def encipher_rijndael(msg,key,input_type="hex",output_type="hex"):
     ct = ''
 
     expanded_key = expand_key(hkey)
+
+    if mode in {'CBC','PCBC'}:
+        if iv == None:
+            raise ValueError('Cipher Block Chaining requires initialization vector.')
+        chain = hexify(iv) if msg_type != "hex" else iv
+
     for b in range(int(len(hmsg) / 16)):
-        block = hmsg[16*b:16*(b+1)]
+        block = hmsg[16*b:16*(b+1)] 
+        if mode == 'CBC':
+            block = asciify( int(hexify(block),16) ^ int(chain,16))
         out = add_round_key(block,expanded_key,0)
         for n in range(1,rounds):
+
             out = sub_bytes(out,True)
-
             out = shift_rows(out)
-
             out = mix_columns(out)
-
             out = add_round_key(out,expanded_key,n)
 
-
         out = sub_bytes(out,True)
-
         out = shift_rows(out)
-
         out = add_round_key(out,expanded_key,rounds)
 
         ct += out
 
-    if output_type == 'hex':
+        chain = hexify(out)
+
+    if msg_type == 'hex':
         ct = hexify(ct)
 
     return ct
 
-def decipher_rijndael(msg,key,input_type="hex",output_type="hex"):
-    hkey, hmsg = key,msg
-    if input_type == 'hex':
-        if hkey[0:2] != '0x':
-            hkey = '0x' + hkey
-        if msg[0:2] != '0x':
-            hmsg = '0x' + hmsg
-        hmsg, hkey = asciify(hmsg),asciify(hkey)
+def decipher_rijndael(msg,key,msg_type="hex"):
+    hmsg, hkey = msg,key
+    if msg_type == 'hex' or msg_type == "binary":
+        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
 
     leftover = (16 - (len(msg) % 16)) % 16
     pad = ''
@@ -2538,30 +2555,27 @@ def decipher_rijndael(msg,key,input_type="hex",output_type="hex"):
     ct = ''
 
     expanded_key = expand_key(hkey)
-    print(hexify(expanded_key) + "\n")
+
     for b in range(int(len(hmsg) / 16)):
+
         block = hmsg[16*b:16*(b+1)]
 
         out = add_round_key(block,expanded_key,rounds)
 
         for n in range(rounds-1,0,-1):
+
             out = shift_rows(out,False)
-
             out = sub_bytes(out,False)
-
             out = add_round_key(out,expanded_key,n)
-
             out = mix_columns(out,False)
-
 
         out = shift_rows(out,False)
         out = sub_bytes(out,False)
         out = add_round_key(out,expanded_key,0)
 
-
         ct += out
 
-    if output_type == 'hex':
+    if msg_type == 'hex':
         ct = hexify(ct)
 
     return ct

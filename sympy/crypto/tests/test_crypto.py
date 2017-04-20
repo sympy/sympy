@@ -13,7 +13,8 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, playfair_matrix,
-      encipher_playfair,decipher_playfair)
+      encipher_playfair, decipher_playfair, mix_columns, expand_key, 
+      asciify,hexify, encipher_rijndael,decipher_rijndael)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -320,3 +321,27 @@ def test_encipher_playfair():
 def test_decipher_playfair():
     assert decipher_playfair("BCHC","ABC") == "ABCX"
     assert decipher_playfair("QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO","PLAYFAIR") == "THEQUICKBROWNFOXIUMPEDOVERTHELAZYDOG"
+
+
+def test_encipher_rijndael():
+    hmsg = "00112233445566778899aabbccddeeff"    
+
+    assert encipher_rijndael(hmsg,"000102030405060708090a0b0c0d0e0f") == "69c4e0d86a7b0430d8cdb78070b4c55a"
+    assert encipher_rijndael(hmsg,"000102030405060708090a0b0c0d0e0f1011121314151617") == "dda97ca4864cdfe06eaf70a0ec0d7191"
+    assert encipher_rijndael(hmsg,"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f") == "8ea2b7ca516745bfeafc49904b496089"
+    assert encipher_rijndael(asciify(hmsg),asciify("000102030405060708090a0b0c0d0e0f"),msg_type="ascii") == asciify("69c4e0d86a7b0430d8cdb78070b4c55a")
+
+    return
+
+
+def test_decipher_rijndael():
+    hmsg = "00112233445566778899aabbccddeeff"    
+     
+    assert decipher_rijndael("69c4e0d86a7b0430d8cdb78070b4c55a","000102030405060708090a0b0c0d0e0f") == hmsg
+    assert decipher_rijndael("dda97ca4864cdfe06eaf70a0ec0d7191","000102030405060708090a0b0c0d0e0f1011121314151617") == hmsg
+    assert decipher_rijndael("8ea2b7ca516745bfeafc49904b496089","000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f") == hmsg
+    assert decipher_rijndael(asciify("69c4e0d86a7b0430d8cdb78070b4c55a"),asciify("000102030405060708090a0b0c0d0e0f"),msg_type="ascii") == asciify(hmsg)
+
+    return
+
+
