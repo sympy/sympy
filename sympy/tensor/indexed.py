@@ -376,8 +376,7 @@ class IndexedBase(Expr, NotIterable):
         elif isinstance(label, (MatrixBase, NDimArray)):
             return label
         elif isinstance(label, collections.Iterable):
-            from sympy import ImmutableDenseNDimArray
-            return ImmutableDenseNDimArray(label)
+            return _sympify(label)
         else:
             label = _sympify(label)
 
