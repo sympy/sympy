@@ -21,7 +21,7 @@ from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
@@ -712,24 +712,24 @@ class Ellipse(GeometrySet):
             else:
                 return False
         elif isinstance(o, (Segment2D, Polygon)):
-            any_intersect = False
+            all_tangents = False
             segments = o.sides if isinstance(o, Polygon) else [o]
             for segment in segments:
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
                     if not any(intersect[0] in i for i in segment.points)\
                                    and all(not self.encloses_point(i) for i in segment.points):
-                        any_intersect = True
+                        all_tangents = True
                         continue
                     else:
                         return False
                 else:
-                    return any_intersect
-            return any_intersect
+                    return all_tangents
+            return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
-            raise NotImplementedError("Unknown argument type")
+            raise TypeError('Is_tangent not handled for %s' % func_name(o))
 
     @property
     def major(self):

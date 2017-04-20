@@ -380,4 +380,4 @@ def test_is_tangent():
     assert e1.is_tangent(Polygon((3, 12), (3, -12), (0, -5), (0, 5))) is False
     assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
     raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))
-    raises(NotImplementedError, lambda: e1.is_tangent(Rational(5)))
+    raises(TypeError, lambda: e1.is_tangent(Rational(5)))
