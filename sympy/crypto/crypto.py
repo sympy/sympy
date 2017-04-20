@@ -2316,6 +2316,9 @@ mult_14 = [
     0xd7,0xd9,0xcb,0xc5,0xef,0xe1,0xf3,0xfd,0xa7,0xa9,0xbb,0xb5,0x9f,0x91,0x83,0x8d
 ]
 
+def xor_ascii(a,b):
+    return asciify( hex(int(hexify(a),16) ^ int(hexify(b),16)))
+
 def asciify(stream,mode="hex"):
     out = ''
     start = 0
@@ -2395,7 +2398,7 @@ def expand_key(key):
         t = key_schedule_core(t,rcon_i)
         rcon_i += 1
         for j in range(4):
-            t = asciify(hex(int(hexify(t),16) ^ int(hexify(expanded_key[-1*n:-1*n+4]),16)))
+            t = xor_ascii(t,expanded_key[-1*n:-1*n+4]) 
             expanded_key += t
         if n == 32:
             tt = ''
@@ -2403,10 +2406,10 @@ def expand_key(key):
                 byte = ord(t[k])
                 eb = encrypt_box[byte]
                 tt += asciify(eb)
-            t = asciify(hex(int(hexify(tt),16) ^ int(hexify(expanded_key[-1*n:-1*n+4]),16)))
+            t = xor_ascii(tt,expanded_key[-1*n:-1*n+4])
             expanded_key += t
         for l in range(end_rep):
-            t = asciify(hex(int(hexify(t),16) ^ int(hexify(expanded_key[-1*n:-1*n+4]),16)))
+            t = xor_ascii(t,expanded_key[-1*n:-1*n+4])
             expanded_key += t
     return expanded_key
 
@@ -2414,7 +2417,7 @@ def add_round_key(state,expanded_key,n):
     out = ''
     round_key = expanded_key[len(state)*n:len(state)*(n+1)]
     for i in range(len(state)):
-        out += asciify( hex(int(hexify(state[i]),16) ^ int(hexify(round_key[i]),16) ))
+        out += xor_ascii(state[i],round_key[i])
     return out
 
 def sub_bytes(state,encrypt=True):
@@ -2472,106 +2475,101 @@ def mix_columns(state,encrypt=True):
         out += mix_column(state[block*i:block*(i+1)],encrypt)
     return out
 
-def encipher_rijndael(msg,key,mode="ECB",iv=None,msg_type="hex"):
-    hmsg, hkey = msg, key
-    if msg_type == 'hex' or msg_type == 'binary':
-        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
+def encipher_rijndael_block(sblock,expanded_key,rounds):
+    block = sblock if len(sblock) == 16 else pad_length(sblock,16)
 
-    leftover = (16 - (len(msg) % 16)) % 16
-    pad = ''
-    for i in range(leftover):
-        pad += '\x00'
-
-    hmsg = pad + hmsg
-
-    k = len(hkey)
-
-    if k == 16:
-        rounds = 10
-    elif k == 24:
-        rounds = 12
-    elif k == 32:
-        rounds = 14
-    else:
-        raise ValueError("Invalid key size.")
-
-    ct = ''
-
-    expanded_key = expand_key(hkey)
-
-    if mode in {'CBC','PCBC'}:
-        if iv == None:
-            raise ValueError('Cipher Block Chaining requires initialization vector.')
-        chain = hexify(iv) if msg_type != "hex" else iv
-
-    for b in range(int(len(hmsg) / 16)):
-        block = hmsg[16*b:16*(b+1)] 
-        if mode == 'CBC':
-            block = asciify( int(hexify(block),16) ^ int(chain,16))
-        out = add_round_key(block,expanded_key,0)
-        for n in range(1,rounds):
-
-            out = sub_bytes(out,True)
-            out = shift_rows(out)
-            out = mix_columns(out)
-            out = add_round_key(out,expanded_key,n)
+    out = add_round_key(block,expanded_key,0)
+    for n in range(1,rounds):
 
         out = sub_bytes(out,True)
         out = shift_rows(out)
-        out = add_round_key(out,expanded_key,rounds)
+        out = mix_columns(out)
+        out = add_round_key(out,expanded_key,n)
 
-        ct += out
+    out = sub_bytes(out,True)
+    out = shift_rows(out)
+    out = add_round_key(out,expanded_key,rounds)
 
-        chain = hexify(out)
+    return out
 
-    if msg_type == 'hex':
-        ct = hexify(ct)
+def decipher_rijndael_block(sblock,expanded_key,rounds):
+    block = sblock if len(sblock) == 16 else pad_length(sblock,16)
 
-    return ct
+    out = add_round_key(block,expanded_key,rounds)
 
-def decipher_rijndael(msg,key,msg_type="hex"):
-    hmsg, hkey = msg,key
-    if msg_type == 'hex' or msg_type == "binary":
-        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
+    for n in range(rounds-1,0,-1):
 
-    leftover = (16 - (len(msg) % 16)) % 16
+        out = shift_rows(out,False)
+        out = sub_bytes(out,False)
+        out = add_round_key(out,expanded_key,n)
+        out = mix_columns(out,False)
+
+    out = shift_rows(out,False)
+    out = sub_bytes(out,False)
+    out = add_round_key(out,expanded_key,0)
+
+    return out
+
+def pad_length(msg,size):
+
+    leftover = (size - (len(msg) % size)) % size 
     pad = ''
     for i in range(leftover):
         pad += '\x00'
 
-    hmsg = pad + hmsg
+    return pad + msg
 
-    k = len(hkey)
+def rijndael_rounds(key):
+    k = len(key)
 
     if k == 16:
-        rounds = 10
-    elif k == 24:
-        rounds = 12
-    elif k == 32:
-        rounds = 14
-    else:
-        raise ValueError("Invalid key size.")
+        return 10
+    if k == 24:
+        return 12
+    if k == 32:
+        return 14
+    
+    raise ValueError("Invalid key size.")
 
+def encipher_rijndael(msg,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
+    hmsg, hkey = msg, key
+    if msg_type != 'ascii':
+        hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
+
+    s = 16
+    if (mode == 'CFB' or mode == 'OFB') and 's' in kwargs.keys():
+        s = kwargs['s']
+
+    hmsg = pad_length(hmsg,s)
+    rounds = rijndael_rounds(hkey)
+    expanded_key = expand_key(hkey)
     ct = ''
 
-    expanded_key = expand_key(hkey)
+    if mode != "ECB":
+        if iv == None:
+            raise ValueError('Chaining requires initialization vector.')
 
-    for b in range(int(len(hmsg) / 16)):
+        chain = hexify(iv) if msg_type != "hex" else iv
+        chain = pad_length(chain,16)
 
-        block = hmsg[16*b:16*(b+1)]
+    for b in range(int(len(hmsg) / s)):
 
-        out = add_round_key(block,expanded_key,rounds)
+        block = hmsg[s*b:s*(b+1)] 
 
-        for n in range(rounds-1,0,-1):
+        if mode == 'CFB':
+            out = xor_ascii(block,encipher_rijndael_block(chain,expanded_key,rounds))
+            out = out[0:s]
+            chain = chain[s:] + out
+        elif mode == 'OFB':
+            chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            out = xor_ascii(block,chain)
+            out = out[0:len(block)]
+        else:
+            if mode == 'CBC':
+                block = xor_ascii(block,chain)
 
-            out = shift_rows(out,False)
-            out = sub_bytes(out,False)
-            out = add_round_key(out,expanded_key,n)
-            out = mix_columns(out,False)
-
-        out = shift_rows(out,False)
-        out = sub_bytes(out,False)
-        out = add_round_key(out,expanded_key,0)
+            out = encipher_rijndael_block(block,expanded_key,rounds)
+            chain = hexify(out)
 
         ct += out
 
@@ -2579,3 +2577,51 @@ def decipher_rijndael(msg,key,msg_type="hex"):
         ct = hexify(ct)
 
     return ct
+
+def decipher_rijndael(ct,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
+    hct, hkey = ct,key
+    if msg_type != 'ascii':
+        hct, hkey = asciify(hct,msg_type),asciify(hkey,msg_type)
+
+    s = 16
+    if (mode == 'CFB' or mode == 'OFB') and 's' in kwargs.keys():
+        s = kwargs['s']
+
+    if mode != 'OFB':
+        hct = pad_length(hct,s)
+    rounds = rijndael_rounds(hkey)
+    expanded_key = expand_key(hkey)
+    pt = ''
+
+    if mode != "ECB":
+        if iv == None:
+            raise ValueError('Cipher Block Chaining requires initialization vector.')
+
+        chain = hexify(iv) if msg_type != "hex" else iv
+        chain = pad_length(chain,16)
+
+    for b in range(int(len(hct) / s)):
+
+        block = hct[s*b:s*(b+1)]
+
+        if mode == 'CFB':
+            out = xor_ascii(block,encipher_rijndael_block(chain,expanded_key,rounds))
+            out = out[0:s]
+            chain = chain[s:] + block
+        elif mode == 'OFB':
+            chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            out = xor_ascii(block,chain)
+            out = out[0:len(block)]
+        else:
+            out = decipher_rijndael_block(block,expanded_key,rounds)
+
+            if mode == "CBC":
+                out = xor_ascii(out,chain)
+                chain = hexify(block)
+
+        pt += out
+
+    if msg_type == 'hex':
+        pt = hexify(pt)
+
+    return pt
