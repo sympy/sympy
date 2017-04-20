@@ -785,7 +785,7 @@ def where(condition, given_condition=None, **kwargs):
     Domain: (-1 < x) & (x < 1)
 
     >>> where(X**2<1).set
-    Interval(-1, 1, True, True)
+    Interval.open(-1, 1)
 
     >>> where(And(D1<=D2 , D2<3))
     Domain: ((Eq(a, 1)) & (Eq(b, 1))) | ((Eq(a, 1)) & (Eq(b, 2))) | ((Eq(a, 2)) & (Eq(b, 2)))    """
