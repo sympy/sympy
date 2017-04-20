@@ -2562,6 +2562,61 @@ def increment_counter(counter):
     return asciify(hex(i % (2**base)))
 
 def encipher_rijndael(msg,key,**kwargs):
+    """
+    Encrypts a message using AES (Rjindael) block encryption.
+
+    Parameters
+    =========
+
+    ``msg``: the message to be encrypted.  
+    ``key``: the key used to encrypt the message.
+
+    Optional Arguments
+    ==================
+
+    ``mode``: the block cipher mode used for encryption. Currently,
+    the algorithm implements the following modes:
+        
+        'ECB': Electronic Code Book
+        'CBC': Cipher Block Chaining
+        'CFB': Cipher Feed Back,
+        'OFB': Ouput Feed Back,
+        'CTR': Counter Mode
+    
+    If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
+    parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
+    parameter must also be set. If ``mode`` is 'CFB', the ``s``
+    parameter msut also be set (see below).
+
+    ``msg_type``: The format that the message is sent in, either 
+    'ascii','binary',or 'hex'.  The ``msg``,``key``, and ``iv`` and ``ctr``
+    (see above) must all be in the same format.
+
+    ``iv``: the initialization vector.  Must be set if ``mode``
+    is something other than 'ECB' or 'CTR'.
+
+    ``s``: the size of each data segment.  Must be set if ``mode``
+    is 'CFB'.
+
+    ``ctr``: the intialized counter.  Must be set if ``mode``
+    is 'CTR'.
+
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import encipher_rijndael
+    >>> hmsg,hkey = "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710","2b7e151628aed2a6abf7158809cf4f3c"
+    >>> encipher_rijndael(hmsg,hkey)
+    '3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4'
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+    .. [2] http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
+
+    """
     mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
     msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
 
@@ -2581,10 +2636,12 @@ def encipher_rijndael(msg,key,**kwargs):
     ct = ''
 
     if mode != "ECB":
-        if 'iv' not in kwargs.keys():
+        if 'iv' not in kwargs.keys() and 'ctr' not in kwargs.keys():
             raise ValueError('Chaining requires initialization vector.')
-
-        chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
+        if mode == 'CTR':
+            chain = asciify(kwargs['ctr'],msg_type) if msg_type != "ascii" else kwargs['ctr']
+        else:
+            chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
         chain = pad_length(chain,16)
 
     for b in range(int(len(hmsg) / s)):
@@ -2628,6 +2685,54 @@ def encipher_rijndael(msg,key,**kwargs):
     return ct
 
 def decipher_rijndael(ct,key,**kwargs):
+    """
+    Decrypts a message using AES (Rjindael) block encryption.
+
+    Parameters
+    =========
+
+    ``msg``: the message to be decrypted.  
+    ``key``: the key used to decrypt the message.
+
+    Optional Arguments
+    ==================
+
+    ``mode``: the block cipher mode used for decryption. Currently,
+    the algorithm implements the following modes:
+        
+        'ECB': Electronic Code Book
+        'CBC': Cipher Block Chaining
+        'CFB': Cipher Feed Back,
+        'OFB': Ouput Feed Back,
+        'CTR': Counter Mode
+    
+    If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
+    parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
+    parameter must also be set. If ``mode`` is 'CFB', the ``s``
+    parameter msut also be set (see below).
+
+    ``msg_type``: The format that the message is sent in, either 
+    'ascii','binary',or 'hex'.  The ``msg``,``key``,``iv``, and ``ctr``
+    (see above) must all be in the same format.
+
+    ``iv``: the initialization vector.  Must be set if ``mode``
+    is something other than 'ECB' or 'CTR'.
+
+    ``s``: the size of each data segment.  Must be set if ``mode``
+    is 'CFB'.
+
+    ``ctr``: the intialized counter.  Must be set if ``mode``
+    is 'CTR'.
+
+    Examples
+    =======
+
+    >>> from sympy.crypto.crypto import decipher_rijndael
+    >>> hmsg,hkey = "3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4","2b7e151628aed2a6abf7158809cf4f3c"
+    >>> decipher_rijndael(hmsg,hkey)
+    '6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710'
+    """
+
     mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
     msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
     hct, hkey = ct,key
@@ -2646,10 +2751,13 @@ def decipher_rijndael(ct,key,**kwargs):
     pt = ''
 
     if mode != "ECB":
-        if 'iv' not in kwargs.keys():
+        if 'iv' not in kwargs.keys() and 'ctr' not in kwargs.keys():
             raise ValueError('Chaining requires initialization vector.')
 
-        chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
+        if mode == 'CTR':
+            chain = asciify(kwargs['ctr'],msg_type) if msg_type != "ascii" else kwargs['ctr']
+        else:
+            chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
         chain = pad_length(chain,16)
 
     for b in range(int(len(hct) / s)):

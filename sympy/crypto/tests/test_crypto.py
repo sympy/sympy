@@ -362,9 +362,9 @@ def test_encipher_rijndael():
     assert encipher_rijndael(hmsg,key256,mode='OFB',iv=iv) == "dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484"
 
     #CTR
-    assert encipher_rijndael(hmsg,key128,mode='CTR',iv=ctr) == "874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee"
-    assert encipher_rijndael(hmsg,key192,mode='CTR',iv=ctr) == "1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050"
-    assert encipher_rijndael(hmsg,key256,mode='CTR',iv=ctr) == "601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6"
+    assert encipher_rijndael(hmsg,key128,mode='CTR',ctr=ctr) == "874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee"
+    assert encipher_rijndael(hmsg,key192,mode='CTR',ctr=ctr) == "1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050"
+    assert encipher_rijndael(hmsg,key256,mode='CTR',ctr=ctr) == "601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6"
 
 
 def test_decipher_rijndael():
@@ -406,6 +406,6 @@ def test_decipher_rijndael():
     assert decipher_rijndael("dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484",key256,mode='OFB',iv=iv) == hmsg
 
     #CTR
-    assert decipher_rijndael("874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee",key128,mode='CTR',iv=ctr) == hmsg
-    assert decipher_rijndael("1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050",key192,mode='CTR',iv=ctr) == hmsg
-    assert decipher_rijndael("601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6",key256,mode='CTR',iv=ctr) == hmsg
+    assert decipher_rijndael("874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee",key128,mode='CTR',ctr=ctr) == hmsg
+    assert decipher_rijndael("1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050",key192,mode='CTR',ctr=ctr) == hmsg
+    assert decipher_rijndael("601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c52b0930daa23de94ce87017ba2d84988ddfc9c58db67aada613c2dd08457941a6",key256,mode='CTR',ctr=ctr) == hmsg
