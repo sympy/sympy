@@ -413,7 +413,7 @@ def playfair_matrix(key):
 
     Some implementations of the Playfair cipher simply remove
     the "J" when it shows up in the keyword; however, in this
-    case, the "J" simply gets turned into an "I", similar to 
+    case, the "J" simply gets turned into an "I", similar to
     what happens during the enciphering/deciphering process.
 
     """
@@ -447,14 +447,14 @@ def encipher_playfair(msg,key):
     msg,key,alp = _prep(msg,key,None)
     key += alp
     map = playfair_matrix(key)
-    
+
     parse = True
     rv = ''
 
     for c in range(len(msg)):
         if parse:
             if c == len(msg) - 1 or msg[c+1] == msg[c]:
-                b = map.index('X') 
+                b = map.index('X')
             else:
                 b = map.index(msg[c+1]) if msg[c+1] in map else map.index('I')
                 parse = False
@@ -495,8 +495,8 @@ def decipher_playfair(msg,key):
     Since I and J share the same space in the Playfair matrix,
     it's impossible to unambigously decode a ciphertext. This,
     plus the fact that Xs need to be inserted into the plaintext
-    in order to encipher it, means that decipher_playfair() 
-    isn't guaranteed to return the same plaintext as was 
+    in order to encipher it, means that decipher_playfair()
+    isn't guaranteed to return the same plaintext as was
     enciphered.  The message will still be readable in most
     cases, though.  For instance:
 
@@ -518,9 +518,9 @@ def decipher_playfair(msg,key):
 
     for c in range(len(msg)):
         if parse:
-            
+
             if c == len(msg) - 1 or msg[c+1]==msg[c]:
-                b = map.index('X') 
+                b = map.index('X')
             else:
                 b = map.index(msg[c+1]) if msg[c+1] in map else map.index('I')
                 parse = False
@@ -540,7 +540,7 @@ def decipher_playfair(msg,key):
             parse = True
 
     return rv
-    
+
 ######################################################################
 #################### Vigenère cipher examples ########################
 ######################################################################
@@ -2322,7 +2322,7 @@ def xor_ascii(a,b):
 def asciify(hstream,mode="hex"):
     stream = hstream[0:-1] if hstream[-1] == 'L' else hstream
     out = ''
-    
+
     start = 0
     if stream[0:2] == '0x' or stream[0:2] == '0b' :
         start = 2
@@ -2346,7 +2346,7 @@ def asciify(hstream,mode="hex"):
     offset = len(stream) % step
     if offset != 0:
         out = chr(int(stream[start:start+offset],base))
-        start += offset 
+        start += offset
 
     for i in range(start,len(stream),step):
         out += chr(int(stream[i:i+step],base))
@@ -2422,7 +2422,7 @@ def expand_key(key):
         t = key_schedule_core(t,rcon_i)
         rcon_i += 1
         for j in range(4):
-            t = xor_ascii(t,expanded_key[-1*n:-1*n+4]) 
+            t = xor_ascii(t,expanded_key[-1*n:-1*n+4])
             expanded_key += t
         if n == 32:
             tt = ''
@@ -2471,7 +2471,7 @@ def mix_column(column,encrypt=True):
     ints = [0 for x in range(4)]
     t = [0 for x in range(4)]
     for i in range(4):
-        ints[i] = ord(column[i]) 
+        ints[i] = ord(column[i])
         c = 0xFF * (ints[i] >> 7)
         t[i] = (ints[i] << 1) & 0xFF
         t[i] ^= 0x1B & c;
@@ -2536,7 +2536,7 @@ def decipher_rijndael_block(sblock,expanded_key,rounds):
 
 def pad_length(msg,size):
 
-    leftover = (size - (len(msg) % size)) % size 
+    leftover = (size - (len(msg) % size)) % size
     pad = ''
     for i in range(leftover):
         pad += '\x00'
@@ -2552,7 +2552,7 @@ def rijndael_rounds(key):
         return 12
     if k == 32:
         return 14
-    
+
     raise ValueError("Invalid key size.")
 
 def increment_counter(counter):
@@ -2568,7 +2568,7 @@ def encipher_rijndael(msg,key,**kwargs):
     Parameters
     =========
 
-    ``msg``: the message to be encrypted.  
+    ``msg``: the message to be encrypted.
     ``key``: the key used to encrypt the message.
 
     Optional Arguments
@@ -2576,19 +2576,19 @@ def encipher_rijndael(msg,key,**kwargs):
 
     ``mode``: the block cipher mode used for encryption. Currently,
     the algorithm implements the following modes:
-        
+
         'ECB': Electronic Code Book
         'CBC': Cipher Block Chaining
         'CFB': Cipher Feed Back,
         'OFB': Ouput Feed Back,
         'CTR': Counter Mode
-    
+
     If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
     parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
     parameter must also be set. If ``mode`` is 'CFB', the ``s``
     parameter msut also be set (see below).
 
-    ``msg_type``: The format that the message is sent in, either 
+    ``msg_type``: The format that the message is sent in, either
     'ascii','binary',or 'hex'.  The ``msg``,``key``, and ``iv`` and ``ctr``
     (see above) must all be in the same format.
 
@@ -2646,13 +2646,13 @@ def encipher_rijndael(msg,key,**kwargs):
 
     for b in range(int(len(hmsg) / s)):
 
-        block = hmsg[s*b:s*(b+1)] 
+        block = hmsg[s*b:s*(b+1)]
 
         if mode == 'CFB':
             temp = asciify(block,"binary")
             enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
             high = asciify(enc[0:s],'binary')
-            
+
             out = binify(xor_ascii(temp,high))
             out = out[-s:]
 
@@ -2691,7 +2691,7 @@ def decipher_rijndael(ct,key,**kwargs):
     Parameters
     =========
 
-    ``msg``: the message to be decrypted.  
+    ``msg``: the message to be decrypted.
     ``key``: the key used to decrypt the message.
 
     Optional Arguments
@@ -2699,19 +2699,19 @@ def decipher_rijndael(ct,key,**kwargs):
 
     ``mode``: the block cipher mode used for decryption. Currently,
     the algorithm implements the following modes:
-        
+
         'ECB': Electronic Code Book
         'CBC': Cipher Block Chaining
         'CFB': Cipher Feed Back,
         'OFB': Ouput Feed Back,
         'CTR': Counter Mode
-    
+
     If ``mode`` is something other than 'EBC' and 'CTR', the ``iv``
     parameter must also be set.  If ``mode`` is 'CTR', the ``ctr``
     parameter must also be set. If ``mode`` is 'CFB', the ``s``
     parameter msut also be set (see below).
 
-    ``msg_type``: The format that the message is sent in, either 
+    ``msg_type``: The format that the message is sent in, either
     'ascii','binary',or 'hex'.  The ``msg``,``key``,``iv``, and ``ctr``
     (see above) must all be in the same format.
 
@@ -2768,7 +2768,7 @@ def decipher_rijndael(ct,key,**kwargs):
             temp = asciify(block,"binary")
             enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
             high = asciify(enc[0:s],'binary')
-            
+
             out = binify(xor_ascii(temp,high))
             out = out[-s:]
 
