@@ -2319,8 +2319,10 @@ mult_14 = [
 def xor_ascii(a,b):
     return asciify( hex(int(hexify(a),16) ^ int(hexify(b),16)))
 
-def asciify(stream,mode="hex"):
+def asciify(hstream,mode="hex"):
+    stream = hstream[0:-1] if hstream[-1] == 'L' else hstream
     out = ''
+    
     start = 0
     if stream[0:2] == '0x' or stream[0:2] == '0b' :
         start = 2
@@ -2351,7 +2353,11 @@ def asciify(stream,mode="hex"):
 
     return out
 
-def hexify(word):
+def hexify(word,mode="ascii"):
+    if mode == 'binary':
+        h = hex(int(word,2))
+        h = h[2:]
+        return h[0:-1] if h[-1] == 'L' else h
     out = ''
     for c in word:
         h = hex(ord(c))
@@ -2360,6 +2366,24 @@ def hexify(word):
         else:
             out += h[2:]
 
+    return out
+
+def binify(word,mode='ascii'):
+    if mode == 'hex':
+        out = bin(int(word,16))
+        out = out[2:]
+        while len(out) % 8 != 0:
+            out = '0' + out
+        return out
+
+    out = ''
+    for c in word:
+        b = bin(ord(c))
+        b = b[2:]
+        pad = ''
+        while len(pad) + len(b) < 8:
+            pad += '0'
+        out += pad + b
     return out
 
 def rotate(word):
@@ -2531,25 +2555,36 @@ def rijndael_rounds(key):
     
     raise ValueError("Invalid key size.")
 
-def encipher_rijndael(msg,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
+def increment_counter(counter):
+    base = len(counter) * 8
+    i = int(hexify(counter),16)
+    i += 1
+    return asciify(hex(i % (2**base)))
+
+def encipher_rijndael(msg,key,**kwargs):
+    mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
+    msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
+
     hmsg, hkey = msg, key
     if msg_type != 'ascii':
         hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
 
     s = 16
-    if (mode == 'CFB' or mode == 'OFB') and 's' in kwargs.keys():
+    if mode == 'CFB' and 's' in kwargs.keys():
+        hmsg = binify(hmsg)
         s = kwargs['s']
 
-    hmsg = pad_length(hmsg,s)
+    if mode != 'OFB' and mode != 'CTR':
+        hmsg = pad_length(hmsg,s)
     rounds = rijndael_rounds(hkey)
     expanded_key = expand_key(hkey)
     ct = ''
 
     if mode != "ECB":
-        if iv == None:
+        if 'iv' not in kwargs.keys():
             raise ValueError('Chaining requires initialization vector.')
 
-        chain = hexify(iv) if msg_type != "hex" else iv
+        chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
         chain = pad_length(chain,16)
 
     for b in range(int(len(hmsg) / s)):
@@ -2557,47 +2592,64 @@ def encipher_rijndael(msg,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
         block = hmsg[s*b:s*(b+1)] 
 
         if mode == 'CFB':
-            out = xor_ascii(block,encipher_rijndael_block(chain,expanded_key,rounds))
-            out = out[0:s]
-            chain = chain[s:] + out
+            temp = asciify(block,"binary")
+            enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
+            high = asciify(enc[0:s],'binary')
+            
+            out = binify(xor_ascii(temp,high))
+            out = out[-s:]
+
+            chain = binify(chain)
+            chain = asciify(chain[s:] + out,"binary")
         elif mode == 'OFB':
             chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            chain = chain[0:len(block)]
             out = xor_ascii(block,chain)
+        elif mode == 'CTR':
+            out = encipher_rijndael_block(chain,expanded_key,rounds)
             out = out[0:len(block)]
+            out = xor_ascii(block,out)
+            chain = increment_counter(chain)
         else:
             if mode == 'CBC':
                 block = xor_ascii(block,chain)
 
             out = encipher_rijndael_block(block,expanded_key,rounds)
-            chain = hexify(out)
+            chain = out
 
         ct += out
 
     if msg_type == 'hex':
-        ct = hexify(ct)
+        if mode == 'CFB':
+            ct = hexify(ct,"binary")
+        else:
+            ct = hexify(ct)
 
     return ct
 
-def decipher_rijndael(ct,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
+def decipher_rijndael(ct,key,**kwargs):
+    mode = kwargs['mode'] if 'mode' in kwargs.keys() else 'ECB'
+    msg_type = kwargs['msg_type'] if 'msg_type' in kwargs.keys() else 'hex'
     hct, hkey = ct,key
     if msg_type != 'ascii':
         hct, hkey = asciify(hct,msg_type),asciify(hkey,msg_type)
 
     s = 16
-    if (mode == 'CFB' or mode == 'OFB') and 's' in kwargs.keys():
+    if mode == 'CFB' and 's' in kwargs.keys():
+        hct = binify(hct)
         s = kwargs['s']
 
-    if mode != 'OFB':
+    if mode != 'OFB' and mode != 'CTR':
         hct = pad_length(hct,s)
     rounds = rijndael_rounds(hkey)
     expanded_key = expand_key(hkey)
     pt = ''
 
     if mode != "ECB":
-        if iv == None:
-            raise ValueError('Cipher Block Chaining requires initialization vector.')
+        if 'iv' not in kwargs.keys():
+            raise ValueError('Chaining requires initialization vector.')
 
-        chain = hexify(iv) if msg_type != "hex" else iv
+        chain = asciify(kwargs['iv'],msg_type) if msg_type != "ascii" else kwargs['iv']
         chain = pad_length(chain,16)
 
     for b in range(int(len(hct) / s)):
@@ -2605,23 +2657,38 @@ def decipher_rijndael(ct,key,mode="ECB",iv=None,msg_type="hex",**kwargs):
         block = hct[s*b:s*(b+1)]
 
         if mode == 'CFB':
-            out = xor_ascii(block,encipher_rijndael_block(chain,expanded_key,rounds))
-            out = out[0:s]
-            chain = chain[s:] + block
+            temp = asciify(block,"binary")
+            enc = binify(encipher_rijndael_block(chain,expanded_key,rounds))
+            high = asciify(enc[0:s],'binary')
+            
+            out = binify(xor_ascii(temp,high))
+            out = out[-s:]
+
+            chain = binify(chain)
+            chain = asciify(chain[s:] + block,"binary")
+
         elif mode == 'OFB':
             chain = encipher_rijndael_block(chain,expanded_key,rounds)
+            chain = chain[0:len(block)]
             out = xor_ascii(block,chain)
+        elif mode == 'CTR':
+            out = encipher_rijndael_block(chain,expanded_key,rounds)
             out = out[0:len(block)]
+            out = xor_ascii(block,out)
+            chain = increment_counter(chain)
         else:
             out = decipher_rijndael_block(block,expanded_key,rounds)
 
             if mode == "CBC":
                 out = xor_ascii(out,chain)
-                chain = hexify(block)
+                chain = block
 
         pt += out
 
     if msg_type == 'hex':
-        pt = hexify(pt)
+        if mode == 'CFB':
+            pt = hexify(pt,"binary")
+        else:
+            pt = hexify(pt)
 
     return pt
