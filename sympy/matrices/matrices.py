@@ -4366,10 +4366,10 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
 
         # Matrix Norms
         else:
-            if ord == 1: #maximum column sum 
+            if ord == 1: #maximum column sum
                 k = 0
                 max_= 0
-                for i in range(self.shape[1]): 
+                for i in range(self.shape[1]):
                     sum_ = 0
                     a = k
                     for j in range(self.shape[0]):
