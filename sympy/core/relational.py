@@ -345,7 +345,7 @@ class Equality(Relational):
                                 rv = fuzzy_bool(Eq(*args))
                                 if rv is True:
                                     rv = None
-                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                elif all(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
                     rv = S.false
                 if rv is not None:
                     return _sympify(rv)
