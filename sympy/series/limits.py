@@ -13,17 +13,17 @@ from sympy.core.exprtools import factor_terms
 from sympy.simplify.ratsimp import ratsimp
 from sympy.polys import PolynomialError
 
-def limit(e, z, z0, dir="+",exc=True):
+def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
 
     z0 can be any expression, including oo and -oo.
 
-    For dir="+-" (default) it calculates the bi-directional limit; for dir="+" it calculates the limit from the right (z->z0+) and for dir="-" the limit from the left (z->z0-).
-    For infinite z0 (oo or -oo), the dir argument is determined from
-    the direction of the infinity (i.e., dir="-" for oo).
+    For dir="+" (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-).  For infinite
+    z0 (oo or -oo), the dir argument is determined from the direction
+    of the infinity (i.e., dir="-" for oo).
 
-    exc is only used in the case of a non-existent bi-directional limit--when the left- and right-side limits don't match.  For exc=True (default), it throws a ValueError(), and for exc=False it returns None.
     Examples
     ========
 
@@ -46,18 +46,7 @@ def limit(e, z, z0, dir="+",exc=True):
     Gruntz algorithm (see the gruntz() function).
     """
 
-    if dir == "+-":
-        llim = Limit(e, z, z0,dir="-").doit(deep=False)
-        rlim = Limit(e, z, z0,dir="+").doit(deep=False)
-        if llim == rlim:
-            return rlim
-        else:
-            if exc:
-                raise ValueError("The limit does not exist! (left and right limits do not match)")
-            else:
-                return None
-    else:
-        return Limit(e, z, z0, dir).doit(deep=False)
+    return Limit(e, z, z0, dir).doit(deep=False)
 
 
 def heuristics(e, z, z0, dir):

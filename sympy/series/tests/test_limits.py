@@ -34,12 +34,12 @@ def test_basic1():
     assert limit(x + 1/x, x, oo) == oo
     assert limit(x - x**2, x, oo) == -oo
     assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
-    assert limit((1 + x)**oo, x, 0,dir='+') == oo
+    assert limit((1 + x)**oo, x, 0) == oo
     assert limit((1 + x)**oo, x, 0, dir='-') == 0
     assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
-    assert limit(y/x/log(x), x, 0,dir='+') == -oo*sign(y)
-    assert limit(cos(x + y)/x, x, 0,dir='+') == sign(cos(y))*oo
-    assert limit(gamma(1/x + 3), x, oo,dir='+') == 2
+    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
+    assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
+    assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
     assert limit(1/(x - 1), x, 1, dir="+") == oo
@@ -55,20 +55,9 @@ def test_basic1():
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
 
-    #test bi-directional limits
-    assert limit(sin(x)/x, x, 0,dir="+-") == 1
-    assert limit(x**2,x,0,dir="+-") == 0
-    assert limit(1/x**2,x,0,dir="+-") == oo
-
-    #test failing bi-directional limits
-    try:
-        assert limit(1/x,x,0,dir="+-") is None
-    except ValueError:
-        assert True
-    assert limit(1/x,x,0,dir="+-",exc=False) is None
     # approaching 0
     # from dir="+"
-    assert limit(1 + 1/x, x, 0,dir='+') == oo
+    assert limit(1 + 1/x, x, 0) == oo
     # from dir='-'
     # Add
     assert limit(1 + 1/x, x, 0, dir='-') == -oo
@@ -92,6 +81,7 @@ def test_basic2():
     assert limit(x + exp(-exp(x)), x, oo) == oo
     assert limit(13 + 1/x - exp(-x), x, oo) == 13
 
+
 def test_basic3():
     assert limit(1/x, x, 0, dir="+") == oo
     assert limit(1/x, x, 0, dir="-") == -oo
@@ -112,6 +102,7 @@ def test_basic5():
             if arg is S.Infinity:
                 return S.NaN
     assert limit(my(x), x, oo) == Limit(my(x), x, oo)
+
 
 def test_issue_3885():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
