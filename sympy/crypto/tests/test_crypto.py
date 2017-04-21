@@ -13,7 +13,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_elgamal, decipher_elgamal, dh_private_key, dh_public_key,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, playfair_matrix,
-      encipher_playfair, decipher_playfair, mix_columns, expand_key, 
+      encipher_playfair, decipher_playfair, mix_columns, expand_key,
       asciify, hexify, binify, encipher_rijndael,decipher_rijndael)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
@@ -332,7 +332,7 @@ def test_encipher_rijndael():
     ctr = "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
 
     #ECB
-    assert encipher_rijndael(hmsg,key128) == "3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4" 
+    assert encipher_rijndael(hmsg,key128) == "3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4"
     assert encipher_rijndael(hmsg,key192) == "bd334f1d6e45f25ff712a214571fa5cc974104846d0ad3ad7734ecb3ecee4eefef7afd2270e2e60adce0ba2face6444e9a4b41ba738d6c72fb16691603c18e0e"
     assert encipher_rijndael(hmsg,key256) == "f3eed1bdb5d2a03c064b5a7e3db181f8591ccb10d410ed26dc5ba74a31362870b6ed21b99ca6f4f9f153e7b1beafed1d23304b7a39f9f3ff067d8d8f9e24ecc7"
 
