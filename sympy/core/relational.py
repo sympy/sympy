@@ -316,6 +316,8 @@ class Equality(Relational):
                     return S.false
                 if L is False:
                     return S.true
+            elif None in fin and False in fin:
+                return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
                 # see if the difference evaluates
@@ -345,7 +347,7 @@ class Equality(Relational):
                                 rv = fuzzy_bool(Eq(*args))
                                 if rv is True:
                                     rv = None
-                elif all(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
+                elif any(a.is_infinite for a in Add.make_args(n)):  # (inf or nan)/x != 0
                     rv = S.false
                 if rv is not None:
                     return _sympify(rv)
