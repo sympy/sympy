@@ -14,6 +14,7 @@ from sympy.core.function import Application, Derivative
 from sympy.core.compatibility import ordered, range, with_metaclass, as_int
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.singleton import Singleton, S
+from sympy.utilities.iterables import uniq
 
 
 class Boolean(Basic):
@@ -343,9 +344,11 @@ class And(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
+        from sympy.core.relational import Equality
         newargs = []
         rel = []
-        for x in reversed(list(args)):
+        drev = {}
+        for x in reversed(list(uniq(args))):  # maintain order
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
                 continue
@@ -356,8 +359,43 @@ class And(LatticeOp, BooleanFunction):
                 nc = (~c).canonical
                 if any(r == nc for r in rel):
                     return [S.false]
+                if c.rel_op in ("<", ">"):
+                    rev = c.reversed.func(*c.args)  # x < 0 --> x > 0
+                    if any(r == rev for r in rel):
+                        return [S.false]
+                    drev[c] = rev
+                # weak (x <= 0) /strong (x < 0) interaction
+                if c.rel_op not in ('==', '!='):
+                    ws = (~c).reversed.func(*c.args)  # x < 0 --> x <= 0
+                    if any(r == ws for r in rel):
+                        if c.rel_op in ("<", ">"):
+                            # strong replaces weak
+                            rel.remove(ws)
+                            rel.append(c)
+                            try:
+                                newargs.remove(ws)
+                            except ValueError:
+                                newargs.remove(ws.reversed)
+                            newargs.append(x)
+                        # weak is ignored
+                        continue
                 rel.append(c)
             newargs.append(x)
+        # check for equality condition
+        for c in rel:
+            if c.rel_op in ("<=", ">="):
+                rev = drev.get(c, c.reversed.func(*c.args))
+                if any(r == rev for r in rel):
+                    rel.remove(rev)
+                    try:
+                        newargs.remove(rev)
+                    except ValueError:
+                        newargs.remove(rev.reversed)
+                    try:
+                        newargs.remove(c)
+                    except ValueError:
+                        newargs.remove(c.reversed)
+                    newargs.append(Equality(*c.args))
         return LatticeOp._new_args_filter(newargs, And)
 
     def as_set(self):
@@ -414,8 +452,10 @@ class Or(LatticeOp, BooleanFunction):
 
     @classmethod
     def _new_args_filter(cls, args):
+        from sympy.core.relational import Unequality
         newargs = []
         rel = []
+        drev = {}
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
@@ -427,8 +467,44 @@ class Or(LatticeOp, BooleanFunction):
                 nc = (~c).canonical
                 if any(r == nc for r in rel):
                     return [S.true]
+                if c.rel_op in ("<=", ">="):
+                    rev = c.reversed.func(*c.args)  # x < 0 --> x > 0
+                    if any(r == rev for r in rel):
+                        return [S.true]
+                    drev[c] = rev
+                # strong (x < 0) and weak (x <= 0)
+                if c.rel_op not in ('==', '!='):
+                    ws = (~c).reversed.func(*c.args)  # x <= 0 --> x < 0
+                    if any(r == ws for r in rel):
+                        # strong is ignored
+                        if c.rel_op in ("<", ">"):
+                            continue
+                        # weak (x<=0) replaces strong (x<0)
+                        rel.remove(ws)
+                        rel.append(c)
+                        try:
+                            newargs.remove(ws)
+                        except ValueError:
+                            newargs.remove(ws.reversed)
+                        newargs.append(x)
+                        continue
                 rel.append(c)
             newargs.append(x)
+        # check for unequality condition
+        for c in rel:
+            if c.rel_op in ("<", ">"):
+                rev = c.reversed.func(*c.args)  # x < 0 --> x > 0
+                if any(r == rev for r in rel):
+                    rel.remove(rev)
+                    try:
+                        newargs.remove(rev)
+                    except ValueError:
+                        newargs.remove(rev.reversed)
+                    try:
+                        newargs.remove(c)
+                    except ValueError:
+                        newargs.remove(c.reversed)
+                    newargs.append(Unequality(*c.args))
         return LatticeOp._new_args_filter(newargs, Or)
 
     def as_set(self):
