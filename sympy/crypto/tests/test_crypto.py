@@ -14,7 +14,9 @@ from sympy.crypto.crypto import (cycle_list,
       dh_shared_key, decipher_shift, decipher_affine, encipher_bifid,
       decipher_bifid, bifid_square, padded_key, uniq, playfair_matrix,
       encipher_playfair, decipher_playfair, mix_columns, expand_key,
-      asciify, hexify, binify, encipher_rijndael,decipher_rijndael)
+      asciify, hexify, binify, encipher_rijndael,decipher_rijndael,
+      encipher_adfgvx,decipher_adfgvx,encipher_vic,decipher_vic,
+      encipher_transposition, decipher_transposition)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -321,6 +323,38 @@ def test_encipher_playfair():
 def test_decipher_playfair():
     assert decipher_playfair("BCHC","ABC") == "ABCX"
     assert decipher_playfair("QMHNPEKSCBQVTPSVEPEFMIVLGIQMGPFWFCVO","PLAYFAIR") == "THEQUICKBROWNFOXIUMPEDOVERTHELAZYDOG"
+
+
+def test_encipher_transposition():
+    assert encipher_transposition("MEETMEUNDERTHEWILLOWTREE","SECRET") == "EDWTENEWMRLETEIRMUHOETLE"
+    assert encipher_transposition("Attack at dawn.","MILITARY") == "KTAANTWADACT"
+
+def test_decipher_transposition():
+    assert decipher_transposition("EDWTENEWMRLETEIRMUHOETLE","SECRET") == "MEETMEUNDERTHEWILLOWTREE"
+    assert decipher_transposition("KTAANTWADACT","MILITARY") == "ATTACKATDAWN"
+
+def test_encipher_adfgvx():
+    assert encipher_adfgvx("ATTACKAT1200AM","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY") == "DGDDDAGDDGAFADDFDADVDVFAADVX"
+    assert encipher_adfgvx("attack at 100 pm","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","CODE") == "ADAAAVDDAVDVFDDGDFVDDGDFFX"
+    assert encipher_adfgvx("do not attack","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","REPEAT") == "AAAXVDGVDDGDDDVFDDAADD"
+
+
+def test_decipher_adfgvx():
+    assert decipher_adfgvx("DGDDDAGDDGAFADDFDADVDVFAADVX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY") == "ATTACKAT1200AM"
+    assert decipher_adfgvx("ADAAAVDDAVDVFDDGDFVDDGDFFX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","CODE") == "ATTACKAT100PM"
+    assert decipher_adfgvx("AAAXVDGVDDGDDDVFDDAADD","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","REPEAT") == "DONOTATTACK"
+
+
+def test_encipher_vic():
+    msg = "We are pleased to hear of your success in establishing your false identity. You will be sent some money to cover expenses within a month."
+    ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    assert encipher_vic(msg,'741776','77651','IDREAMOFJEANNIEWITHT',8) == ct
+
+
+def test_decipher_vic():
+    ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    msg = "WEAREPLEASEDTOHEAROFYOURSUCCESSINESTABLISHINGYOURFALSEIDENTITYYOUWILLBESENTSOMEMONEYTOCOVEREXPENSESWITHINAMONTHR"
+    assert decipher_vic(ct,'741776','77651','IDREAMOFJEANNIEWITHT',8) == msg
 
 
 def test_encipher_rijndael():

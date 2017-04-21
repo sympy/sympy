@@ -395,6 +395,92 @@ def encipher_substitution(msg, old, new=None):
     """
     return translate(msg, old, new)
 
+def encipher_transposition(msg,key):
+    """
+    Enciphers a message using a columnar transposition.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be transposed.
+    ``key`` : The key used for the transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_transposition
+    >>> encipher_transposition("Meet me under the willow tree","SECRET")
+    'EDWTENEWMRLETEIRMUHOETLE'
+
+    """
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+    msg = msg.upper()
+    key = key.upper()
+    lkey = [key[i] + chr(i) for i in range(len(key))]
+    slkey = sorted(lkey)
+    while len(msg) % len(key) != 0:
+        msg += ' '
+
+    out = ''
+
+    l = int(len(msg) / len(key))
+    for i in range(len(key)):
+        for j in range(l):
+            out += msg[lkey.index(slkey[i]) + j*len(key)]
+
+    out = out.replace(" ","")
+    return out
+
+def decipher_transposition(msg,key):
+    """
+    Deciphers a message using a columnar transposition.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be deciphered.
+    ``key`` : The key used for the transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_transposition
+    >>> decipher_transposition("EDWTENEWMRLETEIRMUHOETLE","SECRET")
+    'MEETMEUNDERTHEWILLOWTREE'
+
+    """
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+
+    lkey = [key[i] + chr(i) for i in range(len(key))]
+    slkey = sorted(lkey)
+
+    dmsg = msg
+    l = int(len(msg) / len(key))
+    ex = len(msg) % len(key)
+
+    chunks = ['' for i in range(len(key))]
+    for i in range(len(chunks)):
+        o = lkey.index(slkey[i])
+        chunks[o] += dmsg[0:l]
+        dmsg = dmsg[l:]
+        if o < ex:
+            chunks[o] += dmsg[0]
+            dmsg = dmsg[1:]
+        else:
+            chunks[o] += ' '
+
+    out = ''
+    l += 1
+    chunks = ''.join(chunks)
+    for i in range(l):
+        for j in range(len(key)):
+            out += chunks[l*j + i]
+
+    out = out.replace(" ","")
+
+    return out
+
+
 def playfair_matrix(key):
     """
     Generates the Playfair matrix used in enciphering/deciphering
@@ -540,6 +626,387 @@ def decipher_playfair(msg,key):
             parse = True
 
     return rv
+
+def encipher_adfgvx(msg,alph,key):
+    """
+    Enciphers a message using the ADFGVX cipher.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be encoded..
+    ``alph`` : The alphabet used for the substitution
+    phase.  The alphabet must contain all letters A-Z,
+    and the digits 0-9.
+    ``key`` : The key used for transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_adfgvx
+    >>> encipher_adfgvx("ATTACKAT1200AM","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY")
+    'DGDDDAGDDGAFADDFDADVDVFAADVX'
+
+    """
+
+    t = 'ADFGVX'
+    if len(alph) != 36:
+        raise ValueError('Alphabet must be 36 characters.')
+    for char in uppercase:
+        if char not in alph and char.lower() not in alph:
+            raise ValueError('Alphabet requires all letters A-Z and digits 0-9.')
+
+    msg,key,alp = _prep(msg,key,bifid6 + uppercase.lower())
+    msg = msg.upper()
+    key = key.upper()
+    alp = alph.upper()
+
+    ct = ''
+    for char in msg:
+        i = alp.index(char) % 6
+        j = int(alp.index(char) / 6)
+        ct += t[j] + t[i]
+
+    out = encipher_transposition(ct,key)
+    return out
+
+def decipher_adfgvx(msg,alph,key):
+    """
+    Deciphers a message using the ADFGVX cipher.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be deciphered.
+    ``alph`` : The alphabet used for the substitution
+    phase.  The alphabet must contain all letters A-Z,
+    and the digits 0-9.
+    ``key`` : The key used for the transposition phase.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_adfgvx
+    >>> decipher_adfgvx("DGDDDAGDDGAFADDFDADVDVFAADVX","NA1C3H8TB2OME5WRPD4F6G7I9J0KLQSUVXYZ","PRIVACY")
+    'ATTACKAT1200AM'
+
+    """
+
+    t = 'ADFGVX'
+    if len(alph) != 36:
+        raise ValueError('Alphabet must be 36 characters.')
+    for char in uppercase:
+        if char not in alph and char.lower() not in alph:
+            raise ValueError('Alphabet requires all letters A-Z and digits 0-9.')
+
+    msg,key,alp = _prep(msg,key,bifid6 + uppercase.lower())
+    msg = msg.upper()
+    key = key.upper()
+    alp = alph.upper()
+
+    pt = decipher_transposition(msg,key)
+    out = ''
+
+    for i in range(int(len(pt)/2)):
+        out += alp[6*t.index(pt[2*i]) + t.index(pt[2*i+1])]
+
+    return out
+
+def chain_add(string,n):
+    for i in range(n):
+        string += str( (int(string[i]) + int(string[i+1])) % 10 )
+    return string
+
+def create_keys(date,ind,key,num):
+    num = int(num)
+    key = key[0:20]
+
+    first = ''
+    for i in range(5):
+        first += str( (int(ind[i]) - int(date[i])) % 10 )
+
+    lsplit,rsplit = [key[x] + str(x) for x in range(10)],[key[10+y] + str(y) for y in range(10)]
+    slsplit,srsplit = sorted(lsplit),sorted(rsplit)
+
+    second = list('0'*20)
+    for i in range(10):
+        second[i] = str( (slsplit.index(lsplit[i]) + 1) % 10 )
+        second[10+i] = str( (srsplit.index(rsplit[i]) + 1) % 10)
+
+    second = ''.join(second)
+
+    first = chain_add(first,5)
+
+    third = ''
+    for i in range(10):
+        third += str( (int(first[i]) + int(second[i])) % 10 )
+
+    third = list(third)
+    for i in range(10):
+        third[i] = second[10 + ((int(third[i]) - 1) % 10)]
+
+    third = ''.join(third)
+    third = chain_add(third,50)
+    third_old = third[0:10]
+    third = third[10:]
+
+    temp = sorted([ str( (int( third[40+x] ) - 1) % 10) + str(x) for x in range(10)])
+    toprow = ''
+    for i in range(10):
+        toprow += str( (temp.index( str((int(third[40+i]) -1) % 10) + str(i)) + 1) % 10)
+
+
+    digits = third[-1]
+    t = -2
+
+    while third[t] == digits:
+        t -= 1
+    digits = third[t] + digits
+
+    trans = [int(digits[0]) + num, int(digits[1]) + num]
+
+    third_old = ''.join([str((int(third_old[x]) - 1) % 10) for x in range(len(third_old))])
+
+    tchars = encipher_transposition(third,third_old)
+    tchars = tchars[0:sum(trans)]
+
+    t1 = [ str( (int(tchars[x]) - 1) % 10) + chr(x) for x in range(trans[0]) ]
+    t2 = [ str( (int(tchars[x + trans[0]]) - 1) % 10) + chr(x) for x in range(trans[1]) ]
+
+    return toprow,trans,tchars,t1,t2
+
+def vic_triangles(t,l,trans):
+    st = sorted(t)
+    tri = [0 for i in range(l)]
+
+    n = t.index(st[0])
+    m = 0
+    for i in range(len(tri)):
+        tri[i] = n
+        n += 1
+        if n > trans[1]:
+            m += 1
+            n = t.index(st[m])
+
+    return tri
+
+def encipher_vic(msg,date,ind,key,num):
+    """
+    Enciphers a message using the VIC cipher.
+
+    Notes
+    =====
+
+    The VIC cipher is a pen-and-paper cipher, used by the
+    Russian spy Reino Hayhanen during the Cold War. [1] It's
+    considered the most complex cipher that can still
+    reasonably be used with just pen and paper, and in fact
+    was never broken during the Cold War.
+    A more detailed description of the cipher can be found here:
+
+    http://www.quadibloc.com/crypto/pp1324.htm
+
+    The cipher makes use of a straddling checkerboard in one
+    step of the encryption process; though there are numerous
+    valid configurations, this implementiation uses the one found
+    at the above link, in particular:
+
+
+      |X X X X X X X X X X
+      |___________________
+      |A T   O N E   S I R
+    0 |B C D F G H J K L M
+    8 |P Q U V W X Y Z . /
+
+    ,where XXXXXXXXXX is an intermediate key used during the
+    encryption process.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be encrypted.
+    ``date`` : A six-digit number or string, typically encoded
+    as the date.
+    ``ind`` : A random 5-digit indicator group.
+    ``key`` : A twenty-character string used as the key during
+    encryption.
+    ``num`` : A "personal number", must be no greater than 15.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_vic
+    >>> msg = "We are pleased to hear of your success in establishing your false identity. You will be sent some money to cover expenses within a month."
+    >>> encipher_vic(msg,'741776','77651','IDREAMOFJEANNIEWITHT',8)
+    '36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860'
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/VIC_cipher
+
+    """
+    try:
+        x,y,z = int(date),int(ind),int(num)
+    except:
+        raise ValueError("Date, indicator, and personal number must be numbers.")
+
+    if len(date) != 6:
+        raise ValueError("Date must be 6 digits long.")
+
+    if len(ind) != 5:
+        raise ValueError("Indicator must be 5 digits long.")
+
+    if int(num) > 15:
+        raise ValueError("Personal number must be no greater than 15.")
+
+    msg,key,_ = _prep(msg,key,None)
+    num = int(num)
+    if len(key) < 20:
+        raise ValueError("Key phrase must be at least 20 letters long.")
+
+    toprow,trans,tchars,t1,t2 = create_keys(date,ind,key,num)
+
+    secondrow = 'AT ONE SIR'
+    thirdrow  = 'BCDFGHJKLM'
+    fourthrow = 'PQUVWXYZ./'
+    rows = secondrow + thirdrow + fourthrow
+    column = ' 08'
+
+    tout = ''
+    for char in msg:
+        i = int(rows.index(char) / 10)
+        j = rows.index(char) % 10
+        tout += column[i] + toprow[j]
+
+    tout = tout.replace(" ","")
+
+    while len(tout) % 5 != 0:
+        tout += '9'
+
+    while len(tout) % trans[0] != 0:
+        tout += ' '
+
+    tout2 = encipher_transposition(tout,t1)
+
+    l = int( len(tout2) / trans[1])
+    ex = len(tout2) % trans[1]
+    if ex != 0:
+        l += 1
+
+    tri = vic_triangles(t2,l,trans)
+
+    last = list(' ' * trans[1] * l)
+    for i in range(l):
+        ext = min(ex,tri[i]) if  i == l-1 else tri[i]
+        last[ i*trans[1] : i*trans[1] + ext ] = tout2[0:ext]
+        tout2 = tout2[ext:]
+
+    while tout2 != '':
+        last[last.index(' ')] = tout2[0]
+        tout2 = tout2[1:]
+
+    out = encipher_transposition(last,t2)
+
+    aout = ''
+    for i in range(int(len(out) / 5)):
+        aout += out[5*i:5*(i+1)] + ' '
+
+    aout = aout[0:-1]
+    return aout
+
+def decipher_vic(msg,date,ind,key,num):
+    """
+    Deciphers a message using the VIC cipher.
+
+    Notes
+    =====
+
+    See the documentation for ``encipher_vic`` for more details
+    regarding the VIC cipher.
+
+    Parameters
+    ==========
+
+    ``msg`` : The message to be decrypted.
+    ``date`` : A six-digit number or string, typically encoded
+    as the date.
+    ``ind`` : A random 5-digit indicator group.
+    ``key`` : A twenty-character string used as the key during
+    decryption.
+    ``num`` : A "personal number", must be no greater than 15.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_vic
+    >>> ct = "36178 05428 99592 53507 01440 00113 42004 74684 58426 75048 42503 10084 69181 77284 83603 47503 50076 68483 88242 42838 90960 35071 37586 89914 05000 80429 00873 78601 44725 44860"
+    >>> decipher_vic(ct,'741776','77651','IDREAMOFJEANNIEWITHT',8)
+    'WEAREPLEASEDTOHEAROFYOURSUCCESSINESTABLISHINGYOURFALSEIDENTITYYOUWILLBESENTSOMEMONEYTOCOVEREXPENSESWITHINAMONTHR'
+
+
+    """
+    try:
+        x,y,z = int(date),int(ind),int(num)
+    except:
+        raise ValueError("Date, indicator, and personal number must be numbers.")
+
+    if len(date) != 6:
+        raise ValueError("Date must be 6 digits long.")
+
+    if len(ind) != 5:
+        raise ValueError("Indicator must be 5 digits long.")
+
+    if int(num) > 15:
+        raise ValueError("Personal number must be no greater than 15.")
+
+    msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
+    msg = msg.replace(" ","")
+    num = int(num)
+    if len(key) < 20:
+        raise ValueError("Key phrase must be at least 20 letters long.")
+
+    toprow,trans,tchars,t1,t2 = create_keys(date,ind,key,num)
+    secondrow = 'AT ONE SIR'
+    thirdrow  = 'BCDFGHJKLM'
+    fourthrow = 'PQUVWXYZ./'
+
+    tout = decipher_transposition(msg,t2)
+    l = int(len(tout) / trans[1])
+    ex = len(tout) % trans[1]
+    if ex != 0:
+        l += 1
+
+    tri = vic_triangles(t2,l,trans)
+
+    tout = list(tout)
+    tout2 = ''
+    for i in range(l):
+        ext = min(ex,tri[i]) if i == l-1 else tri[i]
+        tout2 += ''.join(tout[i*trans[1] : i*trans[1] + ext])
+        tout[i*trans[1] : i*trans[1] + ext] = ' '*ext
+
+    tout = ''.join(tout).replace(" ","")
+    tout2 += tout
+
+    tout3 = decipher_transposition(tout2,t1)
+
+    out = ''
+    while tout3 != '':
+        char = tout3[0]
+        if char == '0':
+            out += thirdrow[toprow.index(tout3[1])]
+            tout3 = tout3[2:]
+        elif char == '8':
+            out += fourthrow[toprow.index(tout3[1])]
+            tout3 = tout3[2:]
+        else:
+            out += secondrow[toprow.index(char)]
+            tout3 = tout3[1:]
+
+    return out
+
+
 
 ######################################################################
 #################### Vigenère cipher examples ########################
@@ -2534,12 +3001,12 @@ def decipher_rijndael_block(sblock,expanded_key,rounds):
 
     return out
 
-def pad_length(msg,size):
-
+def pad_length(msg,size,mode="ascii"):
+    out = msg
     leftover = (size - (len(msg) % size)) % size
     pad = ''
     for i in range(leftover):
-        pad += '\x00'
+        pad += '0' if mode == 'binary' else chr(0)
 
     return pad + msg
 
@@ -2625,11 +3092,11 @@ def encipher_rijndael(msg,key,**kwargs):
         hmsg, hkey = asciify(hmsg,msg_type),asciify(hkey,msg_type)
 
     s = 16
-    if mode == 'CFB' and 's' in kwargs.keys():
-        hmsg = binify(hmsg)
-        s = kwargs['s']
-
-    if mode != 'OFB' and mode != 'CTR':
+    if mode == 'CFB':
+        if 's' in kwargs.keys():
+            s = kwargs['s']
+        hmsg = pad_length(binify(hmsg),s,"binary")
+    elif mode != 'OFB' and mode != 'CTR':
         hmsg = pad_length(hmsg,s)
     rounds = rijndael_rounds(hkey)
     expanded_key = expand_key(hkey)
