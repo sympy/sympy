@@ -4078,6 +4078,31 @@ k = 0   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Sum(k**k, (k, -oo, n))
+    ascii_str = \
+"""\
+  n     \n\
+ ___    \n\
+ \\  `   \n\
+  \\    k\n\
+  /   k \n\
+ /__,   \n\
+k = -oo   \
+"""
+    ucode_str = \
+u("""\
+  n     \n\
+ ___    \n\
+ ╲      \n\
+  ╲    k\n\
+  ╱   k \n\
+ ╱      \n\
+ ‾‾‾    \n\
+k = -oo   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, 0, n**n))
     ascii_str = \
 """\
