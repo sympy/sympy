@@ -1525,10 +1525,11 @@ class Basic(with_metaclass(ManagedProperties)):
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
 
-    def _partition_args(self, var):
+    def _partition_args(self, var, all_comm=True):
         """
         Return a `dict` of subexpressions which contains `var`.
         Subexpressions which doesn't contain `var` are considered to be constant.
+        Note: Partition of non-commutative terms is not supported.
 
         See:
         https://people.eecs.berkeley.edu/~fateman/papers/partition-new2.pdf
@@ -1565,6 +1566,9 @@ class Basic(with_metaclass(ManagedProperties)):
             else:
                 leaves['Constant'] = [self]
             return leaves
+
+        if self.args_cnc()[1] and not all_comm:
+            raise NotImplementedError("Partition of non-commutative terms is not supported")
 
         for subexpr in self.args:
             if var in subexpr.free_symbols:
