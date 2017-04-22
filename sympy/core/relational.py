@@ -317,6 +317,8 @@ class Equality(Relational):
                     return S.false
                 if L is False:
                     return S.true
+            elif None in fin and False in fin:
+                return Relational.__new__(cls, lhs, rhs, **options)
 
             if all(isinstance(i, Expr) for i in (lhs, rhs)):
                 # see if the difference evaluates
