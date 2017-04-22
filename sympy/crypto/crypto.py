@@ -923,7 +923,7 @@ def decipher_vic(msg,date,ind,key,num):
     =====
 
     See the documentation for ``encipher_vic`` for more details
-    regarding the VIC cipher.
+    regarding the VIC cipher implementation.
 
     Parameters
     ==========
