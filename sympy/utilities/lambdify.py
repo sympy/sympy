@@ -462,15 +462,13 @@ def should_dummify(expr, printer=None):
     Parameter
     ---------
     expr : Represents the expression for which dummify should be checked
-    printer : Represents the printer which is provided to this function
+    printer : Represents the printer provided by lambdify function or by the user
 
     Examples
     ========
 
     >>> from sympy.utilities.lambdify import should_dummify
     >>> from sympy.abc import x
-    >>> should_dummify(r'32v2?g#Gmw845h$Wb53wi\phi')
-    True
     >>> should_dummify('elif')
     True
     >>> should_dummify(x)
@@ -490,8 +488,7 @@ def should_dummify(expr, printer=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     if keyword.iskeyword(lambdarepr(expr)):
-        result = True
-        return result
+        return True
     else:
         valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
         result = valid_identifier_regex.match(lambdarepr(expr))
