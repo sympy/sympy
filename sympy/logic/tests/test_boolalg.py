@@ -84,6 +84,8 @@ def test_And():
     assert And(w.reversed, s) == s
 
     assert And(A < 0, A > 0) is S.false
+    # denesting
+    assert And(And(A > 0, A > B), A >= 0) == And(A > 0, A > B, A >= 0)
 
 
 def test_Or():
@@ -134,6 +136,8 @@ def test_Or():
     assert Or(w.reversed, s.reversed) == w.reversed
 
     assert Or(A <= 0, A >= 0) is S.true
+    # denesting
+    assert Or(Or(A > 0, A > B), A >= 0) == Or(A > 0, A > B, A >= 0)
 
 
 def test_Xor():

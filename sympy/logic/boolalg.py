@@ -348,7 +348,17 @@ class And(LatticeOp, BooleanFunction):
         newargs = []
         rel = []
         drev = {}
-        for x in reversed(list(uniq(args))):  # maintain order
+        # flatten and maintain order
+        sargs = list(args)
+        while True:
+            changed = False
+            for i in range(len(sargs)):
+                if isinstance(sargs[i], cls):
+                    sargs[i: i + 1] = sargs[i].args
+                    changed = True
+            if not changed:
+                break
+        for x in reversed(list(uniq(sargs))):
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
                 continue
@@ -457,7 +467,17 @@ class Or(LatticeOp, BooleanFunction):
         newargs = []
         rel = []
         drev = {}
-        for x in args:
+        # flatten and maintain order
+        sargs = list(args)
+        while True:
+            changed = False
+            for i in range(len(sargs)):
+                if isinstance(sargs[i], cls):
+                    sargs[i: i + 1] = sargs[i].args
+                    changed = True
+            if not changed:
+                break
+        for x in sargs:
             if isinstance(x, Number) or x in (0, 1):
                 newargs.append(True if x else False)
                 continue
