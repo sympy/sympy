@@ -387,14 +387,15 @@ class And(LatticeOp, BooleanFunction):
                 rev = drev.get(c, c.reversed.func(*c.args))
                 if any(r == rev for r in rel):
                     rel.remove(rev)
-                    try:
-                        newargs.remove(rev)
-                    except ValueError:
-                        newargs.remove(rev.reversed)
-                    try:
-                        newargs.remove(c)
-                    except ValueError:
-                        newargs.remove(c.reversed)
+                    did = 0
+                    for r in (rev, c, rev.reversed, c.reversed):
+                        try:
+                            newargs.remove(r)
+                            did += 1
+                        except ValueError:
+                            pass
+                    if did != 2:
+                        print('equality condition with', args,'did not remove 2')
                     newargs.append(Equality(*c.args))
         return LatticeOp._new_args_filter(newargs, And)
 
@@ -496,14 +497,15 @@ class Or(LatticeOp, BooleanFunction):
                 rev = c.reversed.func(*c.args)  # x < 0 --> x > 0
                 if any(r == rev for r in rel):
                     rel.remove(rev)
-                    try:
-                        newargs.remove(rev)
-                    except ValueError:
-                        newargs.remove(rev.reversed)
-                    try:
-                        newargs.remove(c)
-                    except ValueError:
-                        newargs.remove(c.reversed)
+                    did = 0
+                    for r in (c, rev, c.reversed, rev.reversed):
+                        try:
+                            newargs.remove(r)
+                            did += 1
+                        except ValueError:
+                            pass
+                    if did != 2:
+                        print('Ne condition with',args,'did not remove 2 args')
                     newargs.append(Unequality(*c.args))
         return LatticeOp._new_args_filter(newargs, Or)
 
