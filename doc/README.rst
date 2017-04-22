@@ -33,4 +33,4 @@ If you get **mpmat** error, install python3-mpmath package::
 
 And view it at:
 
-    _build/html/index.html
+    browser to _build/html/index.html
