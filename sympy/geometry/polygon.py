@@ -1,7 +1,7 @@
 from __future__ import division, print_function
 
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, range
+from sympy.core.compatibility import as_int, range, ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -77,9 +77,9 @@ class Polygon(GeometrySet):
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
     >>> Polygon(p1, p2)
-    Segment(Point2D(0, 0), Point2D(1, 0))
+    Segment2D(Point2D(0, 0), Point2D(1, 0))
     >>> Polygon(p1, p2, p5)
-    Segment(Point2D(0, 0), Point2D(3, 0))
+    Segment2D(Point2D(0, 0), Point2D(3, 0))
 
     While the sides of a polygon are not allowed to cross implicitly, they
     can do so explicitly. For example, a polygon shaped like a Z with the top
@@ -123,7 +123,7 @@ class Polygon(GeometrySet):
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
-        vertices = [Point(a) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -142,6 +142,7 @@ class Polygon(GeometrySet):
                 shared.add(p)
             else:
                 got.add(p)
+        del got
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
             a, b, c = nodup[i], nodup[i + 1], nodup[i + 2]
@@ -323,7 +324,7 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        vertices : tuple of Points
+        vertices : list of Points
 
         Notes
         =====
@@ -345,12 +346,12 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
-        (Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
-        >>> poly.args[0]
+        [Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1)]
+        >>> poly.vertices[0]
         Point2D(0, 0)
 
         """
-        return self.args
+        return list(self.args)
 
     @property
     def centroid(self):
@@ -416,9 +417,9 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.sides
-        [Segment(Point2D(0, 0), Point2D(1, 0)),
-        Segment(Point2D(1, 0), Point2D(5, 1)),
-        Segment(Point2D(0, 1), Point2D(5, 1)), Segment(Point2D(0, 0), Point2D(0, 1))]
+        [Segment2D(Point2D(0, 0), Point2D(1, 0)),
+        Segment2D(Point2D(1, 0), Point2D(5, 1)),
+        Segment2D(Point2D(0, 1), Point2D(5, 1)), Segment2D(Point2D(0, 0), Point2D(0, 1))]
 
         """
         res = []
@@ -519,7 +520,7 @@ class Polygon(GeometrySet):
         [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
-        p = Point(p)
+        p = Point(p, dim=2)
         if p in self.vertices or any(p in s for s in self.sides):
             return False
 
@@ -651,7 +652,7 @@ class Polygon(GeometrySet):
         return [t, 0, 1]
 
     def intersection(self, o):
-        """The intersection of two polygons.
+        """The intersection of polygon and geometry entity.
 
         The intersection may be empty and can contain individual Points and
         complete Line Segments.
@@ -659,7 +660,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        other: Polygon
+        other: GeometryEntity
 
         Returns
         =======
@@ -675,21 +676,37 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Polygon
+        >>> from sympy import Point, Polygon, Line
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly1 = Polygon(p1, p2, p3, p4)
         >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
         >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
-        [Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1), Point2D(1/3, 1)]
-
+        [Point2D(1/3, 1), Point2D(2/3, 0), Point2D(9/5, 1/5), Point2D(7/3, 1)]
+        >>> poly1.intersection(Line(p1, p2))
+        [Segment2D(Point2D(0, 0), Point2D(1, 0))]
+        >>> poly1.intersection(p1)
+        [Point2D(0, 0)]
         """
-        res = []
+        intersection_result = []
+        k = o.sides if isinstance(o, Polygon) else [o]
         for side in self.sides:
-            inter = side.intersection(o)
-            if inter is not None:
-                res.extend(inter)
-        return list(uniq(res))
+            for side1 in k:
+                intersection_result.extend(side.intersection(side1))
+
+        intersection_result = list(uniq(intersection_result))
+        points = [entity for entity in intersection_result if isinstance(entity, Point)]
+        segments = [entity for entity in intersection_result if isinstance(entity, Segment)]
+
+        if points and segments:
+            points_in_segments = list(uniq([point for point in points for segment in segments if point in segment]))
+            if points_in_segments:
+                for i in points_in_segments:
+                    points.remove(i)
+            return list(ordered(segments + points))
+        else:
+            return list(ordered(intersection_result))
+
 
     def distance(self, o):
         """
@@ -1081,7 +1098,7 @@ class RegularPolygon(Polygon):
 
     def __new__(self, c, r, n, rot=0, **kwargs):
         r, n, rot = map(sympify, (r, n, rot))
-        c = Point(c)
+        c = Point(c, dim=2, **kwargs)
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
@@ -1555,7 +1572,7 @@ class RegularPolygon(Polygon):
 
         """
         if pt:
-            pt = Point(pt)
+            pt = Point(pt, dim=2)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         if x != y:
             return Polygon(*self.vertices).scale(x, y)
@@ -1693,7 +1710,7 @@ class Triangle(Polygon):
             msg = "Triangle instantiates with three points or a valid keyword."
             raise GeometryError(msg)
 
-        vertices = [Point(a) for a in args]
+        vertices = [Point(a, dim=2, **kwargs) for a in args]
 
         # remove consecutive duplicates
         nodup = []
@@ -1937,7 +1954,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.altitudes[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2003,6 +2020,8 @@ class Triangle(Polygon):
         Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
+        if not a.intersection(b):
+            print(a,b,a.intersection(b))
         return a.intersection(b)[0]
 
     @property
@@ -2212,7 +2231,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medians[p1]
-        Segment(Point2D(0, 0), Point2D(1/2, 1/2))
+        Segment2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         s = self.sides
@@ -2301,7 +2320,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.eulerline
-        Line(Point2D(0, 0), Point2D(1/2, 1/2))
+        Line2D(Point2D(0, 0), Point2D(1/2, 1/2))
 
         """
         if self.is_equilateral():

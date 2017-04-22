@@ -653,6 +653,21 @@ class Mul(Expr, AssocOp):
             return rv.expand()
         return rv
 
+    @property
+    def _mpc_(self):
+        """
+        Convert self to an mpmath mpc if possible
+        """
+        from sympy.core.numbers import I, Float
+        im_part, imag_unit = self.as_coeff_Mul()
+        if not imag_unit == I:
+            # ValueError may seem more reasonable but since it's a @property,
+            # we need to use AttributeError to keep from confusing things like
+            # hasattr.
+            raise AttributeError("Cannot convert Mul to mpc. Must be of the form Number*I")
+
+        return (Float(0)._mpf_, Float(im_part)._mpf_)
+
     @cacheit
     def as_two_terms(self):
         """Return head and tail of self.
@@ -680,6 +695,33 @@ class Mul(Expr, AssocOp):
 
         else:
             return args[0], self._new_rawargs(*args[1:])
+
+    @cacheit
+    def as_coefficients_dict(self):
+        """Return a dictionary mapping terms to their coefficient.
+        Since the dictionary is a defaultdict, inquiries about terms which
+        were not present will return a coefficient of 0. The dictionary
+        is considered to have a single term.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import a, x
+        >>> (3*a*x).as_coefficients_dict()
+        {a*x: 3}
+        >>> _[a]
+        0
+        """
+
+        d = defaultdict(int)
+        args = self.args
+
+        if len(args) == 1 or not args[0].is_Number:
+            d[self] = S.One
+        else:
+            d[self._new_rawargs(*args[1:])] = args[0]
+
+        return d
 
     @cacheit
     def as_coeff_mul(self, *deps, **kwargs):

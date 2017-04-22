@@ -16,7 +16,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import raises, XFAIL, slow, raises
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1705,10 +1705,12 @@ def test_prime():
     assert ask(Q.prime(x), Q.integer(x)) is None
     assert ask(Q.prime(x), ~Q.integer(x)) is False
 
-    assert ask(Q.prime(2*x), Q.integer(x)) is False
+    assert ask(Q.prime(2*x), Q.integer(x)) is None
     assert ask(Q.prime(x*y)) is None
     assert ask(Q.prime(x*y), Q.prime(x)) is None
-    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is False
+    assert ask(Q.prime(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(4*x), Q.integer(x)) is False
+    assert ask(Q.prime(4*x)) is None
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False

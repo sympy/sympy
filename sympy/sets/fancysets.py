@@ -54,7 +54,9 @@ class Naturals(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_positive and other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_positive and other.is_integer:
             return S.true
         elif other.is_integer is False or other.is_positive is False:
             return S.false
@@ -82,7 +84,9 @@ class Naturals0(Naturals):
     _inf = S.Zero
 
     def _contains(self, other):
-        if other.is_integer and other.is_nonnegative:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer and other.is_nonnegative:
             return S.true
         elif other.is_integer is False or other.is_nonnegative is False:
             return S.false
@@ -130,10 +134,19 @@ class Integers(with_metaclass(Singleton, Set)):
         return None
 
     def _contains(self, other):
-        if other.is_integer:
+        if not isinstance(other, Expr):
+            return S.false
+        elif other.is_integer:
             return S.true
         elif other.is_integer is False:
             return S.false
+
+    def _union(self, other):
+        intersect = Intersection(self, other)
+        if intersect == self:
+            return other
+        elif intersect == other:
+            return self
 
     def __iter__(self):
         yield S.Zero
@@ -234,6 +247,14 @@ class ImageSet(Set):
     4
     9
     16
+
+    If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
+    `x` value is in `base_set` or not before passing it as args)
+
+    >>> squares.lamda(2)
+    4
+    >>> squares.lamda(S(1)/2)
+    1/4
 
     >>> n = Dummy('n')
     >>> solutions = ImageSet(Lambda(n, n*pi), S.Integers) # solutions of sin(x) = 0
@@ -421,6 +442,7 @@ class ImageSet(Set):
             n = self.lamda.variables[0]
             base_set = self.base_set
             new_inf, new_sup = None, None
+            new_lopen, new_ropen = other.left_open, other.right_open
 
             if f.is_real:
                 inverter = invert_real
@@ -444,10 +466,15 @@ class ImageSet(Set):
                 if any(i is None for i in (new_sup, new_inf)):
                     return
 
+
                 range_set = S.EmptySet
 
                 if all(i.is_real for i in (new_sup, new_inf)):
-                    new_interval = Interval(new_inf, new_sup)
+                    # this assumes continuity of underlying function
+                    # however fixes the case when it is decreasing
+                    if new_inf > new_sup:
+                        new_inf, new_sup = new_sup, new_inf
+                    new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
                     range_set = base_set._intersect(new_interval)
                 else:
                     if other.is_subset(S.Reals):
@@ -977,15 +1004,15 @@ def normalize_theta_set(theta):
     >>> from sympy.sets.fancysets import normalize_theta_set
     >>> from sympy import Interval, FiniteSet, pi
     >>> normalize_theta_set(Interval(9*pi/2, 5*pi))
-    [pi/2, pi]
+    Interval(pi/2, pi)
     >>> normalize_theta_set(Interval(-3*pi/2, pi/2))
-    [0, 2*pi)
+    Interval.Ropen(0, 2*pi)
     >>> normalize_theta_set(Interval(-pi/2, pi/2))
-    [0, pi/2] U [3*pi/2, 2*pi)
+    Union(Interval(0, pi/2), Interval.Ropen(3*pi/2, 2*pi))
     >>> normalize_theta_set(Interval(-4*pi, 3*pi))
-    [0, 2*pi)
+    Interval.Ropen(0, 2*pi)
     >>> normalize_theta_set(Interval(-3*pi/2, -pi/2))
-    [pi/2, 3*pi/2]
+    Interval(pi/2, 3*pi/2)
     >>> normalize_theta_set(FiniteSet(0, pi, 3*pi))
     {0, pi}
 
@@ -1067,7 +1094,7 @@ class ComplexRegion(Set):
     >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
-    ComplexRegion([2, 3] x [4, 6], False)
+    ComplexRegion(Interval(2, 3) x Interval(4, 6), False)
 
     * c1 represents the rectangular region in complex plane
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
@@ -1075,7 +1102,7 @@ class ComplexRegion(Set):
 
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
-    ComplexRegion([2, 3] x [4, 6] U [4, 6] x [1, 8], False)
+    ComplexRegion(Union(Interval(2, 3) x Interval(4, 6), Interval(4, 6) x Interval(1, 8)), False)
 
     * c2 represents the Union of two rectangular regions in complex
       plane. One of them surrounded by the coordinates of c1 and
@@ -1091,7 +1118,7 @@ class ComplexRegion(Set):
     >>> theta = Interval(0, 2*S.Pi)
     >>> c2 = ComplexRegion(r*theta, polar=True)  # Polar Form
     >>> c2  # unit Disk
-    ComplexRegion([0, 1] x [0, 2*pi), True)
+    ComplexRegion(Interval(0, 1) x Interval.Ropen(0, 2*pi), True)
 
     * c2 represents the region in complex plane inside the
       Unit Disk centered at the origin.
@@ -1105,7 +1132,7 @@ class ComplexRegion(Set):
     >>> upper_half_unit_disk = ComplexRegion(Interval(0, 1)*Interval(0, S.Pi), polar=True)
     >>> intersection = unit_disk.intersect(upper_half_unit_disk)
     >>> intersection
-    ComplexRegion([0, 1] x [0, pi], True)
+    ComplexRegion(Interval(0, 1) x Interval(0, pi), True)
     >>> intersection == upper_half_unit_disk
     True
 
@@ -1184,10 +1211,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.sets
-        [2, 3] x [4, 5]
+        Interval(2, 3) x Interval(4, 5)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.sets
-        [2, 3] x [4, 5] U [4, 5] x [1, 7]
+        Union(Interval(2, 3) x Interval(4, 5), Interval(4, 5) x Interval(1, 7))
 
         """
         return self._sets
@@ -1218,10 +1245,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.psets
-        ([2, 3] x [4, 5],)
+        (Interval(2, 3) x Interval(4, 5),)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.psets
-        ([2, 3] x [4, 5], [4, 5] x [1, 7])
+        (Interval(2, 3) x Interval(4, 5), Interval(4, 5) x Interval(1, 7))
 
         """
         if self.sets.is_ProductSet:
@@ -1247,10 +1274,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.a_interval
-        [2, 3]
+        Interval(2, 3)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.a_interval
-        [2, 3] U [4, 5]
+        Union(Interval(2, 3), Interval(4, 5))
 
         """
         a_interval = []
@@ -1276,10 +1303,10 @@ class ComplexRegion(Set):
         >>> c = Interval(1, 7)
         >>> C1 = ComplexRegion(a*b)
         >>> C1.b_interval
-        [4, 5]
+        Interval(4, 5)
         >>> C2 = ComplexRegion(Union(a*b, b*c))
         >>> C2.b_interval
-        [1, 7]
+        Interval(1, 7)
 
         """
         b_interval = []
@@ -1331,6 +1358,25 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    @classmethod
+    def from_real(cls, sets):
+        """
+        Converts given subset of real numbers to a complex region.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, ComplexRegion
+        >>> unit = Interval(0,1)
+        >>> ComplexRegion.from_real(unit)
+        ComplexRegion(Interval(0, 1) x {0}, False)
+
+        """
+        if not sets.is_subset(S.Reals):
+            raise ValueError("sets must be a subset of the real line")
+
+        return cls(sets * FiniteSet(0))
+
     def _contains(self, other):
         from sympy.functions import arg, Abs
         from sympy.core.containers import Tuple
@@ -1338,6 +1384,10 @@ class ComplexRegion(Set):
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
+
+        # If the other is not an Expression, and neither a Tuple
+        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+            return S.false
         # self in rectangular form
         if not self.polar:
             re, im = other if isTuple else other.as_real_imag()
@@ -1359,7 +1409,7 @@ class ComplexRegion(Set):
                 if And(element.args[0]._contains(r),
                         element.args[1]._contains(theta)):
                     return True
-                return False
+            return False
 
     def _intersect(self, other):
 
@@ -1383,16 +1433,15 @@ class ComplexRegion(Set):
                 return ComplexRegion(new_r_interval*new_theta_interval,
                                     polar=True)
 
-        if other is S.Reals:
-            return other
 
         if other.is_subset(S.Reals):
             new_interval = []
+            x = symbols("x", cls=Dummy, real=True)
 
             # self in rectangular form
             if not self.polar:
                 for element in self.psets:
-                    if S.Zero in element.args[0]:
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
@@ -1400,12 +1449,20 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar:
                 for element in self.psets:
-                    if (0 in element.args[1]) or (S.Pi in element.args[1]):
+                    if S.Zero in element.args[1]:
                         new_interval.append(element.args[0])
+                    if S.Pi in element.args[1]:
+                        new_interval.append(ImageSet(Lambda(x, -x), element.args[0]))
+                    if S.Zero in element.args[0]:
+                        new_interval.append(FiniteSet(0))
                 new_interval = Union(*new_interval)
                 return Intersection(new_interval, other)
 
     def _union(self, other):
+
+        if other.is_subset(S.Reals):
+            # treat a subset of reals as a complex region
+            other = ComplexRegion.from_real(other)
 
         if other.is_ComplexRegion:
 
@@ -1416,9 +1473,6 @@ class ComplexRegion(Set):
             # self in polar form
             elif self.polar and other.polar:
                 return ComplexRegion(Union(self.sets, other.sets), polar=True)
-
-        if self == S.Complexes:
-            return self
 
         return None
 

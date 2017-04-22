@@ -21,7 +21,7 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Field = True
 
     def algebraic_field(self, *extension):
-        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """
+        r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension)
 

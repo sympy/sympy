@@ -36,7 +36,6 @@ from .assumptions import ManagedProperties
 from .basic import Basic
 from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered
-from .core import BasicMeta
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float
@@ -52,6 +51,8 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import uniq
 from sympy.core.evaluate import global_evaluate
+
+import sys
 
 import mpmath
 import mpmath.libmp as mlib
@@ -92,6 +93,44 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                (self.args[1], self.args[0]))
 
+def _getnargs(cls):
+    if hasattr(cls, 'eval'):
+        if sys.version_info < (3, ):
+            return _getnargs_old(cls.eval)
+        else:
+            return _getnargs_new(cls.eval)
+    else:
+        return None
+
+def _getnargs_old(eval_):
+    evalargspec = inspect.getargspec(eval_)
+    if evalargspec.varargs:
+        return None
+    else:
+        evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
+        if evalargspec.defaults:
+            # if there are default args then they are optional; the
+            # fewest args will occur when all defaults are used and
+            # the most when none are used (i.e. all args are given)
+            return tuple(range(
+                evalargs - len(evalargspec.defaults), evalargs + 1))
+
+        return evalargs
+
+def _getnargs_new(eval_):
+    parameters = inspect.signature(eval_).parameters.items()
+    if [p for n,p in parameters if p.kind == p.VAR_POSITIONAL]:
+        return None
+    else:
+        p_or_k = [p for n,p in parameters if p.kind == p.POSITIONAL_OR_KEYWORD]
+        num_no_default = len(list(filter(lambda p:p.default == p.empty, p_or_k)))
+        num_with_default = len(list(filter(lambda p:p.default != p.empty, p_or_k)))
+        if not num_with_default:
+            return num_no_default
+        return tuple(range(num_no_default, num_no_default+num_with_default+1))
+
+
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -103,23 +142,9 @@ class FunctionClass(ManagedProperties):
     _new = type.__new__
 
     def __init__(cls, *args, **kwargs):
-        if hasattr(cls, 'eval'):
-            evalargspec = inspect.getargspec(cls.eval)
-            if evalargspec.varargs:
-                evalargs = None
-            else:
-                evalargs = len(evalargspec.args) - 1  # subtract 1 for cls
-                if evalargspec.defaults:
-                    # if there are default args then they are optional; the
-                    # fewest args will occur when all defaults are used and
-                    # the most when none are used (i.e. all args are given)
-                    evalargs = tuple(range(
-                        evalargs - len(evalargspec.defaults), evalargs + 1))
-        else:
-            evalargs = None
         # honor kwarg value or class-defined value before using
         # the number of arguments in the eval function (if present)
-        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', evalargs))
+        nargs = kwargs.pop('nargs', cls.__dict__.get('nargs', _getnargs(cls)))
         super(FunctionClass, cls).__init__(args, kwargs)
 
         # Canonicalize nargs here; change to set in nargs.
@@ -168,7 +193,7 @@ class FunctionClass(ManagedProperties):
         numbers is returned:
 
         >>> Function('f').nargs
-        Naturals0()
+        S.Naturals0
 
         If the function was initialized to accept one or more arguments, a
         corresponding set will be returned:
@@ -184,7 +209,7 @@ class FunctionClass(ManagedProperties):
 
         >>> f = Function('f')
         >>> f(1).nargs
-        Naturals0()
+        S.Naturals0
         >>> len(f(1).args)
         1
         """
@@ -283,8 +308,9 @@ class Application(with_metaclass(FunctionClass, Basic)):
         return self.__class__
 
     def _eval_subs(self, old, new):
-        if (old.is_Function and new.is_Function and old == self.func and
-            len(self.args) in new.nargs):
+        if (old.is_Function and new.is_Function and
+            callable(old) and callable(new) and
+            old == self.func and len(self.args) in new.nargs):
             return new(*self.args)
 
 
@@ -481,7 +507,7 @@ class Function(Application, Expr):
             func = getattr(mpmath, fname)
         except (AttributeError, KeyError):
             try:
-                return Float(self._imp_(*self.args), prec)
+                return Float(self._imp_(*[i.evalf(prec) for i in self.args]), prec)
             except (AttributeError, TypeError, ValueError):
                 return
 
@@ -750,9 +776,11 @@ class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
     """
-    def __new__(mcl, name, **kwargs):
-        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), kwargs)
-        ret.__module__ = None
+    def __new__(mcl, name, bases=(AppliedUndef,), __dict__=None, **kwargs):
+        __dict__ = __dict__ or {}
+        __dict__.update(kwargs)
+        __dict__['__module__'] = None # For pickling
+        ret = super(UndefinedFunction, mcl).__new__(mcl, name, bases, __dict__)
         return ret
 
     def __instancecheck__(cls, instance):
@@ -773,7 +801,7 @@ class WildFunction(Function, AtomicExpr):
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> F.nargs
-    Naturals0()
+    S.Naturals0
     >>> x.match(F)
     >>> F.match(F)
     {F_: F_}
@@ -1104,10 +1132,9 @@ class Derivative(Expr):
         # expression at all. Note, this cannnot check non-symbols like
         # functions and Derivatives as those can be created by intermediate
         # derivatives.
-        if evaluate:
-            from sympy import IndexedBase
-            symbol_set = set(sc[0].base if sc[0].is_Indexed else sc[0] for sc in variable_count if sc[0].is_Symbol)
-            if symbol_set.difference(expr.free_symbols).difference(expr.atoms(IndexedBase)):
+        if evaluate and all(isinstance(sc[0], Symbol) for sc in variable_count):
+            symbol_set = set(sc[0] for sc in variable_count)
+            if symbol_set.difference(expr.free_symbols):
                 return S.Zero
 
         # We make a generator so as to only generate a variable when necessary.
@@ -1146,7 +1173,7 @@ class Derivative(Expr):
         unhandled_non_symbol = False
         nderivs = 0  # how many derivatives were performed
         for v in variablegen:
-            is_symbol = v.is_Symbol
+            is_symbol = v.is_symbol
 
             if unhandled_non_symbol:
                 obj = None
@@ -1161,7 +1188,7 @@ class Derivative(Expr):
                 nderivs += 1
                 if not is_symbol:
                     if obj is not None:
-                        if not old_v.is_Symbol and obj.is_Derivative:
+                        if not old_v.is_symbol and obj.is_Derivative:
                             # Derivative evaluated at a point that is not a
                             # symbol
                             obj = Subs(obj, v, old_v)
@@ -1239,7 +1266,7 @@ class Derivative(Expr):
         symbol_part = []
         non_symbol_part = []
         for v in vars:
-            if not v.is_Symbol:
+            if not v.is_symbol:
                 if len(symbol_part) > 0:
                     sorted_vars.extend(sorted(symbol_part,
                                               key=default_sort_key))
@@ -1329,7 +1356,7 @@ class Derivative(Expr):
             return Subs(self, old, new)
         # If both are Derivatives with the same expr, check if old is
         # equivalent to self or if old is a subderivative of self.
-        if old.is_Derivative and old.expr == self.args[0]:
+        if old.is_Derivative and old.expr == self.expr:
             # Check if canonnical order of variables is equal.
             old_vars = collections.Counter(old.variables)
             self_vars = collections.Counter(self.variables)
@@ -1346,26 +1373,109 @@ class Derivative(Expr):
         return Derivative(*(x._subs(old, new) for x in self.args))
 
     def _eval_lseries(self, x, logx):
-        dx = self.args[1:]
-        for term in self.args[0].lseries(x, logx=logx):
+        dx = self.variables
+        for term in self.expr.lseries(x, logx=logx):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx):
-        arg = self.args[0].nseries(x, n=n, logx=logx)
+        arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
-        dx = self.args[1:]
+        dx = self.variables
         rv = [self.func(a, *dx) for a in Add.make_args(arg.removeO())]
         if o:
             rv.append(o/x)
         return Add(*rv)
 
     def _eval_as_leading_term(self, x):
-        return self.args[0].as_leading_term(x)
+        series_gen = self.expr.lseries(x)
+        d = S.Zero
+        for leading_term in series_gen:
+            d = diff(leading_term, *self.variables)
+            if d != 0:
+                break
+        return d
 
     def _sage_(self):
         import sage.all as sage
         args = [arg._sage_() for arg in self.args]
         return sage.derivative(*args)
+
+    def as_finite_difference(self, points=1, x0=None, wrt=None):
+        """ Expresses a Derivative instance as a finite difference.
+
+        Parameters
+        ==========
+        points : sequence or coefficient, optional
+            If sequence: discrete values (length >= order+1) of the
+            independent variable used for generating the finite
+            difference weights.
+            If it is a coefficient, it will be used as the step-size
+            for generating an equidistant sequence of length order+1
+            centered around ``x0``. Default: 1 (step-size 1)
+        x0 : number or Symbol, optional
+            the value of the independent variable (``wrt``) at which the
+            derivative is to be approximated. Default: same as ``wrt``.
+        wrt : Symbol, optional
+            "with respect to" the variable for which the (partial)
+            derivative is to be approximated for. If not provided it
+            is required that the derivative is ordinary. Default: ``None``.
+
+
+        Examples
+        ========
+        >>> from sympy import symbols, Function, exp, sqrt, Symbol
+        >>> x, h = symbols('x h')
+        >>> f = Function('f')
+        >>> f(x).diff(x).as_finite_difference()
+        -f(x - 1/2) + f(x + 1/2)
+
+        The default step size and number of points are 1 and
+        ``order + 1`` respectively. We can change the step size by
+        passing a symbol as a parameter:
+
+        >>> f(x).diff(x).as_finite_difference(h)
+        -f(-h/2 + x)/h + f(h/2 + x)/h
+
+        We can also specify the discretized values to be used in a
+        sequence:
+
+        >>> f(x).diff(x).as_finite_difference([x, x+h, x+2*h])
+        -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
+
+        The algorithm is not restricted to use equidistant spacing, nor
+        do we need to make the approximation around ``x0``, but we can get
+        an expression estimating the derivative at an offset:
+
+        >>> e, sq2 = exp(1), sqrt(2)
+        >>> xl = [x-h, x+h, x+e*h]
+        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
+        2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
+
+        Partial derivatives are also supported:
+
+        >>> y = Symbol('y')
+        >>> d2fdxdy=f(x,y).diff(x,y)
+        >>> d2fdxdy.as_finite_difference(wrt=x)
+        -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
+
+        We can apply ``as_finite_difference`` to ``Derivative`` instances in
+        compound expressions using ``replace``:
+
+        >>> (1 + 42**f(x).diff(x)).replace(lambda arg: arg.is_Derivative,
+        ...     lambda arg: arg.as_finite_difference())
+        42**(-f(x - 1/2) + f(x + 1/2)) + 1
+
+
+        See also
+        ========
+
+        sympy.calculus.finite_diff.apply_finite_diff
+        sympy.calculus.finite_diff.differentiate_finite
+        sympy.calculus.finite_diff.finite_diff_weights
+
+        """
+        from ..calculus.finite_diff import _as_finite_diff
+        return _as_finite_diff(self, points, x0, wrt)
 
 
 class Lambda(Expr):
@@ -1599,6 +1709,11 @@ class Subs(Expr):
         return (self.expr.free_symbols - set(self.variables) |
             set(self.point.free_symbols))
 
+    def _has(self, pattern):
+        if pattern in self.variables and pattern not in self.point:
+            return False
+        return super(Subs, self)._has(pattern)
+
     def __eq__(self, other):
         if not isinstance(other, Subs):
             return False
@@ -1615,15 +1730,44 @@ class Subs(Expr):
 
     def _eval_subs(self, old, new):
         if old in self.variables:
+            if old in self.point:
+                newpoint = tuple(new if i == old else i for i in self.point)
+                return self.func(self.expr, self.variables, newpoint)
             return self
 
     def _eval_derivative(self, s):
         if s not in self.free_symbols:
             return S.Zero
-        return self.func(self.expr.diff(s), self.variables, self.point).doit() \
-            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
-                    self.variables, self.point).doit() for arg,
-                    point in zip(self.variables, self.point) ])
+        return Add((Subs(self.expr.diff(s), self.variables, self.point).doit()
+            if s not in self.variables else S.Zero),
+            *[p.diff(s) * Subs(self.expr.diff(v), self.variables,
+            self.point).doit() for v, p in zip(self.variables, self.point)])
+
+    def _eval_nseries(self, x, n, logx):
+        if x in self.point:
+            # x is the variable being substituted into
+            apos = self.point.index(x)
+            other = self.variables[apos]
+            arg = self.expr.nseries(other, n=n, logx=logx)
+            o = arg.getO()
+            subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+            return Add(*subs_args) + o.subs(other, x)
+        arg = self.expr.nseries(x, n=n, logx=logx)
+        o = arg.getO()
+        subs_args = [self.func(a, *self.args[1:]) for a in arg.removeO().args]
+        return Add(*subs_args) + o
+
+    def _eval_as_leading_term(self, x):
+        if x in self.point:
+            ipos = self.point.index(x)
+            xvar = self.variables[ipos]
+            return self.expr.as_leading_term(xvar)
+        if x in self.variables:
+            # if `x` is a dummy variable, it means it won't exist after the
+            # substitution has been performed:
+            return self
+        # The variable is independent of the substitution:
+        return self.expr.as_leading_term(x)
 
 
 def diff(f, *symbols, **kwargs):
@@ -2503,4 +2647,4 @@ def nfloat(expr, n=15, exponent=False):
         lambda x: isinstance(x, Function)))
 
 
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol

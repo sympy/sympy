@@ -5,14 +5,14 @@
 examples."""
 
 # Internal imports
-import sympy as sm
+from sympy.core import backend as sm
 import sympy.physics.mechanics as me
 
 
 def multi_mass_spring_damper(n=1, apply_gravity=False,
                              apply_external_forces=False):
     """Returns a system containing the symbolic equations of motion and
-    associated variables for a simple mutli-degree of freedom point mass,
+    associated variables for a simple multi-degree of freedom point mass,
     spring, damper system with optional gravitational and external
     specified forces. For example, a two mass system under the influence of
     gravity and external forces looks like:

@@ -120,9 +120,11 @@ class MatMul(MatrixExpr):
     # Needed for partial compatibility with Mul
     def args_cnc(self, **kwargs):
         coeff, matrices = self.as_coeff_matrices()
-        # I don't know how coeff could have noncommutative factors, but this
-        # handles it.
         coeff_c, coeff_nc = coeff.args_cnc(**kwargs)
+        if coeff_c == [1]:
+            coeff_c = []
+        elif coeff_c == set([1]):
+            coeff_c = set()
 
         return coeff_c, coeff_nc + matrices
 
@@ -158,22 +160,22 @@ def merge_explicit(matmul):
     >>> C = Matrix([[1, 2], [3, 4]])
     >>> X = MatMul(A, B, C)
     >>> pprint(X)
-    A*[1  1]*[1  2]
-      [    ] [    ]
+      [1  1] [1  2]
+    A*[    ]*[    ]
       [1  1] [3  4]
     >>> pprint(merge_explicit(X))
-    A*[4  6]
-      [    ]
+      [4  6]
+    A*[    ]
       [4  6]
 
     >>> X = MatMul(B, A, C)
     >>> pprint(X)
-    [1  1]*A*[1  2]
-    [    ]   [    ]
+    [1  1]   [1  2]
+    [    ]*A*[    ]
     [1  1]   [3  4]
     >>> pprint(merge_explicit(X))
-    [1  1]*A*[1  2]
-    [    ]   [    ]
+    [1  1]   [1  2]
+    [    ]*A*[    ]
     [1  1]   [3  4]
     """
     if not any(isinstance(arg, MatrixBase) for arg in matmul.args):
@@ -257,14 +259,22 @@ def refine_MatMul(expr, assumptions):
     >>> X = MatrixSymbol('X', 2, 2)
     >>> expr = X * X.T
     >>> print(expr)
-    X*X'
+    X*X.T
     >>> with assuming(Q.orthogonal(X)):
     ...     print(refine(expr))
     I
     """
     newargs = []
-    last = expr.args[0]
-    for arg in expr.args[1:]:
+    exprargs = []
+
+    for args in expr.args:
+        if args.is_Matrix:
+            exprargs.append(args)
+        else:
+            newargs.append(args)
+
+    last = exprargs[0]
+    for arg in exprargs[1:]:
         if arg == last.T and ask(Q.orthogonal(arg), assumptions):
             last = Identity(arg.shape[0])
         elif arg == last.conjugate() and ask(Q.unitary(arg), assumptions):

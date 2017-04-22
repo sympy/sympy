@@ -5,9 +5,11 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import Eq
 from sympy.core.logic import fuzzy_not
 from sympy.polys.polyerrors import PolynomialError
-from sympy.functions.elementary.complexes import im, sign
+from sympy.functions.elementary.complexes import im, sign, Abs
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core.decorators import deprecated
+from sympy.utilities import filldedent
+
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -189,7 +191,7 @@ class DiracDelta(Function):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
-        if arg.is_positive or arg.is_negative:
+        if arg.is_nonzero:
             return S.Zero
         if fuzzy_not(im(arg).is_zero):
             raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
@@ -307,7 +309,7 @@ class DiracDelta(Function):
            Examples
            ========
 
-           >>> from sympy import DiracDelta, Piecewise, Symbol
+           >>> from sympy import DiracDelta, Piecewise, Symbol, SingularityFunction
            >>> x = Symbol('x')
 
            >>> DiracDelta(x).rewrite(Piecewise)
@@ -325,6 +327,30 @@ class DiracDelta(Function):
         """
         if len(args) == 1:
             return Piecewise((DiracDelta(0), Eq(args[0], 0)), (0, True))
+
+    def _eval_rewrite_as_SingularityFunction(self, *args):
+        """
+        Returns the DiracDelta expression written in the form of Singularity Functions.
+
+        """
+        from sympy.solvers import solve
+        from sympy.functions import SingularityFunction
+        if self == DiracDelta(0):
+            return SingularityFunction(0, 0, -1)
+        if self == DiracDelta(0, 1):
+            return SingularityFunction(0, 0, -2)
+        free = self.free_symbols
+        if len(free) == 1:
+            x = (free.pop())
+            if len(args) == 1:
+                return SingularityFunction(x, solve(args[0], x)[0], -1)
+            return SingularityFunction(x, solve(args[0], x)[0], -args[1] - 1)
+        else:
+            # I dont know how to handle the case for DiracDelta expressions
+            # having arguments with more than one variable.
+            raise TypeError(filldedent('''
+                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
+
 
     @staticmethod
     def _latex_no_arg(printer):
@@ -547,6 +573,28 @@ class Heaviside(Function):
         if arg.is_real:
             if H0 is None or H0 == S.Half:
                 return (sign(arg)+1)/2
+
+    def _eval_rewrite_as_SingularityFunction(self, args):
+        """
+        Returns the Heaviside expression written in the form of Singularity Functions.
+
+        """
+        from sympy.solvers import solve
+        from sympy.functions import SingularityFunction
+        if self == Heaviside(0):
+            return SingularityFunction(0, 0, 0)
+        free = self.free_symbols
+        if len(free) == 1:
+            x = (free.pop())
+            return SingularityFunction(x, solve(args, x)[0], 0)
+            # TODO
+            # ((x - 5)**3*Heaviside(x - 5)).rewrite(SingularityFunction) should output
+            # SingularityFunction(x, 5, 0) instead of (x - 5)**3*SingularityFunction(x, 5, 0)
+        else:
+            # I dont know how to handle the case for Heaviside expressions
+            # having arguments with more than one variable.
+            raise TypeError(filldedent('''
+                rewrite(SingularityFunction) doesn't support arguments with more that 1 variable.'''))
 
     def _sage_(self):
         import sage.all as sage

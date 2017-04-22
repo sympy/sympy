@@ -158,6 +158,8 @@ def find_substitutions(integrand, symbol, u_var):
         new_integrand = test_subterm(u, u_diff)
         if new_integrand is not False:
             constant, new_integrand = new_integrand
+            if new_integrand == integrand.subs(symbol, u_var):
+                continue
             substitution = (u, constant, new_integrand)
             if substitution not in results:
                 results.append(substitution)
@@ -1022,7 +1024,8 @@ def eval_constanttimes(constant, other, substep, integrand, symbol):
 
 @evaluates(PowerRule)
 def eval_power(base, exp, integrand, symbol):
-    return (base ** (exp + 1)) / (exp + 1)
+    return sympy.Piecewise((sympy.log(base), sympy.Eq(exp, -1)),
+        ((base**(exp + 1))/(exp + 1), True))
 
 @evaluates(ExpRule)
 def eval_exp(base, exp, integrand, symbol):

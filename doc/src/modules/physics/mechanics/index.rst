@@ -76,6 +76,7 @@ Guide to Mechanics
     masses.rst
     kane.rst
     lagrange.rst
+    symsystem.rst
     linearize.rst
     examples.rst
     advanced.rst
@@ -89,6 +90,7 @@ Mechanics API
 
     api/part_bod.rst
     api/kane_lagrange.rst
+    api/system.rst
     api/linearize.rst
     api/expr_manip.rst
     api/printing.rst
