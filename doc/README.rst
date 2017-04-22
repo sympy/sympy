@@ -31,6 +31,6 @@ If you get **mpmat** error, install python3-mpmath package::
 
     dnf install python3-mpmath
 
-And view it at:
+And view it at::
 
-    browser to _build/html/index.html
+    _build/html/index.html
