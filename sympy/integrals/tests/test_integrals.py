@@ -1138,7 +1138,6 @@ def test_issue_8368():
                 And(
                     Ne(1/s, 1),
                     Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
                     cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
             (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
                 True))
