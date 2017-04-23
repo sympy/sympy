@@ -271,14 +271,6 @@ class Indexed(Expr):
                 undefined range: %s""" % self))
 
     @property
-    def strides(self):
-        return self.base._strides
-
-    @property
-    def offset(self):
-        return self.base._offset
-
-    @property
     def ranges(self):
         """Returns a list of tuples with lower and upper range of each index.
 
@@ -305,6 +297,20 @@ class Indexed(Expr):
             except AttributeError:
                 ranges.append(None)
         return ranges
+
+    @property
+    def strides(self):
+        return self.base.strides
+
+    def set_strides(self, strides):
+        self.base.set_strides(strides)
+
+    @property
+    def offset(self):
+        return self.base.offset
+
+    def set_offset(self, offset):
+        self.base.set_offset(offset)
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
@@ -371,7 +377,7 @@ class IndexedBase(Expr, NotIterable):
     is_symbol = True
     is_Atom = True
 
-    def __new__(cls, label, shape=None, strides=None, offset=0, **kw_args):
+    def __new__(cls, label, shape=None, **kw_args):
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
@@ -384,18 +390,13 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
-        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
-               strides is None):
-            raise TypeError(filldedent("""Stride scheme not understood.
-                             Should be tuple or string('C' or 'F' : denotes
-                             row-major or column-major respectively."""))
         if shape is not None:
             obj = Expr.__new__(cls, label, shape, **kw_args)
         else:
             obj = Expr.__new__(cls, label, **kw_args)
         obj._shape = shape
-        obj._strides = strides
-        obj._offset = offset
+        obj._instance_offset = {}
+        obj._instance_strides = {}
         return obj
 
     def __getitem__(self, indices, **kw_args):
@@ -450,7 +451,17 @@ class IndexedBase(Expr, NotIterable):
         order.
 
         """
-        return self._strides
+
+        return self._instance_strides.get(self, None)
+
+    def set_strides(self, strides):
+        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
+               strides is None):
+            raise TypeError(filldedent("""Stride scheme not understood.
+                             Should be tuple or string('C' or 'F' : denotes
+                             row-major or column-major respectively."""))
+
+        self._instance_strides[self] = strides
 
     @property
     def offset(self):
@@ -466,13 +477,19 @@ class IndexedBase(Expr, NotIterable):
         >>> from sympy.tensor import IndexedBase, Idx
         >>> from sympy import symbols
         >>> l, m, n, o = symbols('l m n o', integer=True)
-        >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
+        >>> A = IndexedBase('A')
+        >>> A.set_strides((l, m, n))
+        >>> A.set_offset(o)
         >>> i, j, k = Idx('i'), Idx('j'), Idx('k')
         >>> ccode(A[i, j, k])
         'A[l*i + m*j + n*k + o]'
 
         """
-        return self._offset
+
+        return self._instance_offset.get(self, 0)
+
+    def set_offset(self, offset):
+        self._instance_offset[self] = offset
 
     @property
     def label(self):

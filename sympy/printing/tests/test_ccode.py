@@ -269,13 +269,18 @@ def test_ccode_Indexed():
         A = IndexedBase('A', shape=(5,3))[i, j]
         assert p._print_Indexed(A) == 'A[%s]' % (3*i + j)
 
-        A = IndexedBase('A', shape=(5,3), strides='F')[i, j]
+        A = IndexedBase('A', shape=(5,3))[i, j]
+        A.set_strides('F')
         assert p._print_Indexed(A) == 'A[%s]' % (i + 5*j)
 
-        A = IndexedBase('A', shape=(29,29), strides=(1, s), offset=o)[i, j]
+        A = IndexedBase('A', shape=(29,29))[i, j]
+        A.set_strides((1, s))
+        A.set_offset(o)
         assert p._print_Indexed(A) == 'A[o + s*j + i]'
 
-        A = IndexedBase('A', strides=(s, m, n), offset=o)[i, j, k]
+        A = IndexedBase('A')[i, j, k]
+        A.set_strides((s, m, n))
+        A.set_offset(o)
         assert p._print_Indexed(A) == 'A[m*j + n*k + o + s*i]'
 
 def test_ccode_Indexed_without_looking_for_contraction():
