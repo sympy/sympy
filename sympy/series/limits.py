@@ -167,8 +167,7 @@ class Limit(Expr):
                         inve = e.subs(z, -1/u)
                     else:
                         inve = e.subs(z, 1/u)
-                    r = limit(inve.as_leading_term(u), u,
-                              S.Zero, "+" if z0 is S.Infinity else "-")
+                    r = limit(inve.as_leading_term(u), u, S.Zero, "+")
                     if isinstance(r, Limit):
                         return self
                     else:
