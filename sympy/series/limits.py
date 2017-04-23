@@ -162,11 +162,10 @@ class Limit(Expr):
                                         for m in Mul.make_args(a))
                                     for a in Add.make_args(w)))
                 if all(ok(w) for w in e.as_numer_denom()):
+                    u = Dummy(positive=True)
                     if z0 is S.NegativeInfinity:
-                        u = Dummy(positive=True)
                         inve = e.subs(z, -1/u)
                     else:
-                        u = Dummy(positive=(z0 is S.Infinity))
                         inve = e.subs(z, 1/u)
                     r = limit(inve.as_leading_term(u), u,
                               S.Zero, "+" if z0 is S.Infinity else "-")
