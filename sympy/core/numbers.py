@@ -3188,8 +3188,6 @@ class NumberSymbol(AtomicExpr):
             return S.true
         if other.is_real and other.is_number:
             other = other.evalf()
-        if isinstance(other, Number):
-            return _sympify(self.evalf() <= other)
         return Expr.__le__(self, other)
 
     def __gt__(self, other):
