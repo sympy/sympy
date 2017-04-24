@@ -6,7 +6,6 @@ from sympy.core.compatibility import is_sequence, as_int, string_types
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
-from mpmath import isint
 from sympy.core import S
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
@@ -222,6 +221,8 @@ class FreeGroup(DefaultPrinting):
         >>> F, x, y = free_group("x, y")
         >>> F.index(y)
         1
+        >>> F.index(x)
+        0
 
         """
         if isinstance(gen, self.dtype):
@@ -230,7 +231,21 @@ class FreeGroup(DefaultPrinting):
             raise ValueError("expected a generator of Free Group %s, got %s" % (self, gen))
 
     def order(self):
-        """Returns the order of the free group."""
+        """Returns the order of the free group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> F.order()
+        oo
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> F, x, y = free_group("x, y")
+        >>> (x ** 0).order()
+        1
+        """
         if self.rank == 0:
             return 1
         else:
@@ -238,6 +253,18 @@ class FreeGroup(DefaultPrinting):
 
     @property
     def elements(self):
+        """
+        Returns the elements of the free group.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> (z,) = free_group("")
+        >>> z.elements
+        {<identity>}
+
+        """
         if self.rank == 0:
             # A set containing Identity element of `FreeGroup` self is returned
             return {self.identity}
