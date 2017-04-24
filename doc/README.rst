@@ -27,7 +27,7 @@ After that, run::
 
     make html
 
-If you get **mpmat** error, install python3-mpmath package::
+If you get **mpmath** error, install python3-mpmath package::
 
     dnf install python3-mpmath
 
