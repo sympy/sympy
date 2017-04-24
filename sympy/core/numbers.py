@@ -1125,8 +1125,8 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s > %s" % (self, other))
-        if isinstance(other, Rational):
-            return Rational(self).__gt__(other)
+        if isinstance(other, Zero):
+            other = Float(0, precision=self._prec)
         if isinstance(other, Float):
             max_prec = max(self._prec, other._prec)
             return _sympify(bool(mlib.mpf_gt(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
@@ -1137,8 +1137,8 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s >= %s" % (self, other))
-        if isinstance(other, Rational):
-            return Rational(self).__ge__(other)
+        if isinstance(other, Zero):
+            other = Float(0, precision=self._prec)
         if isinstance(other, Float):
             max_prec = max(self._prec, other._prec)
             return _sympify(bool(mlib.mpf_ge(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
@@ -1149,8 +1149,8 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, other))
-        if isinstance(other, Rational):
-            return Rational(self).__lt__(other)
+        if isinstance(other, Zero):
+            other = Float(0, precision=self._prec)
         if isinstance(other, Float):
             max_prec = max(self._prec, other._prec)
             return _sympify(bool(mlib.mpf_lt(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
@@ -1161,8 +1161,8 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             raise TypeError("Invalid comparison %s <= %s" % (self, other))
-        if isinstance(other, Rational):
-            return Rational(self).__le__(other)
+        if isinstance(other, Zero):
+            other = Float(0, precision=self._prec)
         if isinstance(other, Float):
             max_prec = max(self._prec, other._prec)
             return _sympify(bool(mlib.mpf_le(self._as_mpf_val(max_prec), other._as_mpf_val(max_prec))))
