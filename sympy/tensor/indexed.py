@@ -140,9 +140,6 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
-    _base_strides = {}
-    _base_offsets = {}
-
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
@@ -302,31 +299,9 @@ class Indexed(Expr):
                 ranges.append(None)
         return ranges
 
-    @property
-    def strides(self):
-        return Indexed._base_strides.get(self.base, None)
-
-    @property
-    def offset(self):
-        return Indexed._base_offsets.get(self.base, S.Zero)
-
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
-
-    @staticmethod
-    def _set_strides(obj, strides):
-        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
-               strides is None):
-            raise TypeError(filldedent("""Stride scheme not understood.
-                             Should be tuple or string('C' or 'F' : denotes
-                             row-major or column-major respectively."""))
-
-        Indexed._base_strides[obj] = strides
-
-    @staticmethod
-    def _set_offset(obj, offset):
-        Indexed._base_offset[obj] = offset
 
     # @property
     # def free_symbols(self):
@@ -402,17 +377,16 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
+        offset = kw_args.pop('offset', S.Zero)
+        strides = kw_args.pop('strides', None)
+
         if shape is not None:
             obj = Expr.__new__(cls, label, shape, **kw_args)
         else:
             obj = Expr.__new__(cls, label, **kw_args)
         obj._shape = shape
-
-        if "strides" in kw_args:
-              Indexed._set_strides(obj, kw_args["strides"])
-        if "offset" in kw_args:
-              Indexed._set_offset(obj, kw_args["offset"])
-
+        obj._offset = offset
+        obj._strides = strides
         return obj
 
     def __getitem__(self, indices, **kw_args):
@@ -468,7 +442,7 @@ class IndexedBase(Expr, NotIterable):
 
         """
 
-        return Indexed._base_strides.get(self, None)
+        return self._strides
 
     @property
     def offset(self):
@@ -484,16 +458,13 @@ class IndexedBase(Expr, NotIterable):
         >>> from sympy.tensor import IndexedBase, Idx
         >>> from sympy import symbols
         >>> l, m, n, o = symbols('l m n o', integer=True)
-        >>> A = IndexedBase('A')
-        >>> A.set_strides((l, m, n))
-        >>> A.set_offset(o)
-        >>> i, j, k = Idx('i'), Idx('j'), Idx('k')
+        >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
+        >>> i, j, k = map(Idx, 'ijk')
         >>> ccode(A[i, j, k])
         'A[l*i + m*j + n*k + o]'
 
         """
-
-        return Indexed._base_offsets.get(self, S.Zero)
+        return self._offset
 
     @property
     def label(self):

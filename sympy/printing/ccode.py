@@ -170,8 +170,8 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
-        offset = expr.offset
-        strides = expr.strides
+        offset = getattr(expr.base, 'offset', S.Zero)
+        strides = getattr(expr.base, 'strides', None)
         indices = expr.indices
 
         if strides is None or isinstance(strides, str):
@@ -188,10 +188,8 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        return "%s[%s]" % (self._print(expr.base.label),
-                               self._print(sum([x[0]*x[1]
-                                   for x in zip(indices, strides)])
-                                   + offset))
+        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        return "%s[%s]" % (self._print(expr.base.label), self._print(flat_index))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
