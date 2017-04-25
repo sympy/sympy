@@ -8,7 +8,6 @@ Contains
 
 from __future__ import division, print_function
 
-from sympy import symbols
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -22,12 +21,11 @@ from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
-from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point
+from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
 from .util import _symbol, idiff
 
@@ -698,27 +696,43 @@ class Ellipse(GeometrySet):
         True
 
         """
-        inter = None
-        if isinstance(o, Ellipse):
-            inter = self.intersection(o)
-            if isinstance(inter, Ellipse):
-                return False
-            return (inter is not None and len(inter) == 1
-                    and isinstance(inter[0], Point))
-        elif isinstance(o, LinearEntity):
-            inter = self.intersection(o)
-            if inter is not None and len(inter) == 1:
-                return inter[0] in o
+        if isinstance(o, Point2D):
+            return False
+        elif isinstance(o, Ellipse):
+            intersect = self.intersection(o)
+            if isinstance(intersect, Ellipse):
+                return True
+            elif intersect:
+                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
             else:
                 return False
-        elif isinstance(o, Polygon):
-            c = 0
-            for seg in o.sides:
-                inter = self.intersection(seg)
-                c += len([True for point in inter if point in seg])
-            return c == 1
+        elif isinstance(o, Line2D):
+            return len(self.intersection(o)) == 1
+        elif isinstance(o, Ray2D):
+            intersect = self.intersection(o)
+            if len(intersect) == 1:
+                return intersect[0] != o.source and not self.encloses_point(o.source)
+            else:
+                return False
+        elif isinstance(o, (Segment2D, Polygon)):
+            all_tangents = False
+            segments = o.sides if isinstance(o, Polygon) else [o]
+            for segment in segments:
+                intersect = self.intersection(segment)
+                if len(intersect) == 1:
+                    if not any(intersect[0] in i for i in segment.points)\
+                                   and all(not self.encloses_point(i) for i in segment.points):
+                        all_tangents = True
+                        continue
+                    else:
+                        return False
+                else:
+                    return all_tangents
+            return all_tangents
+        elif isinstance(o, (LinearEntity3D, Point3D)):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
-            raise NotImplementedError("Unknown argument type")
+            raise TypeError('Is_tangent not handled for %s' % func_name(o))
 
     @property
     def major(self):
