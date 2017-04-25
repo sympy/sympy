@@ -166,6 +166,7 @@ def test_ellipse_geom():
     assert e4.eccentricity == ecc
     assert e4.periapsis == major*(1 - ecc)
     assert e4.apoapsis == major*(1 + ecc)
+    assert e4.semilatus_rectum == major*(1 - ecc ** 2)
     # independent of orientation
     e4 = Ellipse(p2, major, minor)
     assert e4.focus_distance == sqrt(major**2 - minor**2)
