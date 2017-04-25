@@ -140,6 +140,9 @@ class Indexed(Expr):
     is_symbol = True
     is_Atom = True
 
+    _base_strides = {}
+    _base_offsets = {}
+
     def __new__(cls, base, *args, **kw_args):
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
@@ -155,6 +158,7 @@ class Indexed(Expr):
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             return base[args]
+
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -300,21 +304,29 @@ class Indexed(Expr):
 
     @property
     def strides(self):
-        return self.base.strides
-
-    def set_strides(self, strides):
-        self.base.set_strides(strides)
+        return Indexed._base_strides.get(self.base, None)
 
     @property
     def offset(self):
-        return self.base.offset
-
-    def set_offset(self, offset):
-        self.base.set_offset(offset)
+        return Indexed._base_offsets.get(self.base, S.Zero)
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+
+    @staticmethod
+    def _set_strides(obj, strides):
+        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
+               strides is None):
+            raise TypeError(filldedent("""Stride scheme not understood.
+                             Should be tuple or string('C' or 'F' : denotes
+                             row-major or column-major respectively."""))
+
+        Indexed._base_strides[obj] = strides
+
+    @staticmethod
+    def _set_offset(obj, offset):
+        Indexed._base_offset[obj] = offset
 
     # @property
     # def free_symbols(self):
@@ -395,8 +407,12 @@ class IndexedBase(Expr, NotIterable):
         else:
             obj = Expr.__new__(cls, label, **kw_args)
         obj._shape = shape
-        obj._instance_offset = {}
-        obj._instance_strides = {}
+
+        if "strides" in kw_args:
+              Indexed._set_strides(obj, kw_args["strides"])
+        if "offset" in kw_args:
+              Indexed._set_offset(obj, kw_args["offset"])
+
         return obj
 
     def __getitem__(self, indices, **kw_args):
@@ -452,16 +468,7 @@ class IndexedBase(Expr, NotIterable):
 
         """
 
-        return self._instance_strides.get(self, None)
-
-    def set_strides(self, strides):
-        if not(isinstance(strides, tuple) or strides in ['C', 'F'] or
-               strides is None):
-            raise TypeError(filldedent("""Stride scheme not understood.
-                             Should be tuple or string('C' or 'F' : denotes
-                             row-major or column-major respectively."""))
-
-        self._instance_strides[self] = strides
+        return Indexed._base_strides.get(self, None)
 
     @property
     def offset(self):
@@ -486,10 +493,7 @@ class IndexedBase(Expr, NotIterable):
 
         """
 
-        return self._instance_offset.get(self, 0)
-
-    def set_offset(self, offset):
-        self._instance_offset[self] = offset
+        return Indexed._base_offset.get(self, 0)
 
     @property
     def label(self):
