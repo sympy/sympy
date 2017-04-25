@@ -493,7 +493,7 @@ class IndexedBase(Expr, NotIterable):
 
         """
 
-        return Indexed._base_offset.get(self, 0)
+        return Indexed._base_offsets.get(self, S.Zero)
 
     @property
     def label(self):
