@@ -41,8 +41,6 @@ def test_single_arg():
     assert f(1) == 2
 
 def test_should_dummify():
-    assert should_dummify(r'32v2?g#Gmw845h$Wb53wi\phi') == True
-    assert should_dummify(x + y**2) == True
     assert should_dummify(x) == False
     assert should_dummify('and') == True
 

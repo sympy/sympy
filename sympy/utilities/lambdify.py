@@ -455,13 +455,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                     "Expression:\n\n{expr}").format(sig=sig, expr=expr_str)
     return func
 
-def should_dummify(expr, printer=None):
+def should_dummify(symbol, printer=None):
     """
-    Returns the boolean value of dummify to be used.
+    Returns whether ``symbol`` should be dummified.
 
     Parameter
     ---------
-    expr : Represents the expression for which dummify should be checked
+    symbol : Represents the symbol for which dummify should be checked
     printer : Represents the printer provided by lambdify function or by the user
 
     Examples
@@ -487,11 +487,11 @@ def should_dummify(expr, printer=None):
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
-    if keyword.iskeyword(lambdarepr(expr)):
+    if keyword.iskeyword(lambdarepr(symbol)):
         return True
     else:
         valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
-        result = valid_identifier_regex.match(lambdarepr(expr))
+        result = valid_identifier_regex.match(lambdarepr(symbol))
         return result is None
 
 def _module_present(modname, modlist):
