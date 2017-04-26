@@ -316,6 +316,8 @@ class Equality(Relational):
                 if L != R:
                     return S.false
                 if L is False:
+                    if lhs == -rhs:  # Eq(oo, -oo)
+                        return S.false
                     return S.true
             elif None in fin and False in fin:
                 return Relational.__new__(cls, lhs, rhs, **options)
