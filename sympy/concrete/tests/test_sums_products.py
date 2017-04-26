@@ -3,7 +3,7 @@ from sympy import (
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, Ne, Or, oo, pi, Piecewise, Product, product, Rational, S, simplify,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma, Le,
-    Indexed, Idx, IndexedBase, prod)
+    Indexed, Idx, IndexedBase, prod, Interval)
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -914,6 +914,14 @@ def test_indexed_idx_sum():
     raises(ValueError, lambda: Product(A[k], (k, 1, 4)))
     raises(ValueError, lambda: Product(A[k], (k, 0, 3)))
     raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
+
+    raises(ValueError, lambda: Sum(A[k], (k, Interval(1, 4))))
+    raises(ValueError, lambda: Sum(A[k], (k, Interval(0, 3))))
+    raises(ValueError, lambda: Sum(A[k], (k, Interval(2, oo))))
+
+    raises(ValueError, lambda: Product(A[k], (k, Interval(1, 4))))
+    raises(ValueError, lambda: Product(A[k], (k, Interval(0, 3))))
+    raises(ValueError, lambda: Product(A[k], (k, Interval(2, oo))))
 
 
 def test_is_convergent():

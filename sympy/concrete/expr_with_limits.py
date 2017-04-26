@@ -54,9 +54,9 @@ def _process_limits(*symbols):
                         nlim = V[1:]
                     limits.append(Tuple(newsymbol, *nlim))
                     if isinstance(V[0], Idx):
-                        if V[0].lower is not None and not bool(nlim[0] >= V[0].lower):
+                        if V[0].lower is not None and ((nlim[0] >= V[0].lower) == False):
                             raise ValueError("Summation exceeds Idx lower range.")
-                        if V[0].upper is not None and not bool(nlim[1] <= V[0].upper):
+                        if V[0].upper is not None and ((nlim[1] <= V[0].upper) == False):
                             raise ValueError("Summation exceeds Idx upper range.")
                     continue
                 elif len(V) == 1 or (len(V) == 2 and V[1] is None):

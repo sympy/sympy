@@ -109,7 +109,6 @@ from __future__ import print_function, division
 
 import collections
 
-from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence, string_types, NotIterable, range
@@ -154,7 +153,10 @@ class Indexed(Expr):
                 Indexed expects string, Symbol, or IndexedBase as base."""))
         args = list(map(sympify, args))
         if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
-            return base[args]
+            if len(args) == 1:
+                return base[args[0]]
+            else:
+                return base[args]
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -364,12 +366,19 @@ class IndexedBase(Expr, NotIterable):
     is_Atom = True
 
     def __new__(cls, label, shape=None, **kw_args):
+        from sympy import MatrixBase, NDimArray
+
         if isinstance(label, string_types):
             label = Symbol(label)
         elif isinstance(label, Symbol):
             pass
+        elif isinstance(label, (MatrixBase, NDimArray)):
+            return label
+        elif isinstance(label, collections.Iterable):
+            from sympy import ImmutableDenseNDimArray
+            return ImmutableDenseNDimArray(label)
         else:
-            label = _sympify(label)
+            label = sympify(label)
 
         if is_sequence(shape):
             shape = Tuple(*shape)
@@ -670,3 +679,8 @@ class Idx(Expr):
         if self.upper is not None and (self.upper <= other_lower) == True:
             return False
         return super(Idx, self).__gt__(other)
+
+    def _eval_subs(self, old, new):
+        if len(self.args) == 2:
+            return self.func(self.label.subs(old, new), (self.lower, self.upper))
+        return self.func(self.label.subs(old, new))

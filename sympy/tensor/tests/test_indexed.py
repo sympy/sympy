@@ -154,12 +154,12 @@ def test_Idx_func_args():
 
 def test_Idx_subs():
     i, a, b = symbols('i a b', integer=True)
-    assert Idx(i, a).subs(a, b) == Idx(i, b)
+    assert Idx(i, a).subs(a, b) == Idx(i, a)
     assert Idx(i, a).subs(i, b) == Idx(b, a)
 
-    assert Idx(i).subs(i, 2) == Idx(2)
-    assert Idx(i, a).subs(a, 2) == Idx(i, 2)
-    assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b))
+    assert Idx(i).subs(i, 2) == Idx(2) == 2
+    assert Idx(i, a).subs(a, 2) == Idx(i, a)
+    assert Idx(i, (a, b)).subs(i, 2) == Idx(2, (a, b)) == 2
 
 
 def test_IndexedBase_sugar():
@@ -353,3 +353,19 @@ def test_indexed_is_constant():
     assert not A[1+2*i, k].is_constant(i)
     assert A[1+2*i, k].is_constant(j)
     assert not A[1+2*i, k].is_constant(k)
+
+
+def test_issue_12532():
+    n = symbols("n", integer=True)
+    i = Idx('i', (1, n))
+    d = IndexedBase('d')
+    s = Sum(d[i], i)
+    s2 = s.subs(n, 5)
+    assert i.subs(Symbol("i", integer=True), 2) == 2
+    assert s2.doit() == d[1] + d[2] + d[3] + d[4] + d[5]
+
+
+def test_issue_12533():
+    d = IndexedBase('d')
+    assert d[0].subs(Symbol("d"), range(5)) == 0
+    assert d[0].subs(d, range(5)) == 0
