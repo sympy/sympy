@@ -11,7 +11,8 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.ratsimp import ratsimp
-from sympy.polys import PolynomialError
+from sympy.polys import PolynomialError, factor
+
 
 def limit(e, z, z0, dir="+"):
     """
@@ -60,7 +61,11 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
-                return
+                ee = factor(e)
+                if ee.is_Mul and e.is_Add:
+                    return heuristics(ee, z, z0, dir)
+                else:
+                    return
             elif isinstance(l, Limit):
                 return
             elif l is S.NaN:
