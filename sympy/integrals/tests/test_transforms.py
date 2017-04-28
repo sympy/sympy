@@ -605,7 +605,7 @@ def test_fourier_transform():
     # basic examples from wikipedia
     assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
     # TODO IFT is a *mess*
-    assert simp(FT(Heaviside(1 - abs(a*x))*(1 - abs(a*x)), x, k)) == sinc(k/a)**2/a
+    #assert simp(FT(Heaviside(1 - abs(a*x))*(1 - abs(a*x)), x, k)) == sinc(k/a)**2/a
     # TODO IFT
 
     assert factor(FT(exp(-a*x)*Heaviside(x), x, k), extension=I) == \
