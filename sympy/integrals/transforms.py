@@ -13,7 +13,7 @@ from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
 from sympy.matrices.matrices import MatrixBase
-from sympy import limit
+from sympy.series.limits import limit
 
 
 ##########################################################################
@@ -1286,7 +1286,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     and inverse Fourier transforms.
     """
 
-    if limit(f, x, oo)!=0 or limit(f, x, -oo)!=0:
+    if limit(f, x, oo) != 0 or limit(f, x, -oo) != 0:
         raise IntegralTransformError(name, f, 'could not compute integral')
 
     from sympy import exp, I
