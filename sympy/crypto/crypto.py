@@ -413,6 +413,7 @@ def encipher_transposition(msg,key):
     'EDWTENEWMRLETEIRMUHOETLE'
 
     """
+
     msg,key,_ = _prep(msg,key,AZ() + AZ().lower() + '0123456789')
     msg = msg.upper()
     key = key.upper()
