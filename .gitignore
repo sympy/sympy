@@ -71,3 +71,6 @@ sample.tex
 
 # pytest cache folder
 .cache
+
+# pytest related data file for slow tests
+.ci/durations.log

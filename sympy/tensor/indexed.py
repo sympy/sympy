@@ -158,6 +158,7 @@ class Indexed(Expr):
                 return base[args[0]]
             else:
                 return base[args]
+
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -385,11 +386,16 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
+        offset = kw_args.pop('offset', S.Zero)
+        strides = kw_args.pop('strides', None)
+
         if shape is not None:
             obj = Expr.__new__(cls, label, shape, **kw_args)
         else:
             obj = Expr.__new__(cls, label, **kw_args)
         obj._shape = shape
+        obj._offset = offset
+        obj._strides = strides
         return obj
 
     def __getitem__(self, indices, **kw_args):
@@ -429,6 +435,45 @@ class IndexedBase(Expr, NotIterable):
 
         """
         return self._shape
+
+    @property
+    def strides(self):
+        """Returns the strided scheme for the ``IndexedBase`` object.
+
+        Normally this is a tuple denoting the number of
+        steps to take in the respective dimension when traversing
+        an array. For code generation purposes strides='C' and
+        strides='F' can also be used.
+
+        strides='C' would mean that code printer would unroll
+        in row-major order and 'F' means unroll in column major
+        order.
+
+        """
+
+        return self._strides
+
+    @property
+    def offset(self):
+        """Returns the offset for the ``IndexedBase`` object.
+
+        This is the value added to the resulting index when the
+        2D Indexed object is unrolled to a 1D form. Used in code
+        generation.
+
+        Examples
+        ==========
+        >>> from sympy.printing import ccode
+        >>> from sympy.tensor import IndexedBase, Idx
+        >>> from sympy import symbols
+        >>> l, m, n, o = symbols('l m n o', integer=True)
+        >>> A = IndexedBase('A', strides=(l, m, n), offset=o)
+        >>> i, j, k = map(Idx, 'ijk')
+        >>> ccode(A[i, j, k])
+        'A[l*i + m*j + n*k + o]'
+
+        """
+        return self._offset
 
     @property
     def label(self):
