@@ -1155,9 +1155,7 @@ class Ray(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray
-    >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
