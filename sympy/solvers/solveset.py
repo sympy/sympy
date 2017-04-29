@@ -12,7 +12,7 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand, expand_complex)
+from sympy.core.function import (Lambda, expand, expand_complex, Function)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.core.symbol import Symbol
@@ -879,6 +879,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     if not isinstance(f, (Expr, Number)):
         raise ValueError("%s is not a valid SymPy expression" % (f))
+
+    if isinstance(symbol, Function):
+        f_tup = f.args
+        for arg in f_tup:
+            if arg.has(symbol) or arg.is_Number:
+                continue
+            else:
+                raise ValueError("%s is not a valid expression" % (f))
+        var = Dummy('x')
+        con = {symbol: var}
+        f = f.xreplace(con)
+        return _solveset(f, var, domain, _check=True)
 
     free_symbols = f.free_symbols
 

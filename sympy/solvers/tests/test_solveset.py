@@ -7,7 +7,7 @@ from sympy import (
     Lambda, imageset, cot, acot, I, EmptySet, Union, E, Interval, Intersection,
     oo)
 
-from sympy.core.function import nfloat
+from sympy.core.function import nfloat, Function
 from sympy.core.relational import Unequality as Ne
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -877,8 +877,10 @@ def test_solve_lambert():
 
 def test_solveset():
     x = Symbol('x')
+    f = Function('f')
     raises(ValueError, lambda: solveset(x + y))
     raises(ValueError, lambda: solveset(x, 1))
+    raises(ValueError, lambda: solveset(f(1)**2 + f(0) + 1, f(1)))
 
     assert solveset(0, domain=S.Reals) == S.Reals
     assert solveset(1) == S.EmptySet
@@ -895,6 +897,9 @@ def test_solveset():
     assert solveset(exp(x) - 1, x) == imageset(Lambda(n, 2*I*pi*n), S.Integers)
     assert solveset(Eq(exp(x), 1), x) == imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers)
+
+    assert solveset(f(1)**2 - 1, f(1), S.Reals) == FiniteSet(-1, 1)
+    assert solveset(f(1)**2 + 1, f(1)) == FiniteSet(-I, I)
 
 
 def test_conditionset():
@@ -922,10 +927,10 @@ def test_conditionset_equality():
 
 def test_solveset_domain():
     x = Symbol('x')
-
     assert solveset(x**2 - x - 6, x, Interval(0, oo)) == FiniteSet(3)
     assert solveset(x**2 - 1, x, Interval(0, oo)) == FiniteSet(1)
     assert solveset(x**4 - 16, x, Interval(0, 10)) == FiniteSet(2)
+
 
 
 def test_improve_coverage():
