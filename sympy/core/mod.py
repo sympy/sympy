@@ -94,7 +94,7 @@ class Mod(Function):
             for i in p.args:
                 if (i/q).is_integer:
                     continue
-                
+
                 a = cls(i, q)
                 if a.count(cls) > i.count(cls):
                     args.append(i)
@@ -150,4 +150,4 @@ class Mod(Function):
 
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
-return True
+            return True
