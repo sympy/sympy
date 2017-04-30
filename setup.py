@@ -103,6 +103,7 @@ modules = [
     'sympy.parsing',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
+    'sympy.physics.fluid',
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.optics',
