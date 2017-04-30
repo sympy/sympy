@@ -116,7 +116,7 @@ class MatrixShaping(MatrixRequired):
 
     def _eval_col_del(self, col):
         def entry(i, j):
-            return self[i, j] if i <= col else self[i - 1, j]
+            return self[i, j] if j < col else self[i, j + 1]
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
@@ -178,8 +178,7 @@ class MatrixShaping(MatrixRequired):
 
     def _eval_row_del(self, row):
         def entry(i, j):
-            i = i - 1 if i > row else i
-            return self[i, j]
+            return self[i, j] if i < row else self[i + 1, j]
         return self._new(self.rows - 1, self.cols, entry)
 
     def _eval_row_insert(self, pos, other):
@@ -2276,7 +2275,7 @@ class MatrixReductions(MatrixDeterminant):
         if op == "n->kn":
             col = col if col is not None else col1
             if col is None or k is None:
-                raise ValueError("For a {0} operation 'n->kn' you must proved the "
+                raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
             if not 0 <= col <= self.cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
@@ -2302,7 +2301,7 @@ class MatrixReductions(MatrixDeterminant):
             col = col1 if col is None else col
             col2 = col1 if col2 is None else col2
             if col is None or col2 is None or k is None:
-                raise ValueError("For a {0} operation 'n->n+km' you must proved the "
+                raise ValueError("For a {0} operation 'n->n+km' you must provide the "
                                  "kwargs `{0}`, `k`, and `{0}2`".format(error_str))
             if col == col2:
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
@@ -2320,8 +2319,8 @@ class MatrixReductions(MatrixDeterminant):
         algorithms start on the left, having complexity right-shifted
         speeds things up.
 
-        returns a tuple (mat, perm) where perm is a permutation
-        of the columns to perform to shift the complex columns righ, and mat
+        Returns a tuple (mat, perm) where perm is a permutation
+        of the columns to perform to shift the complex columns right, and mat
         is the permuted matrix."""
 
         def complexity(i):
@@ -2443,22 +2442,22 @@ class MatrixReductions(MatrixDeterminant):
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
-        """Perfoms the elementary row operation `op`.
+        """Perfoms the elementary column operation `op`.
 
         `op` may be one of
 
-            * "n->kn" (row n goes to k*n)
-            * "n<->m" (swap row n and row m)
-            * "n->n+km" (row n goes to row n + k*row m)
+            * "n->kn" (column n goes to k*n)
+            * "n<->m" (swap column n and column m)
+            * "n->n+km" (column n goes to column n + k*column m)
 
         Parameters
         =========
 
         op : string; the elementary row operation
-        row : the row to apply the row operation
-        k : the multiple to apply in the row operation
-        row1 : one row of a row swap
-        row2 : second row of a row swap or row "m" in the row operation
+        col : the column to apply the column operation
+        k : the multiple to apply in the column operation
+        col1 : one column of a column swap
+        col2 : second column of a column swap or column "m" in the column operation
                "n->n+km"
         """
 

@@ -110,14 +110,17 @@ def test_tolist():
     assert m.tolist() == lst
 
 def test_row_col_del():
-    e = eye_Shaping(3)
+    e = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
     raises(ValueError, lambda: e.row_del(5))
     raises(ValueError, lambda: e.row_del(-5))
     raises(ValueError, lambda: e.col_del(5))
     raises(ValueError, lambda: e.col_del(-5))
 
-    assert e.row_del(2) == e.row_del(-1) == Matrix([[1, 0, 0], [0, 1, 0]])
-    assert e.col_del(2) == e.col_del(-1) == Matrix([[1, 0], [0, 1], [0, 0]])
+    assert e.row_del(2) == e.row_del(-1) == Matrix([[1, 2, 3], [4, 5, 6]])
+    assert e.col_del(2) == e.col_del(-1) == Matrix([[1, 2], [4, 5], [7, 8]])
+
+    assert e.row_del(1) == e.row_del(-2) == Matrix([[1, 2, 3], [7, 8, 9]])
+    assert e.col_del(1) == e.col_del(-2) == Matrix([[1, 3], [4, 6], [7, 9]])
 
 def test_get_diag_blocks1():
     a = Matrix([[1, 2], [2, 3]])
