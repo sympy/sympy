@@ -18,18 +18,15 @@ Segment3D
 """
 from __future__ import division, print_function
 
-from sympy.core import Dummy, S, sympify
-from sympy.core.exprtools import factor_terms
+from sympy.core import S, sympify
 from sympy.core.relational import Eq
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, sqrt, tan)
+from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import And
 from sympy.simplify.simplify import simplify
-from sympy.solvers.solveset import solveset
 from sympy.geometry.exceptions import GeometryError
-from sympy.core.compatibility import is_sequence, iterable
 from sympy.core.decorators import deprecated
-from sympy.sets import Intersection, EmptySet
+from sympy.sets import Intersection
 from sympy.matrices import Matrix
 
 from .entity import GeometryEntity, GeometrySet
@@ -37,7 +34,6 @@ from .point import Point, Point3D
 from .util import _symbol
 from sympy.utilities.misc import Undecidable
 
-import warnings
 
 
 
@@ -969,7 +965,6 @@ class Line(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import L
     >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
@@ -1391,7 +1386,6 @@ class Segment(LinearEntity):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
@@ -1952,9 +1946,7 @@ class Ray2D(LinearEntity2D, Ray):
 
     >>> import sympy
     >>> from sympy import Point, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray
-    >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -2105,7 +2097,6 @@ class Segment2D(LinearEntity2D, Segment):
 
     >>> import sympy
     >>> from sympy import Point
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
@@ -2258,7 +2249,6 @@ class Line3D(LinearEntity3D, Line):
 
     >>> import sympy
     >>> from sympy import Point3D
-    >>> from sympy.abc import L
     >>> from sympy.geometry import Line3D, Segment3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L
@@ -2351,7 +2341,6 @@ class Ray3D(LinearEntity3D, Ray):
 
     >>> import sympy
     >>> from sympy import Point3D, pi
-    >>> from sympy.abc import r
     >>> from sympy.geometry import Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
@@ -2510,7 +2499,6 @@ class Segment3D(LinearEntity3D, Segment):
 
     >>> import sympy
     >>> from sympy import Point3D
-    >>> from sympy.abc import s
     >>> from sympy.geometry import Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))
