@@ -1286,7 +1286,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     and inverse Fourier transforms.
     """
 
-    if limit(f, x, oo) != 0 or limit(f, x, -oo) != 0:
+    if limit(f, x, -oo) != 0 and (limit(f, x, -oo) is not S.NaN or limit(f, x, -oo).is_number or limit(f, x, -oo) == S.Infinity or limit(f, x, -oo) == S.NegativeInfinity):
         raise IntegralTransformError(name, f, 'could not compute integral')
 
     from sympy import exp, I
