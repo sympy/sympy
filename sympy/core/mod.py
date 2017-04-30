@@ -135,13 +135,13 @@ class Mod(Function):
                         continue
                     i = base**exp
                 if (i/q).is_integer:
-                    pass
+                    continue
+                
+                a = cls(i, q)
+                if a.count(cls) > i.count(cls):
+                    args.append(i)
                 else:
-                    a = cls(i, q)
-                    if a.count(cls) > i.count(cls):
-                        args.append(i)
-                    else:
-                        args.append(a)
+                    args.append(a)
             if args != list(p.args):
                 p = Add(*args)
 
