@@ -97,11 +97,14 @@ class Mod(Function):
         if p.is_Add:
             args = []
             for i in p.args:
-                a = cls(i, q)
-                if a.count(cls) > i.count(cls):
-                    args.append(i)
+                if (i/q).is_integer:
+                    pass
                 else:
-                    args.append(a)
+                    a = cls(i, q)
+                    if a.count(cls) > i.count(cls):
+                        args.append(i)
+                    else:
+                        args.append(a)
             if args != list(p.args):
                 p = Add(*args)
 
