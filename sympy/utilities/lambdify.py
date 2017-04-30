@@ -490,8 +490,7 @@ def should_dummify(symbol, printer=None):
     if keyword.iskeyword(lambdarepr(symbol)):
         return True
     else:
-        valid_identifier_regex = re.compile('^[^\d\W]\w*\Z', re.UNICODE)
-        result = valid_identifier_regex.match(lambdarepr(symbol))
+        result = re.match('^[^\d\W]\w*\Z', lambdarepr(symbol), re.UNICODE)
         return result is None
 
 def _module_present(modname, modlist):
