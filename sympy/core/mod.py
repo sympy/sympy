@@ -30,17 +30,45 @@ class Mod(Function):
         from sympy.core.singleton import S
         from sympy.core.exprtools import gcd_terms
         from sympy.polys.polytools import gcd
+        from sympy.ntheory import totient
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
 
+            p, q = map(S, [p, q])
+            if p.is_Add:
+                args = []
+                for i in p.args:
+                    args.append(doit(i, q))
+                if args != list(p.args):
+                    p = Add(*args)
+                return p
+            if p.is_Mul:
+                if (p / q).is_integer:
+                    p = S.Zero
+                else:
+                    try:
+                        p -= int(p/q)*q
+                    except:
+                        pass
+
+                #elif all(map(lambda i: i.is_integer, p.args)):
+                #    p = Mul(*[doit(i, q) for i in p.args])
+
+                return cls(p, q, evaluate=False)
+            if p.is_Pow:
+                b, e = p.args
+                b = doit(b, q)
+                if e.is_Integer and q.is_Integer:
+                    t = totient(q)
+                    e = doit(e, t)
+                return cls(b**e, q, evaluate=False)
+
             if p.is_infinite or q.is_infinite or p is nan or q is nan:
                 return nan
-            if (p == q or p == -q or
-                    p.is_Pow and p.exp.is_Integer and p.base == q or
-                    p.is_integer and q == 1):
+            if abs(p) == abs(q):
                 return S.Zero
 
             if q.is_Number:
@@ -61,7 +89,7 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if (rv*q < 0) == True:
+                    if rv*q < 0:
                         rv += q
                     return rv
 
@@ -72,6 +100,7 @@ class Mod(Function):
                     return d
                 elif q.is_positive:
                     return p
+            return cls(p, q, evaluate=False)
 
         rv = doit(p, q)
         if rv is not None:
@@ -94,9 +123,17 @@ class Mod(Function):
 
         # simplify terms
         # (x + y + 2) % x -> Mod(y + 2, x)
-        if p.is_Add:
+        if False:
+        #if p.is_Add:
             args = []
             for i in p.args:
+                if i.is_Pow:
+                    print(i.args)
+                    base, exp = i.args
+                    base = (base%q)
+                    if base == 0:
+                        continue
+                    i = base**exp
                 if (i/q).is_integer:
                     pass
                 else:
