@@ -280,6 +280,8 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w1, w2, w3 = speeds
         s1, s2, s3 = [sin(q1), sin(q2), sin(q3)]
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
+	if w1==0 and w2==0 and w3==0:
+		return [0, 0, 0]
         if rot_type.lower() == 'body':
             if rot_order == '123':
                 return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
