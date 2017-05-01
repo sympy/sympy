@@ -631,7 +631,7 @@ class MatrixProperties(MatrixRequired):
                     return False
         return True
 
-    def _eval_is_hermetian(self, simpfunc):
+    def _eval_is_hermitian(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
         return mat.is_zero
 
@@ -884,7 +884,7 @@ class MatrixProperties(MatrixRequired):
         if not isinstance(simplify, FunctionType):
             simpfunc = _simplify if simplify else lambda x: x
 
-        return self._eval_is_hermetian(simpfunc)
+        return self._eval_is_hermitian(simpfunc)
 
     @property
     def is_Identity(self):
@@ -2328,7 +2328,7 @@ class MatrixReductions(MatrixDeterminant):
             # element's zero-ness cannot be determined
             return sum(1 if iszerofunc(e) is None else 0 for e in self[:, i])
         complex = [(complexity(i), i) for i in range(self.cols)]
-        perm = [j for (i,j) in sorted(complex)]
+        perm = [j for (i, j) in sorted(complex)]
 
         return (self.permute(perm, orientation='cols'), perm)
 
