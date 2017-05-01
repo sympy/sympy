@@ -1048,6 +1048,9 @@ def test_linsolve():
     Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
     assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
 
+    # Issue #12604
+    f = Function('f')
+    assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
 
 def test_solve_decomposition():
     x = Symbol('x')
