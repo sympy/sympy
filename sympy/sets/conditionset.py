@@ -41,18 +41,10 @@ class ConditionSet(Set):
         if isinstance(base_set, FiniteSet):
             sifted = sift(
                 base_set, lambda _: fuzzy_bool(
-                    condition.subs(
-                        sym, _)))
+                    condition.subs(sym, _)))
             if sifted[None]:
-                return Union(
-                    FiniteSet(
-                        *sifted[True]),
-                    Basic.__new__(
-                        cls,
-                        sym,
-                        condition,
-                        FiniteSet(
-                            *sifted[None])))
+                return Union(FiniteSet(*sifted[True]), Basic.__new__(
+                    cls, sym, condition, FiniteSet(*sifted[None])))
             else:
                 return FiniteSet(*sifted[True])
         return Basic.__new__(cls, sym, condition, base_set)
