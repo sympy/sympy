@@ -4330,7 +4330,7 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         >>> A = Matrix([[1, 1], [1, 1]])
         >>> A.norm(1) # maximum sum of absolute values of A is 2
         2
-        >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> A.norm(2) # Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
         >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
