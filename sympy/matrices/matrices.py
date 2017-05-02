@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
 import collections
+import numpy
+from numpy import matrix
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -4308,7 +4310,7 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         'fro'  Frobenius norm                - does not exist
         inf    --                            max(abs(x))
         -inf   --                            min(abs(x))
-        1      --                            as below
+        1      maximum column sum            as below
         -1     --                            as below
         2      2-norm (largest sing. value)  as below
         -2     smallest singular value       as below
@@ -4326,6 +4328,8 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         >>> v.norm(10)
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1, 1], [1, 1]])
+        >>> A.norm(1) # maximum sum of absolute values of A is 2
+        2
         >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
         >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
@@ -4366,7 +4370,11 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
 
         # Matrix Norms
         else:
-            if ord == 2:  # Spectral Norm
+            if ord == 1:  # Maximum column sum
+                m = numpy.absolute(self)  # m is a numpy array with absolute value of the original matrix
+                return numpy.sum(m.max(1))  # returns the sum of the maximum column
+
+            elif ord == 2:  # Spectral Norm
                 # Maximum singular value
                 return Max(*self.singular_values())
 
