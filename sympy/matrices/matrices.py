@@ -1,8 +1,6 @@
 from __future__ import print_function, division
 
 import collections
-import numpy
-from numpy import matrix
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
@@ -4371,8 +4369,13 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         # Matrix Norms
         else:
             if ord == 1:  # Maximum column sum
-                m = numpy.absolute(self)  # m is a numpy array with absolute value of the original matrix
-                return numpy.sum(m.max(1))  # returns the sum of the maximum column
+                column = [] # keeps track of the number of columns
+
+                for i in range(self.shape[1]) :
+                    column.append(i)
+
+                def maxcol(x) : return sum(self.applyfunc(lambda y : abs(y)).col(x))
+                return max(list(map(maxcol, column)))
 
             elif ord == 2:  # Spectral Norm
                 # Maximum singular value
