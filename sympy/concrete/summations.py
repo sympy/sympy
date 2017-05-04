@@ -430,9 +430,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         numer, denom = sequence_term.as_numer_denom()
         numer = asymptotic(numer, sym)
         denom = asymptotic(denom, sym)
-        sequence_term = numer / denom
-
-        order = O(sequence_term, (sym, S.Infinity))
+        order = O(numer / denom, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
         p1_series_test = order.expr.match(sym**p)
