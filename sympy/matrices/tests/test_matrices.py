@@ -6,7 +6,8 @@ from sympy import (
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector)
+    NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
+    _simplify)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -1799,6 +1800,51 @@ def test_LUdecomposition_iszerofunc():
         return
 
     assert False
+
+def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero1():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # finds a guaranteed non-zero pivot when the
+    # some of the candidate pivots are symbolic expressions.
+    # Keyword argument: simpfunc=None indicates that no simplifications
+    # should be performed during the search.
+    x = Symbol('x')
+    column = Matrix(3, 1, [x, cos(x)**2 + sin(x)**2, Rational(1, 2)])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column)
+    assert pivot_val == Rational(1, 2)
+
+def test_find_reasonable_pivot_naive_finds_guaranteed_nonzero2():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # finds a guaranteed non-zero pivot when the
+    # some of the candidate pivots are symbolic expressions.
+    # Keyword argument: simpfunc=_simplify indicates that the search
+    # should attempt to simplify candidate pivots.
+    x = Symbol('x')
+    column = Matrix(3, 1,
+                    [x,
+                     cos(x)**2+sin(x)**2+x**2,
+                     cos(x)**2+sin(x)**2])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column, simpfunc=_simplify)
+    assert pivot_val == 1
+
+def test_find_reasonable_pivot_naive_simplifies():
+    # Test if matrices._find_reasonable_pivot_naive()
+    # simplifies candidate pivots, and reports
+    # their offsets correctly.
+    x = Symbol('x')
+    column = Matrix(3, 1,
+                    [x,
+                     cos(x)**2+sin(x)**2+x,
+                     cos(x)**2+sin(x)**2])
+    pivot_offset, pivot_val, pivot_assumed_nonzero, simplified =\
+        _find_reasonable_pivot_naive(column, simpfunc=_simplify)
+
+    assert len(simplified) == 2
+    assert simplified[0][0] == 1
+    assert simplified[0][1] == 1+x
+    assert simplified[1][0] == 2
+    assert simplified[1][1] == 1
 
 def test_errors():
     raises(ValueError, lambda: Matrix([[1, 2], [1]]))
