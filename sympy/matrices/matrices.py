@@ -4169,6 +4169,7 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
 
         return L, U, p
 
+
     def LUdecomposition_Simple(self,
                                rankcheck=False,
                                iszerofunc=_iszero,
@@ -4233,7 +4234,7 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
         if simpfunc is not None.
         The search is repeated, with the difference that a candidate may be
         the pivot if `iszerofunc()` cannot guarantee that it is nonzero.
-        In the second searchm the pivot is the first candidate that
+        In the second search the pivot is the first candidate that
         iszerofunc can guarantee is nonzero.
         If no such candidate exists, then the pivot is the first candidate
         for which iszerofunc returns None.
@@ -4276,78 +4277,28 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
             # XXX `_find_reasonable_pivot` uses slow zero testing. Blocked by bug #10279
             # Future versions of LUdecomposition_simple can pass iszerofunc and simpfunc
             # to _find_reasonable_pivot().
+            # In pass 3 of _find_reasonable_pivot(), the predicate in `if x.equals(S.Zero):`
+            # calls sympy.simplify(), and not the simplification function passed in via
+            # the keyword argument simpfunc.
+
             candidate_pivot_row = None
             while pivot_col != self.cols:
-                for r in range(pivot_row, self.rows):
-                    iszeropivot = iszerofunc(lu[r, pivot_col])
-                    if iszeropivot is False:
-                        # iszerofunc determined that
-                        # lu[r, pivot_col] is non-zero.
-                        # Use this entry as the pivot
-                        candidate_pivot_row = r
-                        break
-                    if candidate_pivot_row is None and iszeropivot is None:
-                        # iszerofunc could not determine if
-                        # lu[r, pivot_col] is zero.
-                        # Save this row in case we don't
-                        # find a guaranteed nonzero pivot in this column
-                        candidate_pivot_row = r
-                    elif iszeropivot is True:
-                        lu[r, pivot_col] = S.Zero
-
-                if iszeropivot == False:
-                    # Found a pivot is that is guaranteed by
-                    # iszeropivot to be nonzero
-                    break
-                if iszeropivot == True and candidate_pivot_row is None:
-                    # There are no nonzero pivots in this column
+                sub_col = (lu[r, pivot_col] for r in range(pivot_row, self.rows))
+                pivot_row_offset, pivot_value, is_assumed_non_zero, ind_simplified_pairs =\
+                    _find_reasonable_pivot_naive(sub_col, iszerofunc, simpfunc)
+                iszeropivot = pivot_value is None
+                if iszeropivot:
+                    # All candidate pivots in this column are zero.
+                    # Proceed to next column.
                     pivot_col += 1
                     continue
-                if simpfunc is None:
-                    # simpfunc is None indicates that the caller
-                    # does not want to simplify candidate pivots
-                    # that iszerofunc could not guarantee are zero
-                    # break
-                    break
-                else:
-                    # Retest candidate pivots after simplification.
-                    # If candidate_pivot_row is not pivot_row,
-                    # then the candidate pivots between pivot_row
-                    # and candidate_pivot_row are all zero,
-                    # so don't bother trying to simplify them.
-                    row_start = candidate_pivot_row
-                    candidate_pivot_row = None
-                    for r in range(row_start, self.rows):
-                        simplified = simpfunc(lu[r, pivot_col])
-                        if simplified is not lu[r, pivot_col]:
-                            lu[r, pivot_col] = simplified
-                        iszeropivot = iszerofunc(lu[r, pivot_col])
-                        if iszeropivot == False:
-                            # Newly simplified candidate pivot is
-                            # guranteed to be nonzero.
-                            candidate_pivot_row = r
-                            break
-                        if iszeropivot is None and candidate_pivot_row is None:
-                            candidate_pivot_row = r
 
-                    if iszeropivot == False:
-                        # Found a pivot is that is guaranteed by
-                        # iszeropivot to be nonzero
-                        break
-                    if iszeropivot == True and candidate_pivot_row is None:
-                        # There are no nonzero pivots in this column
-                        pivot_col += 1
-                        continue
-                if iszeropivot == False:
-                    # Found a pivot is that is guaranteed by
-                    # iszeropivot to be nonzero
-                    break
-                if iszeropivot == True and candidate_pivot_row is None:
-                    # There are no nonzero pivots in this column
-                    pivot_col += 1
-                    continue
-                else:
-                    break
+                # Update entries simplified during pivot search.
+                for offset, val in ind_simplified_pairs:
+                    lu[pivot_row + offset, pivot_col] = val
+
+                candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
+                break
 
             if rankcheck and pivot_col != pivot_row:
                 # All entries including and below the pivot position are
@@ -4388,21 +4339,34 @@ class MatrixBase(MatrixDeprecated, MatrixDeterminant, MatrixProperties):
                     lu[pivot_row, col], lu[candidate_pivot_row, col] =\
                         lu[candidate_pivot_row, col], lu[pivot_row, col]
 
+            # Introduce zeros below the pivot by adding a multiple of the
+            # pivot row to a row under it, and store the result in the
+            # row under it.
+            # Only entries in the target row whose index is greater than
+            # start_col may be nonzero.
+            start_col = pivot_col + 1
             for row in range(pivot_row + 1, lu.rows):
                 # Store factors of L in the subcolumn below
                 # (pivot_row, pivot_row).
                 lu[row, pivot_row] =\
                     lu[row, pivot_col]/lu[pivot_row, pivot_col]
 
-                # Add multiple of pivot row to row below it.
-                # Two loops to handle case where pivot_col > pivot_row
+                # Form the linear combination of the pivot row and the current
+                # row below the pivot row that zeros the entries below the pivot.
                 # Employing slicing instead of a loop here raises
                 # NotImplementedError: Cannot add Zero to MutableSparseMatrix
                 # in sympy/matrices/tests/test_sparse.py.
-                col_start =\
-                    pivot_row + 1 if pivot_row == pivot_col else pivot_col
-                for col in range(col_start, lu.cols):
-                    lu[row, col] -= lu[row, pivot_row] * lu[pivot_row, col]
+                # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
+                for c in range(start_col, lu.cols):
+                    lu[row, c] = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
+
+            if pivot_row != pivot_col:
+                # matrix rank < min(num rows, num cols),
+                # so factors of L are not stored directly below the pivot.
+                # These entries are zero by construction, so don't bother
+                # computing them.
+                for row in range(pivot_row + 1, lu.rows):
+                    lu[row, pivot_col] = S.Zero
 
             pivot_col += 1
             if pivot_col == lu.cols:
@@ -5435,6 +5399,11 @@ def a2idx(j, n=None):
             raise IndexError("Index out of range: a[%s]" % (j,))
     return int(j)
 
+def _axy(const, sequence1, sequence2):
+    """Compute sequence const*x + y, where const is a constant, and x and y are iterable sequences."""
+    for x,y in zip(sequence1, sequence2):
+        yield const*x + y
+
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     """ Find the lowest index of an item in `col` that is
@@ -5539,6 +5508,72 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     i = possible_zeros.index(None)
     return (i, col[i], True, newly_determined)
 
+def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
+    """
+    Computes the offset to the pivot, the pivot, whether the returned
+    pivot is guaranteed to be nonzero, and a list of index-value pairs
+    of pivot candidates that were simplified during the pivot search.
+    See _find_reasonable_pivot() for a more detailed description of
+    this function's output.
+    This function mimics the behavior of _find_reasonable_pivot(),
+    but does less work trying to determine if an indeterminate candidate
+    pivot simplifies to zero. This more naive approach is faster, with
+    the tradeoff that it may erroneously return a pivot that is zero.
+    `col` is the column to be searched for a suitable pivot.
+    `iszerofunc` is a callable that returns a Boolean that indicates
+    if its input is zero, or None if no such determination can be made.
+    `simpfunc` is a callable that simplifies its input. It must return
+    its input if it does not simplify its input. Passing in
+    `simpfunc=None` indicates that the pivot search should not attempt
+    to simplify any candidate pivots.
+    """
+
+    # indeterminates holds the index-value pairs of each pivot candidate
+    # that is neither zero or non-zero, as determined by iszerofunc().
+    indeterminates = []
+    for i, col_val in enumerate(col):
+        col_val_is_zero = iszerofunc(col_val)
+        if col_val_is_zero == False:
+            # This pivot candidate is non-zero.
+            return i, col_val, False, []
+        elif col_val_is_zero is None:
+            # This pivot candidate cannot be guaranteed to be zero
+            # or non-zero.
+            # Store all indeterminate pivots if the caller passed in a
+            # simplification function.
+            # Otherwise, only store the first encountered indeterminate,
+            # which will be returned if there's no guaranteed non-zero
+            # pivot candidate below this one.
+            if simpfunc is not None:
+                indeterminates.append((i, col_val))
+            elif len(indeterminates) == 0:
+                indeterminates.append((i, col_val))
+    
+    if len(indeterminates) == 0:
+        # All candidate pivots are guaranteed to be zero, i.e. there is
+        # no pivot.
+        return None, None, False, []
+
+    if simpfunc is None:
+        # Caller did not pass in a simplification function that might
+        # determine if an indeterminate pivot candidate is guaranteed
+        # to be nonzero, so assume the first indeterminate candidate
+        # is non-zero.
+        return indeterminates[0][0], indeterminates[0][1], True, []
+
+    # newly_determined holds index-value pairs of candidate pivots
+    # that were simplified during the search for a non-zero pivot.
+    newly_determined = []
+    for i, col_val in indeterminates:
+        tmp_col_val = simpfunc(col_val)
+        if id(col_val) != id(tmp_col_val):
+            # simpfunc() simplifed this candidate pivot.
+            newly_determined.append((i, tmp_col_val))
+            if iszerofunc(tmp_col_val) == False:
+                # Candidate pivot simplified to a guaranteed non-zero value.
+                return i, tmp_col_val, False, newly_determined
+
+    return indeterminates[0][0], indeterminates[0][1], True, newly_determined
 
 class _MinimalMatrix(object):
     """Class providing the minimum functionality
