@@ -5548,7 +5548,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
                 indeterminates.append((i, col_val))
             elif len(indeterminates) == 0:
                 indeterminates.append((i, col_val))
-    
+
     if len(indeterminates) == 0:
         # All candidate pivots are guaranteed to be zero, i.e. there is
         # no pivot.
