@@ -440,6 +440,8 @@ def test_kin_eqs():
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
+    assert kinematic_equations((0, 0, 0), (pi, pi / 2, 0), 'body', '132') == \
+            [0,0,0]
 
 
 def test_partial_velocity():
