@@ -621,13 +621,16 @@ class ReferenceFrame(object):
                 from sympy.physics.vector.functions import kinematic_equations
                 q1, q2, q3 = amounts
                 u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-                templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                               rot_type, rot_order)
-                templist = [expand(i) for i in templist]
-                td = solve(templist, [u1, u2, u3])
-                u1 = expand(td[u1])
-                u2 = expand(td[u2])
-                u3 = expand(td[u3])
+                if all(i.is_number for i in [q1, q2, q3]):
+                    u1, u2, u3 = [0, 0, 0]
+                else:
+                    templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
+                                                   rot_type, rot_order)
+                    templist = [expand(i) for i in templist]
+                    td = solve(templist, [u1, u2, u3])
+                    u1 = expand(td[u1])
+                    u2 = expand(td[u2])
+                    u3 = expand(td[u3])
                 wvec = u1 * self.x + u2 * self.y + u3 * self.z
             except (CoercionFailed, AssertionError):
                 wvec = self._w_diff_dcm(parent)

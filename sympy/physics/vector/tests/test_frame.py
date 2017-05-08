@@ -123,6 +123,9 @@ def test_ang_vel():
     assert G.ang_vel_in(N) == q1d * (N.x + N.y).normalize()
     assert N.ang_vel_in(G) == -q1d * (N.x + N.y).normalize()
 
+    # #12600
+    H = N.orientnew('H', 'body', (pi, pi / 2, 0), '132')
+    assert H.ang_vel_in(N) == 0
 
 def test_dcm():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
