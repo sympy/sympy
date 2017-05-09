@@ -25,7 +25,8 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
-from sympy import S, Mul, eye, trace
+from sympy.core.backend import Mul, eye
+from sympy import trace, S
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, Tensor, tensorhead
 from sympy.core.compatibility import range
