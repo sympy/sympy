@@ -23,8 +23,8 @@ before returning the node.
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
+from sympy.core.backend import SympifyError
 from sympy.core.compatibility import exec_
-from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
     fix_missing_locations, Str, Tuple
