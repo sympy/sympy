@@ -31,7 +31,10 @@ from types import FunctionType
 
 def _iszero(x):
     """Returns True if x is zero."""
-    return x.is_zero
+    if hasattr(x, "free_symbols") and not x.free_symbols:
+        return x.equals(0)
+    else:
+        return x.is_zero
 
 
 class MatrixError(Exception):
