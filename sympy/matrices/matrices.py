@@ -631,7 +631,10 @@ class MatrixProperties(MatrixRequired):
                     return False
         return True
 
-    def _eval_is_hermitian(self, simpfunc):
+    # _eval_is_hermitian is called by some general sympy
+    # routines and has a different *args signature.  Make
+    # sure the names don't clash by adding `_matrix_` in name.
+    def _eval_is_matrix_hermitian(self, simpfunc):
         mat = self._new(self.rows, self.cols, lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()))
         return mat.is_zero
 
@@ -884,7 +887,7 @@ class MatrixProperties(MatrixRequired):
         if not isinstance(simplify, FunctionType):
             simpfunc = _simplify if simplify else lambda x: x
 
-        return self._eval_is_hermitian(simpfunc)
+        return self._eval_is_matrix_hermitian(simpfunc)
 
     @property
     def is_Identity(self):
