@@ -581,7 +581,7 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
 
     testmat = Matrix([[6, -2, 7, 4],
                       [0, 3, 6, 7],
@@ -590,13 +590,13 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
 
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - M == zeros(3)
+    assert (L*U).permute_rows(p, 'backward') - M == zeros(3)
 
     mL = Matrix((
         (1, 0, 0),
@@ -975,12 +975,11 @@ def test_eigen():
     assert M.eigenvects(simplify=True) == [
         (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])]),
         (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
-    assert M.eigenvects(simplify=False) == [
-        (Rational(5, 8) + sqrt(73)/8, 1,
-        [Matrix([[-1/(-sqrt(73)/8 + Rational(-3, 8))], [1]])]),
-        (-sqrt(73)/8 + Rational(5, 8), 1,
-        [Matrix([[-1/(Rational(-3, 8) + sqrt(73)/8)], [1]])]),
-    ]
+    assert M.eigenvects(simplify=False) ==[(5/8 + sqrt(73)/8, 1, [Matrix([
+       [-1/(-sqrt(73)/8 - S(3)/8)],
+       [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
+       [-1/(-S(3)/8 + sqrt(73)/8)],
+       [                     1]])])]
 
     m = Matrix([[1, .6, .6], [.6, .9, .9], [.9, .6, .6]])
     evals = {-sqrt(385)/20 + S(5)/4: 1, sqrt(385)/20 + S(5)/4: 1, S.Zero: 1}
@@ -1018,11 +1017,6 @@ def test_xreplace():
 
 def test_simplify():
     f, n = symbols('f, n')
-
-    m = Matrix([[1, x], [x + 1/x, x - 1]])
-    m = m.row_join(eye(m.cols))
-    raw = m.rref(simplify=lambda x: x)[0]
-    assert raw != m.rref(simplify=True)[0]
 
     M = Matrix([[            1/x + 1/y,                 (x + x*y) / x  ],
                 [ (f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n) / pi ]])
@@ -2279,7 +2273,7 @@ def test_copyin():
 def test_invertible_check():
     # sometimes a singular matrix will have a pivot vector shorter than
     # the number of rows in a matrix...
-    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), (0,))
     raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
     m = Matrix([
         [-1, -1,  0],
@@ -2487,7 +2481,7 @@ def test_rank_regression_from_so():
                                [0, 1, 0,    3/(nu*(-lamb - nu))],
                                [0, 0, 1,         3/(-lamb - nu)],
                                [0, 0, 0,                      0]])
-    expected_pivots = [0, 1, 2]
+    expected_pivots = (0, 1, 2)
 
     reduced, pivots = A.rref()
 
@@ -2813,7 +2807,7 @@ def test_opportunistic_simplification():
 
     # issue #10781
     m = Matrix([[3+3*sqrt(3)*I, -9],[4,-3+3*sqrt(3)*I]])
-    assert m.rref()[0] == Matrix([[1, -9/(3 + 3*sqrt(3)*I)], [0, 0]])
+    assert simplify(m.rref()[0] - Matrix([[1, -9/(3 + 3*sqrt(3)*I)], [0, 0]])) == zeros(2, 2)
 
     # issue #11434
     ax,ay,bx,by,cx,cy,dx,dy,ex,ey,t0,t1 = symbols('a_x a_y b_x b_y c_x c_y d_x d_y e_x e_y t_0 t_1')
@@ -2822,8 +2816,11 @@ def test_opportunistic_simplification():
 
 def test_partial_pivoting():
     # example from https://en.wikipedia.org/wiki/Pivot_element
+    # partial pivoting with back subsitution gives a perfect result
+    # naive pivoting give an error ~1e-13, so anything better than
+    # 1e-15 is good
     mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
-    assert mm.rref()[0] == Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])
+    assert (mm.rref()[0] - Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])).norm() < 1e-15
 
     # issue #11549
     m_mixed = Matrix([[6e-17, 1.0, 4],[ -1.0,   0, 8],[    0,   0, 1]])
