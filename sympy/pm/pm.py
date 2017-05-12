@@ -31,24 +31,30 @@ def _rubi_match(s, p, var, head=None, sig={}):
 
             keys = p_partition.keys()
 
-            check = None
             for k in keys:
+                match = None
+                matched = None
                 if len(s_partition[k]) != len(p_partition[k]):
                     yield None
                     break
                 else:
                     for i in s_partition[k]:
                         for j in p_partition[k]:
-                            for k in _rubi_match(i, j, var, sig):
-                                check = k
-                                if check != None:
+                            for res in _rubi_match(i, j, var, k, sig):
+                                match = res
+                                if match != None:
+                                    matched = j # expression which is matched
                                     break
-                            if check != None:
+                            if match != None: # if matched, break the loop
                                 break
-                        if check == None:
+                        if match == None:
                             yield None
-                    if check == None:
+                            break
+                        else:
+                            p_partition[k].remove(matched) # if matched, remove from search space
+                            sig = {**sig, **match}
+                    if match == None and len(s_partition[k]) > 0:
                         yield None
                         break
-            if check != None:
-                yield {**sig, **check}
+
+            yield sig

@@ -1562,7 +1562,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         if not isinstance(self, (Mul, Add)):
             if var in self.free_symbols:
-                leaves[self.__class__.__name__] = [self]
+                leaves[self.__class__.__name__] = list(self.args)
             else:
                 leaves['Constant'] = [self]
             return leaves
