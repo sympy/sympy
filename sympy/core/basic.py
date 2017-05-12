@@ -1525,6 +1525,58 @@ class Basic(with_metaclass(ManagedProperties)):
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
 
+    def _partition_args(self, var, all_comm=True):
+        """
+        Return a `dict` of subexpressions which contains `var`.
+        Subexpressions which doesn't contain `var` are considered to be constant.
+        Note: Partition of non-commutative terms is not supported.
+
+        See:
+        https://people.eecs.berkeley.edu/~fateman/papers/partition-new2.pdf
+
+        Examples
+        ========
+
+        >>> from sympy import exp, sqrt, cos, sin
+        >>> from sympy.abc import x, a, b
+        >>> expr = a + b + x
+        >>> expr._partition_args(x)
+        {'Constant': [a, b], 'Symbol': [x]}
+        >>> expr = cos(a)*b*sin(x)
+        >>> expr._partition_args(x)
+        {'Constant': [b, cos(a)], 'sin': [sin(x)]}
+
+        When the expression head is not commutative('Add' and 'Mul' type
+        epressions), the same expression is returned in form of dict.
+
+        >>> exp(x)._partition_args(x)
+        {'Constant': [], 'exp': [exp(x)]}
+        >>> exp(a)._partition_args(x)
+        {'Constant': [exp(a)]}
+
+        """
+        from .add import Add
+        from .mul import Mul
+        leaves = {}
+        leaves['Constant'] = []
+
+        if not isinstance(self, (Mul, Add)):
+            if var in self.free_symbols:
+                leaves[self.__class__.__name__] = [self]
+            else:
+                leaves['Constant'] = [self]
+            return leaves
+
+        if self.args_cnc()[1] and not all_comm:
+            raise NotImplementedError("Partition of non-commutative terms is not supported")
+
+        for subexpr in self.args:
+            if var in subexpr.free_symbols:
+                leaves.setdefault(subexpr.__class__.__name__, []).append(subexpr)
+            else:
+                leaves['Constant'].append(subexpr)
+        return leaves
+
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
