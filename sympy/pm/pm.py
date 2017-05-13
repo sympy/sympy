@@ -1,3 +1,7 @@
+from sympy.utilities.iterables import dict_merge
+from sympy.core.compatibility import _nodes
+
+
 def rubi_match(subject, pattern, var=None):
     '''
     Commutative pattern matcher for Rubi Integration.
@@ -6,13 +10,15 @@ def rubi_match(subject, pattern, var=None):
     '''
     return next(_rubi_match(subject, pattern, var, sig={}))
 
+
 def _rubi_match(s, p, var, head=None, sig={}):
     '''
     Helper function for `rubi_match`.
-    '''
 
+    :param head: head of pattern. Eg: Add, Mul, log, etc
+    '''
     if p.is_Wild:
-        yield {**sig, **{p: s}}
+        yield dict_merge(sig, {p: s})
     elif p == var and s == var:
         yield sig
     elif p == var:
@@ -22,8 +28,7 @@ def _rubi_match(s, p, var, head=None, sig={}):
         s_partition = s._partition_args(var)
 
         if p_partition.keys() != s_partition.keys():
-            yield None
-
+            sig = None
         else:
             if len(p_partition['Constant']) > 0:
                 if p_partition['Constant'][0].is_Wild:
@@ -31,30 +36,29 @@ def _rubi_match(s, p, var, head=None, sig={}):
 
             keys = p_partition.keys()
 
-            for k in keys:
-                match = None
-                matched = None
-                if len(s_partition[k]) != len(p_partition[k]):
-                    yield None
+            for h in keys:
+                # Match subexpressions having same head
+                if len(s_partition[h]) != len(p_partition[h]):
+                    sig = None
                     break
                 else:
-                    for i in s_partition[k]:
-                        for j in p_partition[k]:
-                            for res in _rubi_match(i, j, var, k, sig):
-                                match = res
-                                if match != None:
-                                    matched = j # expression which is matched
+                    #arrange expression in ascending order
+                    s_partition[h].sort(key=lambda l: _nodes(l))
+                    p_partition[h].sort(key=lambda l: _nodes(l))
+                    for i in s_partition[h]:
+                        matched = None # expression in subject which is matched
+                        for j in p_partition[h]:
+                            for res in _rubi_match(i, j, var, h, sig):
+                                if res != None:
+                                    sig = dict_merge(sig, res)
+                                    matched = j
                                     break
-                            if match != None: # if matched, break the loop
+                            if matched != None: # if matched, break the loop
                                 break
-                        if match == None:
-                            yield None
+                        if matched == None:
+                            sig = None
                             break
                         else:
-                            p_partition[k].remove(matched) # if matched, remove from search space
-                            sig = {**sig, **match}
-                    if match == None and len(s_partition[k]) > 0:
-                        yield None
-                        break
+                            p_partition[h].remove(matched) # if matched, remove from search space
 
             yield sig

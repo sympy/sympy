@@ -21,6 +21,7 @@ modules = [
     'sympy.functions.combinatorial',
     'sympy.functions.elementary',
     'sympy.functions.elementary.benchmarks',
+    'sympy.pm'
 ...
 ]
 

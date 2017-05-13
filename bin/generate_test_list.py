@@ -24,6 +24,7 @@ tests = [
     'sympy.specfun.tests',
     'sympy.test_external',
     'sympy.utilities.tests',
+    'sympy.pm.tests'
     ]
 
 """

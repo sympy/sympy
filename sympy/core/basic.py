@@ -1550,7 +1550,7 @@ class Basic(with_metaclass(ManagedProperties)):
         epressions), the same expression is returned in form of dict.
 
         >>> exp(x)._partition_args(x)
-        {'Constant': [], 'exp': [exp(x)]}
+        {'Constant': [], 'exp': [x]}
         >>> exp(a)._partition_args(x)
         {'Constant': [exp(a)]}
 
