@@ -1993,6 +1993,11 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
 
         return det
 
+    def _eval_determinant(self):
+        """Assumed to exist by matrix expressions; If we subclass
+        MatrixDeterminant, we can fully evaluate determinants."""
+        return self.det()
+
     def adjugate(self, method="berkowitz"):
         """Returns the adjugate, or classical adjoint, of
         a matrix.  That is, the transpose of the matrix of cofactors.

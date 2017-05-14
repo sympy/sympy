@@ -12,6 +12,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
+from sympy.matrices.dense import _InplaceMatrix
 from sympy.core.compatibility import long, iterable, range
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
@@ -2871,3 +2872,32 @@ def test_as_real_imag():
         a,b = kls(m3).as_real_imag()
         assert list(a) == list(m1)
         assert list(b) == list(m1)
+
+
+def test__InplaceMatrix():
+    """_InplaceMatrix is thin wrapper around
+    a list to allow for efficient matrix arithmetic.
+    """
+
+    l1 = list(range(12))
+    l2 = list(range(9))
+
+    m1 = _InplaceMatrix(4, 3, list(l1))
+    m2 = _InplaceMatrix(3, 3, list(l2))
+    assert list(m1.__mul__(m2)) == [15, 18, 21, 42, 54, 66, 69, 90, 111, 96, 126, 156]
+
+    m1 = _InplaceMatrix(4, 3, list(l1))
+    m2 = _InplaceMatrix(3, 3, list(l2))
+    assert list(m1[:3, :].__mul__(m2)) == [15, 18, 21, 42, 54, 66, 69, 90, 111]
+
+    m1 = _InplaceMatrix(4, 3, list(l1))
+    assert list(m1[1:2, 1:]) == [4, 5]
+
+    m2 = _InplaceMatrix(3, 3, list(l2))
+    assert list(m2.__add__(m2)) == [0, 2, 4, 6, 8, 10, 12, 14, 16]
+
+    m2 = _InplaceMatrix(3, 3, list(l2))
+    assert list(m2._scalar_mul(2)) == [0, 2, 4, 6, 8, 10, 12, 14, 16]
+
+    m2 = _InplaceMatrix(3, 3, list(l2))
+    assert list(m2._scalar_rmul(2)) == [0, 2, 4, 6, 8, 10, 12, 14, 16]
