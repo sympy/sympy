@@ -71,7 +71,7 @@ def continuous_domain(f, symbol, domain):
                 sings = Intersection(solveset(1/f, symbol), domain)
 
 
-    except:
+    except Exception:
         raise NotImplementedError("Methods for determining the continuous domains"
                                   " of this function have not been developed.")
 
