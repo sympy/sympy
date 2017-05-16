@@ -267,7 +267,7 @@ def igcd_lehmer(a, b):
         # Quotients are mostly small integers that can
         # be determined from most significant bits.
         n = a.bit_length() - nbits
-        x, y = a >> n, b >> n  # most significant bits
+        x, y = int(a >> n), int(b >> n)  # most significant bits
 
         # Elements of the Euclidean gcd sequence are linear
         # combinations of a and b with integer coefficients.
