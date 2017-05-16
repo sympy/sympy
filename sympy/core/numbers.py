@@ -6,7 +6,10 @@ import math
 import warnings
 import re as regex
 from collections import defaultdict
-from sys import long_info
+try:
+    from sys import int_info
+except ImportError:
+    from sys import long_info as int_info
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
@@ -258,7 +261,7 @@ def igcd_lehmer(a, b):
     # pair (a, b) with a pair of shorter consecutive elements
     # of the Euclidean gcd sequence until a and b
     # fit into two Python (long) int digits.
-    nbits = 2*long_info.bits_per_digit
+    nbits = 2*int_info.bits_per_digit
 
     while a.bit_length() > nbits and b != 0:
         # Quotients are mostly small integers that can
