@@ -60,15 +60,15 @@ def continuous_domain(f, symbol, domain):
     try:
         sings = S.EmptySet
         if f.has(Abs):
-            sings = solveset(1 / f, symbol, domain)
+            sings = solveset(1/f, symbol, domain)
         else:
             for atom in f.atoms(Pow):
                 predicate, denom = _has_rational_power(atom, symbol)
                 if predicate and denom == 2:
-                    sings = solveset(1 / f, symbol, domain)
+                    sings = solveset(1/f, symbol, domain)
                     break
             else:
-                sings = Intersection(solveset(1 / f, symbol), domain)
+                sings = Intersection(solveset(1/f, symbol), domain)
 
     except BaseException:
         raise NotImplementedError(
@@ -804,7 +804,7 @@ class AccumulationBounds(AtomicExpr):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
                 if S.Zero not in other:
-                    return self * AccumBounds(1 / other.max, 1 / other.min)
+                    return self * AccumBounds(1/other.max, 1/other.min)
 
                 if S.Zero in self and S.Zero in other:
                     if self.min.is_zero and other.min.is_zero:
