@@ -601,7 +601,7 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition(rankcheck=False)
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(4, 3)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4, 3)
 
     # square and singular
     testmat = Matrix([[1, 2, 3],
@@ -610,7 +610,7 @@ def test_LUdecomp():
     L, U, p = testmat.LUdecomposition(rankcheck=False)
     assert L.is_lower
     assert U.is_upper
-    assert (L*U).permuteBkwd(p) - testmat == zeros(3)
+    assert (L*U).permute_rows(p, 'backward') - testmat == zeros(3)
 
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
