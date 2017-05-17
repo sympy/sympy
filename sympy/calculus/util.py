@@ -26,13 +26,13 @@ def continuous_domain(f, symbol, domain):
     >>> from sympy.calculus.util import continuous_domain
     >>> x = Symbol('x')
     >>> continuous_domain(1/x, x, S.Reals)
-    Union(Interval(-oo, 0, True, True), Interval(0, oo, True, True))
+    Union(Interval.open(-oo, 0), Interval.open(0, oo))
     >>> continuous_domain(tan(x), x, Interval(0, pi))
-    Union(Interval(0, pi/2, False, True), Interval(pi/2, pi, True))
+    Union(Interval.Ropen(0, pi/2), Interval.Lopen(pi/2, pi))
     >>> continuous_domain(sqrt(x - 2), x, Interval(-5, 5))
     Interval(2, 5)
     >>> continuous_domain(log(2*x - 1), x, S.Reals)
-    Interval(1/2, oo, True, True)
+    Interval.open(1/2, oo)
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
@@ -94,13 +94,13 @@ def function_range(f, symbol, domain):
     >>> function_range(sin(x), x, Interval(0, 2*pi))
     Interval(-1, 1)
     >>> function_range(tan(x), x, Interval(-pi/2, pi/2))
-    Interval(-oo, oo, True, True)
+    Interval(-oo, oo)
     >>> function_range(1/x, x, S.Reals)
-    Interval(-oo, oo, True, True)
+    Interval(-oo, oo)
     >>> function_range(exp(x), x, S.Reals)
-    Interval(0, oo, True, True)
+    Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
-    Interval(-oo, oo, True, True)
+    Interval(-oo, oo)
     >>> function_range(sqrt(x), x , Interval(-5, 9))
     Interval(0, 3)
 
@@ -191,7 +191,7 @@ def not_empty_in(finset_intersection, *syms):
     >>> not_empty_in(FiniteSet(x, x**2).intersect(Interval(1, 2)), x)
     Union(Interval(-sqrt(2), -1), Interval(1, 2))
     >>> not_empty_in(FiniteSet(x**2/(x + 2)).intersect(Interval(1, oo)), x)
-    Union(Interval(-2, -1, True), Interval(2, oo, False, True))
+    Union(Interval.Lopen(-2, -1), Interval(2, oo))
     """
 
     # TODO: handle piecewise defined functions
@@ -381,12 +381,9 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != f:
+                if g != orig_f and g != f: # Fix for issue 12620
                     period = periodicity(g, symbol)
-                    if period is None:
-                        continue
-
-                    else:
+                    if period is not None:
                         break
 
     if period is not None:

@@ -209,6 +209,8 @@ class DenseMatrix(MatrixBase):
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
 
+
+
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
         Without the error checks.

@@ -47,7 +47,7 @@ class Patch(Basic):
 
     On a manifold one can have many patches that do not always include the
     whole manifold. On these patches coordinate charts can be defined that
-    permit the parametrization of any point on the patch in terms of a tuple
+    permit the parameterization of any point on the patch in terms of a tuple
     of real numbers (the coordinates).
 
     This object serves as a container/parent for all coordinate system charts

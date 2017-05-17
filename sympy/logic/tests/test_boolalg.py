@@ -675,6 +675,8 @@ def test_true_false():
         assert ITE(F, F, T) is true
         assert ITE(F, F, F) is false
 
+    assert all(i.simplify(1, 2) is i for i in (S.true, S.false))
+
 
 def test_bool_as_set():
     x = symbols('x')
