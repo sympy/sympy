@@ -4078,6 +4078,31 @@ k = 0   \
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Sum(k**k, (k, oo, n))
+    ascii_str = \
+"""\
+  n      \n\
+ ___     \n\
+ \\  `    \n\
+  \\     k\n\
+  /    k \n\
+ /__,    \n\
+k = oo   \
+"""
+    ucode_str = \
+u("""\
+  n     \n\
+ ___    \n\
+ ╲      \n\
+  ╲    k\n\
+  ╱   k \n\
+ ╱      \n\
+ ‾‾‾    \n\
+k = ∞   \
+""")
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, 0, n**n))
     ascii_str = \
 """\
@@ -4547,23 +4572,25 @@ def test_units():
     expr = joule
     ascii_str = \
 """\
-    2\n\
-kg*m \n\
------\n\
-   2 \n\
-  s  \
+              2\n\
+kilogram*meter \n\
+---------------\n\
+          2    \n\
+    second     \
 """
-
     unicode_str = \
 u("""\
-    2\n\
-kg⋅m \n\
-─────\n\
-   2 \n\
-  s  \
+              2\n\
+kilogram⋅meter \n\
+───────────────\n\
+          2    \n\
+    second     \
 """)
-    assert upretty(expr) == unicode_str
-    assert pretty(expr) == ascii_str
+    from sympy.physics.units import kg, m, s
+    assert upretty(expr) == u("joule")
+    assert pretty(expr) == "joule"
+    assert upretty(expr.convert_to(kg*m**2/s**2)) == unicode_str
+    assert pretty(expr.convert_to(kg*m**2/s**2)) == ascii_str
 
 
 def test_pretty_Subs():
@@ -5553,9 +5580,9 @@ def test_issue_7180():
 
 
 def test_pretty_Complement():
-    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ Naturals()'
+    assert pretty(S.Reals - S.Naturals) == '(-oo, oo) \ S.Naturals'
     assert upretty(S.Reals - S.Naturals) == u'ℝ \ ℕ'
-    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ Naturals0()'
+    assert pretty(S.Reals - S.Naturals0) == '(-oo, oo) \ S.Naturals0'
     assert upretty(S.Reals - S.Naturals0) == u'ℝ \ ℕ₀'
 
 
@@ -5569,7 +5596,7 @@ def test_pretty_SymmetricDifference():
 
 
 def test_pretty_Contains():
-    assert pretty(Contains(x, S.Integers)) == 'Contains(x, Integers())'
+    assert pretty(Contains(x, S.Integers)) == 'Contains(x, S.Integers)'
     assert upretty(Contains(x, S.Integers)) == u'x ∈ ℤ'
 
 

@@ -216,7 +216,7 @@ def constant_system(A, u, DE):
     if not A:
         return A, u
     Au = A.row_join(u)
-    Au = Au.rref(simplify=cancel)[0]
+    Au = Au.rref(simplify=cancel, normalize_last=False)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
     # an identically zero expression to 0.  The danger is that we might
     # incorrectly prove that an integral is nonelementary (such as

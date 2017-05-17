@@ -11,21 +11,21 @@ from __future__ import division, print_function
 from sympy.core import S, pi, sympify
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.core.symbol import Dummy
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
-from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import filldedent, func_name
 from sympy.utilities.decorator import doctest_depends_on
 
 from .entity import GeometryEntity, GeometrySet
-from .point import Point
+from .point import Point, Point2D, Point3D
 from .line import Line, LinearEntity
 from .util import _symbol, idiff
 
@@ -127,7 +127,7 @@ class Ellipse(GeometrySet):
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
-        return isinstance(o, GeometryEntity) and (self.center == o.center and
+        return isinstance(o, Ellipse) and (self.center == o.center and
                                                   self.hradius == o.hradius and
                                                   self.vradius == o.vradius)
 
@@ -164,60 +164,6 @@ class Ellipse(GeometrySet):
             return Circle(center, hradius, **kwargs)
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
-
-    def _do_ellipse_intersection(self, o):
-        """The intersection of an ellipse with another ellipse or a circle.
-
-        Private helper method for `intersection`.
-
-        """
-
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
-        seq = self.equation(x, y)
-        oeq = o.equation(x, y)
-
-        # TODO: Replace solve with solveset, when this line is tested
-        result = solve([seq, oeq], [x, y])
-        return [Point(*r) for r in list(uniq(result))]
-
-
-    def _do_line_intersection(self, o):
-        """
-        Find the intersection of a LinearEntity and the ellipse.
-
-        All LinearEntities are treated as a line and filtered at
-        the end to see that they lie in o.
-
-        """
-
-        hr_sq = self.hradius ** 2
-        vr_sq = self.vradius ** 2
-        lp = o.points
-
-        ldir = lp[1] - lp[0]
-        diff = lp[0] - self.center
-        mdir = Point(ldir.x/hr_sq, ldir.y/vr_sq)
-        mdiff = Point(diff.x/hr_sq, diff.y/vr_sq)
-
-        a = ldir.dot(mdir)
-        b = ldir.dot(mdiff)
-        c = diff.dot(mdiff) - 1
-        det = simplify(b*b - a*c)
-
-        result = []
-        if det == 0:
-            t = -b / a
-            result.append(lp[0] + (lp[1] - lp[0]) * t)
-        # Definite and potential symbolic intersections are allowed.
-        elif (det > 0) != False:
-            root = sqrt(det)
-            t_a = (-b - root) / a
-            t_b = (-b + root) / a
-            result.append( lp[0] + (lp[1] - lp[0]) * t_a )
-            result.append( lp[0] + (lp[1] - lp[0]) * t_b )
-
-        return [r for r in result if r in o]
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG ellipse element for the Ellipse.
@@ -680,32 +626,38 @@ class Ellipse(GeometrySet):
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175), Point2D(3, 0)]
-
+        [Point2D(3, 0), Point2D(-363/175, -48*sqrt(111)/175), Point2D(-363/175, 48*sqrt(111)/175)]
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
+
         if isinstance(o, Point):
             if o in self:
                 return [o]
             else:
                 return []
 
-        elif isinstance(o, LinearEntity):
-            # LinearEntity may be a ray/segment, so check the points
-            # of intersection for coincidence first
-            return self._do_line_intersection(o)
+        elif isinstance(o, (Segment2D, Ray2D)):
+            ellipse_equation = self.equation(x, y)
+            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            return list(ordered([Point(i) for i in result if i in o]))
 
-        elif isinstance(o, Circle):
-            return self._do_ellipse_intersection(o)
+        elif isinstance(o, Polygon):
+            return o.intersection(self)
 
-        elif isinstance(o, Ellipse):
+        elif isinstance(o, (Ellipse, Line2D)):
             if o == self:
                 return self
             else:
-                return self._do_ellipse_intersection(o)
-
-        return o.intersection(self)
+                ellipse_equation = self.equation(x, y)
+                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+        elif isinstance(o, LinearEntity3D):
+                raise TypeError('Entity must be two dimensional, not three dimensional')
+        else:
+            raise TypeError('Intersection not handled for %s' % func_name(o))
 
     def is_tangent(self, o):
         """Is `o` tangent to the ellipse?
@@ -744,27 +696,43 @@ class Ellipse(GeometrySet):
         True
 
         """
-        inter = None
-        if isinstance(o, Ellipse):
-            inter = self.intersection(o)
-            if isinstance(inter, Ellipse):
-                return False
-            return (inter is not None and len(inter) == 1
-                    and isinstance(inter[0], Point))
-        elif isinstance(o, LinearEntity):
-            inter = self._do_line_intersection(o)
-            if inter is not None and len(inter) == 1:
-                return inter[0] in o
+        if isinstance(o, Point2D):
+            return False
+        elif isinstance(o, Ellipse):
+            intersect = self.intersection(o)
+            if isinstance(intersect, Ellipse):
+                return True
+            elif intersect:
+                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
             else:
                 return False
-        elif isinstance(o, Polygon):
-            c = 0
-            for seg in o.sides:
-                inter = self._do_line_intersection(seg)
-                c += len([True for point in inter if point in seg])
-            return c == 1
+        elif isinstance(o, Line2D):
+            return len(self.intersection(o)) == 1
+        elif isinstance(o, Ray2D):
+            intersect = self.intersection(o)
+            if len(intersect) == 1:
+                return intersect[0] != o.source and not self.encloses_point(o.source)
+            else:
+                return False
+        elif isinstance(o, (Segment2D, Polygon)):
+            all_tangents = False
+            segments = o.sides if isinstance(o, Polygon) else [o]
+            for segment in segments:
+                intersect = self.intersection(segment)
+                if len(intersect) == 1:
+                    if not any(intersect[0] in i for i in segment.points)\
+                                   and all(not self.encloses_point(i) for i in segment.points):
+                        all_tangents = True
+                        continue
+                    else:
+                        return False
+                else:
+                    return all_tangents
+            return all_tangents
+        elif isinstance(o, (LinearEntity3D, Point3D)):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
-            raise NotImplementedError("Unknown argument type")
+            raise TypeError('Is_tangent not handled for %s' % func_name(o))
 
     @property
     def major(self):
@@ -969,6 +937,46 @@ class Ellipse(GeometrySet):
 
         """
         return self.major * (1 - self.eccentricity)
+
+
+    @property
+    def semilatus_rectum(self):
+        """
+        Calculates the semi-latus rectum of the Ellipse.
+
+        Semi-latus rectum is defined as one half of the the chord through a
+        focus parallel to the conic section directrix of a conic section.
+
+        Returns
+        =======
+
+        semilatus_rectum : number
+
+        See Also
+        ========
+
+        apoapsis : Returns greatest distance between focus and contour
+
+        periapsis : The shortest distance between the focus and the contour
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Ellipse
+        >>> p1 = Point(0, 0)
+        >>> e1 = Ellipse(p1, 3, 1)
+        >>> e1.semilatus_rectum
+        1/3
+
+        References
+        ==========
+
+        [1] http://mathworld.wolfram.com/SemilatusRectum.html
+        [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
+
+        """
+        return self.major * (1 - self.eccentricity ** 2)
+
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Ellipse.
@@ -1433,36 +1441,6 @@ class Circle(Ellipse):
         []
 
         """
-        if isinstance(o, Circle):
-            if o.center == self.center:
-                if o.radius == self.radius:
-                    return o
-                return []
-            dx, dy = (o.center - self.center).args
-            d = sqrt(simplify(dy**2 + dx**2))
-            R = o.radius + self.radius
-            if d > R or d < abs(self.radius - o.radius):
-                return []
-
-            a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
-
-            x2 = self.center.x + (dx * a/d)
-            y2 = self.center.y + (dy * a/d)
-
-            h = sqrt(simplify(self.radius**2 - a**2))
-            rx = -dy * (h/d)
-            ry = dx * (h/d)
-
-            xi_1 = simplify(x2 + rx)
-            xi_2 = simplify(x2 - rx)
-            yi_1 = simplify(y2 + ry)
-            yi_2 = simplify(y2 - ry)
-
-            ret = [Point(xi_1, yi_1)]
-            if xi_1 != xi_2 or yi_1 != yi_2:
-                ret.append(Point(xi_2, yi_2))
-            return ret
-
         return Ellipse.intersection(self, o)
 
     @property
