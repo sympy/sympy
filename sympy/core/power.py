@@ -263,7 +263,7 @@ class Pow(Expr):
             s = 1
         elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
             s = 1
-        elif e.is_real is not None:
+        elif e.is_real is not None and b.is_complex:
             # helper functions ===========================
             def _half(e):
                 """Return True if the exponent has a literal 2 as the
