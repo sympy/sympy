@@ -725,10 +725,18 @@ def trig_cotcsc_rule(integral):
                 cotcsc_csceven_condition: cotcsc_csceven
             })((a, b, m, n, integrand, symbol))
 
+def trig_sindouble_rule(integral):
+    integrand, symbol = integral
+    a = sympy.Wild('a', exclude=[1/(sympy.sin(2*symbol))])
+    match = integrand.match(sympy.sin(2*symbol)*a)
+    if match:
+        return integral_steps(integrand*2*sympy.sin(symbol)*sympy.cos(symbol)/sympy.sin(2*symbol), symbol)
+
 def trig_powers_products_rule(integral):
     return do_one(null_safe(trig_sincos_rule),
                   null_safe(trig_tansec_rule),
-                  null_safe(trig_cotcsc_rule))(integral)
+                  null_safe(trig_cotcsc_rule),
+                  null_safe(trig_sindouble_rule))(integral)
 
 def trig_substitution_rule(integral):
     integrand, symbol = integral
