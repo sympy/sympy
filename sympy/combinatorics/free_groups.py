@@ -1085,7 +1085,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         elif from_i == 0:  # second if from_i=1 (and to_j < lw) then
             return by*self.subword(to_j, lw - 1)
         elif to_j == lw:   # third if to_j=1 (and fromi_i > 1) then
-            return self.subword(0, from_i - 1)*by;
+            return self.subword(0, from_i - 1)*by
         else:              # finally
             return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
 
