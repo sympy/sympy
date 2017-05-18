@@ -17,6 +17,7 @@ from sympy.core.compatibility import is_sequence, default_sort_key, range, \
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
@@ -35,7 +36,6 @@ def _iszero(x):
         return x.is_zero
     except AttributeError:
         return None
-
 
 class MatrixError(Exception):
     pass
@@ -4677,8 +4677,18 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             raise ValueError("Matrix must be lower triangular.")
         return self._lower_triangular_solve(rhs)
 
-    def LUdecomposition(self, iszerofunc=_iszero):
-        """Returns the decomposition LU and the row swaps p.
+    def LUdecomposition(self,
+                        iszerofunc=_iszero,
+                        simpfunc=None,
+                        rankcheck=False):
+        """Returns (L, U, perm) where L is a lower triangular matrix with unit
+        diagonal, U is an upper triangular matrix, and perm is a list of row
+        swap index pairs. If A is the original matrix, then
+        A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
+        that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
+
+        See documentation for LUCombined for details about the keyword argument
+        rankcheck, iszerofunc, and simpfunc.
 
         Examples
         ========
@@ -4705,22 +4715,113 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         LUdecompositionFF
         LUsolve
         """
-        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
-        L = self.zeros(self.rows)
-        U = self.zeros(self.rows)
-        for i in range(self.rows):
-            for j in range(self.rows):
-                if i > j:
-                    L[i, j] = combined[i, j]
-                else:
-                    if i == j:
-                        L[i, i] = 1
-                    U[i, j] = combined[i, j]
+
+        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc,
+                                                  simpfunc=simpfunc,
+                                                  rankcheck=rankcheck)
+
+        # L is lower triangular self.rows x self.rows
+        # U is upper triangular self.rows x self.cols
+        # L has unit diagonal. For each column in combined, the subcolumn
+        # below the diagonal of combined is shared by L.
+        # If L has more columns than combined, then the remaining subcolumns
+        # below the diagonal of L are zero.
+        # The upper triangular portion of L and combined are equal.
+        def entry_L(i, j):
+            if i < j:
+                # Super diagonal entry
+                return S.Zero
+            elif i == j:
+                return S.One
+            elif j < combined.cols:
+                return combined[i, j]
+            # Subdiagonal entry of L with no corresponding
+            # entry in combined
+            return S.Zero
+
+        def entry_U(i, j):
+            return S.Zero if i > j else combined[i, j]
+
+        L = self._new(combined.rows, combined.rows, entry_L)
+        U = self._new(combined.rows, combined.cols, entry_U)
+
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero):
-        """Returns A comprised of L, U (L's diag entries are 1) and
-        p which is the list of the row swaps (in order).
+
+    def LUdecomposition_Simple(self,
+                               iszerofunc=_iszero,
+                               simpfunc=None,
+                               rankcheck=False):
+        """Compute an lu decomposition of m x n matrix A, where P*A = L*U
+
+        * L is m x m lower triangular with unit diagonal
+        * U is m x n upper triangular
+        * P is an m x m permutation matrix
+
+        Returns an m x n matrix lu, and an m element list perm where each
+        element of perm is a pair of row exchange indices.
+
+        The factors L and U are stored in lu as follows:
+        The subdiagonal elements of L are stored in the subdiagonal elements
+        of lu, that is lu[i, j] = L[i, j] whenever i > j.
+        The elements on the diagonal of L are all 1, and are not explicitly
+        stored.
+        U is stored in the upper triangular portion of lu, that is
+        lu[i ,j] = U[i, j] whenever i <= j.
+        The output matrix can be visualized as:
+
+        Matrix([
+            [u, u, u, u],
+            [l, u, u, u],
+            [l, l, u, u],
+            [l, l, l, u]])
+
+        where l represents a subdiagonal entry of the L factor, and u
+        represents an entry from the upper triangular entry of the U
+        factor.
+
+        perm is a list row swap index pairs such that if A is the original
+        matrix, then A = (L*U).permuteBkwd(perm), and the row permutation
+        matrix P such that P*A = L*U can be computed by
+        soP=eye(A.row).permuteFwd(perm).
+
+        The keyword argument rankcheck determines if this function raises a
+        ValueError when passed a matrix whose rank is strictly less than
+        min(num rows, num cols). The default behavior is to decompose a rank
+        deficient matrix. Pass rankcheck=True to raise a
+        ValueError instead. (This mimics the previous behavior of this function).
+
+        The keyword arguments iszerofunc and simpfunc are used by the pivot
+        search algorithm.
+        iszerofunc is a callable that returns a boolean indicating if its
+        input is zero, or None if it cannot make the determination.
+        simpfunc is a callable that simplifies its input.
+        The default is simpfunc=None, which indicate that the pivot search
+        algorithm should not attempt to simplify any candidate pivots.
+        If simpfunc fails to simplify its input, then it must return its input
+        instead of a copy.
+
+        When a matrix contains symbolic entries, the pivot search algorithm
+        differs from the case where every entry can be categorized as zero or
+        nonzero.
+        The algorithm searches column by column through the submatrix whose
+        top left entry coincides with the pivot position.
+        If it exists, the pivot is the first entry in the current search
+        column that iszerofunc guarantees is nonzero.
+        If no such candidate exists, then each candidate pivot is simplified
+        if simpfunc is not None.
+        The search is repeated, with the difference that a candidate may be
+        the pivot if `iszerofunc()` cannot guarantee that it is nonzero.
+        In the second search the pivot is the first candidate that
+        iszerofunc can guarantee is nonzero.
+        If no such candidate exists, then the pivot is the first candidate
+        for which iszerofunc returns None.
+        If no such candidate exists, then the search is repeated in the next
+        column to the right.
+        The pivot search algorithm differs from the one in `rref()`, which
+        relies on `_find_reasonable_pivot()`.
+        Future versions of `LUdecomposition_simple()` may use
+        `_find_reasonable_pivot()`.
 
         See Also
         ========
@@ -4729,35 +4830,124 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         LUdecompositionFF
         LUsolve
         """
-        if not self.is_square:
-            raise NonSquareMatrixError(
-                "A Matrix must be square to apply LUdecomposition_Simple().")
-        n = self.rows
-        A = self.as_mutable()
-        p = []
-        # factorization
-        for j in range(n):
-            for i in range(j):
-                for k in range(i):
-                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
-            pivot = -1
-            for i in range(j, n):
-                for k in range(j):
-                    A[i, j] = A[i, j] - A[i, k] * A[k, j]
-                # find the first non-zero pivot, includes any expression
-                if pivot == -1 and not iszerofunc(A[i, j]):
-                    pivot = i
-            if pivot < 0:
-                # this result is based on iszerofunc's analysis of the possible pivots, so even though
-                # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
-                raise ValueError("No nonzero pivot found; inversion failed.")
-            if pivot != j:  # row must be swapped
-                A.row_swap(pivot, j)
-                p.append([pivot, j])
-            scale = 1 / A[j, j]
-            for i in range(j + 1, n):
-                A[i, j] = A[i, j] * scale
-        return A, p
+
+        if rankcheck:
+            SymPyDeprecationWarning(
+                feature="Keyword argument rankcheck is deprecated. "
+                        "Future LUdecomposition_Simple() will complete "
+                        "regardless rank of input matrix.",
+                issue=9796,
+                deprecated_since_version="1.1").warn()
+
+        if self.rows == 0 or self.cols == 0:
+            # Define LU decomposition of a matrix with no entries as a matrix
+            # of the same dimensions with all zero entries.
+            return self.zeros(self.rows, self.cols), []
+
+        lu = self.as_mutable()
+        row_swaps = []
+
+        pivot_col = 0
+        for pivot_row in range(0, lu.rows - 1):
+            # Search for pivot. Prefer entry that iszeropivot determines
+            # is nonzero, over entry that iszeropivot cannot guarantee
+            # is  zero.
+            # XXX `_find_reasonable_pivot` uses slow zero testing. Blocked by bug #10279
+            # Future versions of LUdecomposition_simple can pass iszerofunc and simpfunc
+            # to _find_reasonable_pivot().
+            # In pass 3 of _find_reasonable_pivot(), the predicate in `if x.equals(S.Zero):`
+            # calls sympy.simplify(), and not the simplification function passed in via
+            # the keyword argument simpfunc.
+
+            iszeropivot = True
+            while pivot_col != self.cols and iszeropivot:
+                sub_col = (lu[r, pivot_col] for r in range(pivot_row, self.rows))
+                pivot_row_offset, pivot_value, is_assumed_non_zero, ind_simplified_pairs =\
+                    _find_reasonable_pivot_naive(sub_col, iszerofunc, simpfunc)
+                iszeropivot = pivot_value is None
+                if iszeropivot:
+                    # All candidate pivots in this column are zero.
+                    # Proceed to next column.
+                    pivot_col += 1
+
+            if rankcheck and pivot_col != pivot_row:
+                # All entries including and below the pivot position are
+                # zero, which indicates that the rank of the matrix is
+                # strictly less than min(num rows, num cols)
+                # Mimic behavior of previous implementation, by throwing a
+                # ValueError.
+                raise ValueError("Rank of matrix is strictly less than"
+                                 " number of rows or columns."
+                                 " Pass keyword argument"
+                                 " rankcheck=False to compute"
+                                 " the LU decomposition of this matrix.")
+
+            candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
+
+            if candidate_pivot_row is None and iszeropivot:
+                # If candidate_pivot_row is None and iszeropivot is True
+                # after pivot search has completed, then the submatrix
+                # below and to the right of (pivot_row, pivot_col) is
+                # all zeros, indicating that Gaussian elimination is
+                # complete.
+                return lu, row_swaps
+
+            # Update entries simplified during pivot search.
+            for offset, val in ind_simplified_pairs:
+                lu[pivot_row + offset, pivot_col] = val
+
+            if pivot_row != candidate_pivot_row:
+                # Row swap book keeping:
+                # Record which rows were swapped.
+                # Update stored portion of L factor by multiplying L on the
+                # left and right with the current permutation.
+                # Swap rows of U.
+                row_swaps.append([pivot_row, candidate_pivot_row])
+
+                # Update L.
+                lu[pivot_row, 0:pivot_row], lu[candidate_pivot_row, 0:pivot_row] = \
+                    lu[candidate_pivot_row, 0:pivot_row], lu[pivot_row, 0:pivot_row]
+
+                # Swap pivot row of U with candidate pivot row.
+                lu[pivot_row, pivot_col:lu.cols], lu[candidate_pivot_row, pivot_col:lu.cols] = \
+                    lu[candidate_pivot_row, pivot_col:lu.cols], lu[pivot_row, pivot_col:lu.cols]
+
+            # Introduce zeros below the pivot by adding a multiple of the
+            # pivot row to a row under it, and store the result in the
+            # row under it.
+            # Only entries in the target row whose index is greater than
+            # start_col may be nonzero.
+            start_col = pivot_col + 1
+            for row in range(pivot_row + 1, lu.rows):
+                # Store factors of L in the subcolumn below
+                # (pivot_row, pivot_row).
+                lu[row, pivot_row] =\
+                    lu[row, pivot_col]/lu[pivot_row, pivot_col]
+
+                # Form the linear combination of the pivot row and the current
+                # row below the pivot row that zeros the entries below the pivot.
+                # Employing slicing instead of a loop here raises
+                # NotImplementedError: Cannot add Zero to MutableSparseMatrix
+                # in sympy/matrices/tests/test_sparse.py.
+                # c = pivot_row + 1 if pivot_row == pivot_col else pivot_col
+                for c in range(start_col, lu.cols):
+                    lu[row, c] = lu[row, c] - lu[row, pivot_row]*lu[pivot_row, c]
+
+            if pivot_row != pivot_col:
+                # matrix rank < min(num rows, num cols),
+                # so factors of L are not stored directly below the pivot.
+                # These entries are zero by construction, so don't bother
+                # computing them.
+                for row in range(pivot_row + 1, lu.rows):
+                    lu[row, pivot_col] = S.Zero
+
+            pivot_col += 1
+            if pivot_col == lu.cols:
+                # All candidate pivots are zero implies that Gaussian
+                # elimination is complete.
+                return lu, row_swaps
+
+        return lu, row_swaps
 
     def LUdecompositionFF(self):
         """Compute a fraction-free LU decomposition.
@@ -5756,6 +5946,85 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     i = possible_zeros.index(None)
     return (i, col[i], True, newly_determined)
 
+def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
+    """
+    Helper that computes the pivot value and location from a
+    sequence of contiguous matrix column elements. As a side effect
+    of the pivot search, this function may simplify some of the elements
+    of the input column. A list of these simplified entries and their
+    indices are also returned.
+    This function mimics the behavior of _find_reasonable_pivot(),
+    but does less work trying to determine if an indeterminate candidate
+    pivot simplifies to zero. This more naive approach can be much faster,
+    with the trade-off that it may erroneously return a pivot that is zero.
+
+    `col` is a sequence of contiguous column entries to be searched for
+    a suitable pivot.
+    `iszerofunc` is a callable that returns a Boolean that indicates
+    if its input is zero, or None if no such determination can be made.
+    `simpfunc` is a callable that simplifies its input. It must return
+    its input if it does not simplify its input. Passing in
+    `simpfunc=None` indicates that the pivot search should not attempt
+    to simplify any candidate pivots.
+
+    Returns a 4-tuple:
+    (pivot_offset, pivot_val, assumed_nonzero, newly_determined)
+    `pivot_offset` is the sequence index of the pivot.
+    `pivot_val` is the value of the pivot.
+    pivot_val and col[pivot_index] are equivalent, but will be different
+    when col[pivot_index] was simplified during the pivot search.
+    `assumed_nonzero` is a boolean indicating if the pivot cannot be
+    guaranteed to be zero. If assumed_nonzero is true, then the pivot
+    may or may not be non-zero. If assumed_nonzero is false, then
+    the pivot is non-zero.
+    `newly_determined` is a list of index-value pairs of pivot candidates
+    that were simplified during the pivot search.
+    """
+
+    # indeterminates holds the index-value pairs of each pivot candidate
+    # that is neither zero or non-zero, as determined by iszerofunc().
+    # If iszerofunc() indicates that a candidate pivot is guaranteed
+    # non-zero, or that every candidate pivot is zero then the contents
+    # of indeterminates are unused.
+    # Otherwise, the only viable candidate pivots are symbolic.
+    # In this case, indeterminates will have at least one entry,
+    # and all but the first entry are ignored when simpfunc is None.
+    indeterminates = []
+    for i, col_val in enumerate(col):
+        col_val_is_zero = iszerofunc(col_val)
+        if col_val_is_zero == False:
+            # This pivot candidate is non-zero.
+            return i, col_val, False, []
+        elif col_val_is_zero is None:
+            # The candidate pivot's comparison with zero
+            # is indeterminate.
+            indeterminates.append((i, col_val))
+
+    if len(indeterminates) == 0:
+        # All candidate pivots are guaranteed to be zero, i.e. there is
+        # no pivot.
+        return None, None, False, []
+
+    if simpfunc is None:
+        # Caller did not pass in a simplification function that might
+        # determine if an indeterminate pivot candidate is guaranteed
+        # to be nonzero, so assume the first indeterminate candidate
+        # is non-zero.
+        return indeterminates[0][0], indeterminates[0][1], True, []
+
+    # newly_determined holds index-value pairs of candidate pivots
+    # that were simplified during the search for a non-zero pivot.
+    newly_determined = []
+    for i, col_val in indeterminates:
+        tmp_col_val = simpfunc(col_val)
+        if id(col_val) != id(tmp_col_val):
+            # simpfunc() simplified this candidate pivot.
+            newly_determined.append((i, tmp_col_val))
+            if iszerofunc(tmp_col_val) == False:
+                # Candidate pivot simplified to a guaranteed non-zero value.
+                return i, tmp_col_val, False, newly_determined
+
+    return indeterminates[0][0], indeterminates[0][1], True, newly_determined
 
 class _MinimalMatrix(object):
     """Class providing the minimum functionality
