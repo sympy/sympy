@@ -15,7 +15,7 @@ from .pythonrational import PythonRational
 try:
     from math import gcd as python_gcd
 except ImportError:
-    from sympy.core.numbers import igcd_lehmer as python_gcd
+    from sympy.core.numbers import igcd as python_gcd
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,

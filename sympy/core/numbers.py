@@ -197,16 +197,25 @@ def igcd(*args):
                     break
                 if b < 0:
                     b = -b
-                t = a, b
-                while b:
-                    a, b = b, a % b
-                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
+                if (a.bit_length() > BIGBITS and
+                    b.bit_length() > BIGBITS):
+                    # No caching with large keys.
+                    a = igcd_lehmer(a, b)
+                else:
+                    t = a, b
+                    while b:
+                        a, b = b, a % b
+                    _gcdcache[t] = _gcdcache[t[1], t[0]] = a
     while k < len(args):
         ok = as_int(args[k])
         k += 1
     return a
 
 
+# Use Lehmer's algorithm only for very large numbers.
+# The limit could be different on Python 2.7 and 3.x.
+# If so, then this could be defined in compatibility.py.
+BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
 
