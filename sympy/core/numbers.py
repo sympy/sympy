@@ -6,10 +6,6 @@ import math
 import warnings
 import re as regex
 from collections import defaultdict
-try:
-    from sys import int_info
-except ImportError:
-    from sys import long_info as int_info
 
 from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
@@ -20,7 +16,7 @@ from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
-    SYMPY_INTS)
+    SYMPY_INTS, int_info)
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
