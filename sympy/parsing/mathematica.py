@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from re import match
-from sympy.core.backend import sympify
+from sympy import sympify
 
 
 def mathematica(s):

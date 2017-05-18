@@ -1,5 +1,5 @@
 from sympy.parsing.mathematica import mathematica
-from sympy.core.backend import sympify
+from sympy import sympify
 
 
 def test_mathematica():

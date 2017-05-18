@@ -1,6 +1,6 @@
 from sympy.parsing.maxima import parse_maxima
-from sympy import Abs, oo, factorial, Rational
-from sympy.core.backend import Symbol, sin, cos, E, log
+from sympy import Abs, Symbol, oo, factorial, Rational
+from sympy.core.backend import sin, cos, E, log
 from sympy.abc import x
 
 n = Symbol('n', integer=True)
