@@ -364,3 +364,14 @@ def test_Matrix_printing():
         "M[6] = 2*q[4]/q[1];\n"
         "M[7] = Math.sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
+
+
+def test_MatrixElement_printing():
+    # test case from issue #11821
+    A = MatrixSymbol("A",1,3)
+    B = MatrixSymbol("B",1,3)
+    C = MatrixSymbol("C",1,3)
+    E = A-B
+    F = C[0,0]
+    F = F.subs(C,E)
+    assert(jscode(F) == "((-1)*B + A)[0]")
