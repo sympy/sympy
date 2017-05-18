@@ -1,4 +1,5 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols
+from sympy import integrate, oo, simplify, symbols, S
+from sympy.core.backend import exp, sqrt
 from sympy.core.compatibility import range
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac
 from sympy.utilities.pytest import raises
@@ -7,8 +8,8 @@ n, r, Z = symbols('n r Z')
 
 
 def feq(a, b, max_relative_error=1e-12, max_absolute_error=1e-12):
-    a = float(a)
-    b = float(b)
+    a = a.evalf()
+    b = b.evalf()
     # if the numbers are close enough (absolutely), then they are equal
     if abs(a - b) < max_absolute_error:
         return True

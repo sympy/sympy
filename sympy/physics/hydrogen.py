@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
-
+from sympy import assoc_laguerre
+from sympy.core.backend import exp, Float, sqrt, factorial, S
 
 def R_nl(n, l, r, Z=1):
     """
@@ -76,7 +76,7 @@ def R_nl(n, l, r, Z=1):
     a = 1/Z  # Bohr radius
     r0 = 2 * r / (n * a)
     # normalization coefficient
-    C = sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n + l)))
+    C = sqrt((S(2)/(n*a))**3 * factorial(int(n_r)) / (2*n*factorial(int(n + l))))
     # This is an equivalent normalization coefficient, that can be found in
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
@@ -109,7 +109,7 @@ def E_nl(n, Z=1):
 
     """
     n, Z = S(n), S(Z)
-    if n.is_integer and (n < 1):
+    if n.is_integer and (int(n) < 1):
         raise ValueError("'n' must be positive integer")
     return -Z**2/(2*n**2)
 

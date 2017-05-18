@@ -1,6 +1,5 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix, mdft
-from sympy import zeros, eye, I, Matrix, sqrt, Rational
-
+from sympy.core.backend import I, sqrt, eye, zeros, Matrix, Rational, exp, pi
 
 def test_parallel_axis_theorem():
     # This tests the parallel axis theorem matrix by comparing to test
@@ -70,8 +69,10 @@ def test_Dirac():
 
 def test_mdft():
     assert mdft(1) == Matrix([[1]])
-    assert mdft(2) == 1/sqrt(2)*Matrix([[1,1],[1,-1]])
+    assert mdft(2) == 1/sqrt(2)*Matrix([[1,1],[1,exp(-I*pi)]])
     assert mdft(4) == Matrix([[Rational(1,2),  Rational(1,2),  Rational(1,2),\
-        Rational(1,2)],[Rational(1,2), -I/2, Rational(-1,2),  I/2\
-        ],[Rational(1,2), Rational(-1,2),  Rational(1,2), Rational(-1,2)],\
-        [Rational(1,2),  I/2, Rational(-1,2), -I/2]])
+        Rational(1,2)],[Rational(1,2), Rational(1,2)*exp(Rational(-1,2)*I*pi),\
+        Rational(1,2)*exp(-I*pi),  Rational(1,2)*exp(Rational(-3,2)*I*pi)],\
+        [Rational(1,2), Rational(1,2)*exp(-I*pi),  Rational(1,2)*exp(-2*I*pi),\
+        Rational(1,2)*exp(-3*I*pi)], [Rational(1,2),  Rational(1,2)*exp(Rational(-3, 2)*I*pi),\
+        Rational(1,2)*exp(-3*I*pi), Rational(1,2)*exp(Rational(-9,2)*I*pi)]])

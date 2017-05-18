@@ -1,5 +1,6 @@
 from __future__ import print_function, division
-from sympy import sqrt, exp, S, pi, I
+from sympy import S
+from sympy.core.backend import exp, pi, I, sqrt
 from sympy.physics.quantum.constants import hbar
 
 
@@ -39,6 +40,7 @@ def wavefunction(n, x):
 
     """
     # sympify arguments
+    from sympy.core.backend import S
     n, x = S(n), S(x)
     return exp(n * I * x) / sqrt(2 * pi)
 

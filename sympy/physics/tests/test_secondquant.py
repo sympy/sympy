@@ -9,9 +9,8 @@ from sympy.physics.secondquant import (
     substitute_dummies
 )
 
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols)
-
+from sympy import (Dummy, simplify, Sum, Function, Symbol, symbols, expand)
+from sympy.core.backend import I, sqrt, Rational
 from sympy.core.compatibility import range
 from sympy.utilities.pytest import XFAIL, slow
 

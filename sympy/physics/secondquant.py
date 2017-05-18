@@ -8,9 +8,9 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
-                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
-                   zeros)
+from sympy import (Basic, cacheit, Dummy, Expr, sympify, KroneckerDelta,
+                   Pow, Tuple, S, Function, Add, Mul)
+from sympy.core.backend import I, sqrt, Symbol, zeros
 from sympy.printing.str import StrPrinter
 
 from sympy.core.compatibility import range

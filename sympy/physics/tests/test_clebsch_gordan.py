@@ -1,7 +1,7 @@
-from sympy import S, sqrt, pi, Dummy, Sum, Ynm, symbols
+from sympy import Dummy, Sum, Ynm, symbols, sqrt, S
+from sympy.core.backend import pi, Rational
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         racah, dot_rot_grad_Ynm, Wigner3j, wigner_3j)
-from sympy.core.numbers import Rational
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
