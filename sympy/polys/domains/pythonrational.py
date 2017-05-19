@@ -98,16 +98,25 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.new(-self.p, self.q)
 
     def __add__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q + self.q*other.p
-            q = self.q*other.q
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            g = gcd(aq, bq)
+            if g == 1:
+                p = ap*bq + aq*bp
+                q = bq*aq
+            else:
+                q1, q2 = aq//g, bq//g
+                p, q = ap*q2 + bp*q1, q1*q2
+                g2 = gcd(p, g)
+                p, q = (p // g2), q * (g // g2)
         elif isinstance(other, integer_types):
             p = self.p + self.q*other
             q = self.q
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __radd__(self, other):
         if not isinstance(other, integer_types):
@@ -119,16 +128,25 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __sub__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q - self.q*other.p
-            q = self.q*other.q
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            g = gcd(aq, bq)
+            if g == 1:
+                p = ap*bq - aq*bp
+                q = bq*aq
+            else:
+                q1, q2 = aq//g, bq//g
+                p, q = ap*q2 - bp*q1, q1*q2
+                g2 = gcd(p, g)
+                p, q = (p // g2), q * (g // g2)
         elif isinstance(other, integer_types):
             p = self.p - self.q*other
             q = self.q
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __rsub__(self, other):
         if not isinstance(other, integer_types):
