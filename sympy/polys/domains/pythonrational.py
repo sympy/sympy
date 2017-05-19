@@ -42,7 +42,8 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         from sympy.polys.domains import PythonRationalField
         return PythonRationalField()
 
-    def __init__(self, p, q=1):
+    def __init__(self, p, q=1, _gcd=True):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if not q:
             raise ZeroDivisionError('rational number')
         elif q < 0:
@@ -55,14 +56,12 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
             self.p = p
             self.q = q
         else:
-            x, y = p, q
+            if _gcd:
+                x = gcd(p, q)
 
-            while y:
-                x, y = y, x % y
-
-            if x != 1:
-                p //= x
-                q //= x
+                if x != 1:
+                    p //= x
+                    q //= x
 
             self.p = p
             self.q = q
