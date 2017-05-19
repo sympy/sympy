@@ -578,7 +578,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     exp(Integral(7*t, t))*exp(Integral(12*t, t))/x0))]
     >>> eq = (Eq(Derivative(x(t),t),x(t)*y(t)*sin(t)), Eq(Derivative(y(t),t),y(t)**2*sin(t)))
     >>> dsolve(eq)
-    set([Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))])
+    {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
     if iterable(eq):
         match = classify_sysode(eq, func)
@@ -2033,7 +2033,7 @@ def odesimp(eq, func, order, constants, hint):
                             |
                            /
 
-    >>> pprint(odesimp(eq, f(x), 1, set([C1]),
+    >>> pprint(odesimp(eq, f(x), 1, {C1},
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
     ... )) #doctest: +SKIP
         x
@@ -2627,11 +2627,11 @@ def constantsimp(expr, constants):
     >>> from sympy import symbols
     >>> from sympy.solvers.ode import constantsimp
     >>> C1, C2, C3, x, y = symbols('C1, C2, C3, x, y')
-    >>> constantsimp(2*C1*x, set([C1, C2, C3]))
+    >>> constantsimp(2*C1*x, {C1, C2, C3})
     C1*x
-    >>> constantsimp(C1 + 2 + x, set([C1, C2, C3]))
+    >>> constantsimp(C1 + 2 + x, {C1, C2, C3})
     C1 + x
-    >>> constantsimp(C1*C2 + 2 + C2 + C3*x, set([C1, C2, C3]))
+    >>> constantsimp(C1*C2 + 2 + C2 + C3*x, {C1, C2, C3})
     C1 + C3*x
 
     """
@@ -4857,7 +4857,7 @@ def _undetermined_coefficients_match(expr, x):
     >>> from sympy.solvers.ode import _undetermined_coefficients_match
     >>> from sympy.abc import x
     >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-    {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
+    {'test': True, 'trialset': {x*exp(x), exp(-x), exp(x)}}
     >>> _undetermined_coefficients_match(log(x), x)
     {'test': False}
 

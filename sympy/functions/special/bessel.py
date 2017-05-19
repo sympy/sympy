@@ -672,11 +672,9 @@ class jn(SphericalBesselBase):
     def _rewrite(self):
         return self._eval_rewrite_as_besselj(self.order, self.argument)
 
-    @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
-    @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z):
         return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
@@ -953,9 +951,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
                                               int(l)), prec)
                 for l in range(1, k + 1)]
     elif method == "scipy":
-        from scipy.special import sph_jn
         from scipy.optimize import newton
-        f = lambda x: sph_jn(n, x)[0][-1]
+        try:
+            from scipy.special import spherical_jn
+            f = lambda x: spherical_jn(n, x)
+        except ImportError:
+            from scipy.special import sph_jn
+            f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
 

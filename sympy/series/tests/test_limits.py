@@ -12,6 +12,8 @@ from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.core.numbers import GoldenRatio
+from sympy.functions.combinatorial.numbers import fibonacci
 
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
@@ -104,6 +106,10 @@ def test_basic5():
 
 def test_issue_3885():
     assert limit(x*y + x*z, z, 2) == x*y + 2*x
+
+def test_issue_10382():
+    n = Symbol('n', integer=True)
+    assert limit(fibonacci(n+1)/fibonacci(n), n, oo) == S.GoldenRatio
 
 
 def test_Limit():
@@ -222,11 +228,12 @@ def test_AccumBounds():
     t1 = Mul(S(1)/2, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(Add(AccumBounds(-2, 2), sin(1)), 1/(-2*cos(1) + 2))
+    t2 = Mul(S(1)/2, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
     assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
+    # Possible improvement: AccumBounds(0, 1)
 
 
 @XFAIL
@@ -478,7 +485,23 @@ def test_limit_seq():
                   (2**x*x), x, oo) == 4)
 
 
+def test_issue_11879():
+    assert simplify(limit(((x+y)**n-x**n)/y, y, 0)) == n*x**(n-1)
+
+
 def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
     assert limit(0.3*1.0**k, k, oo) == Float(0.3)
+
+
+def test_issue_10610():
+    assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == S(1)/3
+
+
+def test_issue_6599():
+    assert limit((n + cos(n))/n, n, oo) == 1
+
+def test_issue_12555():
+    assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, -oo) == 2
+    assert limit((3**x + 2* x**10) / (x**10 + exp(x)), x, oo) == oo

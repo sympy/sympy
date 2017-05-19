@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+import os
 from os.path import join
 import tempfile
 import shutil
@@ -195,8 +196,17 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
+            # Avoid showing a cmd.exe window when running this
+            # on Windows
+            if os.name == 'nt':
+                creation_flag = 0x08000000 # CREATE_NO_WINDOW
+            else:
+                creation_flag = 0 # Default value
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+                          'texput.tex'],
+                         cwd=workdir,
+                         stderr=STDOUT,
+                         creationflags=creation_flag)
         except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
@@ -233,7 +243,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output(cmd, cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
@@ -310,7 +327,14 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             win.close()
         else:
             try:
-                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+                # Avoid showing a cmd.exe window when running this
+                # on Windows
+                if os.name == 'nt':
+                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
+                else:
+                    creation_flag = 0 # Default value
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT,
+                             creationflags=creation_flag)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %

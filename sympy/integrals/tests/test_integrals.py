@@ -809,9 +809,11 @@ def test_issue_4403():
         -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
     x = Symbol('x', real=True)
-    y = Symbol('y', nonzero=True, real=True)
+    y = Symbol('y', positive=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
-        1/(y**2*sqrt(1 + y**2/x**2))
+        x/(y**2*sqrt(x**2 + y**2))
+    # If y is real and nonzero, we get x*Abs(y)/(y**3*sqrt(x**2 + y**2)),
+    # which results from sqrt(1 + x**2/y**2) = sqrt(x**2 + y**2)/|y|.
 
 
 def test_issue_4403_2():
@@ -1019,7 +1021,6 @@ def test_issue_4487():
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
-@XFAIL
 def test_issue_4215():
     x = Symbol("x")
     assert integrate(1/(x**2), (x, -1, 1)) == oo
@@ -1168,3 +1169,11 @@ def test_issue_4950():
 
 def test_issue_4968():
     assert integrate(sin(log(x**2))) == x*sin(2*log(x))/5 - 2*x*cos(2*log(x))/5
+
+def test_singularities():
+    assert integrate(1/x**2, (x, -oo, oo)) == oo
+    assert integrate(1/x**2, (x, -1, 1)) == oo
+    assert integrate(1/(x - 1)**2, (x, -2, 2)) == oo
+
+    assert integrate(1/x**2, (x, 1, -1)) == -oo
+    assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo

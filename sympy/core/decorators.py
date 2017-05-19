@@ -24,6 +24,7 @@ def deprecated(**decorator_kwargs):
             decorator_kwargs.setdefault('feature', func.__name__)
             SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=3)
             return func(*args, **kwargs)
+        new_func._sympy_deprecated_func = func
         return new_func
     return deprecated_decorator
 

@@ -3,6 +3,9 @@ import inspect
 import copy
 import pickle
 import warnings
+
+from sympy.physics.units import meter
+
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
@@ -84,7 +87,7 @@ def test_core_basic():
               Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
-              SingletonRegistry, SingletonRegistry()):
+              SingletonRegistry, S):
         check(c)
 
 
@@ -278,7 +281,7 @@ from sympy.physics.units import Unit
 
 
 def test_physics():
-    for c in (Unit, Unit("meter", "m"), Pauli, Pauli(1)):
+    for c in (Unit, meter, Pauli, Pauli(1)):
         check(c)
 
 #================== plotting ====================

@@ -5,7 +5,7 @@ from sympy.utilities.pytest import raises, XFAIL
 
 # import test:
 from sympy import IndexedBase, Idx, Indexed, S, sin, cos, Sum, Piecewise, And, Order, LessThan, StrictGreaterThan, \
-    GreaterThan, StrictLessThan
+    GreaterThan, StrictLessThan, Range, Array
 
 
 def test_Idx_construction():
@@ -342,3 +342,23 @@ def test_indexed_series():
     A = IndexedBase("A")
     i = symbols("i", integer=True)
     assert sin(A[i]).series(A[i]) == A[i] - A[i]**3/6 + A[i]**5/120 + Order(A[i]**6, A[i])
+
+
+def test_indexed_is_constant():
+    A = IndexedBase("A")
+    i, j, k = symbols("i,j,k")
+    assert not A[i].is_constant()
+    assert A[i].is_constant(j)
+    assert not A[1+2*i, k].is_constant()
+    assert not A[1+2*i, k].is_constant(i)
+    assert A[1+2*i, k].is_constant(j)
+    assert not A[1+2*i, k].is_constant(k)
+
+
+def test_issue_12533():
+    d = IndexedBase('d')
+    assert IndexedBase(range(5)) == Range(0, 5, 1)
+    assert d[0].subs(Symbol("d"), range(5)) == 0
+    assert d[0].subs(d, range(5)) == 0
+    assert d[1].subs(d, range(5)) == 1
+    assert Indexed(Range(5), 2) == 2

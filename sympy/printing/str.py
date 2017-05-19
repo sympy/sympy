@@ -74,13 +74,14 @@ class StrPrinter(Printer):
     def _print_BooleanFalse(self, expr):
         return "False"
 
+    def _print_Not(self, expr):
+        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
+
     def _print_And(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
-        return '%s(%s)' % (expr.func, ', '.join(sorted(self._print(a) for a in
-            expr.args)))
+        return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
 
     def _print_AppliedPredicate(self, expr):
         return '%s(%s)' % (expr.func, expr.arg)
@@ -173,18 +174,23 @@ class StrPrinter(Printer):
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
     def _print_Interval(self, i):
-        if i.left_open:
-            left = '('
+        fin =  'Interval{m}({a}, {b})'
+        a, b, l, r = i.args
+        if a.is_infinite and b.is_infinite:
+            m = ''
+        elif a.is_infinite and not r:
+            m = ''
+        elif b.is_infinite and not l:
+            m = ''
+        elif not l and not r:
+            m = ''
+        elif l and r:
+            m = '.open'
+        elif l:
+            m = '.Lopen'
         else:
-            left = '['
-
-        if i.right_open:
-            right = ')'
-        else:
-            right = ']'
-
-        return "%s%s, %s%s" % \
-               (left, self._print(i.start), self._print(i.end), right)
+            m = '.Ropen'
+        return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
         left = '<'
@@ -502,6 +508,9 @@ class StrPrinter(Printer):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
 
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
+
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
@@ -515,6 +524,18 @@ class StrPrinter(Printer):
 
     def _print_Integer(self, expr):
         return str(expr.p)
+
+    def _print_Integers(self, expr):
+        return 'S.Integers'
+
+    def _print_Naturals(self, expr):
+        return 'S.Naturals'
+
+    def _print_Naturals0(self, expr):
+        return 'S.Naturals0'
+
+    def _print_Reals(self, expr):
+        return 'S.Reals'
 
     def _print_int(self, expr):
         return str(expr)
@@ -563,6 +584,9 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
+        if rv.startswith('+'):
+            # e.g., +inf -> inf
+            rv = rv[1:]
         return rv
 
     def _print_Relational(self, expr):
@@ -619,11 +643,14 @@ class StrPrinter(Printer):
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
-        if args:
-            args = '[%s]' % args
-        return '%s(%s)' % (type(s).__name__, args)
+        if not args:
+            return "set()"
+        return '{%s}' % args
 
-    _print_frozenset = _print_set
+    def _print_frozenset(self, s):
+        if not s:
+            return "frozenset()"
+        return "frozenset(%s)" % self._print_set(s)
 
     def _print_SparseMatrix(self, expr):
         from sympy.matrices import Matrix
@@ -671,14 +698,13 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return ' U '.join(self._print(set) for set in expr.args)
+        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
 
-
-    def _print_Unit(self, expr):
-        return expr.abbrev
+    def _print_Quantity(self, expr):
+        return "%s" % expr.name
 
     def _print_Dimension(self, expr):
         return str(expr)
