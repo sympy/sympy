@@ -1526,7 +1526,7 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
-    def contains(self, g, strict=False):
+    def contains(self, g, strict=True):
         """Test if permutation ``g`` belong to self, ``G``.
 
         If ``g`` is an element of ``G`` it can be written as a product
@@ -1906,6 +1906,8 @@ class PermutationGroup(Basic):
         if not isinstance(G, PermutationGroup):
             return False
         if self == G:
+            return True
+        if self.parent == G:
             return True
         if G.order() % self.order() != 0:
             return False

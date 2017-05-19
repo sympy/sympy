@@ -94,14 +94,17 @@ def _parse_symbols(symbols):
         return tuple()
     if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr):
+    elif isinstance(symbols, Expr) or isinstance(symbols, FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, string_types) for s in symbols):
             return _symbols(symbols)
-        elif all(isinstance(s, Expr) for s in symbols):
+        elif all(isinstance(s, Expr) for s in symbols) or \
+             all(isinstance(s, FreeGroupElement) for s in symbols):
             return symbols
-    raise ValueError("")
+    raise ValueError("The type of `symbols` must be one of the following: "\
+                     "a str, Symbol/Expr, FreeGroupElement or a sequence of "\
+                     "one of these types")
 
 
 ##############################################################################
@@ -111,8 +114,10 @@ def _parse_symbols(symbols):
 _free_group_cache = {}
 
 class FreeGroup(DefaultPrinting):
-    """Free group with finite or infinite number of generators. Its input API
-    is that of an str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty).
+    """
+    Free group with finite or infinite number of generators. Its input API
+    is that of a str, Symbol/Expr, FreeGroupElement or a sequence of one of
+    these types (which may be empty)
 
     References
     ==========
@@ -169,6 +174,8 @@ class FreeGroup(DefaultPrinting):
         (x, y, z)
 
         """
+        if isinstance(group.symbols[0], FreeGroupElement):
+            return tuple(group.symbols)
         gens = []
         for sym in group.symbols:
             elm = ((sym, 1),)
