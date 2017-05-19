@@ -125,7 +125,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         p = self.p + self.q*other
         q = self.q
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __sub__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
@@ -155,7 +155,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         p = self.q*other - self.p
         q = self.q
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __mul__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
