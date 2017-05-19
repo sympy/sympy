@@ -7,7 +7,7 @@ from sympy.core.compatibility import long
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr, _intcache,
-    igcd_lehmer, mpf_norm, comp, mod_inverse)
+    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.utilities.pytest import XFAIL, raises
@@ -226,8 +226,15 @@ def test_igcd_lehmer():
     c = fibonacci(100)
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
-    assert igcd(a, 10**1000) == 1
+    assert igcd_lehmer(a, 10**1000) == 1
 
+
+def test_igcd2():
+    # short loop
+    assert igcd2(2**100 - 1, 2**99 - 1) == 1
+    # Lehmer's algorithm
+    a, b = int(fibonacci(10001)), int(fibonacci(10000))
+    assert igcd2(a, b) == 1
 
 def test_ilcm():
     assert ilcm(0, 0) == 0

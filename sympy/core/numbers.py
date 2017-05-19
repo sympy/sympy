@@ -197,19 +197,28 @@ def igcd(*args):
                     break
                 if b < 0:
                     b = -b
-                if (a.bit_length() > BIGBITS and
-                    b.bit_length() > BIGBITS):
-                    # No caching with large keys.
-                    a = igcd_lehmer(a, b)
-                else:
-                    t = a, b
-                    while b:
-                        a, b = b, a % b
-                    _gcdcache[t] = _gcdcache[t[1], t[0]] = a
+                t = a, b
+                a = igcd2(a, b)
+                _gcdcache[t] = _gcdcache[t[1], t[0]] = a
     while k < len(args):
         ok = as_int(args[k])
         k += 1
     return a
+
+
+try:
+    from math import gcd as igcd2
+except ImportError:
+    def igcd2(a, b):
+        """Compute gcd of two Python integers a and b."""
+        if (a.bit_length() > BIGBITS and
+            b.bit_length() > BIGBITS):
+            return igcd_lehmer(a, b)
+
+        a, b = abs(a), abs(b)
+        while b:
+            a, b = b, a % b
+        return a
 
 
 # Use Lehmer's algorithm only for very large numbers.
