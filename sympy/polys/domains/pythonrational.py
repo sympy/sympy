@@ -140,16 +140,20 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __mul__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.p
-            q = self.q*other.q
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            x1 = gcd(ap, bq)
+            x2 = gcd(bp, aq)
+            p, q = ((ap//x1)*(bp//x2), (aq//x2)*(bq//x1))
         elif isinstance(other, integer_types):
-            p = self.p*other
-            q = self.q
+            x = gcd(other, self.q)
+            p = self.p*(other//x)
+            q = self.q//x
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     def __rmul__(self, other):
         if not isinstance(other, integer_types):
@@ -161,16 +165,20 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         return self.__class__(p, q)
 
     def __div__(self, other):
+        from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
-            p = self.p*other.q
-            q = self.q*other.p
+            ap, aq, bp, bq = self.p, self.q, other.p, other.q
+            x1 = gcd(ap, bp)
+            x2 = gcd(bq, aq)
+            p, q = ((ap//x1)*(bq//x2), (aq//x2)*(bp//x1))
         elif isinstance(other, integer_types):
-            p = self.p
-            q = self.q*other
+            x = gcd(other, self.p)
+            p = self.p//x
+            q = self.q*(other//x)
         else:
             return NotImplemented
 
-        return self.__class__(p, q)
+        return self.__class__(p, q, _gcd=False)
 
     __truediv__ = __div__
 
