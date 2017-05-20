@@ -174,10 +174,10 @@ class FreeGroup(DefaultPrinting):
         (x, y, z)
 
         """
-        if isinstance(group.symbols[0], FreeGroupElement):
-            return tuple(group.symbols)
         gens = []
         for sym in group.symbols:
+            if isinstance(sym, FreeGroupElement):
+                return tuple(group.symbols)
             elm = ((sym, 1),)
             gens.append(group.dtype(elm))
         return tuple(gens)

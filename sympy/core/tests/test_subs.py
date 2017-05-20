@@ -706,7 +706,3 @@ def test_issue_8886():
     assert x.subs(x, v) == x
     assert v.subs(v, x) == v
     assert v.__eq__(x) is False
-
-def test_issue_12576():
-    a = Symbol("a", commutative = False)
-    assert (a**3).subs(a*a,-1) == a**3
