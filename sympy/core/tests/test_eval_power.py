@@ -68,9 +68,15 @@ def test_issue_3449():
     assert (x**.5)**2 == x**1.0
     assert (x**2)**k == (x**k)**2 == x**(2*k)
 
+    a = Symbol('a', positive=True)
+    assert (a**3)**Rational(2, 5) == a**Rational(6, 5)
+    assert (a**2)**b == (a**b)**2
+    assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
+
+
 
 def test_issue_3866():
-    assert --sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
+    assert sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
 
 
 def test_negative_one():
