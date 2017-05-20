@@ -102,8 +102,8 @@ def _parse_symbols(symbols):
         elif all(isinstance(s, Expr) for s in symbols) or \
              all(isinstance(s, FreeGroupElement) for s in symbols):
             return symbols
-    raise ValueError("The type of `symbols` must be one of the following: "\
-                     "a str, Symbol/Expr, FreeGroupElement or a sequence of "\
+    raise ValueError("The type of `symbols` must be one of the following: "
+                     "a str, Symbol/Expr, FreeGroupElement or a sequence of "
                      "one of these types")
 
 
