@@ -74,9 +74,8 @@ def test_issue_3449():
     assert (a**Rational(2, 3))**x == (a**(2*x/3)) != (a**x)**Rational(2, 3)
 
 
-
 def test_issue_3866():
-    assert sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
+    assert --sqrt(sqrt(5) - 1) == sqrt(sqrt(5) - 1)
 
 
 def test_negative_one():
