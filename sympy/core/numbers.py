@@ -211,6 +211,7 @@ try:
 except ImportError:
     def igcd2(a, b):
         """Compute gcd of two Python integers a and b."""
+        a, b = as_int(a), as_int(b)
         if (a.bit_length() > BIGBITS and
             b.bit_length() > BIGBITS):
             return igcd_lehmer(a, b)
