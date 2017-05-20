@@ -59,7 +59,7 @@ class FpGroup(DefaultPrinting):
         obj = object.__new__(cls)
         obj._free_group = fr_grp
         obj._relators = relators
-        obj._generators = fr_grp.generators
+        obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
 
         # CosetTable instance on identity subgroup
@@ -85,9 +85,8 @@ class FpGroup(DefaultPrinting):
     def relators(self):
         return tuple(self._relators)
 
-    @property
-    def generators(self):
-        return self._generators
+    def _generators(self):
+        return self.fr_grp.generators
 
     def subgroup(self, gens):
         '''
