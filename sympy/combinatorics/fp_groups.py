@@ -86,7 +86,7 @@ class FpGroup(DefaultPrinting):
         return tuple(self._relators)
 
     def _generators(self):
-        return self.fr_grp.generators
+        return self.free_group.generators
 
     def subgroup(self, gens):
         '''
