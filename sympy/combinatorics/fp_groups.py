@@ -96,7 +96,7 @@ class FpGroup(DefaultPrinting):
         '''
         if not all([isinstance(g, FreeGroupElement) for g in gens]):
             raise ValueError("Generators must be `FreeGroupElement`s")
-        letters = [g.array_form[0][0] for g in self.generators]
+        letters = self.free_group.symbols
         for g in gens:
             c = [t[0] in letters for t in g.array_form]
             if not all(c):

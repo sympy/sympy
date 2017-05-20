@@ -94,7 +94,7 @@ def _parse_symbols(symbols):
         return tuple()
     if isinstance(symbols, string_types):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr) or isinstance(symbols, FreeGroupElement):
+    elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, string_types) for s in symbols):
