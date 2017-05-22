@@ -1976,21 +1976,51 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
         berk_vector = self._eval_berkowitz_vector()
         return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
 
-    def _eval_det_lu(self):
-        """ Use LU the decomposition to compute the determinant."""
-        try:
-            l, u, p = self.LUdecomposition()
-        except ValueError:
-            # if there is a value error in the LU decomposition, it means the matrix
-            # wasn't invertible
+    def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
+        """ Computes the determinant of a matrix from its LU decomposition.
+        This function uses the LU decomposition computed by
+        LUDecomposition_Simple().
+
+        The keyword arguments iszerofunc and simpfunc are passed to
+        LUDecomposition_Simple().
+        iszerofunc is a callable that returns a boolean indicating if its
+        input is zero, or None if it cannot make the determination.
+        simpfunc is a callable that simplifies its input.
+        The default is simpfunc=None, which indicate that the pivot search
+        algorithm should not attempt to simplify any candidate pivots.
+        If simpfunc fails to simplify its input, then it must return its input
+        instead of a copy."""
+
+        if self.rows == 0:
+            return S.One
+            # sympy/matrices/tests/test_matrices.py contains a test that
+            # suggests that the determinant of a 0 x 0 matrix is one, by
+            # convention.
+
+        lu, row_swaps = self.LUdecomposition_Simple(iszerofunc=iszerofunc, simpfunc=None)
+        # P*A = L*U => det(A) = det(L)*det(U)/det(P) = det(P)*det(U).
+        # Lower triangular factor L encoded in lu has unit diagonal => det(L) = 1.
+        # P is a permutation matrix => det(P) in {-1, 1} => 1/det(P) = det(P).
+        # LUdecomposition_Simple() returns a list of row exchange index pairs, rather
+        # than a permutation matrix, but det(P) = (-1)**len(row_swaps).
+
+        # Avoid forming the potentially time consuming  product of U's diagonal entries
+        # if the product is zero.
+        # Bottom right entry of U is 0 => det(A) = 0.
+        # It may be impossible to determine if this entry of U is zero when it is symbolic.
+        if iszerofunc(lu[lu.rows-1, lu.rows-1]):
             return S.Zero
 
-        # get the sign of the determinant
-        det = (-1) ** (len(p) % 2)
-        # multiply by the diagonal entries
-        for k in range(self.rows):
-            det *= l[k, k] * u[k, k]
+        # Compute det(P)
+        det = -S.One if len(row_swaps)%2 else S.One
 
+        # Compute det(U) by calculating the product of U's diagonal entries.
+        # The upper triangular portion of lu is the upper triangular portion of the
+        # U factor in the LU decomposition.
+        for k in range(lu.rows):
+            det *= lu[k, k]
+
+        # return det(P)*det(U)
         return det
 
     def adjugate(self, method="berkowitz"):
