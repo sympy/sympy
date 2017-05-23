@@ -96,14 +96,10 @@ class FpGroup(DefaultPrinting):
         '''
         if not all([isinstance(g, FreeGroupElement) for g in gens]):
             raise ValueError("Generators must be `FreeGroupElement`s")
-        letters = self.free_group.symbols
-        for g in gens:
-            c = [t[0] in letters for t in g.array_form]
-            if not all(c):
+        if not all([g.group == self.free_group for g in gens]):
                 raise ValueError("Given generators are not members of the group")
         g, rels = reidemeister_presentation(self, gens)
-        g = free_group(g)[0]
-        g = FpGroup(g, rels)
+        g = FpGroup(g[0].group, rels)
         g._parent = self
         return g
 
@@ -1751,6 +1747,19 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     for i in range(20):
         elimination_technique_1(C)
         simplify_presentation(C)
+
+    syms = [g.array_form[0][0] for g in C._schreier_generators]
+    g = free_group(syms)[0]
+    subs = dict(zip(syms,g.generators))
+    C._schreier_generators = g.generators
+    for j in range(len(C._reidemeister_relators)):
+        r = C._reidemeister_relators[j]
+        a = r.array_form
+        rel = g.identity
+        for i in range(len(a)):
+            rel = rel*subs[a[i][0]]**a[i][1]
+        C._reidemeister_relators[j] = rel
+
     C.schreier_generators = tuple(C._schreier_generators)
     C.reidemeister_relators = tuple(C._reidemeister_relators)
     return C.schreier_generators, C.reidemeister_relators
