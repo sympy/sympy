@@ -141,7 +141,6 @@ class PermutationGroup(Basic):
         obj = Basic.__new__(cls, *args, **kwargs)
         obj._generators = args
         obj._order = None
-        obj._parent = None
         obj._center = []
         obj._is_abelian = None
         obj._is_transitive = None
@@ -412,12 +411,6 @@ class PermutationGroup(Basic):
             temp = parent
             parent = parents[temp]
         return rep
-
-    @property
-    def parent(self):
-        """Return the parent of the group (or None) which is a group
-           containing `self` as a subgroup"""
-        return self._parent
 
     @property
     def base(self):
@@ -1907,8 +1900,6 @@ class PermutationGroup(Basic):
             return False
         if self == G:
             return True
-        if self.parent == G:
-            return True
         if G.order() % self.order() != 0:
             return False
         if self.degree == G.degree or \
@@ -3037,7 +3028,6 @@ class PermutationGroup(Basic):
             raise ValueError("The group doesn't contain the supplied generators")
 
         G = PermutationGroup(gens)
-        G._parent = self
         return G
 
     def subgroup_search(self, prop, base=None, strong_gens=None, tests=None,
