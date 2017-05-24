@@ -809,7 +809,7 @@ def test_subgroup_presentations():
     assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
 
     H = f.subgroup(H)
-    assert (H.generators == p1[0]) and (H.relators == p1[1])
+    assert (H.generators, H.relators) == p1
 
     f = FpGroup(F, [x**3, y**3, (x*y)**3])
     H = [x*y, x*y**-1]
