@@ -585,7 +585,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return S.Infinity
 
     def commutator(self, other):
-        """Returns the commutator of `self` and `x`: ``~x*~self*x*self``
+        """Return the commutator of `self` and `x`: ``~x*~self*x*self``
         """
         group = self.group
         if not isinstance(other, group.dtype):
@@ -593,6 +593,15 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
                     "FreeGroup exists")
         else:
             return self.inverse()*other.inverse()*self*other
+
+    def eliminate_words(self, words):
+        '''
+        Replace each subword from the dictionary words by words[subword].
+        '''
+        new = self
+        for sub in words:
+            new = new.eliminate_word(sub, words[sub])
+        return new
 
     def eliminate_word(self, gen, by):
         """
@@ -1015,7 +1024,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     def generator_syllable(self, i):
         """
-        Returns the number of the generator that is involved in the
+        Returns the symbol of the generator that is involved in the
         i-th syllable of the associative word `self`.
 
         Examples

@@ -1499,45 +1499,37 @@ def elimination_technique_1(C):
     rels = C._reidemeister_relators
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
-    rels.sort(reverse=True)
+    rels.sort()
     gens = C._schreier_generators
     redundant_gens = {}
-    contained_gens = []
+    redundant_rels = []
+    used_gens = []
     # examine each relator in relator list for any generator occuring exactly
     # once
-    next_i = False
-    for i in range(len(rels) -1, -1, -1):
-        rel = rels[i]
-        # don't look for a new generator occuring once in relator which
-        # has already found to posses a
-        for gen in redundant_gens:
-            gen_sym = gen.array_form[0][0]
-            if any([gen_sym == r[0] for r in rel.array_form]):
-                next_i = True
-                break
-        if next_i:
-            next_i = False
+    for rel in rels:
+        # don't look for a redundant generator in a relator which
+        # depends on previously found ones
+        if any([rel.is_dependent(g) for g in redundant_gens]):
             continue
-        for j in range(len(gens) - 1, -1, -1):
-            gen = gens[j]
-            if rel.generator_count(gen) == 1 and gen not in contained_gens:
+        for gen in reversed(gens):
+            if gen not in used_gens and rel.generator_count(gen) == 1:
                 k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
                 chi = (bk*fw).identity_cyclic_reduction()
                 redundant_gens[gen] = chi**(-1*k)
-                contained_gens.extend(chi.contains_generators())
-                del rels[i]; del gens[j]
+                used_gens.extend(chi.contains_generators())
+                redundant_rels.append(rel)
                 break
-    # eliminate the redundant generator from remaing relators
-    for i, gen in product(range(len(rels)), redundant_gens):
-        rels[i] = (rels[i].eliminate_word(gen, redundant_gens[gen])).identity_cyclic_reduction()
-    rels.sort()
+    rels = [r for r in rels if not r in redundant_rels]
+    # eliminate the redundant generators from remaining relators
     try:
         rels.remove(C._schreier_free_group.identity)
     except ValueError:
         pass
+    rels = [r.eliminate_words(redundant_gens).identity_cyclic_reduction() for r in rels]
+    gens = [g for g in gens if not g in redundant_gens]
     C._reidemeister_relators = rels
     C._schreier_generators = gens
 
