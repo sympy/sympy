@@ -1509,7 +1509,7 @@ def elimination_technique_1(C):
     for rel in rels:
         # don't look for a redundant generator in a relator which
         # depends on previously found ones
-        if any([rel.is_dependent(g) for g in redundant_gens]):
+        if any([rel.is_dependent(g) for g in used_gens]):
             continue
         for gen in reversed(gens):
             if gen not in used_gens and rel.generator_count(gen) == 1:
@@ -1519,17 +1519,19 @@ def elimination_technique_1(C):
                 fw = rel.subword(0, gen_index)
                 chi = (bk*fw).identity_cyclic_reduction()
                 redundant_gens[gen] = chi**(-1*k)
-                used_gens.extend(chi.contains_generators())
+                used_gens.extend(rel.contains_generators())
                 redundant_rels.append(rel)
-                break
-    rels = [r for r in rels if not r in redundant_rels]
+    rels = [r for r in rels if r not in redundant_rels]
+    print("RED",redundant_gens)
     # eliminate the redundant generators from remaining relators
+    rels = [r.eliminate_words(redundant_gens).identity_cyclic_reduction() for r in rels]
     try:
         rels.remove(C._schreier_free_group.identity)
     except ValueError:
         pass
-    rels = [r.eliminate_words(redundant_gens).identity_cyclic_reduction() for r in rels]
-    gens = [g for g in gens if not g in redundant_gens]
+    gens = [g for g in gens if g not in redundant_gens]
+    print("gens",gens)
+    print("used",used_gens)
     C._reidemeister_relators = rels
     C._schreier_generators = gens
 
