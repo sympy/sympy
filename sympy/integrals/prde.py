@@ -578,7 +578,7 @@ def param_rischDE(fa, fd, G, DE):
     = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
     a matrix A with m + r columns and entries in Const(k) such that
     Dy + f*y = Sum(ci*Gi, (i, 1, m)) has a solution y
-    in k(t) with c1, ..., cm in Const(k) if and only if p = Sum(dj*hj,
+    in k(t) with c1, ..., cm in Const(k) if and only if y = Sum(dj*hj,
     (j, 1, r)) where d1, ..., dr are in Const(k) and (c1, ..., cm,
     d1, ..., dr) is a solution of Ax == 0.
 
@@ -749,35 +749,29 @@ def limited_integrate(fa, fd, G, DE):
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
     fa, fd = fa*Poly(1/fd.LC(), DE.t), fd.monic()
-    A, B, h, N, g, V = limited_integrate_reduce(fa, fd, G, DE)
-    V = [g] + V
-    g = A.gcd(B)
-    A, B, V = A.quo(g), B.quo(g), [via.cancel(vid*g, include=True) for
-        via, vid in V]
-    Q, M = prde_linear_constraints(A, B, V, DE)
-    M, _ = constant_system(M, zeros(M.rows, 1), DE)
-    l = M.nullspace()
-    if M == Matrix() or len(l) > 1:
-        # Continue with param_rischDE()
-        raise NotImplementedError("param_rischDE() is required to solve this "
-            "integral.")
-    elif len(l) == 0:
-        raise NonElementaryIntegralException
-    elif len(l) == 1:
-        # The c1 == 1.  In this case, we can assume a normal Risch DE
-        if l[0][0].is_zero:
-            raise NonElementaryIntegralException
-        else:
-            l[0] *= 1/l[0][0]
-            C = sum([Poly(i, DE.t)*q for (i, q) in zip(l[0], Q)])
-            # Custom version of rischDE() that uses the already computed
-            # denominator and degree bound from above.
-            B, C, m, alpha, beta = spde(A, B, C, N, DE)
-            y = solve_poly_rde(B, C, m, DE)
-
-            return ((alpha*y + beta, h), list(l[0][1:]))
+    # interpretting limited integration problem as a
+    # parametric Risch DE problem
+    Fa = Poly(0, DE.t)
+    Fd = Poly(1, DE.t)
+    G = [(fa, fd)] + G
+    h, A = param_rischDE(Fa, Fd, G, DE)
+    V = A.nullspace()
+    V = [v for v in V if v[0] != 0]
+    if not V:
+        return NonElementaryIntegralException
     else:
-        raise NotImplementedError
+        c0 = V[0][0]
+        V = [v/(-c0) for v in V]
+        # v = [-1, c1, ..., cm, d1, ..., dr]
+        v = V[0]
+        r = len(h)
+        m = len(v) - r - 1
+        C = list(v[1: m + 1])
+        y = -sum([v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
+                for i in range(r)])
+        y_num, y_den = y.as_numer_denom()
+        Y = Poly(y_num, DE.t), Poly(y_den, DE.t)
+        return Y, C
 
 
 def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
