@@ -1288,9 +1288,10 @@ def integrate_primitive_polynomial(p, DE):
             aa, ad = frac_in(a, DE.t)
 
             try:
-                (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-                if len(c) != 1:
-                    raise ValueError("Length of c should  be 1")
+                rv = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+                if rv is None:
+                    raise NonElementaryIntegralException
+                (ba, bd), c = rv
             except NonElementaryIntegralException:
                 return (q, p, False)
 

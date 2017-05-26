@@ -16,7 +16,7 @@ each function for more information.
 """
 from __future__ import print_function, division
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core import Dummy, ilcm, Add, Mul, Pow, S, oo
 
 from sympy.matrices import Matrix, zeros, eye
 
@@ -90,7 +90,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     """
     Parametric Risch Differential Equation - Special part of the denominator.
 
-    case is on of {'exp', 'tan', 'primitive'} for the hyperexponential,
+    case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
     hypertangent, and primitive cases, respectively.  For the hyperexponential
     (resp. hypertangent) case, given a derivation D on k[t] and a in k[t],
     b in k<t>, and g1, ..., gm in k(t) with Dt/t in k (resp. Dt/(t**2 + 1) in
@@ -147,8 +147,9 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
                         a, s, z = A
+                        # TODO: Add test
                         if a == 1:
-                             n = min(n, s/2)
+                            n = min(n, s/2)
 
     N = max(0, -nb)
     pN = p**N
@@ -758,19 +759,20 @@ def limited_integrate(fa, fd, G, DE):
     V = A.nullspace()
     V = [v for v in V if v[0] != 0]
     if not V:
-        return NonElementaryIntegralException
+        return None
     else:
+        # we can take any vector from V, we take V[0]
         c0 = V[0][0]
-        V = [v/(-c0) for v in V]
         # v = [-1, c1, ..., cm, d1, ..., dr]
-        v = V[0]
+        v = V[0]/(-c0)
         r = len(h)
         m = len(v) - r - 1
         C = list(v[1: m + 1])
         y = -sum([v[m + 1 + i]*h[i][0].as_expr()/h[i][1].as_expr() \
                 for i in range(r)])
         y_num, y_den = y.as_numer_denom()
-        Y = Poly(y_num, DE.t), Poly(y_den, DE.t)
+        Ya, Yd = Poly(y_num, DE.t), Poly(y_den, DE.t)
+        Y = Ya*Poly(1/Yd.LC(), DE.t), Yd.monic()
         return Y, C
 
 
