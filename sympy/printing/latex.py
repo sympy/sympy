@@ -811,7 +811,7 @@ class LatexPrinter(Printer):
     _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
-        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Func'])
+        tex = r"\Re{%s}" % self.parenthesize(expr.args[0], PRECEDENCE['Atom'])
 
         return self._do_exponent(tex, exp)
 

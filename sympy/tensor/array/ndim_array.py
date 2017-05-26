@@ -403,6 +403,9 @@ class NDimArray(object):
 class ImmutableNDimArray(NDimArray, Basic):
     _op_priority = 11.0
 
+    def __hash__(self):
+        return Basic.__hash__(self)
+
 
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify

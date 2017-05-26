@@ -86,7 +86,6 @@ NUMPY_TRANSLATIONS = {
     "Matrix": "array",
     "MutableDenseMatrix": "array",
     "ImmutableDenseMatrix": "array",
-    "ImmutableDenseMatrix": "array",
 }
 
 TENSORFLOW_TRANSLATIONS = {
