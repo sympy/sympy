@@ -785,7 +785,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy.series import limit, Limit
         from sympy.solvers.solveset import solveset
-        from sympy.sets.sets import Intersection, Interval
+        from sympy.sets.sets import Interval
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -831,8 +831,7 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            singularities = solveset(self.cancel().as_numer_denom()[1], x)
-            singularities = list(Intersection(domain, singularities))
+            singularities = solveset(self.cancel().as_numer_denom()[1], x, domain = domain)
             for s in singularities:
                 if a < s < b:
                     value += -limit(self, x, s, "+") + limit(self, x, s, "-")
