@@ -831,7 +831,7 @@ class Expr(Basic, EvalfMixin):
                 domain = Interval(a, b)
             else:
                 domain = Interval(b, a)
-            singularities = solveset(self.cancel().as_numer_denom()[1], x, domain = domain)
+            singularities = list(solveset(self.cancel().as_numer_denom()[1], x, domain = domain))
             for s in singularities:
                 if a < s < b:
                     value += -limit(self, x, s, "+") + limit(self, x, s, "-")
