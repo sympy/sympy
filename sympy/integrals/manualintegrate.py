@@ -727,7 +727,7 @@ def trig_cotcsc_rule(integral):
 
 def trig_sindouble_rule(integral):
     integrand, symbol = integral
-    a = sympy.Wild('a', exclude=[1/(sympy.sin(2*symbol))])
+    a = sympy.Wild('a', exclude=[sympy.sin(2*symbol)])
     match = integrand.match(sympy.sin(2*symbol)*a)
     if match:
         return integral_steps(integrand*2*sympy.sin(symbol)*sympy.cos(symbol)/sympy.sin(2*symbol), symbol)
