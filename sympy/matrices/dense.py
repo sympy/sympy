@@ -3,11 +3,11 @@ from __future__ import print_function, division
 import random
 from sympy import Derivative
 
+from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range, reduce
 from sympy.core.function import count_ops
-from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -168,7 +168,7 @@ class DenseMatrix(MatrixBase):
                 vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
                 try:
                     new_mat[i] = Add(*vec)
-                except TypeError:
+                except (TypeError, SympifyError):
                     # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
                     # They don't work with `sum` because `sum` tries to add `0`
                     # initially, and for a matrix, that is a mix of a scalar and
