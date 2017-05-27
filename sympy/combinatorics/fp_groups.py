@@ -1605,15 +1605,15 @@ def _simplification_technique_1(rels):
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplification_technique_1(w1)
-    [[(x, 3)], [(x, -1), (y, 4)]]
+    [x**-1*y**4, x**3]
 
     >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
     >>> _simplification_technique_1(w2)
-    [[(x, 3)], [(y, 5)], [(x, -1), (y, -2)], [(x, -1), (y, 1), (x, -1)]]
+    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
 
     >>> w3 = [x**6*y**4, x**4]
     >>> _simplification_technique_1(w3)
-    [[(x, 4)], [(x, 2), (y, 4)]]
+    [x**2*y**4, x**4]
 
     """
 

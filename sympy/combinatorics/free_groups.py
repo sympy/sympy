@@ -630,7 +630,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> w.eliminate_word(x**5)
         y*x**2*y**-4*x
         >>> w.eliminate_word(x*y, y)
-        x**5*y*x*y**-4*x
+        x**4*y*x**2y**-4*x
 
         See Also
         ========
@@ -867,7 +867,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
-        >>> w.subword(2, 6)
+        >>> w.subword(2, 5)
         a**3*b
 
         """
@@ -892,7 +892,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**2*b*a*b**3
-        >>> w.index(a*b*a*b)
+        >>> w.subword_index(a*b*a*b)
         1
 
         '''
