@@ -630,7 +630,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> w.eliminate_word(x**5)
         y*x**2*y**-4*x
         >>> w.eliminate_word(x*y, y)
-        x**4*y*x**2y**-4*x
+        x**4*y*x**2*y**-4*x
 
         See Also
         ========
