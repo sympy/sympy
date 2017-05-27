@@ -91,6 +91,7 @@ class Add(Expr, AssocOp):
 
         """
         from sympy.calculus.util import AccumBounds
+        from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -139,6 +140,10 @@ class Add(Expr, AssocOp):
                 continue
 
             elif isinstance(o, AccumBounds):
+                coeff = o.__add__(coeff)
+                continue
+
+            elif isinstance(o, MatrixExpr):
                 coeff = o.__add__(coeff)
                 continue
 

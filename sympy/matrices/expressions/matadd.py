@@ -11,9 +11,9 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 from sympy.utilities import default_sort_key, sift
+from sympy.core.operations import AssocOp
 
-
-class MatAdd(MatrixExpr):
+class MatAdd(MatrixExpr, AssocOp):
     """A Sum of Matrix Expressions
 
     MatAdd inherits from and operates like SymPy Add
