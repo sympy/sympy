@@ -204,9 +204,9 @@ def test_FreeGroup_generators():
 
 def test_FreeGroupElm_words():
     w = x**5*y*x**2*y**-4*x
-    assert w.subword(2, 6) == x**3*y
+    assert w.subword(2, 5) == x**3*y
     assert w.subword(3, 2) == F.identity
-    assert w.subword(6, 10) == x**2*y**-2
+    assert w.subword(6, 9) == x**2*y**-2
 
-    assert w.substituted_word(1, 6, y**-1) == y**-1*x*y**-4*x
-    assert w.substituted_word(0, 7, y**2*x) == y**2*x**2*y**-4
+    assert w.substituted_word(0, 6, y**-1) == y**-1*x*y**-4*x
+    assert w.substituted_word(0, 6, y**2*x) == y**2*x**2*y**-4*x

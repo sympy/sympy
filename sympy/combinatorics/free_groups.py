@@ -594,20 +594,28 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return self.inverse()*other.inverse()*self*other
 
-    def eliminate_words(self, words):
+    def eliminate_words(self, words, _all = False):
         '''
-        Replace each subword from the dictionary words by words[subword].
+        Replace each subword from the dictionary `words` by words[subword].
+        If words is a list, replace the words by the identity.
         '''
         new = self
-        for sub in words:
-            new = new.eliminate_word(sub, words[sub])
+        if type(words) is dict:
+            for sub in words:
+                new = new.eliminate_word(sub, words[sub], _all=_all)
+        else:
+            for sub in words:
+                new = new.eliminate_word(sub, _all=_all)
         return new
 
-    def eliminate_word(self, gen, by):
+    def eliminate_word(self, gen, by=None, _all=False):
         """
-        For an associative word `self`, a generator `gen`, and an associative
-        word by, ``eliminate_word`` returns the associative word obtained by
-        replacing each occurrence of `gen` in `self` by `by`.
+        For an associative word `self`, a subword `gen`, and an associative
+        word `by` (identity by default), return the associative word obtained by
+        replacing each occurrence of `gen` in `self` by `by`. If `_all = True`,
+        the occurances of `gen` that may appear after the first substitution will
+        also be replaced and so on until no occurances are found. This might not
+        always terminate (e.g. `(x).eliminate_word(x, x**2, _all=True)`).
 
         Examples
         ========
@@ -619,35 +627,43 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         x**10*y*x**4*y**-4*x**2
         >>> w.eliminate_word( x, y**-1 )
         y**-11
+        >>> w.eliminate_word(x**5)
+        y*x**2*y**-4*x
+        >>> w.eliminate_word(x*y, y)
+        x**5*y*x*y**-4*x
 
         See Also
         ========
         substituted_word
 
         """
-        group = self.group
-        r = Symbol(str(gen))
-        arr = self.array_form
-        array = []
-        by_arr = list(by.array_form)
-        l_by = len(by_arr)
-        for i in range(len(arr)):
-            if arr[i][0] == r:
-                # TODO: this shouldn't be checked again and again, since `by`
-                # is fixed
-                if by_arr == 1:
-                    array.append((by_arr[0][0], by_arr[0][1]*arr[i][1]))
-                    zero_mul_simp(array, len(array) - l_by - 1)
-                else:
-                    k = arr[i][1]
-                    sig = sign(k)
-                    for j in range(sig*k):
-                        array.extend(list((by**sig).array_form))
-                        zero_mul_simp(array, len(array) - l_by - 1)
-            else:
-                array.append(arr[i])
-                zero_mul_simp(array, len(array) - 2)
-        return group.dtype(tuple(array))
+        if by == None:
+            by = self.group.identity
+        if self.is_independent(gen) or gen == by:
+            return self
+        if gen == self:
+            return by
+        if gen**-1 == by:
+            _all = False
+        word = self
+        l = len(gen)
+
+        try:
+            i = word.subword_index(gen)
+            k = 1
+        except:
+            try:
+                i = word.subword_index(gen**-1)
+                k = -1
+            except:
+                return word
+
+        word = word.subword(0, i-1)*by**k*word.subword(i+l, len(word)-1).eliminate_word(gen, by)
+
+        if _all:
+            return word.eliminate_word(gen, by)
+        else:
+            return word
 
     def __len__(self):
         """
@@ -856,15 +872,42 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         group = self.group
-        if from_i < 0 or to_j > len(self):
+        if from_i < 0 or to_j > len(self)-1:
             raise ValueError("`from_i`, `to_j` must be positive and less than "
                     "the length of associative word")
-        if to_j <= from_i:
+        if to_j < from_i:
             return group.identity
         else:
-            letter_form = self.letter_form[from_i: to_j]
+            letter_form = self.letter_form[from_i: to_j+1]
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
+
+    def subword_index(self, word, start = 0):
+        '''
+        Find the index of `word` in `self`.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.free_groups import free_group
+        >>> f, a, b = free_group("a b")
+        >>> w = a**2*b*a*b**3
+        >>> w.index(a*b*a*b)
+        1
+
+        '''
+        l = len(word)
+        self_lf = self.letter_form
+        word_lf = word.letter_form
+        index = None
+        for i in range(start,len(self)-l+1):
+            if self_lf[i:i+l] == word_lf:
+                index = i
+                break
+        if index is not None:
+            return index
+        else:
+            raise ValueError("The given word is not a subword of `self`")
 
     def is_dependent(self, word):
         """
@@ -887,9 +930,18 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         is_independent
 
         """
-        self_st = str(self.letter_form)[1: -1]
-        return str(word.letter_form)[1: -1] in self_st or \
-                str((word**-1).letter_form)[1: -1] in self_st
+        i = None
+        try:
+            i = self.subword_index(word)
+        except:
+            try:
+                i = self.subword_index(word**-1)
+            except:
+                pass
+        if i is not None:
+            return True
+        else:
+            return False
 
     def is_independent(self, word):
         """
@@ -899,7 +951,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         is_dependent
 
         """
-        return not self.is_dependent
+        return not self.is_dependent(word)
 
     def contains_generators(self):
         """
@@ -1083,7 +1135,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         lw = len(self)
-        if from_i > to_j or from_i > lw or to_j > lw:
+        if from_i > to_j or from_i > lw or to_j > lw - 1:
             raise ValueError("values should be within bounds")
 
         # otherwise there are four possibilities
@@ -1092,11 +1144,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if from_i == 0 and to_j == lw - 1:
             return by
         elif from_i == 0:  # second if from_i=1 (and to_j < lw) then
-            return by*self.subword(to_j, lw - 1)
-        elif to_j == lw:   # third if to_j=1 (and fromi_i > 1) then
+            return by*self.subword(to_j + 1, lw - 1)
+        elif to_j == lw-1:   # third if to_j=1 (and from_i > 1) then
             return self.subword(0, from_i - 1)*by
         else:              # finally
-            return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw)
+            return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw - 1)
 
     def is_cyclically_reduced(self):
         r"""Returns whether the word is cyclically reduced or not.
@@ -1138,18 +1190,19 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         http://planetmath.org/cyclicallyreduced
 
         """
-        if self.is_cyclically_reduced():
-            return self.copy()
+        word = self.copy()
         group = self.group
-        exp1 = self.exponent_syllable(0)
-        exp2 = self.exponent_syllable(-1)
-        r = exp1 + exp2
-        if r == 0:
-            rep = self.array_form[1: self.number_syllables() - 1]
-        else:
-            rep = ((self.generator_syllable(0), exp1 + exp2),) + \
-                    self.array_form[1: self.number_syllables() - 1]
-        return group.dtype(rep)
+        while not word.is_cyclically_reduced():
+            exp1 = word.exponent_syllable(0)
+            exp2 = word.exponent_syllable(-1)
+            r = exp1 + exp2
+            if r == 0:
+                rep = word.array_form[1: word.number_syllables() - 1]
+            else:
+                rep = ((word.generator_syllable(0), exp1 + exp2),) + \
+                        word.array_form[1: word.number_syllables() - 1]
+            word = group.dtype(rep)
+        return word
 
 
 def letter_form_to_array_form(array_form, group):
