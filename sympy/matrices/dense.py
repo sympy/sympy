@@ -26,255 +26,6 @@ def _iszero(x):
     return x.is_zero
 
 
-class _InplaceMatrix(object):
-    """A Matrix-like object where all operations happen
-    in place.  This is meant to be used inside Matrix
-    classes and should not be used directly.  It has
-    very few safety checks and is optimized for efficiency."""
-    __hash__ = None
-
-    def __init__(self, rows, cols, elements, copy=False):
-        if rows*cols != len(elements):
-            raise ValueError("elements must have length rows*cols")
-        self.rows = rows
-        self.cols = cols
-        if copy:
-            elements = list(elements)
-        self._mat = elements
-
-    def __add__(self, other):
-        if self.rows != other.rows or \
-           self.cols != other.cols or \
-           len(self._mat) != len(other._mat):
-            raise ValueError("Wrong sized Matrices {} {}".format(self, other))
-        # cache self._mat for performance
-        mat = self._mat
-        for i,x in enumerate(other._mat):
-            mat[i] += x
-        return self
-
-    def __getitem__(self, key):
-        if isinstance(key, tuple):
-            i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
-                # if the coordinates are not slices, make them so
-                # and expand the slices so they don't contain `None`
-                row_slice, col_slice = self._normalize_slices(i, j)
-
-                return _InplaceMatrixView(self, row_slice, col_slice)
-
-            # if the key is a tuple of ints, change
-            # it to an array index
-            key = self._coord_to_index(i,j)
-        return self._mat[key]
-
-    def __iter__(self):
-        return self._mat.__iter__()
-
-    def __len__(self):
-        return self.rows*self.cols
-
-    def __mul__(self, other):
-        if self.cols != other.rows:
-            raise ValueError("Dimension mismatch when multiplying {} and {}".format(self, other))
-        # allocate space for the new matrix
-        new_mat_rows = self.rows
-        new_mat_cols = other.cols
-        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
-
-        def get_coord(i):
-            return (i // new_mat_cols, i % new_mat_cols)
-        # cache these methods for minor speedups
-        row_indices = self._row_indices
-        if hasattr(other, '_col_indices'):
-            col_indices = other._col_indices
-        else:
-            # this allows us to multiply by a Matrix,
-            cls_col_indices = self.__class__._col_indices
-            col_indices = lambda i: cls_col_indices(other, i)
-
-        # if we multiply an n x 0 with a 0 x m, the
-        # expected behavior is to produce an n x m matrix of zeros
-        if self.cols != 0 and other.rows != 0:
-            # cache self._mat and other._mat for performance
-            mat = self._mat
-            other_mat = other._mat
-            for i in range(len(new_mat)):
-                row, col = get_coord(i)
-                vec = (mat[a]*other_mat[b] for a,b \
-                       in zip(row_indices(row), col_indices(col)))
-                try:
-                    new_mat[i] = sum(vec)
-                except TypeError:
-                    # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
-                    # They don't work with `sum` because `sum` tries to add `0`
-                    # initially, and for a matrix, that is a mix of a scalar and
-                    # a matrix, which raises a TypeError. Fall back to a
-                    # block-matrix-safe way to multiply if the `sum` fails.
-                    vec = (mat[a]*other_mat[b] for a,b \
-                           in zip(row_indices(row), col_indices(col)))
-                    new_mat[i] = reduce(lambda a,b: a + b, vec)
-        # make sure the operation is in-place
-        self._mat[:] = new_mat
-        self.rows, self.cols = new_mat_rows, new_mat_cols
-        return self
-
-    def __neg__(self):
-        return self._scalar_mul(-1)
-
-    def __repr__(self):
-        return "{}({}, {}, {})".format(self.__class__.__name__, self.rows, self.cols, self._mat)
-
-    def __setitem__(self, key, val):
-        """Set item by index or tuple containing a mix
-        of coordinates and slices."""
-        if isinstance(key, tuple):
-            i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
-                row_slice, col_slice = self._normalize_slices(i, j)
-                inplace_mat = _InplaceMatrixView(self, row_slice, col_slice)
-                if len(inplace_mat) != len(val):
-                    raise ValueError("Attempting to assign {} values to {} positions".format(len(val), len(inplace_mat)))
-                # when we have an appropriate view, we can set items directly
-                for i,v in enumerate(val):
-                    inplace_mat[i] = v
-                return
-            else:
-                self._set((i, j), val)
-                return
-        self._set(key, val)
-
-    def _col_indices(self, i):
-        """Return an interable that will give the indices of
-        the elements in column i"""
-        if i < 0 or i >= self.cols:
-            raise ValueError("i must be a valid column")
-        return range(i, len(self._mat), self.cols)
-
-    def _coord_to_index(self, i, j):
-        """Return the index in _mat corresponding
-        to the (i,j) position in the matrix. """
-        return i*self.cols + j
-
-    def _elementwise_mul(self, other):
-        if self.rows != other.rows or \
-                        self.cols != other.cols or \
-                        len(self._mat) != len(other._mat):
-            raise ValueError("Wrong sized Matrices {} {}".format(self, other))
-        # cache self._mat for performance
-        mat = self._mat
-        for i,x in enumerate(other._mat):
-            mat[i] *= x
-        return self
-
-    def _index_to_coord(self, i):
-        """Return the matrix coordinates of the element
-        at position `i` in the flattened matrix."""
-        return (i // self.cols, i % self.cols)
-
-    def _normalize_slices(self, row_slice, col_slice):
-        """Ensure that row_slice and col_slice don't have
-        `None` in their arguments.  Any integers are converted
-        to slices of length 1"""
-        if not isinstance(row_slice, slice):
-            row_slice = slice(row_slice, row_slice+1, None)
-        row_slice = slice(*row_slice.indices(self.rows))
-
-        if not isinstance(col_slice, slice):
-            col_slice = slice(col_slice, col_slice+1, None)
-        col_slice = slice(*col_slice.indices(self.cols))
-
-        return (row_slice, col_slice)
-
-    def _row_indices(self, i):
-        """Return an interable that will give the indices of
-        the elements in row i"""
-        if i < 0 or i >= self.rows:
-            raise ValueError("i must be a valid row")
-        return range(self.cols*i, self.cols*(i+1))
-
-    def _scalar_mul(self, other):
-        # cache self._mat for performance
-        mat = self._mat
-        for i in range(len(self._mat)):
-            mat[i] *= other
-        return self
-
-    def _scalar_rmul(self, other):
-        # cache self._mat for performance
-        mat = self._mat
-        for i in range(len(self._mat)):
-            mat[i] = other*self._mat[i]
-        return self
-
-    def _set(self, coord, val):
-        """Set an element in the matrix.  If coord is a tuple,
-        those coordinates will be set.  Otherwise, that index will
-        be set."""
-        if isinstance(coord, tuple):
-            i, j = coord
-            key = self._coord_to_index(i, j)
-            self._mat[key] = val
-            return
-        self._mat[coord] = val
-
-
-class _InplaceMatrixView(_InplaceMatrix):
-    """A view of an InplaceMatrix.  Assigning values
-    to elements of the InplaceMatrixView will affect the
-    values in the InplaceMatrix.  `row_slice` and `col_slice`
-    must be non-empty slices without `None` for any argument."""
-    def __init__(self, inplace_mat, row_slice, col_slice):
-        if None in (row_slice.start, row_slice.stop, row_slice.step,
-                    col_slice.start, col_slice.stop, col_slice.step):
-            raise ValueError("slice objects cannot contain None")
-
-        self.row_slice = row_slice
-        self.col_slice = col_slice
-        self.inplace_mat = inplace_mat
-
-        self._mat = inplace_mat._mat
-        self.rows = (row_slice.stop - row_slice.start) // row_slice.step
-        self.cols = (col_slice.stop - col_slice.start) // col_slice.step
-
-    def __getitem__(self, key):
-        if isinstance(key, tuple):
-            i, j = key
-            if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError("Slices of views are not yet implemented")
-            key = self._coord_to_index(i,j)
-
-        # adjust the key based on the offsets of the slice
-        i, j = self._index_to_coord(key)
-        key = self._coord_to_true_index(i, j)
-
-        return self._mat[key]
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
-
-    def _coord_to_true_index(self, i, j):
-        """Returns the index in self.inplace_mat._mat corresponding
-        to the (i,j) position in the View."""
-        true_i = self.row_slice.start + i*self.row_slice.step
-        true_j = self.col_slice.start + j*self.col_slice.step
-        return self.inplace_mat._coord_to_index(true_i, true_j)
-
-    def _set(self, coord, val):
-        # we can easily convert coordinates to indices
-        # using _coord_to_true_index, so if we sent an
-        # index, convert it to a coord and work from there.
-        if not isinstance(coord, tuple):
-            coord = self._index_to_coord(coord)
-        i, j = coord
-        key = self._coord_to_true_index(i, j)
-        self._mat[key] = val
-
-    def copy(self):
-        raise NotImplementedError("Cannot copy an InplaceMatrixView")
-
-
 class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False
@@ -389,22 +140,47 @@ class DenseMatrix(MatrixBase):
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
-        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = _InplaceMatrix(other.rows, other.cols, other._mat)
-        a.__add__(b)
-        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+        mat = [a + b for a,b in zip(self._mat, other._mat)]
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_matrix_mul(self, other):
-        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = _InplaceMatrix(other.rows, other.cols, other._mat)
-        a.__mul__(b)
-        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+        from sympy import Add
+        # cache attributes for faster access
+        self_rows, self_cols = self.rows, self.cols
+        other_rows, other_cols = other.rows, other.cols
+        other_len = other_rows * other_cols
+        new_mat_rows = self.rows
+        new_mat_cols = other.cols
+
+        # preallocate the array
+        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+
+        # if we multiply an n x 0 with a 0 x m, the
+        # expected behavior is to produce an n x m matrix of zeros
+        if self.cols != 0 and other.rows != 0:
+            # cache self._mat and other._mat for performance
+            mat = self._mat
+            other_mat = other._mat
+            for i in range(len(new_mat)):
+                row, col = i // new_mat_cols, i % new_mat_cols
+                row_indices = range(self_cols*row, self_cols*(row+1))
+                col_indices = range(col, other_len, other_cols)
+                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                try:
+                    new_mat[i] = Add(*vec)
+                except TypeError:
+                    # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                    # They don't work with `sum` because `sum` tries to add `0`
+                    # initially, and for a matrix, that is a mix of a scalar and
+                    # a matrix, which raises a TypeError. Fall back to a
+                    # block-matrix-safe way to multiply if the `sum` fails.
+                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                    new_mat[i] = reduce(lambda a,b: a + b, vec)
+        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
-        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        b = _InplaceMatrix(other.rows, other.cols, other._mat)
-        a._elementwise_mul(b)
-        return classof(self, other)._new(a.rows, a.cols, a._mat, copy=False)
+        mat = [a*b for a,b in zip(self._mat, other._mat)]
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_diff(self, *args, **kwargs):
         if kwargs.pop("evaluate", True):
@@ -476,14 +252,12 @@ class DenseMatrix(MatrixBase):
         return self._new(rv)
 
     def _eval_scalar_mul(self, other):
-        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        a._scalar_mul(other)
-        return self._new(a.rows, a.cols, a._mat, copy=False)
+        mat = [other*a for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_scalar_rmul(self, other):
-        a = _InplaceMatrix(self.rows, self.cols, self._mat, copy=True)
-        a._scalar_rmul(other)
-        return self._new(a.rows, a.cols, a._mat, copy=False)
+        mat = [a*other for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
 
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
