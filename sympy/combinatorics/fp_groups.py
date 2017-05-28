@@ -1616,6 +1616,7 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
+    rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
     exps = {}
     for i in range(len(rels)):
@@ -1648,7 +1649,7 @@ def _simplification_technique_1(rels):
                 if exp % 2 == 0:
                     max_exp = exp//2
                 else:
-                    max_exp = exp//2 + 1
+                    max_exp = (exp + 1)//2
                 rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
                 rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
         rels[i] = rel
