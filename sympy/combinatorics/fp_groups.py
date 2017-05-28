@@ -1646,10 +1646,7 @@ def _simplification_technique_1(rels):
         for g in rel.contains_generators():
             if g in exps:
                 exp = exps[g].array_form[0][1]
-                if exp % 2 == 0:
-                    max_exp = exp//2
-                else:
-                    max_exp = (exp + 1)//2
+                max_exp = (exp + 1)//2
                 rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
                 rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
         rels[i] = rel
