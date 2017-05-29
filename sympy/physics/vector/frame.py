@@ -621,9 +621,11 @@ class ReferenceFrame(object):
                 from sympy.physics.vector.functions import kinematic_equations
                 q1, q2, q3 = amounts
                 u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-                if all(i.is_number for i in [q1, q2, q3]):
+                t = dynamicsymbols._t
+                if all(i.is_constant(t) for i in [q1, q2, q3]):
                     u1, u2, u3 = [0, 0, 0]
                 else:
+                    u1, u2, u3 = symbols('u1 u2 u3', cls=Dummy)
                     templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
                                                    rot_type, rot_order)
                     templist = [expand(i) for i in templist]
