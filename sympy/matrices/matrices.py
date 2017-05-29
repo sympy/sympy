@@ -19,7 +19,7 @@ from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import exp, factorial
+from sympy.functions import Abs, exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
@@ -1723,6 +1723,9 @@ class MatrixArithmetic(MatrixRequired):
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
+
+    def __abs__(self):
+        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
