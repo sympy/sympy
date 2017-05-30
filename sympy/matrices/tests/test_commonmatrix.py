@@ -8,7 +8,7 @@ from sympy import (
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
     MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant,
-    MatrixReductions)
+    MatrixReductions, MatrixSpecial, MatrixSubspaces, MatrixEigen)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -77,6 +77,15 @@ def eye_Reductions(n):
 def zeros_Reductions(n):
     return ReductionsOnlyMatrix(n, n, lambda i, j: 0)
 
+class SpecialOnlyMatrix(_MinimalMatrix, MatrixSpecial):
+    pass
+
+class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
+    pass
+
+class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
+    pass
+
 
 def test__MinimalMatrix():
     x = _MinimalMatrix(2,3,[1,2,3,4,5,6])
@@ -101,7 +110,6 @@ def test_vec():
     assert m_vec.cols == 1
     for i in range(4):
         assert m_vec[i] == i + 1
-
 
 def test_tolist():
     lst = [[S.One, S.Half, x*y, S.Zero], [x, y, z, x**2], [y, -S.One, z*x, 3]]
@@ -130,7 +138,6 @@ def test_get_diag_blocks1():
     assert b.get_diag_blocks() == [b]
     assert c.get_diag_blocks() == [c]
 
-
 def test_get_diag_blocks2():
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
@@ -150,7 +157,6 @@ def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
     m.shape == (1, 2)
 
-
 def test_reshape():
     m0 = eye_Shaping(3)
     assert m0.reshape(1, 9) == Matrix(1, 9, (1, 0, 0, 0, 1, 0, 0, 0, 1))
@@ -159,20 +165,16 @@ def test_reshape():
         4, 3) == Matrix(((0, 1, 2), (3, 1, 2), (3, 4, 2), (3, 4, 5)))
     assert m1.reshape(2, 6) == Matrix(((0, 1, 2, 3, 1, 2), (3, 4, 2, 3, 4, 5)))
 
-
 def test_row_col():
     m = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
     assert m.row(0) == Matrix(1, 3, [1, 2, 3])
     assert m.col(0) == Matrix(3, 1, [1, 4, 7])
-
-
 
 def test_row_join():
     assert eye_Shaping(3).row_join(Matrix([7, 7, 7])) == \
            Matrix([[1, 0, 0, 7],
                    [0, 1, 0, 7],
                    [0, 0, 1, 7]])
-
 
 def test_col_join():
     assert eye_Shaping(3).col_join(Matrix([[7, 7, 7]])) == \
@@ -181,14 +183,12 @@ def test_col_join():
                    [0, 0, 1],
                    [7, 7, 7]])
 
-
 def test_row_insert():
     r4 = Matrix([[4, 4, 4]])
     for i in range(-4, 5):
         l = [1, 0, 0]
         l.insert(i, 4)
         assert flatten(eye_Shaping(3).row_insert(i, r4).col(0).tolist()) == l
-
 
 def test_col_insert():
     c4 = Matrix([4, 4, 4])
@@ -197,7 +197,6 @@ def test_col_insert():
         l.insert(i, 4)
         assert flatten(zeros_Shaping(3).col_insert(i, c4).row(0).tolist()) == l
 
-
 def test_extract():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
     assert m.extract([0, 1, 3], [0, 1]) == Matrix(3, 2, [0, 1, 3, 4, 9, 10])
@@ -205,6 +204,36 @@ def test_extract():
     assert m.extract(range(4), range(3)) == m
     raises(IndexError, lambda: m.extract([4], [0]))
     raises(IndexError, lambda: m.extract([0], [3]))
+
+def test_hstack():
+    m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
+    m2 = ShapingOnlyMatrix(3, 4, lambda i, j: i*3 + j)
+    assert m == m.hstack(m)
+    assert m.hstack(m, m, m) == ShapingOnlyMatrix.hstack(m, m, m) == Matrix([
+                [0,  1,  2, 0,  1,  2, 0,  1,  2],
+                [3,  4,  5, 3,  4,  5, 3,  4,  5],
+                [6,  7,  8, 6,  7,  8, 6,  7,  8],
+                [9, 10, 11, 9, 10, 11, 9, 10, 11]])
+    raises(ShapeError, lambda: m.hstack(m, m2))
+
+def test_vstack():
+    m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
+    m2 = ShapingOnlyMatrix(3, 4, lambda i, j: i*3 + j)
+    assert m == m.vstack(m)
+    assert m.vstack(m, m, m) == ShapingOnlyMatrix.vstack(m, m, m) == Matrix([
+                                [0,  1,  2],
+                                [3,  4,  5],
+                                [6,  7,  8],
+                                [9, 10, 11],
+                                [0,  1,  2],
+                                [3,  4,  5],
+                                [6,  7,  8],
+                                [9, 10, 11],
+                                [0,  1,  2],
+                                [3,  4,  5],
+                                [6,  7,  8],
+                                [9, 10, 11]])
+    raises(ShapeError, lambda: m.vstack(m, m2))
 
 
 # PropertiesOnlyMatrix tests
@@ -646,7 +675,6 @@ def test_div():
 
 # DeterminantOnlyMatrix tests
 def test_det():
-
     a = DeterminantOnlyMatrix(2,3,[1,2,3,4,5,6])
     raises(NonSquareMatrixError, lambda: a.det())
 
@@ -990,3 +1018,140 @@ def test_rref():
             [1, 0, sqrt(x)*(-x + 1)/(-x**(S(5)/2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
+
+
+# SpecialOnlyMatrix tests
+def test_eye():
+    assert list(SpecialOnlyMatrix.eye(2,2)) == [1, 0, 0, 1]
+    assert list(SpecialOnlyMatrix.eye(2)) == [1, 0, 0, 1]
+    assert type(SpecialOnlyMatrix.eye(2)) == SpecialOnlyMatrix
+    assert type(SpecialOnlyMatrix.eye(2, cls=Matrix)) == Matrix
+
+def test_ones():
+    assert list(SpecialOnlyMatrix.ones(2,2)) == [1, 1, 1, 1]
+    assert list(SpecialOnlyMatrix.ones(2)) == [1, 1, 1, 1]
+    assert SpecialOnlyMatrix.ones(2,3) == Matrix([[1, 1, 1], [1, 1, 1]])
+    assert type(SpecialOnlyMatrix.ones(2)) == SpecialOnlyMatrix
+    assert type(SpecialOnlyMatrix.ones(2, cls=Matrix)) == Matrix
+
+def test_zeros():
+    assert list(SpecialOnlyMatrix.zeros(2,2)) == [0, 0, 0, 0]
+    assert list(SpecialOnlyMatrix.zeros(2)) == [0, 0, 0, 0]
+    assert SpecialOnlyMatrix.zeros(2,3) == Matrix([[0, 0, 0], [0, 0, 0]])
+    assert type(SpecialOnlyMatrix.zeros(2)) == SpecialOnlyMatrix
+    assert type(SpecialOnlyMatrix.zeros(2, cls=Matrix)) == Matrix
+
+def test_diag():
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    assert SpecialOnlyMatrix.diag(a, b, b) == Matrix([
+        [1, 2, 0, 0, 0, 0],
+        [2, 3, 0, 0, 0, 0],
+        [0, 0, 3, x, 0, 0],
+        [0, 0, y, 3, 0, 0],
+        [0, 0, 0, 0, 3, x],
+        [0, 0, 0, 0, y, 3],
+    ])
+    assert SpecialOnlyMatrix.diag(a, b, c) == Matrix([
+        [1, 2, 0, 0, 0, 0, 0],
+        [2, 3, 0, 0, 0, 0, 0],
+        [0, 0, 3, x, 0, 0, 0],
+        [0, 0, y, 3, 0, 0, 0],
+        [0, 0, 0, 0, 3, x, 3],
+        [0, 0, 0, 0, y, 3, z],
+        [0, 0, 0, 0, x, y, z],
+    ])
+    assert SpecialOnlyMatrix.diag(a, c, b) == Matrix([
+        [1, 2, 0, 0, 0, 0, 0],
+        [2, 3, 0, 0, 0, 0, 0],
+        [0, 0, 3, x, 3, 0, 0],
+        [0, 0, y, 3, z, 0, 0],
+        [0, 0, x, y, z, 0, 0],
+        [0, 0, 0, 0, 0, 3, x],
+        [0, 0, 0, 0, 0, y, 3],
+    ])
+    a = Matrix([x, y, z])
+    b = Matrix([[1, 2], [3, 4]])
+    c = Matrix([[5, 6]])
+    assert SpecialOnlyMatrix.diag(a, 7, b, c) == Matrix([
+        [x, 0, 0, 0, 0, 0],
+        [y, 0, 0, 0, 0, 0],
+        [z, 0, 0, 0, 0, 0],
+        [0, 7, 0, 0, 0, 0],
+        [0, 0, 1, 2, 0, 0],
+        [0, 0, 3, 4, 0, 0],
+        [0, 0, 0, 0, 5, 6],
+    ])
+    assert SpecialOnlyMatrix.diag([2, 3]) == Matrix([
+        [2, 0],
+        [0, 3]])
+    assert SpecialOnlyMatrix.diag(Matrix([2, 3])) == Matrix([
+        [2],
+        [3]])
+    assert SpecialOnlyMatrix.diag(1, rows=3, cols=2) == Matrix([
+        [1, 0],
+        [0, 0],
+        [0, 0]])
+    assert type(SpecialOnlyMatrix.diag(1)) == SpecialOnlyMatrix
+    assert type(SpecialOnlyMatrix.diag(1, cls=Matrix)) == Matrix
+
+def test_jordan_block():
+    assert SpecialOnlyMatrix.jordan_block(3, 2) == SpecialOnlyMatrix.jordan_block(3, eigenvalue=2) \
+            == SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) \
+            == SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2) \
+            == SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) \
+            == SpecialOnlyMatrix.jordan_block(3, 2, band='upper') == Matrix([
+                    [2, 1, 0],
+                    [0, 2, 1],
+                    [0, 0, 2]])
+    assert SpecialOnlyMatrix.jordan_block(3, 2, band='lower') == Matrix([
+                    [2, 0, 0],
+                    [1, 2, 0],
+                    [0, 1, 2]])
+    # missing eigenvalue
+    raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(2))
+    # non-integral size
+    raises(ValueError, lambda: SpecialOnlyMatrix.jordan_block(3.5, 2))
+
+
+# SubspaceOnlyMatrix tests
+def test_columnspace():
+    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
+                            [-2, -5,  1, -1, -8],
+                            [ 0, -3,  3,  4,  1],
+                            [ 3,  6,  0, -7,  2]])
+
+    basis = m.columnspace()
+    assert basis[0] == Matrix([1, -2, 0, 3])
+    assert basis[1] == Matrix([2, -5, -3, 6])
+    assert basis[2] == Matrix([2, -1, 4, -7])
+
+    assert len(basis) == 3
+    assert Matrix.hstack(m, *basis).columnspace() == basis
+
+def test_rowspace():
+    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
+                            [-2, -5,  1, -1, -8],
+                            [ 0, -3,  3,  4,  1],
+                            [ 3,  6,  0, -7,  2]])
+
+    basis = m.rowspace()
+    assert basis[0] == Matrix([[1, 2, 0, 2, 5]])
+    assert basis[1] == Matrix([[0, -1, 1, 3, 2]])
+    assert basis[2] == Matrix([[0, 0, 0, 5, 5]])
+
+    assert len(basis) == 3
+
+def test_nullspace():
+    m = SubspaceOnlyMatrix([[ 1,  2,  0,  2,  5],
+                            [-2, -5,  1, -1, -8],
+                            [ 0, -3,  3,  4,  1],
+                            [ 3,  6,  0, -7,  2]])
+
+    basis = m.nullspace()
+    assert basis[0] == Matrix([-2, 1, 1, 0, 0])
+    assert basis[1] == Matrix([-1, -1, 0, -1, 1])
+    # make sure the null space is really gets zeroed
+    assert all(e.is_zero for e in m*basis[0])
+    assert all(e.is_zero for e in m*basis[1])

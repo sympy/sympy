@@ -250,6 +250,7 @@ def test_power():
 
 def test_creation():
     raises(ValueError, lambda: Matrix(5, 5, range(20)))
+    raises(ValueError, lambda: Matrix(5, -1, []))
     raises(IndexError, lambda: Matrix((1, 2))[2])
     with raises(IndexError):
         Matrix((1, 2))[1:2] = 5
@@ -993,9 +994,9 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
     M = Matrix([[S(1)/4, 1], [1, 1]])
     assert M.eigenvects(simplify=True) == [
-        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])]),
-        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[8/(-sqrt(73) + 3)], [1]])])]
-    assert M.eigenvects(simplify=False) ==[(5/8 + sqrt(73)/8, 1, [Matrix([
+        (S(5)/8 + sqrt(73)/8, 1, [Matrix([[-S(3)/8 + sqrt(73)/8], [1]])]),
+        (-sqrt(73)/8 + S(5)/8, 1, [Matrix([[-sqrt(73)/8 - S(3)/8], [1]])])]
+    assert M.eigenvects(simplify=False) ==[(S(5)/8 + sqrt(73)/8, 1, [Matrix([
        [-1/(-sqrt(73)/8 - S(3)/8)],
        [                     1]])]), (-sqrt(73)/8 + S(5)/8, 1, [Matrix([
        [-1/(-S(3)/8 + sqrt(73)/8)],

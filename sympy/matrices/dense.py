@@ -20,6 +20,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -368,26 +369,6 @@ class DenseMatrix(MatrixBase):
             return rv
         except AttributeError:
             return False
-
-    @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        mat = [cls._sympify(0)]*n*n
-        mat[::n + 1] = [cls._sympify(1)]*n
-        return cls._new(n, n, mat)
-
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls._new(r, c, [cls._sympify(0)]*r*c)
-
-    ############################
-    # Mutable matrix operators #
-    ############################
 
 
 def _force_mutable(x):
@@ -1063,7 +1044,7 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def eye(n, cls=None):
+def eye(*args, **kwargs):
     """Create square identity matrix n x n
 
     See Also
@@ -1073,9 +1054,9 @@ def eye(n, cls=None):
     zeros
     ones
     """
-    if cls is None:
-        from sympy.matrices import Matrix as cls
-    return cls.eye(n)
+    from .dense import Matrix
+
+    return Matrix.eye(*args, **kwargs)
 
 
 def diag(*values, **kwargs):
@@ -1164,44 +1145,18 @@ def diag(*values, **kwargs):
 
     eye
     """
-    from .sparse import MutableSparseMatrix
 
-    cls = kwargs.pop('cls', None)
-    if cls is None:
-        from .dense import Matrix as cls
+    from .dense import Matrix
 
-    if kwargs:
-        raise ValueError('unrecognized keyword%s: %s' % (
-            's' if len(kwargs) > 1 else '',
-            ', '.join(kwargs.keys())))
-    rows = 0
-    cols = 0
-    values = list(values)
-    for i in range(len(values)):
-        m = values[i]
-        if isinstance(m, MatrixBase):
-            rows += m.rows
-            cols += m.cols
-        elif is_sequence(m):
-            m = values[i] = Matrix(m)
-            rows += m.rows
-            cols += m.cols
-        else:
-            rows += 1
-            cols += 1
-    res = MutableSparseMatrix.zeros(rows, cols)
-    i_row = 0
-    i_col = 0
-    for m in values:
-        if isinstance(m, MatrixBase):
-            res[i_row:i_row + m.rows, i_col:i_col + m.cols] = m
-            i_row += m.rows
-            i_col += m.cols
-        else:
-            res[i_row, i_col] = m
-            i_row += 1
-            i_col += 1
-    return cls._new(res)
+    # diag assumes any lists passed in are to be interpreted
+    # as arguments to Matrix, so apply Matrix to any list arguments
+    def normalize(m):
+        if is_sequence(m) and not isinstance(m, MatrixBase):
+            return Matrix(m)
+        return m
+    values = (normalize(m) for m in values)
+
+    return Matrix.diag(*values, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):
@@ -1319,13 +1274,9 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    n = as_int(n)
-    out = zeros(n)
-    for i in range(n - 1):
-        out[i, i] = eigenval
-        out[i, i + 1] = S.One
-    out[n - 1, n - 1] = eigenval
-    return out
+    from .dense import Matrix
+
+    return Matrix.jordan_block(size=n, eigenvalue=eigenval)
 
 
 def matrix_multiply_elementwise(A, B):
@@ -1352,9 +1303,9 @@ def matrix_multiply_elementwise(A, B):
                               lambda i, j: A[i, j]*B[i, j])
 
 
-def ones(r, c=None):
-    """Returns a matrix of ones with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
+def ones(*args, **kwargs):
+    """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
+    if ``cols`` is omitted a square matrix will be returned.
 
     See Also
     ========
@@ -1365,10 +1316,7 @@ def ones(r, c=None):
     """
     from .dense import Matrix
 
-    c = r if c is None else c
-    r = as_int(r)
-    c = as_int(c)
-    return Matrix(r, c, [S.One]*r*c)
+    return Matrix.ones(*args, **kwargs)
 
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
@@ -1478,9 +1426,9 @@ def wronskian(functions, var, method='bareiss'):
     return W.det(method)
 
 
-def zeros(r, c=None, cls=None):
-    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
+def zeros(*args, **kwargs):
+    """Returns a matrix of zeros with ``rows`` rows and ``cols`` columns;
+    if ``cols`` is omitted a square matrix will be returned.
 
     See Also
     ========
@@ -1489,6 +1437,6 @@ def zeros(r, c=None, cls=None):
     eye
     diag
     """
-    if cls is None:
-        from .dense import Matrix as cls
-    return cls.zeros(r, c)
+    from .dense import Matrix
+
+    return Matrix.zeros(*args, **kwargs)
