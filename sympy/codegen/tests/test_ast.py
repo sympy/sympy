@@ -1,12 +1,15 @@
-from sympy import (symbols, MatrixSymbol, Matrix, IndexedBase, Idx, Range,
-    Tuple, sin)
+from sympy import (
+    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin, symbols, Tuple
+)
 from sympy.core.relational import Relational
 from sympy.utilities.pytest import raises
 
 
-from sympy.codegen.ast import (Assignment, aug_assign, CodeBlock, For,
+from sympy.codegen.ast import (
+    Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
-    DivAugmentedAssignment, ModAugmentedAssignment)
+    DivAugmentedAssignment, ModAugmentedAssignment
+)
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
 n = symbols("n", integer=True)
@@ -164,3 +167,58 @@ def test_For():
     f = For(n, (1, 2, 3, 4, 5), (Assignment(A[n, 0], x + n),))
     assert f.func(*f.args) == f
     raises(TypeError, lambda: For(n, x, (x + y,)))
+
+
+def test_Type():
+    t = Type('float64')
+    assert t.name == 'float64'
+    assert t.from_expr(7) == Type('integer')
+    raises(ValueError, lambda: Type('float2'))
+    assert Type.from_expr(None, i) == Type('integer')
+    assert Type.from_expr(None, x) == Type('real')
+    assert Type.from_expr(x, n) == Type('integer')
+    assert Type.from_expr(3, x) == Type('integer')
+    assert Type.from_expr(3.0, x) == Type('real')
+    assert Type.from_expr(3) == Type('integer')
+    assert Type.from_expr(3+1j) == Type('complex')
+
+
+def test_Variable():
+    v = Variable(x)
+    assert v.symbol == x
+    assert v.type == Type('real')
+    assert v.const == False
+    w = Variable(y, Type('float32'), True)
+    assert w.symbol == y
+    assert w.type == Type('float32')
+    assert w.const
+
+
+def test_Pointer():
+    p = Pointer(x)
+    assert p.symbol == x
+    assert p.type == Type('real')
+    assert not p.value_const
+    assert not p.pointer_const
+    assert not p.restrict
+    pB = Pointer(B)
+    assert pB.symbol is B
+    assert pB.type == Type('real')
+
+
+def test_Declaration():
+    decl = Declaration(x, 3.0, True)
+    assert decl.variable == Variable(x, const=True)
+    assert type(decl.value) == Float
+    assert decl.value == 3.0
+
+    decl2 = Declaration(y, 3)
+    assert decl2.variable == Variable(y, Type('integer'))
+    assert decl2.value is Integer(3)
+
+    var = Variable(x)
+    raises(ValueError, lambda: Declaration(var, const=True))
+    assert Declaration(z, 3).variable.type == Type('integer')
+    assert Declaration(z, 3.0).variable.type == Type('real')
+    assert Declaration(z, 3.0+1j).variable.type == Type('complex')
+    assert Declaration(B).variable == Pointer(B)

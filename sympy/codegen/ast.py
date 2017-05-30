@@ -27,8 +27,9 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
+from sympy.core.numbers import Float, Integer
 from sympy.core.relational import Relational
+from sympy.core.sympify import _sympify
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
@@ -399,3 +400,229 @@ class For(Basic):
         Must be an iterable object or CodeBlock.
         """
         return self._args[2]
+
+
+class Type(Basic):
+    """ Represents a type.
+
+    The naming is a super-set of NumPy naming, see [1]_.
+
+    Arguments
+    ---------
+    name : str or Type
+        Either an explicit type: ``intc``, ``intp``, ``int8``, ``int16``,
+        ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64,
+        float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
+        ``bool. Or only kind (precision decided by code-printer): ``real``,
+        ``integer`` or ``complex``. If a ``Type`` instance is given, the said
+        instance is returned.
+
+    References
+    ==========
+    [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+
+    """
+    allowed_names = tuple('intc intp int8 int16 int32 int64 uint8 uint16 uint32'.split() +
+                          'uint64 float16 float32 float64 complex64 complex128'.split() +
+                          'real integer complex bool'.split())
+    __slots__ = []
+
+    def __new__(cls, name):
+        if isinstance(name, Type):
+            return name
+        if name not in cls.allowed_names:
+            raise ValueError("Unknown type: %s" % name)
+        return Basic.__new__(cls, name)
+
+    @property
+    def name(self):
+        """ Return the name of the type. """
+        return self._args[0]
+
+    @classmethod
+    def from_expr(cls, expr, symb=None):
+        """ Infers type from an expression or a ``Symbol``.
+
+        Parameters
+        ----------
+        expr : number, string or SymPy object
+            The typename will be deduced from type or properties. Default is 'real'
+            (e.g. when a string is given as expr).
+        symb : Symbol (optional)
+            If given, assumptions of ``symb`` has higher precedence than expr.
+
+        Examples
+        --------
+        >>> Type.from_expr(2) == Type('integer')
+        True
+        >>> Type.from_expr('i') == Type('integer')
+        False
+        >>> from sympy import Symbol
+        >>> Type.from_expr(2, Symbol('j', complex=True)) == Type('complex')
+        """
+        if symb is not None:
+            if getattr(symb, 'is_integer', False):
+                return cls('integer')
+            if getattr(symb, 'is_complex', False):
+                return cls('complex')
+
+        if isinstance(expr, str):
+            return cls('real')  # default
+        else:
+            if isinstance(expr, (float, Float)):
+                return cls('real')
+            if isinstance(expr, complex) or getattr(expr, 'is_complex', False):
+                return cls('complex')
+            if isinstance(expr, (int, Integer)) or getattr(expr, 'is_integer', False):
+                return cls('integer')
+
+            if getattr(expr, 'is_Relational', False):
+                return cls('bool')
+            else:
+                return cls('real')
+
+
+class Variable(Basic):
+    """ Represents a variable
+
+    Parameters
+    ----------
+    symbol : Symbol
+        If a ``Variable`` instance is given as symbol, said instance is simply returned.
+    type_ : Type (optional)
+        Type of the variable. Inferred from ``symbol`` if not given.
+    const : bool
+        Constness of the variable.
+
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> i = Symbol('i', integer=True)
+    >>> v = Variable(i)
+    >>> v.type == Type('integer')
+    True
+
+    """
+    def __new__(cls, symbol, type_=None, const=False):
+        if isinstance(symbol, Variable):
+            return symbol
+        if type_ is None:
+            type_ = Type.from_expr(symbol)
+        return Basic.__new__(cls, _sympify(symbol), Type(type_), _sympify(const or False))
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def type(self):
+        return self.args[1]
+
+    @property
+    def const(self):
+        return self.args[2]
+
+
+class Pointer(Basic):
+    """ Represents a pointer
+
+    Parameters
+    ----------
+    name : Symbol
+    type_ : Type
+        Type of the variable. Inferred from ``symbol`` if not given.
+    value_const : bool
+        Constness of the value pointed to by the variable.
+    pointer_const : bool
+        Constness of the pointer (i.e. opposite of the mutability of the address).
+    restrict : bool
+        Applicable to C > C99. If the pointer is guaranteed not to alias another pointer
+        this may be set to ``True``. (allows the compiler to generate efficient assembly).
+
+    Examples
+    --------
+    >>> p = Pointer('x', value_const=True, pointer_const=True, restrict=True)
+    >>> p.type == Type('real')
+    True
+
+    """
+    def __new__(cls, symbol, type_=None, value_const=False, pointer_const=False, restrict=False):
+        if type_ is None:
+            type_ = Type.from_expr(symbol)
+        args = symbol, type_, value_const or False, pointer_const, restrict
+        return Basic.__new__(cls, *map(_sympify, args))
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def type(self):
+        return self.args[1]
+
+    @property
+    def value_const(self):
+        return self.args[2]
+
+    @property
+    def pointer_const(self):
+        return self.args[3]
+
+    @property
+    def restrict(self):
+        return self.args[4]
+
+
+class Declaration(Basic):
+    """ Represents a variable declaration
+
+    Parameters
+    ----------
+    var : Variable, Pointer or IndexedBase
+    value : Value (optional)
+        Value to be assigned upon declaration.
+    const : bool
+        Constness of value. Can not be given if ``var`` is Variable
+        or Pointer since constness is then taken from ``var``.
+
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> decl = Declaration(x, 3)
+    >>> decl.value.type == Type('integer')
+    False
+    >>> decl.value.type == Type('real')
+    True
+    >>> k = Symbol('k', integer=True)
+    >>> k_decl = Declaration(k, 3.0)
+    >>> k_decl == Type('integer')
+    True
+
+    """
+    def __new__(cls, var, value=None, const=None):
+        from sympy.tensor.indexed import IndexedBase
+
+        if isinstance(var, (Variable, Pointer)):
+            if const is not None:
+                raise ValueError("Cannot change constness of an existing Variable/Pointer")
+        else:
+            if value is not None:
+                type_ = Type.from_expr(value, var)
+            else:
+                type_ = None
+
+            if isinstance(var, IndexedBase):
+                var = Pointer(var, type_, const)
+            else:
+                var = Variable(var, type_, const)
+
+        return Basic.__new__(cls, var, _sympify(value))
+
+    @property
+    def variable(self):
+        return self.args[0]
+
+    @property
+    def value(self):
+        return self.args[1]
