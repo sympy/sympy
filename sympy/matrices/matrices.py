@@ -1595,6 +1595,9 @@ class MatrixArithmetic(MatrixRequired):
 
     _op_priority = 10.01
 
+    def _eval_Abs(self):
+        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
+
     def _eval_add(self, other):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
@@ -1639,6 +1642,10 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     # python arithmetic functions
+    def __abs__(self):
+        """Returns a new matrix with entry-wise absolute values."""
+        return self._eval_Abs()
+
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
@@ -1723,9 +1730,6 @@ class MatrixArithmetic(MatrixRequired):
 
     def __neg__(self):
         return self._eval_scalar_mul(-1)
-
-    def __abs__(self):
-        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
 
     @call_highest_priority('__rpow__')
     def __pow__(self, num):
