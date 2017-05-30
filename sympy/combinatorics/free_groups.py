@@ -658,7 +658,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             except:
                 return word
 
-        word = word.subword(0, i-1)*by**k*word.subword(i+l, len(word)-1).eliminate_word(gen, by)
+        word = word.subword(0, i)*by**k*word.subword(i+l, len(word)).eliminate_word(gen, by)
 
         if _all:
             return word.eliminate_word(gen, by)
@@ -858,8 +858,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def subword(self, from_i, to_j):
         """
         For an associative word `self` and two positive integers `from_i` and
-        `to_j`, subword returns the subword of `self` that begins at position
-        `from_to` and ends at `to_j`, indexing is done with origin 0.
+        `to_j`, `subword` returns the subword of `self` that begins at position
+        `from_i` and ends at `to_j - `, indexing is done with origin 0.
 
         Examples
         ========
@@ -867,18 +867,18 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> from sympy.combinatorics.free_groups import free_group
         >>> f, a, b = free_group("a b")
         >>> w = a**5*b*a**2*b**-4*a
-        >>> w.subword(2, 5)
+        >>> w.subword(2, 6)
         a**3*b
 
         """
         group = self.group
-        if from_i < 0 or to_j > len(self)-1:
-            raise ValueError("`from_i`, `to_j` must be positive and less than "
+        if from_i < 0 or to_j > len(self):
+            raise ValueError("`from_i`, `to_j` must be positive and no greater than "
                     "the length of associative word")
-        if to_j < from_i:
+        if to_j <= from_i:
             return group.identity
         else:
-            letter_form = self.letter_form[from_i: to_j+1]
+            letter_form = self.letter_form[from_i: to_j]
             array_form = letter_form_to_array_form(letter_form, group)
             return group.dtype(array_form)
 
@@ -1122,12 +1122,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def substituted_word(self, from_i, to_j, by):
         """
         Returns the associative word obtained by replacing the subword of
-        `self` that begins at position `from_i` and ends at position `to_j`
+        `self` that begins at position `from_i` and ends at position `to_j - 1`
         by the associative word `by`. `from_i` and `to_j` must be positive
         integers, indexing is done with origin 0. In other words,
         `w.substituted_word(w, from_i, to_j, by)` is the product of the three
-        words: `w.subword(0, from_i - 1)`, `by`, and
-        `w.subword(to_j + 1, len(w))`.
+        words: `w.subword(0, from_i)`, `by`, and
+        `w.subword(to_j len(w))`.
 
         See Also
         ========
@@ -1135,20 +1135,20 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         lw = len(self)
-        if from_i > to_j or from_i > lw or to_j > lw - 1:
+        if from_i >= to_j or from_i > lw or to_j > lw:
             raise ValueError("values should be within bounds")
 
         # otherwise there are four possibilities
 
         # first if from=1 and to=lw then
-        if from_i == 0 and to_j == lw - 1:
+        if from_i == 0 and to_j == lw:
             return by
         elif from_i == 0:  # second if from_i=1 (and to_j < lw) then
-            return by*self.subword(to_j + 1, lw - 1)
-        elif to_j == lw-1:   # third if to_j=1 (and from_i > 1) then
-            return self.subword(0, from_i - 1)*by
+            return by*self.subword(to_j, lw)
+        elif to_j == lw:   # third if to_j=1 (and from_i > 1) then
+            return self.subword(0, from_i)*by
         else:              # finally
-            return self.subword(0, from_i - 1)*by*self.subword(to_j + 1, lw - 1)
+            return self.subword(0, from_i)*by*self.subword(to_j, lw)
 
     def is_cyclically_reduced(self):
         r"""Returns whether the word is cyclically reduced or not.

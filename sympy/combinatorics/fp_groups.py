@@ -1509,16 +1509,17 @@ def elimination_technique_1(C):
     for rel in rels:
         # don't look for a redundant generator in a relator which
         # depends on previously found ones
-        if any([g in rel.contains_generators() for g in redundant_gens]):
+        contained_gens = rel.contains_generators()
+        if any([g in contained_gens for g in redundant_gens]):
             continue
-        contained_gens = list(rel.contains_generators())
+        contained_gens = list(contained_gens)
         contained_gens.sort(reverse = True)
         for gen in contained_gens:
             if rel.generator_count(gen) == 1 and gen not in used_gens:
                 k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
-                bk = rel.subword(gen_index + 1, len(rel)-1)
-                fw = rel.subword(0, gen_index-1)
+                bk = rel.subword(gen_index + 1, len(rel))
+                fw = rel.subword(0, gen_index)
                 chi = (bk*fw).identity_cyclic_reduction()
                 redundant_gens[gen] = chi**(-1*k)
                 used_gens.update(chi.contains_generators())
@@ -1566,8 +1567,8 @@ def elimination_technique_2(C):
             if rel.generator_count(gen) == 1:
                 k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
-                bk = rel.subword(gen_index + 1, len(rel)-1)
-                fw = rel.subword(0, gen_index-1)
+                bk = rel.subword(gen_index + 1, len(rel))
+                fw = rel.subword(0, gen_index)
                 rep_by = (bk*fw)**(-1*k)
                 del rels[i]; del gens[j]
                 for l in range(len(rels)):
