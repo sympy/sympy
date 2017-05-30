@@ -1,5 +1,5 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc)
+                   cot, sec, csc, Abs)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds)
 from sympy.core import Add, Mul, Pow
@@ -93,6 +93,10 @@ def test_periodicity():
     assert periodicity(log(x), x) is None
     assert periodicity(exp(x)**sin(x), x) is None
     assert periodicity(sin(x)**y, y) is None
+
+    assert periodicity(x**3 - x**2 + 1, x) is None
+    assert periodicity(Abs(x), x) is None
+    assert periodicity(Abs(x**2 - 1), x) is None
 
 
 def test_periodicity_check():

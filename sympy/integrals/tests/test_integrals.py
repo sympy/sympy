@@ -1177,3 +1177,6 @@ def test_singularities():
 
     assert integrate(1/x**2, (x, 1, -1)) == -oo
     assert integrate(1/(x - 1)**2, (x, 2, -2)) == -oo
+
+def test_issue_12677():
+    assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)

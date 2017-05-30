@@ -216,7 +216,7 @@ def constant_system(A, u, DE):
     if not A:
         return A, u
     Au = A.row_join(u)
-    Au = Au.rref(simplify=cancel)[0]
+    Au = Au.rref(simplify=cancel, normalize_last=False)[0]
     # Warning: This will NOT return correct results if cancel() cannot reduce
     # an identically zero expression to 0.  The danger is that we might
     # incorrectly prove that an integral is nonelementary (such as
@@ -294,9 +294,9 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
     Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
     b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), returns
-    h1, ..., hr in k[r] and a matrix A with coefficients in Const(k) such that
+    h1, ..., hr in k[t] and a matrix A with coefficients in Const(k) such that
     if c1, ..., cm in Const(k) and q in k[t] satisfy deg(q) <= n and
-    Dq + b*Q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
+    Dq + b*q == Sum(ci*qi, (i, 1, m)), then q = Sum(dj*hj, (j, 1, r)), where
     d1, ..., dr in Const(k) and A*Matrix([[c1, ..., cm, d1, ..., dr]]).T == 0.
     """
     db = b.degree(DE.t)
@@ -314,7 +314,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
         dc = -1
         M = zeros(0, 2)
     else:
-        dc = max([qi.degree(t) for qi in Q])
+        dc = max([qi.degree(DE.t) for qi in Q])
         M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
     A, u = constant_system(M, zeros(dc + 1, 1), DE)
     c = eye(m)

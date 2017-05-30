@@ -465,6 +465,12 @@ class SparseMatrix(MatrixBase):
             X[i, 0] /= self[i, i]
         return self._new(X)
 
+    @property
+    def _mat(self):
+        """Return a list of matrix elements.  Some routines
+        in DenseMatrix use `_mat` directly to speed up operations."""
+        return list(self)
+
     def _upper_triangular_solve(self, rhs):
         """Fast algorithm for solving an upper-triangular system,
         exploiting the sparsity of the given matrix.
