@@ -16,16 +16,29 @@ def deprecated(**decorator_kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
+    from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-    def deprecated_decorator(func):
-        @wraps(func)
-        def new_func(*args, **kwargs):
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            decorator_kwargs.setdefault('feature', func.__name__)
-            SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=3)
-            return func(*args, **kwargs)
-        new_func._sympy_deprecated_func = func
-        return new_func
+    def _warn_deprecation(wrapped, stacklevel):
+        decorator_kwargs.setdefault('feature', wrapped.__name__)
+        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
+
+    def deprecated_decorator(wrapped):
+        if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
+            class wrapper(wrapped):
+                __doc__ = wrapped.__doc__
+                __name__ = wrapped.__name__
+                __module__ = wrapped.__module__
+                _sympy_deprecated_func = wrapped
+                def __init__(self, *args, **kwargs):
+                    _warn_deprecation(wrapped, 4)
+                    super(wrapper, self).__init__(*args, **kwargs)
+        else:
+            @wraps(wrapped)
+            def wrapper(*args, **kwargs):
+                _warn_deprecation(wrapped, 3)
+                return wrapped(*args, **kwargs)
+            wrapper._sympy_deprecated_func = wrapped
+        return wrapper
     return deprecated_decorator
 
 
