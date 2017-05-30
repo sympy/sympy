@@ -859,7 +859,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         For an associative word `self` and two positive integers `from_i` and
         `to_j`, `subword` returns the subword of `self` that begins at position
-        `from_i` and ends at `to_j - `, indexing is done with origin 0.
+        `from_i` and ends at `to_j - 1`, indexing is done with origin 0.
 
         Examples
         ========
