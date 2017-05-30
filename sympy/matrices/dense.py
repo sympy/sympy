@@ -1314,6 +1314,12 @@ def ones(*args, **kwargs):
     eye
     diag
     """
+
+    if 'c' in kwargs:
+        kwargs['cols'] = kwargs.pop('c')
+        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
+                                useinstead="cols",
+                                deprecated_since_version="1.1")
     from .dense import Matrix
 
     return Matrix.ones(*args, **kwargs)
@@ -1437,6 +1443,13 @@ def zeros(*args, **kwargs):
     eye
     diag
     """
+
+    if 'c' in kwargs:
+        kwargs['cols'] = kwargs.pop('c')
+        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
+                                useinstead="cols",
+                                deprecated_since_version="1.1")
+
     from .dense import Matrix
 
     return Matrix.zeros(*args, **kwargs)
