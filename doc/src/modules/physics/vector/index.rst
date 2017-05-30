@@ -41,4 +41,5 @@ Vector API
     api/kinematics.rst
     api/printing.rst
     api/functions.rst
+    api/spatial.rst
     api/fieldfunctions.rst
