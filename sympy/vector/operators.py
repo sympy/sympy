@@ -1,47 +1,60 @@
+from sympy.core import Expr
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.core import Basic
 from sympy.vector.vector import Vector
 from sympy.vector.deloperator import Del
 
 
-class Gradient(Basic):
+class Gradient(Expr):
     """
     Represents unevaluated Gradient.
-    
+
     Examples
     ========
-    
+
     >>> from sympy.vector import CoordSysCartesian, Gradient
     >>> R = CoordSysCartesian('R')
-    >>> s1 = R.x*R.y*R.z
-    >>> Gradient(s1, R)
-    (Derivative(R.x*R.y*R.z, R.x))*R.i git + (Derivative(R.x*R.y*R.z, R.y))*R.j + (Derivative(R.x*R.y*R.z, R.z))*R.k
+    >>> s = R.x*R.y*R.z
+    >>> Gradient(s, R)
+    Gradient(R.x*R.y*R.z, R)
+
     """
 
     def __new__(cls, scalar, coord_sys):
-        return Del(coord_sys).gradient(scalar)
+        obj = Expr.__new__(cls, scalar, coord_sys)
+        obj._scalar = scalar
+        obj._coord_sys = coord_sys
+        return obj
+
+    def doit(self):
+        return Del(self._coord_sys).gradient(self._scalar).doit()
 
 
-class Divergence(Basic):
+class Divergence(Expr):
     """
     Represents unevaluated Divergence.
 
     Examples
     ========
-    
+
     >>> from sympy.vector import CoordSysCartesian, Gradient
     >>> R = CoordSysCartesian('R')
-    >>> v = R.x*R.y*R.z*R.i + R.j + R.k
+    >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> Divergence(v, R)
-    Derivative(R.x*R.y*R.z, R.x)
-    
+    Divergence(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k, R)
+
     """
 
     def __new__(cls, vect, coord_sys):
-        return Del(coord_sys).dot(vect)
+        obj = Expr.__new__(cls, vect, coord_sys)
+        obj._vect = vect
+        obj._coord_sys = coord_sys
+        return obj
+
+    def doit(self):
+        return Del(self._coord_sys).dot(self._vect).doit()
 
 
-class Curl(Basic):
+class Curl(Expr):
     """
     Represents unevaluated Curl.
 
@@ -50,18 +63,23 @@ class Curl(Basic):
 
     >>> from sympy.vector import CoordSysCartesian, Curl
     >>> R = CoordSysCartesian('R')
-    >>> s1 = R.x*R.y*R.z*R.i + R.j
-    Curl(s1, R)
-    (Derivative(0, R.y) - Derivative(1, R.z))*R.i + (-Derivative(0, R.x) + 
-    Derivative(R.x*R.y*R.z, R.z))*R.j + (Derivative(1, R.x) - Derivative(R.x*R.y*R.z, R.y))*R.k    
-    
+    >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> Curl(v, R)
+    Curl(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k, R)
+
     """
 
     def __new__(cls, vect, coord_sys):
-        return Del(coord_sys).cross(vect)
+        obj = Expr.__new__(cls, vect, coord_sys)
+        obj._vect = vect
+        obj._coord_sys = coord_sys
+        return obj
+
+    def doit(self):
+        return Del(self._coord_sys).cross(self._vect).doit()
 
 
-def gradient(scalar, coord_sys):
+def gradient(scalar, coord_sys=None):
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
@@ -89,10 +107,14 @@ def gradient(scalar, coord_sys):
 
     """
 
-    return Gradient(scalar, coord_sys).doit()
+    if coord_sys is None:
+        coord_sys = list(scalar.atoms(CoordSysCartesian))[0]
+        return Gradient(scalar, coord_sys).doit()
+    else:
+        return Gradient(scalar, coord_sys).doit()
 
 
-def divergence(vect, coord_sys):
+def divergence(vect, coord_sys=None):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -102,7 +124,7 @@ def divergence(vect, coord_sys):
 
     vect : Vector
         The vector operand
-        
+
     coord_sys : CoordSysCartesian
         The coordinate system to calculate the gradient in
 
@@ -120,10 +142,14 @@ def divergence(vect, coord_sys):
 
     """
 
-    return Divergence(vect, coord_sys).doit()
+    if coord_sys is None:
+        coord_sys = vect._sys
+        return Curl(vect, coord_sys).doit()
+    else:
+        return Curl(vect, coord_sys).doit()
 
 
-def curl(vect, coord_sys):
+def curl(vect, coord_sys=None):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -151,4 +177,8 @@ def curl(vect, coord_sys):
 
     """
 
-    return Curl(vect, coord_sys).doit()
+    if coord_sys is None:
+        coord_sys = vect._sys
+        return Curl(vect, coord_sys).doit()
+    else:
+        return Curl(vect, coord_sys).doit()
