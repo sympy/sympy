@@ -19,14 +19,16 @@ class Gradient(Expr):
 
     """
 
-    def __new__(cls, scalar, coord_sys):
-        obj = Expr.__new__(cls, scalar, coord_sys)
+    def __new__(cls, scalar):
+        obj = Expr.__new__(cls, scalar)
         obj._scalar = scalar
-        obj._coord_sys = coord_sys
         return obj
 
+    def _get_coord_sys_from_expr(self, scalar):
+        return list(scalar.atoms(CoordSysCartesian))[0]
+
     def doit(self):
-        return Del(self._coord_sys).gradient(self._scalar).doit()
+        return Del(self._get_coord_sys_from_expr(self._scalar)).gradient(self._scalar).doit()
 
 
 class Divergence(Expr):
@@ -44,14 +46,16 @@ class Divergence(Expr):
 
     """
 
-    def __new__(cls, vect, coord_sys):
-        obj = Expr.__new__(cls, vect, coord_sys)
+    def __new__(cls, vect):
+        obj = Expr.__new__(cls, vect)
         obj._vect = vect
-        obj._coord_sys = coord_sys
         return obj
 
+    def _get_coord_sys_from_expr(self, vect):
+        return vect._sys
+
     def doit(self):
-        return Del(self._coord_sys).dot(self._vect).doit()
+        return Del(self._get_coord_sys_from_expr(self._vect)).dot(self._vect).doit()
 
 
 class Curl(Expr):
@@ -69,14 +73,16 @@ class Curl(Expr):
 
     """
 
-    def __new__(cls, vect, coord_sys):
-        obj = Expr.__new__(cls, vect, coord_sys)
+    def __new__(cls, vect):
+        obj = Expr.__new__(cls, vect)
         obj._vect = vect
-        obj._coord_sys = coord_sys
         return obj
 
+    def _get_coord_sys_from_expr(self, vect):
+        return vect._sys
+
     def doit(self):
-        return Del(self._coord_sys).cross(self._vect).doit()
+        return Del(self._get_coord_sys_from_expr(self._vect)).cross(self._vect).doit()
 
 
 def gradient(scalar, coord_sys=None):
@@ -99,19 +105,18 @@ def gradient(scalar, coord_sys=None):
     >>> from sympy.vector import CoordSysCartesian, gradient
     >>> R = CoordSysCartesian('R')
     >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1, R)
+    >>> gradient(s1)
     R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
     >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2, R)
+    >>> gradient(s2)
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
 
     if coord_sys is None:
-        coord_sys = list(scalar.atoms(CoordSysCartesian))[0]
-        return Gradient(scalar, coord_sys).doit()
+        return Gradient(scalar).doit()
     else:
-        return Gradient(scalar, coord_sys).doit()
+        return coord_sys.delop(scalar).doit()
 
 
 def divergence(vect, coord_sys=None):
@@ -137,16 +142,15 @@ def divergence(vect, coord_sys=None):
     >>> divergence(v1)
     R.x*R.y + R.x*R.z + R.y*R.z
     >>> v2 = 2*R.y*R.z*R.j
-    >>> divergence(v2, R)
+    >>> divergence(v2)
     2*R.z
 
     """
 
     if coord_sys is None:
-        coord_sys = vect._sys
-        return Curl(vect, coord_sys).doit()
+        return Divergence(vect).doit()
     else:
-        return Curl(vect, coord_sys).doit()
+        coord_sys.delop.dot(vect).doit()
 
 
 def curl(vect, coord_sys=None):
@@ -172,13 +176,12 @@ def curl(vect, coord_sys=None):
     >>> curl(v1)
     0
     >>> v2 = R.x*R.y*R.z*R.i
-    >>> curl(v2, R)
+    >>> curl(v2)
     R.x*R.y*R.j + (-R.x*R.z)*R.k
 
     """
 
     if coord_sys is None:
-        coord_sys = vect._sys
-        return Curl(vect, coord_sys).doit()
+        return Divergence(vect).doit()
     else:
-        return Curl(vect, coord_sys).doit()
+        coord_sys.delop.cross(vect).doit()
