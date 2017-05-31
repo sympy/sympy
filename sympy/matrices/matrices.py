@@ -639,7 +639,6 @@ class MatrixShaping(MatrixRequired):
         return reduce(kls.col_join, args)
 
 
-
 class MatrixSpecial(MatrixRequired):
     """Construction of special matrices"""
 
