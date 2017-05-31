@@ -3220,7 +3220,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
         if has_floats:
             # if we had floats to start with, turn the eigenvectors to floats
-            ret = [(val, mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
+            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
         return ret
 
     def is_diagonalizable(self, reals_only=False, **kwargs):
