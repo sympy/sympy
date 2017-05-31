@@ -4,6 +4,10 @@ from sympy.vector.vector import Vector
 from sympy.vector.deloperator import Del
 
 
+def _get_coord_sys_from_expr(expr):
+    return list(expr.atoms(CoordSysCartesian))[0]
+
+
 class Gradient(Expr):
     """
     Represents unevaluated Gradient.
@@ -24,11 +28,11 @@ class Gradient(Expr):
         obj._scalar = scalar
         return obj
 
-    def _get_coord_sys_from_expr(self, scalar):
-        return list(scalar.atoms(CoordSysCartesian))[0]
+    def gradient(self):
+        return Del(_get_coord_sys_from_expr(self._scalar)).gradient(self._scalar)
 
     def doit(self):
-        return Del(self._get_coord_sys_from_expr(self._scalar)).gradient(self._scalar).doit()
+        return self.gradient().doit()
 
 
 class Divergence(Expr):
@@ -51,11 +55,11 @@ class Divergence(Expr):
         obj._vect = vect
         return obj
 
-    def _get_coord_sys_from_expr(self, vect):
-        return vect._sys
+    def divergence(self):
+        return Del(_get_coord_sys_from_expr(self._vect)).dot(self._vect)
 
     def doit(self):
-        return Del(self._get_coord_sys_from_expr(self._vect)).dot(self._vect).doit()
+        return self.divergence().doit()
 
 
 class Curl(Expr):
@@ -78,11 +82,11 @@ class Curl(Expr):
         obj._vect = vect
         return obj
 
-    def _get_coord_sys_from_expr(self, vect):
-        return vect._sys
+    def curl(self):
+        return Del(_get_coord_sys_from_expr(self._vect)).cross(self._vect)
 
     def doit(self):
-        return Del(self._get_coord_sys_from_expr(self._vect)).cross(self._vect).doit()
+        return self.curl().doit()
 
 
 def gradient(scalar, coord_sys=None):
@@ -113,10 +117,7 @@ def gradient(scalar, coord_sys=None):
 
     """
 
-    if coord_sys is None:
-        return Gradient(scalar).doit()
-    else:
-        return coord_sys.delop(scalar).doit()
+    return _get_coord_sys_from_expr(scalar).delop(scalar).doit()
 
 
 def divergence(vect, coord_sys=None):
@@ -147,10 +148,7 @@ def divergence(vect, coord_sys=None):
 
     """
 
-    if coord_sys is None:
-        return Divergence(vect).doit()
-    else:
-        coord_sys.delop.dot(vect).doit()
+    return _get_coord_sys_from_expr(vect).delop.dot(vect).doit()
 
 
 def curl(vect, coord_sys=None):
@@ -181,7 +179,4 @@ def curl(vect, coord_sys=None):
 
     """
 
-    if coord_sys is None:
-        return Divergence(vect).doit()
-    else:
-        coord_sys.delop.cross(vect).doit()
+    return _get_coord_sys_from_expr(vect).delop.cross(vect).doit()
