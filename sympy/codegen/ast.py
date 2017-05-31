@@ -27,9 +27,9 @@ from __future__ import print_function, division
 
 from sympy.core import Symbol, Tuple
 from sympy.core.basic import Basic
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
@@ -413,9 +413,9 @@ class Type(Basic):
         Either an explicit type: ``intc``, ``intp``, ``int8``, ``int16``,
         ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64,
         float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
-        ``bool. Or only kind (precision decided by code-printer): ``real``,
-        ``integer`` or ``complex``. If a ``Type`` instance is given, the said
-        instance is returned.
+        ``bool. Or only kind (precision decided by code-printer): ``integer``,
+        ``real`` or ``complex`` (where the latter two are of floating point type).
+        If a ``Type`` instance is given, the said instance is returned.
 
     References
     ==========
@@ -426,6 +426,23 @@ class Type(Basic):
                           'uint64 float16 float32 float64 complex64 complex128'.split() +
                           'real integer complex bool'.split())
     __slots__ = []
+
+    default_limits = {
+        'INT_MAX': 2**31 - 1,
+        'INT_MIN': -2**31,
+        'FLT_MAX': 3.40282347e+38,
+        'FLT_MIN': 1.17549435e-38,  # excluding subnormal numbers
+        'FLT_DIG': 6,
+        'FLT_EPSILON': 1.1920929e-07,
+        'DBL_MAX': 1.79769313486231571e+308,
+        'DBL_MIN': 2.22507385850720138e-308,  # excluding subnormal numbers
+        'DBL_DIG': 15,
+        'DBL_EPSILON': 2.22044604925031308e-16,
+        'LDBL_MAX': 1.18973149535723176502e+4932,
+        'LDBL_MIN': 3.36210314311209350626e-4932,
+        'LDBL_DIG': 18,
+        'LDBL_EPSILON': 1.08420217248550443401e-19
+    }
 
     def __new__(cls, name):
         if isinstance(name, Type):
@@ -453,12 +470,15 @@ class Type(Basic):
 
         Examples
         --------
+        >>> from sympy.codegen.ast import Type
         >>> Type.from_expr(2) == Type('integer')
         True
         >>> Type.from_expr('i') == Type('integer')
         False
         >>> from sympy import Symbol
         >>> Type.from_expr(2, Symbol('j', complex=True)) == Type('complex')
+        True
+
         """
         if symb is not None:
             if getattr(symb, 'is_integer', False):
@@ -481,6 +501,94 @@ class Type(Basic):
             else:
                 return cls('real')
 
+    def cast_check(self, value, rtol=1e-8, atol=1e-8, limits=None):
+        """ Casts a value to the data type of the instance.
+
+        Parameters
+        ----------
+        value : number
+        rtol : floating point number
+            Relative tolerance. (will be deduced if not given).
+        atol : floating point number
+            Absolute tolerance. (will be deduced if not given).
+        limits : dict
+            Values given by ``limits.h``, x86/IEEE754 defaults if not given.
+
+        Examples
+        --------
+        >>> from sympy.codegen.ast import Type
+        >>> Type('integer').cast_check(3.0) is 3
+        True
+        >>> Type('float32').cast_check(1e-40)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ValueError: Minimum value for data type bigger than new value.
+
+        """
+        from sympy.functions.elementary.complexes import im, re
+
+        def lim(key):
+            return (limits or self.default_limits)[key]
+
+        def tol(val):
+            return atol + rtol*abs(val)
+
+        caster = lambda x: x  # identity
+        flt_caster = lambda x: round(x, lim('FLT_DIG') + 3)
+        _min, _max = -oo, oo  # undefined precision
+
+        if self.name == 'integer':
+            caster = int
+        elif self.name.startswith('int'):
+            nbits = int(self.name.split('int')[1])
+            _min, _max = -2**(nbits - 1), 2**(nbits - 1) - 1
+            caster = int
+
+        elif self.name.startswith('uint'):
+            nbits = int(self.name.split('uint')[1])
+            _min, _max = 0, 2**nbits - 1
+            caster = int
+
+        elif self.name.startswith('float'):
+            nbits = int(self.name.split('float')[1])
+            if nbits == 32:
+                _min, _max = lim('FLT_MIN'), lim('FLT_MAX')
+                caster = flt_caster
+            elif nbits == 64:
+                _min, _max = lim('DBL_MIN'), lim('DBL_MAX')
+                caster = float  # Python's float is double precision
+            # long double is usually 80 bits long, but sometimes 128 bits
+            # in NumPy float128 is actually often 80 bits (quite confusing)
+
+        if self.name.startswith('complex'):
+            if self.name != 'complex':
+                nbits = int(self.name.split('complex')[1])
+                if nbits == 64:
+                    _min, _max = lim('FLT_MIN'), lim('FLT_MAX')
+                    caster = lambda x: flt_caster(re(x)) + 1j*flt_caster(im(x))
+                elif nbits == 128:
+                    _min, _max = lim('DBL_MIN'), lim('DBL_MAX')
+                    caster = complex  # Python's float is double precision
+            if re(value) > _max or im(value) > _max:
+                raise ValueError("Maximum value exceeded for data type.")
+            if re(value) < _min or im(value) < _min:
+                raise ValueError("Minimum value for data type bigger than new value.")
+            new_val = caster(value)
+            delta = new_val - value
+            if abs(re(delta)) > tol(re(value)) or abs(im(delta)) > tol(im(value)):
+                raise ValueError("Casting gives a significantly different value.")
+        else:
+            if value > _max:
+                raise ValueError("Maximum value exceeded for data type.")
+            if value < _min:
+                raise ValueError("Minimum value for data type bigger than new value.")
+            new_val = caster(value)
+            delta = new_val - value
+            if abs(delta) > tol(value):  # e.g. int(3.5) != 3.5
+                raise ValueError("Casting gives a significantly different value.")
+
+        return new_val
+
 
 class Variable(Basic):
     """ Represents a variable
@@ -497,6 +605,7 @@ class Variable(Basic):
     Examples
     --------
     >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Variable, Type
     >>> i = Symbol('i', integer=True)
     >>> v = Variable(i)
     >>> v.type == Type('integer')
@@ -507,7 +616,7 @@ class Variable(Basic):
         if isinstance(symbol, Variable):
             return symbol
         if type_ is None:
-            type_ = Type.from_expr(symbol)
+            type_ = Type.from_expr(None, symbol)
         return Basic.__new__(cls, _sympify(symbol), Type(type_), _sympify(const or False))
 
     @property
@@ -541,7 +650,10 @@ class Pointer(Basic):
 
     Examples
     --------
-    >>> p = Pointer('x', value_const=True, pointer_const=True, restrict=True)
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Pointer, Type
+    >>> x = Symbol('x')
+    >>> p = Pointer(x, value_const=True, pointer_const=True, restrict=True)
     >>> p.type == Type('real')
     True
 
@@ -588,15 +700,14 @@ class Declaration(Basic):
     Examples
     --------
     >>> from sympy import Symbol
+    >>> from sympy.codegen.ast import Declaration, Type
     >>> x = Symbol('x')
     >>> decl = Declaration(x, 3)
-    >>> decl.value.type == Type('integer')
-    False
-    >>> decl.value.type == Type('real')
+    >>> decl.variable.type == Type('integer')
     True
     >>> k = Symbol('k', integer=True)
     >>> k_decl = Declaration(k, 3.0)
-    >>> k_decl == Type('integer')
+    >>> k_decl.variable.type == Type('integer')
     True
 
     """
@@ -609,6 +720,7 @@ class Declaration(Basic):
         else:
             if value is not None:
                 type_ = Type.from_expr(value, var)
+                value = type_.cast_check(value)
             else:
                 type_ = None
 
@@ -617,7 +729,7 @@ class Declaration(Basic):
             else:
                 var = Variable(var, type_, const)
 
-        return Basic.__new__(cls, var, _sympify(value))
+        return Basic.__new__(cls, var, sympify(value))
 
     @property
     def variable(self):

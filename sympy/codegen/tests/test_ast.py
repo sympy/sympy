@@ -174,6 +174,8 @@ def test_Type():
     assert t.name == 'float64'
     assert t.from_expr(7) == Type('integer')
     raises(ValueError, lambda: Type('float2'))
+
+def test_Type__from_expr():
     assert Type.from_expr(None, i) == Type('integer')
     assert Type.from_expr(None, x) == Type('real')
     assert Type.from_expr(x, n) == Type('integer')
@@ -181,6 +183,26 @@ def test_Type():
     assert Type.from_expr(3.0, x) == Type('real')
     assert Type.from_expr(3) == Type('integer')
     assert Type.from_expr(3+1j) == Type('complex')
+
+
+def test_Type__cast_check():
+    int8 = Type('int8')
+    assert int8.cast_check(127.0) is 127
+    raises(ValueError, lambda: int8.cast_check(128))
+
+    uint8 = Type('uint8')
+    assert uint8.cast_check(128) is 128
+    raises(ValueError, lambda: uint8.cast_check(256.0))
+
+    float32 = Type('float32')
+    assert abs(0.123456789499 - float32.cast_check(0.123456789499) - 4.99e-10) < 1e-16
+
+    float64 = Type('float64')
+    dcm19 = Float('0.1234567890123456789')  # 19 decimals
+    assert abs(dcm19 - float64.cast_check(dcm19)) < 6789e-19
+
+    integer = Type('integer')
+    raises(ValueError, lambda: integer.cast_check(3.5))
 
 
 def test_Variable():
@@ -192,6 +214,10 @@ def test_Variable():
     assert w.symbol == y
     assert w.type == Type('float32')
     assert w.const
+    v_n = Variable(n)
+    assert v_n.type == Type('integer')
+    v_i = Variable(i)
+    assert v_i.type == Type('integer')
 
 
 def test_Pointer():
@@ -215,6 +241,12 @@ def test_Declaration():
     decl2 = Declaration(y, 3)
     assert decl2.variable == Variable(y, Type('integer'))
     assert decl2.value is Integer(3)
+
+    decl3 = Declaration(i, 3.0)
+    assert decl3.variable.type == Type('integer')
+    assert decl3.value == 3.0
+
+    decl4 = raises(ValueError, lambda: Declaration(n, 3.5))
 
     var = Variable(x)
     raises(ValueError, lambda: Declaration(var, const=True))
