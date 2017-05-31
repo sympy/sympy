@@ -540,6 +540,10 @@ def test_permute():
 
 
 # ArithmeticOnlyMatrix tests
+def test_abs():
+    m = ArithmeticOnlyMatrix([[1, -2], [x, y]])
+    assert abs(m) == ArithmeticOnlyMatrix([[1, 2], [Abs(x), Abs(y)]])
+
 def test_add():
     m = ArithmeticOnlyMatrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
     assert m + m == ArithmeticOnlyMatrix([[2, 4, 6], [2*x, 2*y, 2*x], [4*y, -100, 2*z*x]])
