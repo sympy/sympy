@@ -8,6 +8,7 @@ from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.codegen.ast import Type, Declaration, Pointer, Variable
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -587,3 +588,27 @@ def test_get_math_macros():
     macros = get_math_macros()
     assert macros[exp(1)] == 'M_E'
     assert macros[1/Sqrt(2)] == 'M_SQRT1_2'
+
+
+def test_ccode_Declaration():
+    i = symbols('i', integer=True)
+    var1 = Variable(i)
+    dcl1 = Declaration(var1)
+    assert ccode(dcl1) == 'int i;'
+
+    var2 = Variable(x, Type('float32'), const=True)
+    dcl2a = Declaration(var2)
+    assert ccode(dcl2a) == 'const float x;'
+    dcl2b = Declaration(var2, pi)
+    assert ccode(dcl2b) == 'const float x = M_PI;'
+
+    var3 = Variable(y, Type('bool'))
+    dcl3 = Declaration(var3)
+    printer = C89CodePrinter()
+    assert 'stdbool.h' not in printer.headers
+    assert printer.doprint(dcl3) == 'bool y;'
+    assert 'stdbool.h' in printer.headers
+
+    ptr4 = Pointer(y, pointer_const=True, restrict=True)
+    dcl4 = Declaration(ptr4)
+    assert ccode(dcl4) == 'double * const restrict y;'

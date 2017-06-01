@@ -173,7 +173,7 @@ def test_Type():
     t = Type('float64')
     assert t.name == 'float64'
     assert t.from_expr(7) == Type('integer')
-    raises(ValueError, lambda: Type('float2'))
+
 
 def test_Type__from_expr():
     assert Type.from_expr(None, i) == Type('integer')
@@ -185,24 +185,31 @@ def test_Type__from_expr():
     assert Type.from_expr(3+1j) == Type('complex')
 
 
-def test_Type__cast_check():
+def test_Type__cast_check__integers():
+    # Rounding
+    integer = Type('integer')
+    raises(ValueError, lambda: integer.cast_check(3.5))
+
+    # Range
     int8 = Type('int8')
     assert int8.cast_check(127.0) is 127
     raises(ValueError, lambda: int8.cast_check(128))
+    assert int8.cast_check(-128) is -128
+    raises(ValueError, lambda: int8.cast_check(-129))
 
     uint8 = Type('uint8')
+    assert uint8.cast_check(0) is 0
     assert uint8.cast_check(128) is 128
     raises(ValueError, lambda: uint8.cast_check(256.0))
+    raises(ValueError, lambda: uint8.cast_check(-1))
 
-    float32 = Type('float32')
-    assert abs(0.123456789499 - float32.cast_check(0.123456789499) - 4.99e-10) < 1e-16
+def test_Type__cast_check__floating_point():
+    f32 = Type('float32')
+    assert abs(0.1234567890499 - f32.cast_check(0.1234567890499) - 4.99e-11) < 1e-16
 
-    float64 = Type('float64')
-    dcm19 = Float('0.1234567890123456789')  # 19 decimals
-    assert abs(dcm19 - float64.cast_check(dcm19)) < 6789e-19
-
-    integer = Type('integer')
-    raises(ValueError, lambda: integer.cast_check(3.5))
+    f64 = Type('float64')
+    dcm21 = Float('0.123456789012345604999')  # 21 decimals
+    assert abs(dcm21 - f64.cast_check(dcm21)) < 4999e-21
 
 
 def test_Variable():
@@ -233,6 +240,9 @@ def test_Pointer():
 
 
 def test_Declaration():
+    assert Declaration(x).variable.type.name == 'real'
+    assert Declaration(n).variable.type.name == 'integer'
+
     decl = Declaration(x, 3.0, True)
     assert decl.variable == Variable(x, const=True)
     assert type(decl.value) == Float

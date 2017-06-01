@@ -19,6 +19,7 @@ the responsibility for generating properly cased Fortran code to the user.
 
 from __future__ import print_function, division
 
+from collections import defaultdict
 import string
 
 from sympy.core import S, Add, N
@@ -26,7 +27,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
-from sympy.codegen.ast import Assignment
+from sympy.codegen.ast import Assignment, Declaration, Pointer, Type
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -63,7 +64,18 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
         'contract': True,
-        'standard': 77
+        'standard': 77,
+        'type_mappings': {
+            Type('intc'): ('integer(c_int)', {'iso_c_binding': 'c_int'}),
+            Type('float32'): ('real(4)', None),
+            Type('float64'): ('real(8)', None),
+            Type('complex64'): ('complex(4)', None),
+            Type('complex128'): ('complex(8)', None),
+            Type('real'): ('real(kind(1d0))', None),
+            Type('integer'): ('integer', None),
+            Type('complex'): ('complex(kind(1d0))', None),
+            Type('bool'): ('logical', None)
+        }
     }
 
     _operators = {
@@ -99,6 +111,7 @@ class FCodePrinter(CodePrinter):
         if self._settings['standard'] not in standards:
             raise ValueError("Unknown Fortran standard: %s" % self._settings[
                              'standard'])
+        self.module_uses = defaultdict(set)  # e.g.: use iso_c_binding, only: c_int
 
     def _rate_index_position(self, p):
         return -p*5
@@ -305,6 +318,37 @@ class FCodePrinter(CodePrinter):
     def _print_Unequality(self, expr):
         lhs, rhs = expr.args
         return ' /= '.join(map(self._print, (lhs, rhs)))
+
+    def _print_Type(self, type_):
+        type_str, module_uses = self._settings['type_mappings'].get(type_, type_.name)
+        if module_uses:
+            for k, v in module_uses:
+                self.module_uses[k].add(v)
+        return type_str
+
+    def _print_Declaration(self, expr):
+        var, val = expr.variable, expr.value
+        if isinstance(var, Pointer):
+            raise NotImplementedError("Pointers are not available by default in Fortran.")
+        if self._settings["standard"] >= 90:
+            result = '{t}{vc} :: {s}'.format(
+                t=self._print(var.type),
+                vc=', parameter' if var.const else '',
+                s=self._print(var.symbol)
+            )
+            if val is not None:
+                result += ' = %s' % self._print(val)
+        else:
+            if var.const or val:
+                raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
+            result = ' '.join(self._print(var.type), self._print(var.symbol))
+        return result
+
+    def _print_BooleanTrue(self, expr):
+        return '.true.'
+
+    def _print_BooleanFalse(self, expr):
+        return '.false.'
 
     def _pad_leading_columns(self, lines):
         result = []

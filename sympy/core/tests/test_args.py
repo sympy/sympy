@@ -170,6 +170,34 @@ def test_sympy__codegen__ast__For():
     assert _test_args(For(x, Range(10), CodeBlock(AddAugmentedAssignment(y, 1))))
 
 
+def test_sympy__codegen__ast__Type():
+    from sympy.codegen.ast import Type
+    assert _test_args(Type('float32'))
+
+
+def test_sympy__codegen__ast__Variable():
+    from sympy.codegen.ast import Variable, Type
+    assert _test_args(Variable(x))
+    assert _test_args(Variable(y, Type('float32')))
+    assert _test_args(Variable(z, Type('float64'), const=True))
+
+
+def test_sympy__codegen__ast__Pointer():
+    from sympy.codegen.ast import Pointer, Type
+    assert _test_args(Pointer(x))
+    assert _test_args(Pointer(y, Type('float32')))
+    assert _test_args(Pointer(z, Type('float64'), value_const=True, pointer_const=True, restrict=True))
+
+
+def test_sympy__codegen__ast__Declaration():
+    from sympy.codegen.ast import Declaration
+    assert _test_args(Declaration(x))
+    assert _test_args(Declaration(y, 3.0))
+    i, j = symbols('i j', integer=True)
+    assert _test_args(Declaration(i))
+    assert _test_args(Declaration(j, 3))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode

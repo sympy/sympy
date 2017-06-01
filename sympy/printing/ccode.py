@@ -13,10 +13,13 @@ source code files that are compilable without further modifications.
 
 from __future__ import print_function, division
 
+from functools import wraps
+from itertools import chain
+
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
-from sympy.codegen.ast import Assignment
+from sympy.codegen.ast import Assignment, Pointer, Type, Variable
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
@@ -103,6 +106,19 @@ def get_math_macros():
         1/Sqrt(2): 'M_SQRT1_2'
     }
 
+class _requires(object):
+    def __init__(self, headers=None, libraries=None):
+        self._headers = headers or set()
+        self._libraries = libraries or set()
+
+    def __call__(self, meth):
+        @wraps(meth)
+        def _method_wrapper(self_, *args, **kwargs):
+            self_.headers.update(self._headers)
+            self_.libraries.update(self._libraries)
+            return meth(self_, *args, **kwargs)
+        return _method_wrapper
+
 
 class C89CodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -121,6 +137,15 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
+        'type_mappings': {
+            Type('intc'): ('int', None),
+            Type('float32'): ('float', None),
+            Type('float64'): ('double', None),
+            Type('real'): ('double', None),
+            Type('integer'): ('int', None),
+            Type('complex'): ('double _Complex', {'complex.h'}),
+            Type('bool'): ('bool', {'stdbool.h'})
+        }
     }
 
     _ns = ''  # namespace, C++ uses 'std::'
@@ -130,6 +155,8 @@ class C89CodePrinter(CodePrinter):
         super(C89CodePrinter, self).__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
+        self.headers = set()
+        self.libraries = set()
 
     def _rate_index_position(self, p):
         return p*5
@@ -333,6 +360,43 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _print_Type(self, type_):
+        type_str, headers = self._settings['type_mappings'].get(type_, (type_.name, None))
+        if headers:
+            self.headers.update(headers)
+        return type_str
+
+    def _print_Declaration(self, expr):
+        var, val = expr.variable, expr.value
+        if isinstance(var, Pointer):
+            result = '{vc}{t} *{pc} {r}{s}'.format(
+                vc='const ' if var.value_const else '',
+                t=self._print(var.type),
+                pc=' const' if var.pointer_const else '',
+                r='restrict ' if var.restrict else '',  # actually only guaranteed by C >= C99
+                s=self._print(var.symbol)
+            )
+        elif isinstance(var, Variable):
+            result = '{vc}{t} {s}'.format(
+                vc='const ' if var.const else '',
+                t=self._print(var.type),
+                s=self._print(var.symbol)
+            )
+        else:
+            raise NotImplementedError("Unknown type of var: %s" % type(var))
+        if val is not None:
+            result += ' = %s' % self._print(val)
+        return '%s;' % result
+
+    @_requires({'stdbool.h'})
+    def _print_BooleanTrue(self, expr):
+        return 'true'
+
+    @_requires({'stdbool.h'})
+    def _print_BooleanFalse(self, expr):
+        return 'false'
+
+
 
 class _C9XCodePrinter(object):
     # Move these methods to C99CodePrinter when removing CCodePrinter
@@ -368,6 +432,16 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
     standard = 'C99'
     reserved_words = set(reserved_words + reserved_words_c99)
     _kf = known_functions_C99  # known_functions-dict to copy
+    _default_settings = dict(
+        C89CodePrinter._default_settings,
+        type_mappings=dict(chain(
+            C89CodePrinter._default_settings['type_mappings'].items(),
+            {
+                Type('complex64'): ('float complex', {'complex.h'}),
+                Type('complex128'): ('double complex', {'complex.h'}),
+            }.items()
+        ))
+    )
 
     def _print_Max(self, expr):
         if "Max" in self.known_functions:

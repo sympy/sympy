@@ -402,7 +402,7 @@ class For(Basic):
         return self._args[2]
 
 
-class Type(Basic):
+class Type(Symbol):
     """ Represents a type.
 
     The naming is a super-set of NumPy naming, see [1]_.
@@ -417,44 +417,67 @@ class Type(Basic):
         ``real`` or ``complex`` (where the latter two are of floating point type).
         If a ``Type`` instance is given, the said instance is returned.
 
+    Examples
+    --------
+    >>> from sympy.codegen.ast import Type
+    >>> Type.from_expr(42).name
+    'integer'
+    >>> f32 = Type("float32")
+    >>> v6 = 0.123456
+    >>> f32.cast_check(v6)
+    0.123456
+    >>> v10 = 0.1234567895
+    >>> f32.cast_check(v10)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: Casting gives a significantly different value.
+    >>> Type('float64').cast_check(v10)
+    0.1234567895
+    >>> from sympy import Float
+    >>> v22 = Float(0.1234567890123456789015)
+
     References
-    ==========
+    ----------
     [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
     allowed_names = tuple('intc intp int8 int16 int32 int64 uint8 uint16 uint32'.split() +
                           'uint64 float16 float32 float64 complex64 complex128'.split() +
                           'real integer complex bool'.split())
-    __slots__ = []
+    __slots__ = ['name']
 
-    default_limits = {
-        'INT_MAX': 2**31 - 1,
-        'INT_MIN': -2**31,
-        'FLT_MAX': 3.40282347e+38,
-        'FLT_MIN': 1.17549435e-38,  # excluding subnormal numbers
-        'FLT_DIG': 6,
-        'FLT_EPSILON': 1.1920929e-07,
-        'DBL_MAX': 1.79769313486231571e+308,
-        'DBL_MIN': 2.22507385850720138e-308,  # excluding subnormal numbers
-        'DBL_DIG': 15,
-        'DBL_EPSILON': 2.22044604925031308e-16,
-        'LDBL_MAX': 1.18973149535723176502e+4932,
-        'LDBL_MIN': 3.36210314311209350626e-4932,
-        'LDBL_DIG': 18,
-        'LDBL_EPSILON': 1.08420217248550443401e-19
+    default_limits = {  # IEE754 data when applicable
+        'int32': {  # usually the fastest integer typ (and hence 'int' on most systems)
+            'max': 2**31 - 1,  # INT_MAX
+            'min': -2**31  # INT_MIN
+        },
+        'float32': {
+            'max': 3.40282347e+38,  # FLT_MAX
+            'tiny': 1.17549435e-38,  # FLT_MIN, excluding subnormal numbers
+            'eps': 1.1920929e-07,  # FLT_EPSILON
+            'dig': 6,  # FLT_DIG
+            'decimal_dig': 9,  # FLT_DECIMAL_DIG
+        },
+        'float64': {
+            'max': 1.79769313486231571e+308,  # DBL_MAX
+            'tiny': 2.22507385850720138e-308,  # DBL_MIN, excluding subnormal numbers
+            'eps': 2.22044604925031308e-16,  # DBL_EPSILON
+            'dig': 15,  # DBL_DIG
+            'decimal_dig': 17,  # DBL_DECIMAL_DIG
+        },
+        'float80': {  # extended precision, usually "long double", even numpy.float128 (!)
+            'max': 1.18973149535723176502e+4932,  # LDBL_MAX
+            'tiny': 3.36210314311209350626e-4932,  # LDBL_MIN, excluding subnormal numbers
+            'eps': 1.08420217248550443401e-19,  # LDBL_EPSILON
+            'dig': 18,  # LDBL_DIG
+            'decimal_dig': 21,  # LDBL_DECIMAL_DIG
+        }
     }
 
     def __new__(cls, name):
         if isinstance(name, Type):
             return name
-        if name not in cls.allowed_names:
-            raise ValueError("Unknown type: %s" % name)
-        return Basic.__new__(cls, name)
-
-    @property
-    def name(self):
-        """ Return the name of the type. """
-        return self._args[0]
+        return Symbol.__new__(cls, name)
 
     @classmethod
     def from_expr(cls, expr, symb=None):
@@ -501,7 +524,7 @@ class Type(Basic):
             else:
                 return cls('real')
 
-    def cast_check(self, value, rtol=1e-8, atol=1e-8, limits=None):
+    def cast_check(self, value, rtol=None, atol=None, limits=None):
         """ Casts a value to the data type of the instance.
 
         Parameters
@@ -513,6 +536,7 @@ class Type(Basic):
             Absolute tolerance. (will be deduced if not given).
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
+            Default: :attr:`Type.default_limits`.
 
         Examples
         --------
@@ -527,15 +551,25 @@ class Type(Basic):
         """
         from sympy.functions.elementary.complexes import im, re
 
-        def lim(key):
-            return (limits or self.default_limits)[key]
+        def lim(type_name, key):
+            return (limits or self.default_limits).get(type_name, {}).get(key)
+
+        if rtol is None:
+            exp10 = lim(self.name, 'decimal_dig')
+            rtol = 1e-15 if exp10 is None else 10**(1-exp10)
+
+        if atol is None:
+            if rtol == 0:
+                exp10 = lim(self.name, 'decimal_dig')
+                atol = 1e-15 if exp10 is None else 10**(1-exp10)
+            else:
+                atol = 0
 
         def tol(val):
             return atol + rtol*abs(val)
 
         caster = lambda x: x  # identity
-        flt_caster = lambda x: round(x, lim('FLT_DIG') + 3)
-        _min, _max = -oo, oo  # undefined precision
+        _min, _max, _tiny = -oo, oo, 0  # undefined precision
 
         if self.name == 'integer':
             caster = int
@@ -543,48 +577,43 @@ class Type(Basic):
             nbits = int(self.name.split('int')[1])
             _min, _max = -2**(nbits - 1), 2**(nbits - 1) - 1
             caster = int
-
         elif self.name.startswith('uint'):
             nbits = int(self.name.split('uint')[1])
             _min, _max = 0, 2**nbits - 1
             caster = int
-
         elif self.name.startswith('float'):
-            nbits = int(self.name.split('float')[1])
-            if nbits == 32:
-                _min, _max = lim('FLT_MIN'), lim('FLT_MAX')
-                caster = flt_caster
-            elif nbits == 64:
-                _min, _max = lim('DBL_MIN'), lim('DBL_MAX')
-                caster = float  # Python's float is double precision
-            # long double is usually 80 bits long, but sometimes 128 bits
-            # in NumPy float128 is actually often 80 bits (quite confusing)
+            _max = +lim(self.name, 'max')
+            _min = -lim(self.name, 'max')
+            _tiny = lim(self.name, 'tiny')
+            caster = lambda x: round(x, lim(self.name, 'decimal_dig'))
 
         if self.name.startswith('complex'):
-            if self.name != 'complex':
+            if self.name == 'complex':
+                nbits = 128  # assume double precision as underlying data
+            else:
                 nbits = int(self.name.split('complex')[1])
-                if nbits == 64:
-                    _min, _max = lim('FLT_MIN'), lim('FLT_MAX')
-                    caster = lambda x: flt_caster(re(x)) + 1j*flt_caster(im(x))
-                elif nbits == 128:
-                    _min, _max = lim('DBL_MIN'), lim('DBL_MAX')
-                    caster = complex  # Python's float is double precision
-            if re(value) > _max or im(value) > _max:
+            corresponding_float = 'float%d' % (nbits // 2)
+            _max = +lim(corresponding_float, 'max')
+            _tiny = lim(corresponding_float, 'tiny')
+            caster = lambda x: round(x, lim(corresponding_float, 'decimal_dig'))
+            if abs(re(value)) > _max or abs(im(value)) > _max:
                 raise ValueError("Maximum value exceeded for data type.")
-            if re(value) < _min or im(value) < _min:
-                raise ValueError("Minimum value for data type bigger than new value.")
-            new_val = caster(value)
+            if abs(re(value)) < _tiny or abs(im(value)) < _tiny:
+                raise ValueError("Minimum (absolute) value for data type bigger than new value.")
+            new_val = caster(re(value)) + 1j*caster(im(value))
             delta = new_val - value
             if abs(re(delta)) > tol(re(value)) or abs(im(delta)) > tol(im(value)):
                 raise ValueError("Casting gives a significantly different value.")
         else:
+            if value < _min:
+                raise ValueError("Minumum value for data type bigger than new value.")
             if value > _max:
                 raise ValueError("Maximum value exceeded for data type.")
-            if value < _min:
-                raise ValueError("Minimum value for data type bigger than new value.")
+            if abs(value) < _tiny:
+                raise ValueError("Smallest (absolute) value for data type bigger than new value.")
             new_val = caster(value)
             delta = new_val - value
-            if abs(delta) > tol(value):  # e.g. int(3.5) != 3.5
+            if abs(delta) > tol(value):  # rounding, e.g. int(3.5) != 3.5
                 raise ValueError("Casting gives a significantly different value.")
 
         return new_val
@@ -711,6 +740,9 @@ class Declaration(Basic):
     True
 
     """
+
+    nargs = (1, 2)
+
     def __new__(cls, var, value=None, const=None):
         from sympy.tensor.indexed import IndexedBase
 
@@ -729,7 +761,11 @@ class Declaration(Basic):
             else:
                 var = Variable(var, type_, const)
 
-        return Basic.__new__(cls, var, sympify(value))
+        args = var,
+        if value is not None:
+            args += (_sympify(value),)
+        return Basic.__new__(cls, *args)
+
 
     @property
     def variable(self):
@@ -737,4 +773,7 @@ class Declaration(Basic):
 
     @property
     def value(self):
-        return self.args[1]
+        if len(self.args) == 2:
+            return self.args[1]
+        else:
+            return None
