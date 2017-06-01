@@ -1,6 +1,6 @@
 from sympy.pattern.expressions import (
-    Arity, Operation, Symbol, Wildcard, SymbolWildcard, make_dot_variable, make_plus_variable, make_star_variable,
-    make_symbol_variable
+    Arity, Operation, Symbol, Wildcard, SymbolWildcard, make_dot_variable,
+    make_plus_variable, make_star_variable, make_symbol_variable
 )
 
 from multiset import Multiset
