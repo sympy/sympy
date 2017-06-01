@@ -32,6 +32,7 @@ class PolyMatrix(DenseMatrix):
 
     """
     _class_priority = 10
+    _sympify = staticmethod(lambda x: x)
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
