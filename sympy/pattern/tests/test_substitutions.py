@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-import inspect
-import itertools
-
-import pytest
+from sympy.utilities import pytest
 from multiset import Multiset
 
 from sympy.pattern.expressions.substitution import Substitution

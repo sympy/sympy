@@ -637,12 +637,13 @@ class Symbol(Atom):
 
     def __lt__(self, other):
         if not isinstance(other, Expression):
-            return NotImplemented
+            raise NotImplemented
         if isinstance(other, Symbol):
             if self.name == other.name:
                 return (self.variable_name or u'') < (other.variable_name or u'')
             return self.name < other.name
         return type(self).__name__ < type(other).__name__
+
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):

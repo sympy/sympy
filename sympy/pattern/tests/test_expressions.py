@@ -3,7 +3,10 @@ from sympy.pattern.expressions import (
     make_plus_variable, make_star_variable, make_symbol_variable
 )
 
+from sympy.utilities import pytest
 from multiset import Multiset
+import inspect
+from itertools import product
 
 class SpecialSymbol(Symbol):
     pass
@@ -38,7 +41,23 @@ x___ = make_star_variable('x')
 y___ = make_star_variable('y')
 z___ = make_star_variable('z')
 
-def test_simplified():
+
+SIMPLE_EXPRESSIONS = [
+    a,
+    b,
+    f(a, b),
+    x_,
+    ___,
+    f(_, variable_name='x'),
+    s_,
+    _s,
+]
+
+class SpecialF(f):
+    name = 'special'
+
+
+def test_operation_simplify():
     test = [
         (f_i(a),                                                            a),
         (f_i(a, b),                                                         f_i(a, b)),
@@ -60,7 +79,46 @@ def test_simplified():
     for expression, simplified in test:
         assert expression == simplified
 
-def test_syntactic():
+
+def test_operation_errors():
+    test = [
+        (Operation.new('f', Arity.unary),                       [],             ValueError),
+        (Operation.new('f', Arity.unary),                       [a, b],         ValueError),
+        (Operation.new('f', Arity.variadic),                    [],             None),
+        (Operation.new('f', Arity.variadic),                    [a],            None),
+        (Operation.new('f', Arity.variadic),                    [a, b],         None),
+        (Operation.new('f', Arity.binary, associative=True),    [a, a, b],      ValueError),
+        (Operation.new('f', Arity.binary),                      [x_, x___],     None),
+        (Operation.new('f', Arity.binary),                      [x_, x__],      None),
+        (Operation.new('f', Arity.binary),                      [x_, x_, x__],  ValueError),
+        (Operation.new('f', Arity.binary),                      [x_, x_, x___], None),
+        (Operation.new('f', Arity.binary),                      [x_, x_],       None),
+        (Operation.new('f', Arity.binary),                      [x_, x_, x_],   ValueError),
+    ]
+
+    for operation, operands, expected_error in test:
+        if expected_error is not None:
+            with pytest.raises(expected_error):
+                operation(*operands)
+        else:
+            _ = operation(*operands)
+
+
+def test_is_constant():
+    test = [
+        (a,             True),
+        (x_,            False),
+        (_,             False),
+        (f(a),          True),
+        (f(a, b),       True),
+        (f(x_),         False),
+    ]
+
+    for expression, is_constant in test:
+        assert expression.is_constant == is_constant
+
+
+def test_is_syntactic():
     test = [
         (a,             True),
         (x_,            True),
@@ -125,7 +183,7 @@ def test_variables():
         assert expression.variables == Multiset(variables)
 
 def test_preorder_iter():
-    test = [                                               # expression        position
+    test = [
             (f(a, x_),      None,                       [(f(a, x_),         ()),
                                                          (a,                (0, )),
                                                          (x_,               (1, ))]),
@@ -137,6 +195,63 @@ def test_preorder_iter():
     for expression, predicate, preorder_list in test:
         result = list(expression.preorder_iter(predicate))
         assert result == preorder_list
+
+GETITEM_TEST_EXPRESSION = f(a, f(x_, b), _)
+
+def test_getitem():
+    test = [
+        ((),            GETITEM_TEST_EXPRESSION),
+        ((0, ),         a),
+        ((0, 0),        IndexError),
+        ((1, ),         f(x_, b)),
+        ((1, 0),        x_),
+        ((1, 0, 0),     IndexError),
+        ((1, 1),        b),
+        ((1, 1, 0),     IndexError),
+        ((1, 2),        IndexError),
+        ((2, ),         _),
+        ((3, ),         IndexError),
+    ]
+
+    for position, expected_result in test:
+        if inspect.isclass(expected_result) and issubclass(expected_result, Exception):
+            with pytest.raises(expected_result):
+                result = GETITEM_TEST_EXPRESSION[position]
+                print(result)
+        else:
+            result = GETITEM_TEST_EXPRESSION[position]
+            assert result == expected_result
+
+
+def test_getitem_slice():
+    test = [
+        ((),            (),     [GETITEM_TEST_EXPRESSION]),
+        ((0, ),         (0, ),  [a]),
+        ((0, ),         (1, ),  [a, f(x_, b)]),
+        ((0, ),         (2, ),  [a, f(x_, b), _]),
+        ((0, ),         (3, ),  [a, f(x_, b), _]),
+        ((1, ),         (2, ),  [f(x_, b), _]),
+        ((1, 0),        (1, 1), [x_, b]),
+        ((1, 0),        (2, ),  IndexError),
+        ((1, ),         (0, ),  IndexError),
+        ((1, 0),        (2, 0), IndexError),
+    ]
+
+    for start, end, expected_result in test:
+        if inspect.isclass(expected_result) and issubclass(expected_result, Exception):
+            with pytest.raises(expected_result):
+                result = GETITEM_TEST_EXPRESSION[start:end]
+                print(result)
+        else:
+            result = GETITEM_TEST_EXPRESSION[start:end]
+            assert result == expected_result
+
+def test_getitem_slice_symbol():
+    with pytest.raises(IndexError):
+        print(a[(0, ):()])
+    with pytest.raises(IndexError):
+        print(a[(0, ):(1, )])
+    assert a[():()] == [a]
 
 
 def test_lt():
@@ -167,13 +282,40 @@ def test_lt():
         (_s,                            __),
         (_,                             _s),
         (SymbolWildcard(SpecialSymbol), SymbolWildcard(Symbol)),
-        #(f(a),                          SpecialF(a)),
+        (f(a),                          SpecialF(a)),
     ]
 
     for expression1, expression2 in test:
         assert expression1 < expression2, "{!s} < {!s} did not hold".format(expression1, expression2)
         assert not (expression2 < expression1
                    ), "Inconsistent order: Both {0} < {1} and {1} < {0}".format(expression2, expression1)
+
+
+def test_lt_error():
+    test = [a, f(a), x_, _]
+    for expression in test:
+        with pytest.raises(TypeError):
+            expression < object()
+
+
+def test_operation_new_error():
+    with pytest.raises(ValueError):
+        _ = Operation.new('if', Arity.variadic)
+
+    with pytest.raises(ValueError):
+        _ = Operation.new('+', Arity.variadic)
+
+
+def test_wildcard_error():
+    with pytest.raises(ValueError):
+        _ = Wildcard(-1, False)
+
+    with pytest.raises(ValueError):
+        _ = Wildcard(0, True)
+
+def test_symbol_wildcard_error():
+    with pytest.raises(TypeError):
+        _ = SymbolWildcard(object)
 
 
 def test_with_renamed_vars():
@@ -191,6 +333,24 @@ def test_with_renamed_vars():
     for expression, renaming, expected_result in test:
         new_expr = expression.with_renamed_vars(renaming)
         assert new_expr == expected_result
+
+
+def test_hash():
+    for expression, other in product(SIMPLE_EXPRESSIONS, SIMPLE_EXPRESSIONS):
+        if expression != other:
+            assert hash(expression) != hash(other), "hash({!s}) == hash({!s})".format(expression, other)
+        else:
+            assert hash(expression) == hash(other), "hash({!s}) != hash({!s})".format(expression, other)
+
+
+
+def test_copy():
+    for expression in SIMPLE_EXPRESSIONS:
+        other = expression.__copy__()
+        assert other == expression
+        assert other is not expression
+
+
 
 def test_contains():
     test = [
@@ -211,3 +371,13 @@ def test_contains():
             assert subexpression in expression, "{!s} should be contained in {!s}".format(subexpression, expression)
         else:
             assert subexpression not in expression, "{!s} should not be contained in {!s}".format(subexpression, expression)
+
+def test_one_identity_error():
+    with pytest.raises(TypeError):
+        Operation.new('Invalid', Arity.unary, one_identity=True)
+    with pytest.raises(TypeError):
+        Operation.new('Invalid', Arity.binary, one_identity=True)
+
+def test_infix_error():
+    with pytest.raises(TypeError):
+        Operation.new('Invalid', Arity.unary, infix=True)

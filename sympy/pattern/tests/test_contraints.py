@@ -1,7 +1,6 @@
-
 from sympy.utilities import pytest
 from sympy.pattern.expressions.constraints import Constraint, CustomConstraint, EqualVariablesConstraint
-
+from itertools import product
 
 class DummyConstraint(Constraint):
     def __call__(self, match):
@@ -43,15 +42,7 @@ def test_equal_variables_constraint_call():
 
 
 def test_equal_variables_constraint_hash():
-    c1 = list(enumerate(VARIABLE_CONSTRAINTS))
-    c2 = list(enumerate(VARIABLE_CONSTRAINTS))
-
-    test = []
-
-    for i in range(0, len(c1)):
-        test.append([c1[i], c2[i]])
-
-    for c1, c2 in test:
+    for c1, c2 in product(list(enumerate(VARIABLE_CONSTRAINTS)), list(enumerate(VARIABLE_CONSTRAINTS))):
         i, c1 = c1
         j, c2 = c2
         if i == j:
@@ -80,15 +71,7 @@ def test_custom_constraint_call():
 
 
 def test_custom_constraint_hash():
-    c1 = list(enumerate(CUSTOM_CONSTRAINTS))
-    c2 = list(enumerate(CUSTOM_CONSTRAINTS))
-
-    test = []
-
-    for i in range(0, len(c1)):
-        test.append([c1[i], c2[i]])
-
-    for c1, c2 in test:
+    for c1, c2 in product(list(enumerate(CUSTOM_CONSTRAINTS)), list(enumerate(CUSTOM_CONSTRAINTS))):
         i, c1 = c1
         j, c2 = c2
         if i == j:
