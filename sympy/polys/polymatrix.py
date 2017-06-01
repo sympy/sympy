@@ -9,25 +9,24 @@ class PolyMatrix(DenseMatrix):
     """
     Matrix of polynomials.
 
-    >>> from sympy.polys.polymatric import PolyMatrix
-    >>> from sympy.matrices.matrices import Matrix
-    >>> from sympy import Symbol
+    >>> from sympy.polys.polymatrix import PolyMatrix
+    >>> from sympy import Symbol, Matrix, Poly
+    >>> x = Symbol('x')
     >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
     >>> v1 = Matrix([[1, 0], [-1, 0]])
-    >>> x = Symbol('x')
     >>> pm1*v1
     Matrix([
     [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
     [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
 
-    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**2, x, domain='QQ'),
+    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**2, x, domain='QQ'), \
             Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
     >>> v2 = Matrix([1, 0, 0, 0, 0, 0])
     >>> pm2*v2
     Matrix([[Poly(x**2, x, domain='QQ')]])
 
     """
-    _class_priority = 5
+    _class_priority = 10
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
