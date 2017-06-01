@@ -1,55 +1,14 @@
 from __future__ import print_function
 
-from sympy.core import S
 from sympy.matrices.dense import DenseMatrix
 
 
-class PolyMatrix(DenseMatrix):
+class PolyDenseMatrix(DenseMatrix):
     """
     Matrix of objects from poly module or to operate with them.
-
-    >>> from sympy.polys.polymatrix import PolyMatrix
-    >>> from sympy import Symbol, Matrix, Poly
-    >>> x = Symbol('x')
-    >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
-    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
-    >>> pm1*v1
-    Matrix([
-    [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
-    [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
-
-    >>> v1*pm1
-    Matrix([
-    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
-    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
-
-    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**2, x, domain='QQ'), \
-            Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
-    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
-    >>> pm2*v2
-    Matrix([[Poly(x**2, x, domain='QQ')]])
-
     """
     _class_priority = 10
     _sympify = staticmethod(lambda x: x)
-
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        if kwargs.get('copy', True) is False:
-            if len(args) != 3:
-                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
-            rows, cols, flat_list = args
-        else:
-            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-            flat_list = list(flat_list) # create a shallow copy
-        self = object.__new__(cls)
-        self.rows = rows
-        self.cols = cols
-        self._mat = flat_list
-        return self
 
     def _eval_matrix_mul(self, other):
         self_rows, self_cols = self.rows, self.cols
@@ -71,3 +30,75 @@ class PolyMatrix(DenseMatrix):
                 new_mat[i] = sum(vec)
 
         return self._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+
+
+class MutablePolyDenseMatrix(PolyDenseMatrix):
+    """
+    Mutable version of PolyMatrix
+
+    >>> from sympy.polys.polymatrix import PolyMatrix
+    >>> from sympy import Symbol, Poly
+    >>> x = Symbol('x')
+    >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
+    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
+    >>> pm1*v1
+    Matrix([
+    [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
+    [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
+
+    >>> v1*pm1
+    Matrix([
+    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
+    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
+
+    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(1, x, domain='QQ'), \
+            Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
+    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
+    >>> pm2*v2
+    Matrix([[Poly(x**2, x, domain='QQ')]])
+
+    """
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        # if the `copy` flag is set to False, the input
+        # was rows, cols, [list].  It should be used directly
+        # without creating a copy.
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
+        self = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
+        self._mat = flat_list
+        return self
+
+
+class ImmutablePolyDenseMatrix(PolyDenseMatrix):
+    """
+    Immutable version of PolyMatrix
+
+    """
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], ImmutablePolyMatrix):
+            return args[0]
+        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+        self = object.__new__(cls)
+        self.rows = Integer(rows)
+        self.cols = Integer(cols)
+        self._mat = Tuple(*flat_list)
+        return self
+
+
+MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
+ImmutablePolyMatrix = ImmutablePolyDenseMatrix
