@@ -2,18 +2,17 @@ from __future__ import print_function
 
 from sympy.core import S
 from sympy.matrices.dense import DenseMatrix
-from sympy.matrices.matrices import classof
 
 
 class PolyMatrix(DenseMatrix):
     """
-    Matrix of polynomials.
+    Matrix of objects from poly module or to operate with them.
 
     >>> from sympy.polys.polymatrix import PolyMatrix
     >>> from sympy import Symbol, Matrix, Poly
     >>> x = Symbol('x')
     >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
-    >>> v1 = Matrix([[1, 0], [-1, 0]])
+    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
     >>> pm1*v1
     Matrix([
     [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
@@ -21,12 +20,12 @@ class PolyMatrix(DenseMatrix):
 
     >>> v1*pm1
     Matrix([
-    [ Poly(x**2, x, domain='ZZ'),  Poly(-x, x, domain='ZZ')],
-    [-Poly(x**2, x, domain='ZZ'), -Poly(-x, x, domain='ZZ')]])
+    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
+    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
 
     >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**2, x, domain='QQ'), \
             Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
-    >>> v2 = Matrix([1, 0, 0, 0, 0, 0])
+    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
     >>> pm2*v2
     Matrix([[Poly(x**2, x, domain='QQ')]])
 
@@ -59,7 +58,7 @@ class PolyMatrix(DenseMatrix):
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 
-        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+        new_mat = [0]*new_mat_rows*new_mat_cols
 
         if self.cols != 0 and other.rows != 0:
             mat = self._mat
