@@ -1617,6 +1617,8 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
+    from sympy import gcd
+
     rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
     exps = {}
@@ -1628,11 +1630,9 @@ def _simplification_technique_1(rels):
             if rel.array_form[0][1] < 0:
                 rels[i] = rels[i]**-1
                 g = g**-1
-                sign = -1
-            else:
-                sign = 1
-            if not g in exps or exps[g].array_form[0][1] > exp:
-                exps[g] = rel**sign
+            if g in exps:
+                exp = gcd(exp, exps[g].array_form[0][1])
+            exps[g] = g**exp
 
     one_syllables_words = exps.values()
     # decrease some of the exponents in relators, making use of the single

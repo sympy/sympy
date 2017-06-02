@@ -600,7 +600,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         If words is a list, replace the words by the identity.
         '''
         new = self
-        if type(words) is dict:
+        if isinstance(words, dict):
             for sub in words:
                 new = new.eliminate_word(sub, words[sub], _all=_all)
         else:
@@ -613,8 +613,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         For an associative word `self`, a subword `gen`, and an associative
         word `by` (identity by default), return the associative word obtained by
         replacing each occurrence of `gen` in `self` by `by`. If `_all = True`,
-        the occurances of `gen` that may appear after the first substitution will
-        also be replaced and so on until no occurances are found. This might not
+        the occurrences of `gen` that may appear after the first substitution will
+        also be replaced and so on until no occurrences are found. This might not
         always terminate (e.g. `(x).eliminate_word(x, x**2, _all=True)`).
 
         Examples
@@ -651,17 +651,17 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         try:
             i = word.subword_index(gen)
             k = 1
-        except:
+        except ValueError:
             try:
                 i = word.subword_index(gen**-1)
                 k = -1
-            except:
+            except ValueError:
                 return word
 
         word = word.subword(0, i)*by**k*word.subword(i+l, len(word)).eliminate_word(gen, by)
 
         if _all:
-            return word.eliminate_word(gen, by)
+            return word.eliminate_word(gen, by, _all=True)
         else:
             return word
 
@@ -900,7 +900,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         self_lf = self.letter_form
         word_lf = word.letter_form
         index = None
-        for i in range(start,len(self)-l+1):
+        for i in range(start,len(self_lf)-l+1):
             if self_lf[i:i+l] == word_lf:
                 index = i
                 break
@@ -933,14 +933,13 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         i = None
         try:
             i = self.subword_index(word)
-        except:
-            try:
-                i = self.subword_index(word**-1)
-            except:
-                pass
-        if i is not None:
             return True
-        else:
+        except ValueError:
+            pass
+        try:
+            i = self.subword_index(word**-1)
+            return True
+        except ValueError:
             return False
 
     def is_independent(self, word):
