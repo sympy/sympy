@@ -26,7 +26,8 @@ You can also create a subclass of the :class:`Constraint` class to create your o
 
 from __future__ import absolute_import
 
-import funcsigs
+#import funcsigs
+from sympy.utilities import funcsigs
 
 from collections import OrderedDict
 

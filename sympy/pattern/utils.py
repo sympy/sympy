@@ -1,7 +1,8 @@
 u"""This module contains various utility functions."""
 from __future__ import absolute_import
 
-import funcsigs
+#import funcsigs
+from sympy.utilities import funcsigs
 
 import itertools
 import math

@@ -20,3 +20,5 @@ from .runtests import test, doctest
 from .timeutils import timed
 
 from .multiset import Multiset
+
+from .funcsigs import *
