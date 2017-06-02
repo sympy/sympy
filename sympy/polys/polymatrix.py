@@ -1,11 +1,33 @@
 from __future__ import print_function
 
-from sympy.matrices.dense import DenseMatrix
+from sympy.matrices.dense import MutableDenseMatrix
 
 
-class PolyDenseMatrix(DenseMatrix):
+class MutablePolyDenseMatrix(MutableDenseMatrix):
     """
-    Matrix of objects from poly module or to operate with them.
+    A mutable matrix of objects from poly module or to operate with them.
+
+    >>> from sympy.polys.polymatrix import PolyMatrix
+    >>> from sympy import Symbol, Poly
+    >>> x = Symbol('x')
+    >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
+    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
+    >>> pm1*v1
+    Matrix([
+    [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
+    [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
+
+    >>> v1*pm1
+    Matrix([
+    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
+    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
+
+    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(1, x, domain='QQ'), \
+            Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
+    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
+    >>> pm2*v2
+    Matrix([[Poly(x**2, x, domain='QQ')]])
+
     """
     _class_priority = 10
     _sympify = staticmethod(lambda x: x)
@@ -31,76 +53,5 @@ class PolyDenseMatrix(DenseMatrix):
 
         return self._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
 
-
-class MutablePolyDenseMatrix(PolyDenseMatrix):
-    """
-    Mutable version of PolyMatrix
-
-    >>> from sympy.polys.polymatrix import PolyMatrix
-    >>> from sympy import Symbol, Poly
-    >>> x = Symbol('x')
-    >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
-    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
-    >>> pm1*v1
-    Matrix([
-    [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
-    [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
-
-    >>> v1*pm1
-    Matrix([
-    [ Poly(x**2, x, domain='ZZ'), Poly(-x, x, domain='ZZ')],
-    [Poly(-x**2, x, domain='ZZ'),  Poly(x, x, domain='ZZ')]])
-
-    >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(1, x, domain='QQ'), \
-            Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
-    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
-    >>> pm2*v2
-    Matrix([[Poly(x**2, x, domain='QQ')]])
-
-    """
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        # if the `copy` flag is set to False, the input
-        # was rows, cols, [list].  It should be used directly
-        # without creating a copy.
-        if kwargs.get('copy', True) is False:
-            if len(args) != 3:
-                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
-            rows, cols, flat_list = args
-        else:
-            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-            flat_list = list(flat_list) # create a shallow copy
-        self = object.__new__(cls)
-        self.rows = rows
-        self.cols = cols
-        self._mat = flat_list
-        return self
-
-    def row_op(self, i, f):
-        """In-place operation on row ``i`` using two-arg functor whose args are
-        interpreted as ``(self[i, j], j)``.
-
-        See Also
-        ========
-        col_op
-
-        """
-        i0 = i*self.cols
-        ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [f(x, j) for x, j in zip(ri, list(range(self.cols)))]
-
-    def col_op(self, j, f):
-        """In-place operation on col j using two-arg functor whose args are
-        interpreted as (self[i, j], i).
-
-        See Also
-        ========
-        row_op
-
-        """
-        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
 
 MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
