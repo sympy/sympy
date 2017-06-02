@@ -18,7 +18,6 @@ def test_polymatrix():
     assert pm1*v1 == A
     assert pm1*m1 == A
     assert v1*pm1 == B
-    assert m1*pm1 == B
 
     pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**2, x, domain='QQ'), \
                     Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
@@ -28,12 +27,10 @@ def test_polymatrix():
     assert pm2*v2 == C
     assert pm2*m2 == C
 
+    pm3 = PolyMatrix([[Poly(x**2, x), S(1)]])
+    assert (S(1)/2)*pm3 == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]])
+    assert pm3*(S(1)/2) == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]])
 
-def test_polymatrix_mul():
-    pm = PolyMatrix([[Poly(x**2, x), S(1)]])
-    assert (S(1)/2)*pm == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]])
-    assert pm*(S(1)/2) == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]])
-
-    pm2 = PolyMatrix([[Poly(x**2, x, domain='ZZ'), Poly(-x**2, x, domain='ZZ')]])
-    v2 = Matrix([1, -1])
-    assert pm2*v2 == PolyMatrix([[Poly(2*x**2, x, domain='ZZ')]])
+    pm4 = PolyMatrix([[Poly(x**2, x, domain='ZZ'), Poly(-x**2, x, domain='ZZ')]])
+    v4 = Matrix([1, -1])
+    assert pm4*v4 == PolyMatrix([[Poly(2*x**2, x, domain='ZZ')]])
