@@ -33,16 +33,6 @@ def fixed_integer_vector_iter(max_vector, vector_sum):
 
     The iterator yields the vectors in lexicographical order.
 
-    Examples:
-
-        List all vectors that are between ``(0, 0)`` and ``(2, 2)`` componentwise, where the sum of components is 2:
-
-        >>> vectors = list(fixed_integer_vector_iter([2, 2], 2))
-        >>> vectors
-        [(0, 2), (1, 1), (2, 0)]
-        >>> list(map(sum, vectors))
-        [2, 2, 2]
-
     Args:
         max_vector:
             Maximum vector for the iteration. Every yielded result will be less than or equal to this componentwise.
@@ -76,17 +66,6 @@ def weak_composition_iter(n, num_parts):
 
     Each composition is yielded as a tuple. The generated partitions are order-dependant and not unique when
     ignoring the order of the components. The partitions are yielded in lexicographical order.
-
-    Example:
-
-        >>> compositions = list(weak_composition_iter(5, 2))
-        >>> compositions
-        [(0, 5), (1, 4), (2, 3), (3, 2), (4, 1), (5, 0)]
-
-        We can easily verify that all compositions are indeed valid:
-
-        >>> list(map(sum, compositions))
-        [5, 5, 5, 5, 5, 5]
 
     The algorithm was adapted from an answer to this `Stackoverflow question`_.
 
@@ -167,23 +146,6 @@ def commutative_sequence_variable_partition_iter(values, variables
         The results are not yielded in any particular order because the algorithm uses dictionaries. Dictionaries until
         Python 3.6 do not keep track of the insertion order.
 
-    Example:
-
-        For a subject like ``fc(a, a, a, b, b, c)`` and a pattern like ``f(x__, y___, y___)`` one can define the
-        following input parameters for the partitioning:
-
-        >>> x = VariableWithCount(name='x', count=1, minimum=1)
-        >>> y = VariableWithCount(name='y', count=2, minimum=0)
-        >>> values = Multiset('aaabbc')
-
-        Then the solutions are found (and sorted to get a unique output):
-
-        >>> substitutions = commutative_sequence_variable_partition_iter(values, [x, y])
-        >>> as_strings = list(str(Substitution(substitution)) for substitution in substitutions)
-        >>> for substitution in sorted(as_strings):
-        ...     print(substitution)
-
-
     Args:
         values:
             The multiset of values which are partitioned and distributed among the variables.
@@ -222,8 +184,7 @@ def get_short_lambda_source(lambda_func):
 
     The source is returned without the ``lambda`` and signature parts:
 
-    >>> get_short_lambda_source(lambda x, y: x < y)
-    'x < y'
+
 
     This should work well for most lambda definitions, however for multi-line or highly nested lambdas,
     the source extraction might not succeed.
@@ -402,22 +363,6 @@ def generator_chain(initial_data, *factories):
     yielded by the previous one. For each data item yielded by a generator, a new generator is constructed by the
     next factory.
 
-    Example:
-
-        Lets say for every number from 0 to 4, we want to count up to that number. Then we can do
-        something like this using list comprehensions:
-
-        >>> [i for n in range(1, 5) for i in range(1, n + 1)]
-        [1, 1, 2, 1, 2, 3, 1, 2, 3, 4]
-
-        You can use this function to achieve the same thing:
-
-        >>> list(generator_chain(5, lambda n: iter(range(1, n)), lambda i: iter(range(1, i + 1))))
-        [1, 1, 2, 1, 2, 3, 1, 2, 3, 4]
-
-        The advantage is, that this is independent of the number of dependant generators you have.
-        Also, this function does not use recursion so it is safe to use even with large generator counts.
-
     Args:
         initial_data:
             The initial data that is passed to the first generator factory.
@@ -453,58 +398,10 @@ def generator_chain(initial_data, *factories):
 
 
 class cached_property(property):
-    u"""Property with caching.
 
-    An extension of the builtin `property`, that caches the value after the first access.
-    This is useful in case the computation of the property value is expensive.
-
-    Use it just like a regular property decorator. Cached properties cannot have a setter.
-
-    Example:
-
-        First, create a class with a cached property:
-
-        >>> class MyClass:
-        ...     @cached_property
-        ...     def my_property(self):
-        ...         print('my_property called')
-        ...         return 42
-        >>> instance = MyClass()
-
-        Then, access the property and get the computed value:
-
-        >>> instance.my_property
-        my_property called
-        42
-
-        Now the result is cached and the original method will not be called again:
-
-        >>> instance.my_property
-        42
-    """
 
     def __init__(self, getter, slot=None):
-        u"""
-        Use it as a decorator:
 
-        >>> class MyClass:
-        ...     @cached_property
-        ...     def my_property(self):
-        ...         return 42
-
-        The *slot* argument specifies a class slot to use for caching the property. You should use the
-        `slot_cached_property` decorator instead as that is more convenient.
-
-        Args:
-            getter:
-                The getter method for the property.
-            slot:
-                Optional slot to use for the cached value. Only relevant in classes that use slots.
-                Use `slot_cached_property` instead.
-
-        Returns:
-            The wrapped `property` with caching.
-        """
         super(cached_property, self).__init__(getter)
         self._name = getter.__name__
         self._slot = slot
@@ -533,30 +430,6 @@ def slot_cached_property(slot):
     It provides an extension of the builtin `property`, that caches the value in a slot after the first access.
     You need to specify which slot to use for the cached value.
 
-    Example:
-
-        First, create a class with a cached property and a slot to hold the cached value:
-
-        >>> class MyClass:
-        ...     __slots__ = ('_my_cached_property', )
-        ...
-        ...     @slot_cached_property('_my_cached_property')
-        ...     def my_property(self):
-        ...         print('my_property called')
-        ...         return 42
-        ...
-        >>> instance = MyClass()
-
-        Then, access the property and get the computed value:
-
-        >>> instance.my_property
-        my_property called
-        42
-
-        Now the result is cached and the original method will not be called again:
-
-        >>> instance.my_property
-        42
 
     Args:
         slot:
