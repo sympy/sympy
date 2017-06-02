@@ -102,7 +102,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.pattern',
-	'sympy.pattern.expressions',
+    'sympy.pattern.expressions',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.hep',

@@ -11,7 +11,7 @@ import os
 import tokenize
 import copy
 
-from typing import NamedTuple, TypeVar
+from sympy.utilities.typing import NamedTuple, TypeVar
 from sympy.utilities.multiset import Multiset
 
 __all__ = [

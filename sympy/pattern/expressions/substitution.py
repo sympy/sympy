@@ -12,7 +12,7 @@ In addition, the `Substitution` class has some helper methods to unify multiple 
 and nicer string formatting.
 """
 from __future__ import absolute_import
-from typing import Dict, Tuple, Union, cast
+from sympy.utilities.typing import Dict, Tuple, Union, cast
 
 from sympy.utilities.multiset import Multiset
 

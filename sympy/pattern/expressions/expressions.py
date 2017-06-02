@@ -1,6 +1,6 @@
 from abc import ABCMeta
-from enum import Enum, EnumMeta
-from typing import (NamedTuple, TupleMeta)
+from sympy.utilities.enum import Enum, EnumMeta
+from sympy.utilities.typing import (NamedTuple, TupleMeta)
 
 from sympy.core.compatibility import with_metaclass
 

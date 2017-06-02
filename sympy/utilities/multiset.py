@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-"""An implementation of a multiset."""
 
 from collections import defaultdict
 try:
@@ -10,46 +9,11 @@ from itertools import chain, repeat, starmap
 
 
 class BaseMultiset:
-    """A multiset implementation.
-
-    A multiset is similar to the builtin :class:`set`, but elements can occur multiple times in the multiset.
-    It is also similar to a :class:`list` without ordering of the values and hence no index-based operations.
-
-    The multiset internally uses a :class:`dict` for storage where the key is the element and the value its
-    multiplicity. It supports all operations that the :class:`set` supports.
-
-    In contrast to the builtin :class:`collections.Counter`, no negative counts are allowed, elements with
-    zero counts are removed from the :class:`dict`, and set operations are supported.
-
-    The multiset comes in two variants, `Multiset` and `FrozenMultiset` which correspond to the `set` and
-    `frozenset` classes, respectively.
-
-    .. warning::
-
-        You cannot instantiate this class directly. Use one of its variants instead.
-
-    :see: https://en.wikipedia.org/wiki/Multiset
-    """
 
     __slots__ = ('_elements', '_total')
 
     def __init__(self, iterable=None):
-        r"""Create a new, empty Multiset object.
 
-        And if given, initialize with elements from input iterable.
-        Or, initialize from a mapping of elements to their multiplicity.
-
-        Example:
-
-        >>> ms = Multiset()                 # a new, empty multiset
-        >>> ms = Multiset('abc')            # a new multiset from an iterable
-        >>> ms = Multiset({'a': 4, 'b': 2}) # a new multiset from a mapping
-
-        Args:
-            iterable:
-                An optional iterable of elements or mapping of elements to multiplicity to
-                initialize the multiset from.
-        """
         if isinstance(iterable, BaseMultiset):
             self._elements = iterable._elements.copy()
             self._total = iterable._total
@@ -81,7 +45,6 @@ class BaseMultiset:
         return element in self._elements
 
     def __getitem__(self, element):
-        """The multiplicity of an element or zero if it is not in the multiset."""
         return self._elements.get(element, 0)
 
     def __str__(self):
@@ -92,24 +55,7 @@ class BaseMultiset:
         return '%s({%s})' % (type(self).__name__, items)
 
     def __len__(self):
-        """Returns the total number of elements in the multiset.
 
-        Note that this is equivalent to the sum of the multiplicities:
-
-        >>> ms = Multiset('aab')
-        >>> len(ms)
-        3
-        >>> sum(ms.multiplicities())
-        3
-
-        If you need the total number of distinct elements, use either the :meth:`distinct_elements` method:
-        >>> len(ms.distinct_elements())
-        2
-
-        or convert to a :class:`set`:
-        >>> len(set(ms))
-        2
-        """
         return self._total
 
     def __bool__(self):
@@ -119,48 +65,13 @@ class BaseMultiset:
         return chain.from_iterable(starmap(repeat, self._elements.items()))
 
     def isdisjoint(self, other):
-        r"""Return True if the set has no elements in common with other.
 
-        Sets are disjoint iff their intersection is the empty set.
-
-        >>> ms = Multiset('aab')
-        >>> ms.isdisjoint('bc')
-        False
-        >>> ms.isdisjoint(Multiset('ccd'))
-        True
-
-        Args:
-            other: The other set to check disjointedness. Can also be an :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         if not isinstance(other, Container):
             other = self._as_multiset(other)
         return all(element not in other for element in self._elements.keys())
 
     def difference(self, *others):
-        r"""Return a new multiset with all elements from the others removed.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.difference('bc'))
-        ['a', 'a']
-
-        You can also use the ``-`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aabbbc')
-        >>> sorted(ms - Multiset('abd'))
-        ['a', 'b', 'b', 'c']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`difference_update`.
-
-        Args:
-            others: The other sets to remove from the multiset. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-
-        Returns:
-            The resulting difference multiset.
-        """
         result = self.__copy__()
         _elements = result._elements
         _total = result._total
@@ -184,29 +95,7 @@ class BaseMultiset:
         return self.difference(other)
 
     def union(self, *others):
-        r"""Return a new multiset with all elements from the multiset and the others with maximal multiplicities.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.union('bc'))
-        ['a', 'a', 'b', 'c']
-
-        You can also use the ``|`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aab')
-        >>> sorted(ms | Multiset('aaa'))
-        ['a', 'a', 'a', 'b']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`union`.
-
-        Args:
-            *others: The other sets to union the multiset with. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-
-        Returns:
-            The multiset resulting from the union.
-        """
         result = self.__copy__()
         _elements = result._elements
         _total = result._total
@@ -227,29 +116,7 @@ class BaseMultiset:
     __ror__ = __or__
 
     def combine(self, *others):
-        r"""Return a new multiset with all elements from the multiset and the others with their multiplicities summed up.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.combine('bc'))
-        ['a', 'a', 'b', 'b', 'c']
-
-        You can also use the ``+`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aab')
-        >>> sorted(ms + Multiset('a'))
-        ['a', 'a', 'a', 'b']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`update`.
-
-        Args:
-            others: The other sets to add to the multiset. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-
-        Returns:
-            The multiset resulting from the addition of the sets.
-        """
         result = self.__copy__()
         _elements = result._elements
         _total = result._total
@@ -274,29 +141,7 @@ class BaseMultiset:
     __radd__ = __add__
 
     def intersection(self, *others):
-        r"""Return a new multiset with elements common to the multiset and all others.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.intersection('abc'))
-        ['a', 'b']
-
-        You can also use the ``&`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aab')
-        >>> sorted(ms & Multiset('aaac'))
-        ['a', 'a']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`intersection_update`.
-
-        Args:
-            others: The other sets intersect with the multiset. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-
-        Returns:
-            The multiset resulting from the intersection of the sets.
-        """
         result = self.__copy__()
         _elements = result._elements
         _total = result._total
@@ -321,29 +166,7 @@ class BaseMultiset:
     __rand__ = __and__
 
     def symmetric_difference(self, other):
-        r"""Return a new set with elements in either the set or other but not both.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.symmetric_difference('abc'))
-        ['a', 'c']
-
-        You can also use the ``^`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aab')
-        >>> sorted(ms ^ Multiset('aaac'))
-        ['a', 'b', 'c']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`symmetric_difference_update`.
-
-        Args:
-            other: The other set to take the symmetric difference with. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-
-        Returns:
-            The resulting symmetric difference multiset.
-        """
         other = self._as_multiset(other)
         result = self.__class__()
         _total = 0
@@ -370,23 +193,7 @@ class BaseMultiset:
     __rxor__ = __xor__
 
     def times(self, factor):
-        """Return a new set with each element's multiplicity multiplied with the given scalar factor.
 
-        >>> ms = Multiset('aab')
-        >>> sorted(ms.times(2))
-        ['a', 'a', 'a', 'a', 'b', 'b']
-
-        You can also use the ``*`` operator for the same effect:
-
-        >>> sorted(ms * 3)
-        ['a', 'a', 'a', 'a', 'a', 'a', 'b', 'b', 'b']
-
-        For a variant of the operation which modifies the multiset in place see
-        :meth:`times_update`.
-
-        Args:
-            factor: The factor to multiply each multiplicity with.
-        """
         result = self.__copy__()
         _elements = result._elements
         for element in _elements:
@@ -412,30 +219,7 @@ class BaseMultiset:
         return all(multiplicity <= other[element] for element, multiplicity in self.items())
 
     def issubset(self, other):
-        """Return True iff this set is a subset of the other.
 
-        >>> Multiset('ab').issubset('aabc')
-        True
-        >>> Multiset('aabb').issubset(Multiset('aabc'))
-        False
-
-        You can also use the ``<=`` operator for this comparison:
-
-        >>> Multiset('ab') <= Multiset('ab')
-        True
-
-        When using the ``<`` operator for comparison, the sets are checked
-        to be unequal in addition:
-
-        >>> Multiset('ab') < Multiset('ab')
-        False
-
-        Args:
-            other: The potential superset of the multiset to be checked.
-
-        Returns:
-            True iff this set is a subset of the other.
-        """
         return self._issubset(other, False)
 
     def __le__(self, other):
@@ -461,30 +245,7 @@ class BaseMultiset:
         return True
 
     def issuperset(self, other):
-        """Return True iff this multiset is a superset of the other.
 
-        >>> Multiset('aabc').issuperset('ab')
-        True
-        >>> Multiset('aabc').issuperset(Multiset('abcc'))
-        False
-
-        You can also use the ``>=`` operator for this comparison:
-
-        >>> Multiset('ab') >= Multiset('ab')
-        True
-
-        When using the ``>`` operator for comparison, the sets are checked
-        to be unequal in addition:
-
-        >>> Multiset('ab') > Multiset('ab')
-        False
-
-        Args:
-            other: The potential subset of the multiset to be checked.
-
-        Returns:
-            True iff this set is a subset of the other.
-        """
         return self._issuperset(other, False)
 
     def __ge__(self, other):
@@ -516,36 +277,15 @@ class BaseMultiset:
         return not self._issubset(other, False)
 
     def get(self, element, default):
-        """Return the multiplicity for *element* if it is in the multiset, else *default*.
 
-        Makes the *default* argument of the original :meth:`dict.get` non-optional.
-
-        Args:
-            element: The element of which to get the multiplicity.
-            default: The default value to return if the element if not in the multiset.
-
-        Returns:
-            The multiplicity for *element* if it is in the multiset, else *default*.
-        """
         return self._elements.get(element, default)
 
     @classmethod
     def from_elements(cls, elements, multiplicity):
-        """Create a new multiset with the given *elements* and each multiplicity set to *multiplicity*.
 
-        Uses :meth:`dict.fromkeys` internally.
-
-        Args:
-            elements: The element for the new multiset.
-            multiplicity: The multiplicity for all elements.
-
-        Returns:
-            The new multiset.
-        """
         return cls(dict.fromkeys(elements, multiplicity))
 
     def copy(self):
-        """Return a shallow copy of the multiset."""
         return self.__class__(self)
 
     __copy__ = copy
@@ -585,14 +325,10 @@ class BaseMultiset:
 
 
 class Multiset(BaseMultiset):
-    """The mutable multiset variant."""
     __slots__ = ()
 
     def __setitem__(self, element, multiplicity):
-        """Set the element's multiplicity.
 
-        This will remove the element if the multiplicity is less than or equal to zero.
-        '"""
         if not isinstance(multiplicity, int):
             raise TypeError('multiplicity must be an integer')
         _elements = self._elements
@@ -612,55 +348,14 @@ class Multiset(BaseMultiset):
         del self._elements[element]
 
     def update(self, *others):
-        r"""Like :meth:`dict.update` but add multiplicities instead of replacing them.
 
-        >>> ms = Multiset('aab')
-        >>> ms.update('abc')
-        >>> sorted(ms)
-        ['a', 'a', 'a', 'b', 'b', 'c']
-
-        Note that the operator ``+=`` is equivalent to :meth:`update`, except that the operator will only
-        accept sets to avoid accidental errors.
-
-        >>> ms += Multiset('bc')
-        >>> sorted(ms)
-        ['a', 'a', 'a', 'b', 'b', 'b', 'c', 'c']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`combine`.
-
-        Args:
-            others: The other sets to add to this multiset. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         _elements = self._elements
         for other in map(self._as_mapping, others):
             for element, multiplicity in other.items():
                 self[element] += multiplicity
 
     def union_update(self, *others):
-        r"""Update the multiset, adding elements from all others using the maximum multiplicity.
 
-        >>> ms = Multiset('aab')
-        >>> ms.union_update('bc')
-        >>> sorted(ms)
-        ['a', 'a', 'b', 'c']
-
-        You can also use the ``|=`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aab')
-        >>> ms |= Multiset('bccd')
-        >>> sorted(ms)
-        ['a', 'a', 'b', 'c', 'c', 'd']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`union`.
-
-        Args:
-            others: The other sets to union this multiset with. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         _elements = self._elements
         _total = self._total
         for other in map(self._as_mapping, others):
@@ -678,28 +373,7 @@ class Multiset(BaseMultiset):
         return self
 
     def intersection_update(self, *others):
-        r"""Update the multiset, keeping only elements found in it and all others.
 
-        >>> ms = Multiset('aab')
-        >>> ms.intersection_update('bc')
-        >>> sorted(ms)
-        ['b']
-
-        You can also use the ``&=`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aabc')
-        >>> ms &= Multiset('abbd')
-        >>> sorted(ms)
-        ['a', 'b']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`intersection`.
-
-        Args:
-            others: The other sets to intersect this multiset with. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         for other in map(self._as_mapping, others):
             for element, current_count in list(self.items()):
                 multiplicity = other.get(element, 0)
@@ -713,28 +387,7 @@ class Multiset(BaseMultiset):
         return self
 
     def difference_update(self, *others):
-        r"""Remove all elements contained the others from this multiset.
 
-        >>> ms = Multiset('aab')
-        >>> ms.difference_update('abc')
-        >>> sorted(ms)
-        ['a']
-
-        You can also use the ``-=`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aabbbc')
-        >>> ms -= Multiset('abd')
-        >>> sorted(ms)
-        ['a', 'b', 'b', 'c']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`difference`.
-
-        Args:
-            others: The other sets to remove from this multiset. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         for other in map(self._as_multiset, others):
             for element, multiplicity in other.items():
                 self.discard(element, multiplicity)
@@ -746,28 +399,7 @@ class Multiset(BaseMultiset):
         return self
 
     def symmetric_difference_update(self, other):
-        r"""Update the multiset to contain only elements in either this multiset or the other but not both.
 
-        >>> ms = Multiset('aab')
-        >>> ms.symmetric_difference_update('abc')
-        >>> sorted(ms)
-        ['a', 'c']
-
-        You can also use the ``^=`` operator for the same effect. However, the operator version
-        will only accept a set as other operator, not any iterable, to avoid errors.
-
-        >>> ms = Multiset('aabbbc')
-        >>> ms ^= Multiset('abd')
-        >>> sorted(ms)
-        ['a', 'b', 'b', 'c', 'd']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`symmetric_difference`.
-
-        Args:
-            other: The other set to take the symmetric difference with. Can also be any :class:`~typing.Iterable`\[~T]
-                or :class:`~typing.Mapping`\[~T, :class:`int`] which are then converted to :class:`Multiset`\[~T].
-        """
         other = self._as_multiset(other)
         elements = set(self.distinct_elements()) | set(other.distinct_elements())
         for element in elements:
@@ -782,26 +414,7 @@ class Multiset(BaseMultiset):
         return self
 
     def times_update(self, factor):
-        """Update each this multiset by multiplying each element's multiplicity with the given scalar factor.
 
-        >>> ms = Multiset('aab')
-        >>> ms.times_update(2)
-        >>> sorted(ms)
-        ['a', 'a', 'a', 'a', 'b', 'b']
-
-        You can also use the ``*=`` operator for the same effect:
-
-        >>> ms = Multiset('ac')
-        >>> ms *= 3
-        >>> sorted(ms)
-        ['a', 'a', 'a', 'c', 'c', 'c']
-
-        For a variant of the operation which does not modify the multiset, but returns a new
-        multiset instead see :meth:`times`.
-
-        Args:
-            factor: The factor to multiply each multiplicity with.
-        """
         if factor <= 0:
             self.clear()
         else:
@@ -813,73 +426,14 @@ class Multiset(BaseMultiset):
         return self
 
     def add(self, element, multiplicity=1):
-        """Adds an element to the multiset.
 
-        >>> ms = Multiset()
-        >>> ms.add('a')
-        >>> sorted(ms)
-        ['a']
-
-        An optional multiplicity can be specified to define how many of the element are added:
-
-        >>> ms.add('b', 2)
-        >>> sorted(ms)
-        ['a', 'b', 'b']
-
-        This extends the :meth:`MutableSet.add` signature to allow specifying the multiplicity.
-
-        Args:
-            element:
-                The element to add to the multiset.
-            multiplicity:
-                The multiplicity i.e. count of elements to add.
-        """
         if multiplicity < 1:
             raise ValueError("Multiplicity must be positive")
         self._elements[element] += multiplicity
         self._total += multiplicity
 
     def remove(self, element, multiplicity=None):
-        """Removes an element from the multiset.
 
-        If no multiplicity is specified, the element is completely removed from the multiset:
-
-        >>> ms = Multiset('aabbbc')
-        >>> ms.remove('a')
-        2
-        >>> sorted(ms)
-        ['b', 'b', 'b', 'c']
-
-        If the multiplicity is given, it is subtracted from the element's multiplicity in the multiset:
-
-        >>> ms.remove('b', 2)
-        3
-        >>> sorted(ms)
-        ['b', 'c']
-
-        It is not an error to remove more elements than are in the set:
-
-        >>> ms.remove('b', 2)
-        1
-        >>> sorted(ms)
-        ['c']
-
-        This extends the :meth:`MutableSet.remove` signature to allow specifying the multiplicity.
-
-        Args:
-            element:
-                The element to remove from the multiset.
-            multiplicity:
-                An optional multiplicity i.e. count of elements to remove.
-
-        Returns:
-            The multiplicity of the element in the multiset before
-            the removal.
-
-        Raises:
-            KeyError: if the element is not contained in the set. Use :meth:`discard` if
-                you do not want an exception to be raised.
-        """
         _elements = self._elements
         if element not in _elements:
             raise KeyError
@@ -895,51 +449,7 @@ class Multiset(BaseMultiset):
         return old_multiplicity
 
     def discard(self, element, multiplicity=None):
-        """Removes the `element` from the multiset.
 
-        If multiplicity is ``None``, all occurrences of the element are removed:
-
-        >>> ms = Multiset('aab')
-        >>> ms.discard('a')
-        2
-        >>> sorted(ms)
-        ['b']
-
-        Otherwise, the multiplicity is subtracted from the one in the multiset and the
-        old multiplicity is removed:
-
-        >>> ms = Multiset('aab')
-        >>> ms.discard('a', 1)
-        2
-        >>> sorted(ms)
-        ['a', 'b']
-
-        In contrast to :meth:`remove`, this does not raise an error if the
-        element is not in the multiset:
-
-        >>> ms = Multiset('a')
-        >>> ms.discard('b')
-        0
-        >>> sorted(ms)
-        ['a']
-
-        It is also not an error to remove more elements than are in the set:
-
-        >>> ms.remove('a', 2)
-        1
-        >>> sorted(ms)
-        []
-
-        Args:
-            element:
-                The element to remove from the multiset.
-            multiplicity:
-                An optional multiplicity i.e. count of elements to remove.
-
-        Returns:
-            The multiplicity of the element in the multiset before
-            the removal.
-        """
         _elements = self._elements
         if element in _elements:
             old_multiplicity = _elements[element]
@@ -956,42 +466,19 @@ class Multiset(BaseMultiset):
             return 0
 
     def pop(self, element, default):
-        """If *element* is in the multiset, remove it and return its multiplicity, else return *default*.
 
-        Makes the *default* argument of the original :meth:`dict.pop` non-optional.
-
-        Args:
-            element: The element which is removed.
-            default: The default value to return if the element if not in the multiset.
-
-        Returns:
-            The multiplicity for *element* if it is in the multiset, else *default*.
-        """
         return self._elements.pop(element, default)
 
     def setdefault(self, element, default):
-        """If *element* is in the multiset, return its multiplicity.
-        Else add it with a multiplicity of *default* and return *default*.
 
-        Makes the *default* argument of the original :meth:`dict.setdefault` non-optional.
-
-        Args:
-            element: The element which is added if not already present.
-            default: The default multiplicity to add the element with if not in the multiset.
-
-        Returns:
-            The multiplicity for *element* if it is in the multiset, else *default*.
-        """
         return self._elements.setdefault(element, default)
 
     def clear(self):
-        """Empty the multiset."""
         self._elements.clear()
         self._total = 0
 
 
 class FrozenMultiset(BaseMultiset):
-    """The frozen multiset variant that is immutable and hashable."""
     __slots__ = ()
 
     def __hash__(self):

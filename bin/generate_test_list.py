@@ -14,7 +14,7 @@ tests = [
     'sympy.ntheory.tests',
     'sympy.numerics.tests',
     'sympy.parsing.tests',
-	'sympy.pattern.tests',
+    'sympy.pattern.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
     'sympy.polynomials.tests',

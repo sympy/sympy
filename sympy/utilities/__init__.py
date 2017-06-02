@@ -22,3 +22,7 @@ from .timeutils import timed
 from .multiset import Multiset
 
 from .funcsigs import *
+
+from .enum import Enum, EnumMeta
+
+from .typing import NamedTuple, TupleMeta
