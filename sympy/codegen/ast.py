@@ -426,13 +426,13 @@ class Type(Symbol):
     >>> v6 = 0.123456
     >>> f32.cast_check(v6)
     0.123456
-    >>> v10 = 0.1234567895
+    >>> v10 = 12345.67894
     >>> f32.cast_check(v10)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
     ValueError: Casting gives a significantly different value.
     >>> Type('float64').cast_check(v10)
-    0.1234567895
+    12345.67894
     >>> from sympy import Float
     >>> v22 = Float(0.1234567890123456789015)
 
@@ -472,6 +472,12 @@ class Type(Symbol):
             'dig': 18,  # LDBL_DIG
             'decimal_dig': 21,  # LDBL_DECIMAL_DIG
         }
+    }
+
+    default_precision_targets = {  # e.g.:
+        # 'real': 'float64',
+        # 'integer': 'intc',
+        # 'complex': 'complex128'
     }
 
     def __new__(cls, name):
@@ -524,7 +530,7 @@ class Type(Symbol):
             else:
                 return cls('real')
 
-    def cast_check(self, value, rtol=None, atol=None, limits=None):
+    def cast_check(self, value, rtol=None, atol=None, limits=None, precision_targets=None):
         """ Casts a value to the data type of the instance.
 
         Parameters
@@ -537,6 +543,8 @@ class Type(Symbol):
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
             Default: :attr:`Type.default_limits`.
+        precision_targets : dict
+            Maps substitutions for Type.name, e.g. {'integer': 'int64', 'real': 'float32'}
 
         Examples
         --------
@@ -550,70 +558,72 @@ class Type(Symbol):
 
         """
         from sympy.functions.elementary.complexes import im, re
-
+        val = _sympify(value)
         def lim(type_name, key):
             return (limits or self.default_limits).get(type_name, {}).get(key)
 
+        name = (precision_targets or self.default_precision_targets).get(self.name, self.name)
+
         if rtol is None:
-            exp10 = lim(self.name, 'decimal_dig')
-            rtol = 1e-15 if exp10 is None else 10**(1-exp10)
+            exp10 = lim(name, 'decimal_dig')
+            rtol = 1e-15 if exp10 is None else 10**(-exp10)
 
         if atol is None:
             if rtol == 0:
-                exp10 = lim(self.name, 'decimal_dig')
-                atol = 1e-15 if exp10 is None else 10**(1-exp10)
+                exp10 = lim(name, 'decimal_dig')
+                atol = 1e-15 if exp10 is None else 10**(-exp10)
             else:
                 atol = 0
 
-        def tol(val):
-            return atol + rtol*abs(val)
+        def tol(num):
+            return atol + rtol*abs(num)
 
         caster = lambda x: x  # identity
         _min, _max, _tiny = -oo, oo, 0  # undefined precision
 
-        if self.name == 'integer':
+        if name == 'integer':
             caster = int
-        elif self.name.startswith('int'):
-            nbits = int(self.name.split('int')[1])
+        elif name.startswith('int'):
+            nbits = int(name.split('int')[1])
             _min, _max = -2**(nbits - 1), 2**(nbits - 1) - 1
             caster = int
-        elif self.name.startswith('uint'):
-            nbits = int(self.name.split('uint')[1])
+        elif name.startswith('uint'):
+            nbits = int(name.split('uint')[1])
             _min, _max = 0, 2**nbits - 1
             caster = int
-        elif self.name.startswith('float'):
-            _max = +lim(self.name, 'max')
-            _min = -lim(self.name, 'max')
-            _tiny = lim(self.name, 'tiny')
-            caster = lambda x: round(x, lim(self.name, 'decimal_dig'))
+        elif name.startswith('float'):
+            _max = +lim(name, 'max')
+            _min = -lim(name, 'max')
+            _tiny = lim(name, 'tiny')
+            caster = lambda x: Float(str(x.evalf(lim(name, 'decimal_dig'))))
 
-        if self.name.startswith('complex'):
-            if self.name == 'complex':
+        if name.startswith('complex'):
+            if name == 'complex':
                 nbits = 128  # assume double precision as underlying data
             else:
-                nbits = int(self.name.split('complex')[1])
+                nbits = int(name.split('complex')[1])
             corresponding_float = 'float%d' % (nbits // 2)
             _max = +lim(corresponding_float, 'max')
             _tiny = lim(corresponding_float, 'tiny')
-            caster = lambda x: round(x, lim(corresponding_float, 'decimal_dig'))
-            if abs(re(value)) > _max or abs(im(value)) > _max:
+            caster = lambda x: Float(str(x.evalf(lim(corresponding_float, 'decimal_dig'))))
+            if abs(re(val)) > _max or abs(im(val)) > _max:
                 raise ValueError("Maximum value exceeded for data type.")
-            if abs(re(value)) < _tiny or abs(im(value)) < _tiny:
+            if abs(re(val)) < _tiny or abs(im(val)) < _tiny:
                 raise ValueError("Minimum (absolute) value for data type bigger than new value.")
-            new_val = caster(re(value)) + 1j*caster(im(value))
-            delta = new_val - value
-            if abs(re(delta)) > tol(re(value)) or abs(im(delta)) > tol(im(value)):
+            new_val = caster(re(val)) + 1j*caster(im(val))
+            delta = new_val - val
+            if abs(re(delta)) > tol(re(val)) or abs(im(delta)) > tol(im(val)):
                 raise ValueError("Casting gives a significantly different value.")
         else:
-            if value < _min:
+            if val < _min:
                 raise ValueError("Minumum value for data type bigger than new value.")
-            if value > _max:
+            if val > _max:
                 raise ValueError("Maximum value exceeded for data type.")
-            if abs(value) < _tiny:
+            if abs(val) < _tiny:
                 raise ValueError("Smallest (absolute) value for data type bigger than new value.")
-            new_val = caster(value)
-            delta = new_val - value
-            if abs(delta) > tol(value):  # rounding, e.g. int(3.5) != 3.5
+            new_val = caster(val)
+            delta = new_val - val
+            if abs(delta) > tol(val):  # rounding, e.g. int(3.5) != 3.5
                 raise ValueError("Casting gives a significantly different value.")
 
         return new_val

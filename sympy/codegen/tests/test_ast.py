@@ -192,24 +192,33 @@ def test_Type__cast_check__integers():
 
     # Range
     int8 = Type('int8')
-    assert int8.cast_check(127.0) is 127
+    assert int8.cast_check(127.0) == 127
     raises(ValueError, lambda: int8.cast_check(128))
-    assert int8.cast_check(-128) is -128
+    assert int8.cast_check(-128) == -128
     raises(ValueError, lambda: int8.cast_check(-129))
 
     uint8 = Type('uint8')
-    assert uint8.cast_check(0) is 0
-    assert uint8.cast_check(128) is 128
+    assert uint8.cast_check(0) == 0
+    assert uint8.cast_check(128) == 128
     raises(ValueError, lambda: uint8.cast_check(256.0))
     raises(ValueError, lambda: uint8.cast_check(-1))
 
 def test_Type__cast_check__floating_point():
     f32 = Type('float32')
-    assert abs(0.1234567890499 - f32.cast_check(0.1234567890499) - 4.99e-11) < 1e-16
+    # assert abs(0.12345678949 - f32.cast_check(0.12345678949) - 4.9e-10) < 1e-10  # see gh-12038
+    raises(ValueError, lambda: f32.cast_check(123.45678949))
+    raises(ValueError, lambda: f32.cast_check(12.345678949))
+    raises(ValueError, lambda: f32.cast_check(1.2345678949))
+    raises(ValueError, lambda: f32.cast_check(.12345678949))
+    assert abs(123.456789049 - f32.cast_check(123.456789049) - 4.9e-8) < 1e-8
 
     f64 = Type('float64')
-    dcm21 = Float('0.123456789012345604999')  # 21 decimals
-    assert abs(dcm21 - f64.cast_check(dcm21)) < 4999e-21
+    dcm21 = Float('0.123456789012345670499')  # 21 decimals
+    assert abs(dcm21 - f64.cast_check(dcm21) - 4.99e-19) < 1e-19
+
+    f80 = Type('float80')
+    f80.cast_check(Float('0.12345678901234567890103'))
+    raises(ValueError, lambda: f80.cast_check(Float('0.12345678901234567890123')))
 
 
 def test_Variable():
