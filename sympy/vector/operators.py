@@ -1,4 +1,4 @@
-from sympy.core import Expr
+from sympy.core import Expr, sympify
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -6,13 +6,8 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
     """
-
-    expr : vector or scalar
-        From this parameter is obtained information about
-        coordinate system.
-    coord_sys : CoordSysCartesian
-        Deprecated since version 1.1. This parameter is unnecessary.
-
+    expr : expression
+        The coordinate system is extracted from this parameter.
     """
     if coord_sys is not None:
         SymPyDeprecationWarning(
@@ -38,13 +33,14 @@ class Gradient(Expr):
 
     """
 
-    def __new__(cls, scalar):
-        obj = Expr.__new__(cls, scalar)
-        obj._scalar = scalar
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
         return obj
 
-    def doit(self):
-        return gradient(self._scalar)
+    def doit(self, **kwargs):
+        return gradient(self._expr)
 
 
 class Divergence(Expr):
@@ -62,13 +58,14 @@ class Divergence(Expr):
 
     """
 
-    def __new__(cls, vect):
-        obj = Expr.__new__(cls, vect)
-        obj._vect = vect
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
         return obj
 
-    def doit(self):
-        return divergence(self._vect)
+    def doit(self, **kwargs):
+        return divergence(self._expr)
 
 
 class Curl(Expr):
@@ -86,13 +83,14 @@ class Curl(Expr):
 
     """
 
-    def __new__(cls, vect):
-        obj = Expr.__new__(cls, vect)
-        obj._vect = vect
+    def __new__(cls, expr):
+        expr = sympify(expr)
+        obj = Expr.__new__(cls, expr)
+        obj._expr = expr
         return obj
 
-    def doit(self):
-        return curl(self._vect)
+    def doit(self, **kwargs):
+        return curl(self._expr)
 
 
 def gradient(scalar, coord_sys=None):
