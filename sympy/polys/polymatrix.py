@@ -79,26 +79,28 @@ class MutablePolyDenseMatrix(PolyDenseMatrix):
         self._mat = flat_list
         return self
 
+    def row_op(self, i, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], j)``.
 
-class ImmutablePolyDenseMatrix(PolyDenseMatrix):
-    """
-    Immutable version of PolyMatrix
+        See Also
+        ========
+        col_op
 
-    """
-    def __new__(cls, *args, **kwargs):
-        return cls._new(*args, **kwargs)
+        """
+        i0 = i*self.cols
+        ri = self._mat[i0: i0 + self.cols]
+        self._mat[i0: i0 + self.cols] = [f(x, j) for x, j in zip(ri, list(range(self.cols)))]
 
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        if len(args) == 1 and isinstance(args[0], ImmutablePolyMatrix):
-            return args[0]
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
-        self = object.__new__(cls)
-        self.rows = Integer(rows)
-        self.cols = Integer(cols)
-        self._mat = Tuple(*flat_list)
-        return self
+    def col_op(self, j, f):
+        """In-place operation on col j using two-arg functor whose args are
+        interpreted as (self[i, j], i).
 
+        See Also
+        ========
+        row_op
+
+        """
+        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
 
 MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
-ImmutablePolyMatrix = ImmutablePolyDenseMatrix
