@@ -17,6 +17,3 @@ def test_smith_normal():
     setattr(m, 'ring', QQ[x])
     invs = (Poly(1, x), Poly(x - 1), Poly(x**2 - 1))
     assert smith_normal_invariants(m) == invs
-
-    
-
