@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S
+from sympy.core import S, Symbol
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
 from sympy.core.function import diff
@@ -31,8 +31,10 @@ def polytope_integrate(poly, expr, dims=None):
 
     """
     if dims is None:
-        dims = list(expr.free_symbols)
-
+        if isinstance(expr, Expr):
+            dims = sorted(list(expr.free_symbols), key=lambda x: str(x))
+        else:
+            dims = (x, y)
     hp_params = hyperplane_parameters(poly, dims)
     polys = decompose(expr)
     facets = poly.sides
@@ -236,20 +238,20 @@ def best_origin(a, b, lineseg, expr):
     if len(gens) > 1:
         # Special case for vertical and horizontal lines
         if len(gens) == 2:
-            keys = list(a.keys())
-            if a[keys[0]] == 0:
+            x, y = Symbol('x'), Symbol('y')
+            if a[x] == 0:
                 if y_axis_cut(lineseg):
-                    return {keys[1]: b/a[keys[1]], keys[0]: 0}
+                    return {y: b/a[y], x: 0}
                 else:
-                    return {keys[0]: a1, keys[1]: b1}
-            elif a[keys[1]] == 0:
+                    return {x: a1, y: b1}
+            elif a[y] == 0:
                 if x_axis_cut(lineseg):
-                    return {keys[0]: b/a[keys[0]], keys[1]: 0}
+                    return {x: b/a[x], y: 0}
                 else:
-                    return {keys[0]: a1, keys[1]: b1}
+                    return {x: a1, y: b1}
 
-        if isinstance(expr, Expr):  #Find the sum total of power of each
-            if expr.is_Add:         #generator and store in a dictionary.
+        if isinstance(expr, Expr):  # Find the sum total of power of each
+            if expr.is_Add:         # generator and store in a dictionary.
                 for monomial in expr.args:
                     if monomial.is_Pow:
                         if monomial.args[0] in gens:
@@ -272,15 +274,16 @@ def best_origin(a, b, lineseg, expr):
                 power_gens[expr.args[0]] = expr.args[1]
             elif expr.is_Symbol:
                 power_gens[expr] += 1
-        else:  #If `expr` is a constant take first vertex of the line segment.
+        else:  # If `expr` is a constant take first vertex of the line segment.
             keys = list(a.keys())
             return {keys[0]: a1, keys[1]: b1}
 
-        values = list(power_gens.values())
-        keys = list(power_gens.keys())
+        #TODO : This part is quite hacky. Should be made more robust with
+        #TODO : respect to symbol names and scalable w.r.t higher dimensions.
+        power_gens = sorted(power_gens.items(), key=lambda x: str(x[0]))
 
-        if values[0] >= values[1]:
-            max_gen, gen2 = keys
+        if power_gens[0][1] >= power_gens[1][1]:
+            max_gen, gen2 = power_gens[0][0], power_gens[1][0]
             if y_axis_cut(lineseg):
                 x0[max_gen] = 0
                 x0[gen2] = b / a[gen2]
@@ -291,7 +294,7 @@ def best_origin(a, b, lineseg, expr):
                 x0[max_gen] = a1
                 x0[gen2] = b1
         else:
-            gen2, max_gen = keys
+            gen2, max_gen = power_gens[0][0], power_gens[1][0]
             if x_axis_cut(lineseg):
                 x0[max_gen] = 0
                 x0[gen2] = b/a[gen2]
@@ -334,7 +337,6 @@ def decompose(expr):
                 if monomial.is_Pow:
                     degree += monomial.args[1]
                 else:
-                    print(monomial)
                     term_type = len(monomial.args)
                     if term_type == 0:
                         if monomial.is_Symbol:
