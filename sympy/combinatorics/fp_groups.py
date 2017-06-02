@@ -135,14 +135,38 @@ class FpGroup(DefaultPrinting):
         2
 
         """
+        from sympy.core import S
         if self._order != None:
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
         else:
-            self._coset_table = self.coset_enumeration([], strategy)
-            self._order = len(self._coset_table.table)
+            if self._is_infinite():
+                self._order = S.Infinity
+            else:
+                self._coset_table = self.coset_enumeration([], strategy)
+                self._order = len(self._coset_table.table)
         return self._order
+
+    def _is_infinite(self):
+        '''
+        Test if the group is infinite. Return `True` if the test succeeds
+        and `None` otherwise
+
+        '''
+        # Abelianisation test: check is the abelianisation is infinite
+        abelian_rels = []
+        from sympy.matrices import Matrix
+        from sympy.polys.domains import ZZ
+        from sympy.matrices.normalforms import smith_normal_invariants
+        for rel in self.relators():
+            abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
+        m = Matrix(abelian_rels)
+        setattr(m, "ring", ZZ)
+        if 0 in smith_normal_invariants(m):
+            return True
+        else:
+            return None
 
     def index(self, H, strategy="relator_based"):
         """

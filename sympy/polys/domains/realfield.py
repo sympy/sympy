@@ -21,6 +21,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     is_Exact = False
     is_Numerical = True
+    is_PID = False
 
     has_assoc_Ring = False
     has_assoc_Field = True

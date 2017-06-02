@@ -166,7 +166,7 @@ class FracField(DefaultPrinting):
         except CoercionFailed:
             domain = self.domain
 
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
                 ground_field = domain.get_field()
                 element = ground_field.convert(element)
@@ -217,7 +217,7 @@ class FracField(DefaultPrinting):
                 try:
                     return domain.convert(expr)
                 except CoercionFailed:
-                    if not domain.has_Field and domain.has_assoc_Field:
+                    if not domain.is_Field and domain.has_assoc_Field:
                         return domain.get_field().convert(expr)
                     else:
                         raise
@@ -338,7 +338,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         try:
             element = domain.convert(element)
         except CoercionFailed:
-            if not domain.has_Field and domain.has_assoc_Field:
+            if not domain.is_Field and domain.has_assoc_Field:
                 ground_field = domain.get_field()
 
                 try:

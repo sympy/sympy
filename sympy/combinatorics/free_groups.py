@@ -585,7 +585,8 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
             return S.Infinity
 
     def commutator(self, other):
-        """Returns the commutator of `self` and `x`: ``~x*~self*x*self``
+        """
+        Return the commutator of `self` and `x`: ``~x*~self*x*self``
         """
         group = self.group
         if not isinstance(other, group.dtype):

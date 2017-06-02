@@ -21,8 +21,8 @@ class Domain(object):
     zero = None
     one = None
 
-    has_Ring = False
-    has_Field = False
+    is_Ring = False
+    is_Field = False
 
     has_assoc_Ring = False
     has_assoc_Field = False
@@ -42,6 +42,7 @@ class Domain(object):
 
     is_Simple = False
     is_Composite = False
+    is_PID = False
 
     has_CharacteristicZero = False
 
@@ -270,7 +271,7 @@ class Domain(object):
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.has_Field or not K1_ground.has_Field) and domain.has_Field):
+                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field):
                 domain = domain.get_ring()
 
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):

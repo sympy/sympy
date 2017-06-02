@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
 from sympy.combinatorics.free_groups import free_group
@@ -848,3 +849,8 @@ def test_subgroup_presentations():
         "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
         )
     assert str(reidemeister_presentation(f, H)) == k
+
+def test_is_infinite():
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
+    assert f.order() == S.Infinity
