@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy.polys.polytools import Poly
 
 
 class MutablePolyDenseMatrix(MutableDenseMatrix):
@@ -52,6 +53,14 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
                 new_mat[i] = sum(vec)
 
         return self._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+
+    def _eval_scalar_mul(self, other):
+        mat = [Poly(a.as_expr()*other, *a.gens) if isinstance(a, Poly) else a for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
+
+    def _eval_scalar_rmul(self, other):
+        mat = [Poly(other*a.as_expr(), *a.gens) if isinstance(a, Poly) else a for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
 
 
 MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
