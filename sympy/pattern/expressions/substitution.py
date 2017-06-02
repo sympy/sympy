@@ -1,3 +1,16 @@
+# -*- coding: utf-8 -*-
+u"""Contains the `Substitution` class which is a specialized dictionary.
+
+A substitution maps a variable to a replacement value. The variable is represented by its string name.
+The replacement can either be a plain expression, a sequence of expressions, or a `.Multiset` of expressions:
+
+>>> subst = Substitution({'x': a, 'y': (a, b), 'z': Multiset([a, b])})
+>>> print(subst)
+{x ↦ a, y ↦ (a, b), z ↦ {a, b}}
+
+In addition, the `Substitution` class has some helper methods to unify multiple substitutions
+and nicer string formatting.
+"""
 from __future__ import absolute_import
 from typing import Dict, Tuple, Union, cast
 
@@ -11,18 +24,23 @@ VariableReplacement = Union[Tuple[u'expressions.Expression', ...], Multiset, u'e
 
 
 class Substitution(Dict[str, VariableReplacement]):
-    """Special :class:`dict` for substitutions with nicer formatting.
+    u"""Special :class:`dict` for substitutions with nicer formatting.
 
     The key is a variable's name and the value the replacement for it.
     """
 
     def try_add_variable(self, variable_name, replacement):
-        """Try to add the variable with its replacement to the substitution.
+        u"""Try to add the variable with its replacement to the substitution.
 
         This considers an existing replacement and will only succeed if the new replacement
         can be merged with the old replacement. Merging can occur if either the two replacements
         are equivalent. Replacements can also be merged if the old replacement for the variable_name was
         unordered (i.e. a :class:`~.Multiset`) and the new one is an equivalent ordered version of it:
+
+        >>> subst = Substitution({'x': Multiset(['a', 'b'])})
+        >>> subst.try_add_variable('x', ('a', 'b'))
+        >>> print(subst)
+        {x ↦ (a, b)}
 
         Args:
             variable:
@@ -59,7 +77,7 @@ class Substitution(Dict[str, VariableReplacement]):
                 raise ValueError
 
     def union_with_variable(self, variable, replacement):
-        """Try to create a new substitution with the given variable added.
+        u"""Try to create a new substitution with the given variable added.
 
         See :meth:`try_add_variable` for a version of this method that modifies the substitution
         in place.
@@ -83,7 +101,7 @@ class Substitution(Dict[str, VariableReplacement]):
         return new_subst
 
     def extract_substitution(self, subject, pattern):
-        """Extract the variable substitution for the given pattern and subject.
+        u"""Extract the variable substitution for the given pattern and subject.
 
         This assumes that subject and pattern already match when being considered as linear.
         Also, they both must be :term:`syntactic`, as sequence variables cannot be handled here.
@@ -95,6 +113,31 @@ class Substitution(Dict[str, VariableReplacement]):
             This method mutates the substitution and will even do so in case the extraction fails.
 
             Create a copy before using this method if you need to preserve the original substitution.
+
+        Example:
+
+            With an empty initial substitution and a linear pattern, the extraction will always succeed:
+
+            >>> subst = Substitution()
+            >>> subst.extract_substitution(f(a, b), f(x_, y_))
+            True
+            >>> print(subst)
+            {x ↦ a, y ↦ b}
+
+            Clashing values for existing variables will fail:
+
+            >>> subst.extract_substitution(b, x_)
+            False
+
+            For non-linear patterns, the extraction can also fail with an empty substitution:
+
+            >>> subst = Substitution()
+            >>> subst.extract_substitution(f(a, b), f(x_, x_))
+            False
+            >>> print(subst)
+            {x ↦ a}
+
+            Note that the initial substitution got mutated even though the extraction failed!
 
         Args:
             subject:
@@ -121,12 +164,19 @@ class Substitution(Dict[str, VariableReplacement]):
         return True
 
     def union(self, *others):
-        """Try to merge the substitutions.
+        u"""Try to merge the substitutions.
 
         If a variable occurs in multiple substitutions, try to merge the replacements.
         See :meth:`union_with_variable` to see how replacements are merged.
 
         Does not modify any of the original substitutions.
+
+        Example:
+
+        >>> subst1 = Substitution({'x': Multiset(['a', 'b']), 'z': a})
+        >>> subst2 = Substitution({'x': ('a', 'b'), 'y': ('c', )})
+        >>> print(subst1.union(subst2))
+        {x ↦ (a, b), y ↦ (c), z ↦ a}
 
         Args:
             others:
@@ -147,7 +197,15 @@ class Substitution(Dict[str, VariableReplacement]):
         return new_subst
 
     def rename(self, renaming):
-        """Return a copy of the substitution with renamed variables.
+        u"""Return a copy of the substitution with renamed variables.
+
+        Example:
+
+            Rename the variable *x* to *y*:
+
+            >>> subst = Substitution({'x': a})
+            >>> subst.rename({'x': 'y'})
+            {'y': Symbol('a')}
 
         Args:
             renaming:

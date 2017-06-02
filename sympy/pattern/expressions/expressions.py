@@ -15,6 +15,7 @@ __all__ = [
     u'make_plus_variable', u'make_star_variable', u'make_symbol_variable', u'AssociativeOperation', u'CommutativeOperation'
 ]
 
+
 class Expression(object):
 
     def __init__(self, variable_name):
@@ -101,6 +102,13 @@ _ArityBase = NamedTuple(u'_ArityBase', [(u'min_count', int), (u'fixed_size', boo
 
 class Arity(_ArityBase, Enum):
     __metaclass__ = _ArityMeta
+    u"""Arity of an operator as (`int`, `bool`) tuple.
+
+    The first component is the minimum number of operands.
+    If the second component is ``True``, the operator has fixed width arity. In that case, the first component
+    describes the fixed number of operands required.
+    If it is ``False``, the operator has variable width arity.
+    """
 
     def __new__(cls, *data):
         return tuple.__new__(cls, data)
@@ -117,6 +125,11 @@ class Arity(_ArityBase, Enum):
 
 
 class _OperationMeta(ABCMeta):
+    u"""Metaclass for `Operation`
+
+    This metaclass is mainly used to override :meth:`__call__` to provide simplification when creating a
+    new operation expression. This is done to avoid problems when overriding ``__new__`` of the operation class.
+    """
 
     def __init__(cls, name, bases, dct):
         super(_OperationMeta, cls).__init__(name, bases, dct)
@@ -162,6 +175,12 @@ class _OperationMeta(ABCMeta):
         return operation
 
     def _simplify(cls, operands):
+        u"""Flatten/sort the operands of associative/commutative operations.
+
+        Returns:
+            True iff *one_identity* is True and the operation contains a single
+            argument that is not a sequence wildcard.
+        """
 
         if cls.associative:
             new_operands = []  # type: List[Expression]
@@ -188,22 +207,65 @@ class _OperationMeta(ABCMeta):
 
 class Operation(with_metaclass(_OperationMeta, Expression)):
     __metaclass__ = _OperationMeta
+    u"""Base class for all operations.
+
+    Do not instantiate this class directly, but create a subclass for every operation in your domain.
+    You can use :meth:`new` as a shortcut for doing so.
+    """
 
     name = None  # type: str
+    u"""str: Name or symbol for the operator.
 
+    This needs to be overridden in the subclass.
+    """
 
     arity = Arity.variadic  # type: Arity
+    u"""Arity: The arity of the operator.
+
+    Trying to construct an operation expression with a number of operands that does not fit its
+    operation's arity will result in an error.
+    """
 
     associative = False
+    u"""bool: True if the operation is associative, i.e. `f(a, f(b, c)) = f(f(a, b), c)`.
+
+    This attribute is used to flatten nested associative operations of the same type.
+    Therefore, the `arity` of an associative operation has to have an unconstrained maximum
+    number of operand.
+    """
 
     commutative = False
+    u"""bool: True if the operation is commutative, i.e. `f(a, b) = f(b, a)`.
+
+    Note that commutative operations will always be converted into canonical
+    form with sorted operands.
+    """
 
     one_identity = False
+    u"""bool: True if the operation with a single argument is equivalent to the identity function.
+
+    This property is used to simplify expressions, e.g. for ``f`` with ``f.one_identity = True``
+    the expression ``f(a)`` if simplified to ``a``.
+    """
 
     infix = False
+    u"""bool: True if the name of the operation should be used as an infix operator by str()."""
 
     def __init__(self, operands, variable_name=None):
+        u"""Create an operation expression.
 
+        Args:
+            *operands
+                The operands for the operation expression.
+
+        Raises:
+            ValueError:
+                if the operand count does not match the operation's arity.
+            ValueError:
+                if the operation contains conflicting variables, i.e. variables with the same name that match
+                different things. A common example would be mixing sequence and fixed variables with the same name in
+                one expression.
+        """
         super(Operation, self).__init__(variable_name)
 
         operand_count, variable_count = self._count_operands(operands)
@@ -267,7 +329,39 @@ class Operation(with_metaclass(_OperationMeta, Expression)):
         else: commutative = False
         if 'associative' in _3to2kwargs: associative = _3to2kwargs['associative']; del _3to2kwargs['associative']
         else: associative = False
+        u"""Utility method to create a new operation type.
 
+        Example:
+
+        >>> Times = Operation.new('*', Arity.polyadic, 'Times', associative=True, commutative=True, one_identity=True)
+        >>> Times
+        Times['*', Arity.polyadic, associative, commutative, one_identity]
+        >>> str(Times(Symbol('a'), Symbol('b')))
+        '*(a, b)'
+
+        Args:
+            name:
+                Name or symbol for the operator. Will be used as name for the new class if
+                `class_name` is not specified.
+            arity:
+                The arity of the operator as explained in the documentation of `Operation`.
+            class_name:
+                Name for the new operation class to be used instead of name. This argument
+                is required if `name` is not a valid python identifier.
+
+        Keyword Args:
+            associative:
+                See :attr:`~Operation.associative`.
+            commutative:
+                See :attr:`~Operation.commutative`.
+            one_identity:
+                See :attr:`~Operation.one_identity`.
+            infix:
+                See :attr:`~Operation.infix`.
+
+        Raises:
+            ValueError: if the class name of the operation is not a valid class identifier.
+        """
         class_name = class_name or name
         identifier = re.match(tokenize.Name + '$', class_name) and not keyword.iskeyword(class_name)
         if not identifier or keyword.iskeyword(class_name):
@@ -428,13 +522,27 @@ CommutativeOperation.register(frozenset)
 
 
 class Atom(Expression):  # pylint: disable=abstract-method
+    u"""Base for all atomic expressions."""
 
     __iter__ = None
 
 
 class Symbol(Atom):
+    u"""An atomic constant expression term.
+
+    It is uniquely identified by its name.
+
+    Attributes:
+        name (str):
+            The symbol's name.
+    """
 
     def __init__(self, name, variable_name=None):
+        u"""
+        Args:
+            name:
+                The name of the symbol that uniquely identifies it.
+        """
         super(Symbol, self).__init__(variable_name)
         self.name = name
         self.head = self
@@ -460,8 +568,6 @@ class Symbol(Atom):
 
     def __lt__(self, other):
         if not isinstance(other, Expression):
-            #raise TypeError(u'')
-            #raise TypeError(u'{}: An operation with fixed arity cannot have one_identity = True.'.format(name))
             raise NotImplemented
         if isinstance(other, Symbol):
             if self.name == other.name:
@@ -480,11 +586,33 @@ class Symbol(Atom):
 
 
 class Wildcard(Atom):
+    u"""A wildcard that matches any expression.
+
+    The wildcard will match any number of expressions between *min_count* and *fixed_size*.
+    Optionally, the wildcard can also be constrained to only match expressions satisfying a predicate.
+
+    Attributes:
+        min_count (int):
+            The minimum number of expressions this wildcard will match.
+        fixed_size (bool):
+            If ``True``, the wildcard matches exactly *min_count* expressions.
+            If ``False``, the wildcard is a sequence wildcard and can match *min_count* or more expressions.
+    """
 
     head = None
 
     def __init__(self, min_count, fixed_size, variable_name=None):
+        u"""
+        Args:
+            min_count:
+                The minimum number of expressions this wildcard will match. Must be a non-negative number.
+            fixed_size:
+                If ``True``, the wildcard matches exactly *min_count* expressions.
+                If ``False``, the wildcard is a sequence wildcard and can match *min_count* or more expressions.
 
+        Raises:
+            ValueError: if *min_count* is negative or when trying to create a fixed zero-length wildcard.
+        """
         if min_count < 0:
             raise ValueError(u"min_count cannot be negative")
         if min_count == 0 and fixed_size:
@@ -507,24 +635,58 @@ class Wildcard(Atom):
 
     @staticmethod
     def dot(name=None):
+        u"""Create a `Wildcard` that matches a single argument.
 
+        Args:
+            name: An optional name for the wildcard.
+
+        Returns:
+            A dot wildcard.
+        """
         return Wildcard(min_count=1, fixed_size=True, variable_name=name)
 
     @staticmethod
     def symbol(name=None, symbol_type=Symbol):
+        u"""Create a `SymbolWildcard` that matches a single `Symbol` argument.
 
+        Args:
+            name:
+                Optional variable name for the wildcard.
+            symbol_type:
+                An optional subclass of `Symbol` to further limit which kind of symbols are
+                matched by the wildcard.
+
+        Returns:
+            A `SymbolWildcard` that matches the *symbol_type*.
+        """
         if isinstance(name, type) and issubclass(name, Symbol) and symbol_type is Symbol:
             return SymbolWildcard(name)
         return SymbolWildcard(symbol_type, variable_name=name)
 
     @staticmethod
     def star(name=None):
+        u"""Creates a `Wildcard` that matches any number of arguments.
 
+        Args:
+            name:
+                Optional variable name for the wildcard.
+
+        Returns:
+            A star wildcard.
+        """
         return Wildcard(min_count=0, fixed_size=False, variable_name=name)
 
     @staticmethod
     def plus(name=None):
+        u"""Creates a `Wildcard` that matches at least one and up to any number of arguments
 
+        Args:
+            name:
+                Optional variable name for the wildcard.
+
+        Returns:
+            A plus wildcard.
+        """
         return Wildcard(min_count=1, fixed_size=False, variable_name=name)
 
     def __str__(self):
@@ -580,9 +742,24 @@ class Wildcard(Atom):
 
 
 class SymbolWildcard(Wildcard):
+    u"""A special `Wildcard` that matches a `Symbol`.
+
+    Attributes:
+        symbol_type:
+            A subclass of `Symbol` to constrain what the wildcard matches.
+            If not specified, the wildcard will match any `Symbol`.
+    """
 
     def __init__(self, symbol_type=Symbol, variable_name=None):
+        u"""
+        Args:
+            symbol_type:
+                A subclass of `Symbol` to constrain what the wildcard matches.
+                If not specified, the wildcard will match any `Symbol`.
 
+        Raises:
+            TypeError: if *symbol_type* is not a subclass of `Symbol`.
+        """
         super(SymbolWildcard, self).__init__(1, True, variable_name)
 
         if not issubclass(symbol_type, Symbol):
@@ -617,9 +794,20 @@ class SymbolWildcard(Wildcard):
 
 
 class Pattern(object):
+    u"""A pattern is a term that can be matched against another subject term.
+
+    A pattern can contain variables and can optionally have constraints attached to it.
+    Those constraints a predicates which limit what the pattern can match.
+    """
 
     def __init__(self, expression, *constraints):
-
+        u"""
+        Args:
+            expression:
+                The term that forms the pattern.
+            *constraints:
+                Optional constraints for the pattern.
+        """
         self.expression = expression
         self.constraints = constraints
 
@@ -640,29 +828,83 @@ class Pattern(object):
 
     @property
     def is_syntactic(self):
+        u"""True, iff the pattern is :term:`syntactic`."""
         return self.expression.is_syntactic
 
     @property
     def local_constraints(self):
+        u"""The subset of the patterns contrainst which are local.
 
+        A local constraint has a defined non-empty set of dependency variables.
+        These constraints can be evaluated once their dependency variables have a substitution.
+        """
         return [c for c in self.constraints if c.variables]
 
     @property
     def global_constraints(self):
+        u"""The subset of the patterns contrainst which are global.
+
+        A global constraint does not define dependency variables and can only be evaluated, once the
+        match has been completed.
+        """
         return [c for c in self.constraints if not c.variables]
 
 
 def make_dot_variable(name):
+    u"""Create a new variable with the given name that matches a single term.
+
+    Args:
+        name:
+            The name of the variable
+
+    Returns:
+        The new dot variable.
+    """
     return Wildcard.dot(name)
 
 
 def make_symbol_variable(name, symbol_type=Symbol):
+    u"""Create a new variable with the given name that matches a single symbol.
+
+    Optionally, a symbol type can be specified to further limit what the variable can match.
+
+    Args:
+        name:
+            The name of the variable
+        symbol_type:
+            The symbol type must be a subclass of `Symbol`. Defaults to `Symbol` itself.
+
+    Returns:
+        The new symbol variable.
+    """
     return Wildcard.symbol(name, symbol_type)
 
 
 def make_star_variable(name):
+    u"""Create a new variable with the given name that matches any number of terms.
+
+    Can also match an empty argument sequence.
+
+    Args:
+        name:
+            The name of the variable
+
+    Returns:
+        The new star variable.
+    """
     return Wildcard.star(name)
 
 
 def make_plus_variable(name):
+    u"""Create a new variable with the given name that matches any number of terms.
+
+    Only matches sequences with at least one argument.
+
+    Args:
+        name:
+            The name of the variable
+
+    Returns:
+        The new plus variable.
+    """
     return Wildcard.plus(name)

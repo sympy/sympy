@@ -4,8 +4,22 @@ A pattern constraint is used to further filter which subjects a pattern matches.
 
 The most common use would be the :class:`CustomConstraint`, which wraps a lambda or function to act as a constraint:
 
+>>> a_symbol_constraint = CustomConstraint(lambda x: x.name.startswith('a'))
+>>> pattern = Pattern(x_, a_symbol_constraint)
+>>> is_match(Symbol('a1'), pattern)
+True
+>>> is_match(Symbol('b1'), pattern)
+False
+
 There is also the :class:`EqualVariablesConstraint` which will try to unify the substitutions of the variables and only
 match if it succeeds:
+
+>>> equal_constraint = EqualVariablesConstraint('x', 'y')
+>>> pattern = Pattern(f(x_, y_), equal_constraint)
+>>> is_match(f(a, a), pattern)
+True
+>>> is_match(f(a, b), pattern)
+False
 
 You can also create a subclass of the :class:`Constraint` class to create your own custom constraint type.
 """
@@ -127,6 +141,13 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
     u"""Wrapper for lambdas of functions as constraints.
 
     The parameter names have to be the same as the the variable names in the expression:
+
+    >>> constraint = CustomConstraint(lambda x, y: x.name < y.name)
+    >>> pattern = Pattern(f(x_, y_), constraint)
+    >>> is_match(f(a, b), pattern)
+    True
+    >>> is_match(f(b, a), pattern)
+    False
 
     The ordering of the parameters is not important. You only need to have the parameters needed for the constraint,
     not all variables occurring in the pattern.
