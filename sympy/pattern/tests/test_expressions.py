@@ -4,7 +4,7 @@ from sympy.pattern.expressions import (
 )
 
 from sympy.utilities import pytest
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 import inspect
 from itertools import product
 

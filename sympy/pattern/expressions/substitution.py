@@ -14,7 +14,7 @@ and nicer string formatting.
 from __future__ import absolute_import
 from typing import Dict, Tuple, Union, cast
 
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 
 from . import expressions
 

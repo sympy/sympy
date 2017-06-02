@@ -4,7 +4,7 @@ from typing import (NamedTuple, TupleMeta)
 
 from sympy.core.compatibility import with_metaclass
 
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 
 from sympy.pattern.utils import cached_property
 

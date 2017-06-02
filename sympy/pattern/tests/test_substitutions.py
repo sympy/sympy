@@ -1,5 +1,5 @@
 from sympy.utilities import pytest
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 
 from sympy.pattern.expressions.substitution import Substitution
 
@@ -8,7 +8,7 @@ from sympy.pattern.expressions import (
     make_symbol_variable
 )
 
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 
 class SpecialSymbol(Symbol):
     pass

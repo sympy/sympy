@@ -11,7 +11,7 @@ import tokenize
 import copy
 
 from typing import NamedTuple, TypeVar
-from multiset import Multiset
+from sympy.utilities.multiset import Multiset
 
 __all__ = [
     u'fixed_integer_vector_iter', u'weak_composition_iter', u'commutative_sequence_variable_partition_iter',
