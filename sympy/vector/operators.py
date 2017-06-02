@@ -1,10 +1,25 @@
 from sympy.core import Expr
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
-from sympy.vector.deloperator import Del
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-def _get_coord_sys_from_expr(expr):
+def _get_coord_sys_from_expr(expr, coord_sys=None):
+    """
+
+    expr : vector or scalar
+        From this parameter is obtained information about
+        coordinate system.
+    coord_sys : CoordSysCartesian
+        Deprecated since version 1.1. This parameter is unnecessary.
+
+    """
+    if coord_sys is not None:
+        SymPyDeprecationWarning(
+            feature="coord_sys parameter",
+            useinstead="do not use it",
+            deprecated_since_version="1.1"
+        ).warn()
     return list(expr.atoms(CoordSysCartesian))[0]
 
 
@@ -18,8 +33,8 @@ class Gradient(Expr):
     >>> from sympy.vector import CoordSysCartesian, Gradient
     >>> R = CoordSysCartesian('R')
     >>> s = R.x*R.y*R.z
-    >>> Gradient(s, R)
-    Gradient(R.x*R.y*R.z, R)
+    >>> Gradient(s)
+    Gradient(R.x*R.y*R.z)
 
     """
 
@@ -28,11 +43,8 @@ class Gradient(Expr):
         obj._scalar = scalar
         return obj
 
-    def gradient(self):
-        return Del(_get_coord_sys_from_expr(self._scalar)).gradient(self._scalar)
-
     def doit(self):
-        return self.gradient().doit()
+        return gradient(self._scalar)
 
 
 class Divergence(Expr):
@@ -42,11 +54,11 @@ class Divergence(Expr):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSysCartesian, Gradient
+    >>> from sympy.vector import CoordSysCartesian, Divergence
     >>> R = CoordSysCartesian('R')
     >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> Divergence(v, R)
-    Divergence(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k, R)
+    >>> Divergence(v)
+    Divergence(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
 
     """
 
@@ -55,11 +67,8 @@ class Divergence(Expr):
         obj._vect = vect
         return obj
 
-    def divergence(self):
-        return Del(_get_coord_sys_from_expr(self._vect)).dot(self._vect)
-
     def doit(self):
-        return self.divergence().doit()
+        return divergence(self._vect)
 
 
 class Curl(Expr):
@@ -72,8 +81,8 @@ class Curl(Expr):
     >>> from sympy.vector import CoordSysCartesian, Curl
     >>> R = CoordSysCartesian('R')
     >>> v = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> Curl(v, R)
-    Curl(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k, R)
+    >>> Curl(v)
+    Curl(R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k)
 
     """
 
@@ -82,11 +91,8 @@ class Curl(Expr):
         obj._vect = vect
         return obj
 
-    def curl(self):
-        return Del(_get_coord_sys_from_expr(self._vect)).cross(self._vect)
-
     def doit(self):
-        return self.curl().doit()
+        return curl(self._vect)
 
 
 def gradient(scalar, coord_sys=None):
@@ -102,6 +108,7 @@ def gradient(scalar, coord_sys=None):
 
     coord_sys : CoordSysCartesian
         The coordinate system to calculate the gradient in
+        Deprecated since version 1.1
 
     Examples
     ========
@@ -117,7 +124,7 @@ def gradient(scalar, coord_sys=None):
 
     """
 
-    return _get_coord_sys_from_expr(scalar).delop(scalar).doit()
+    return _get_coord_sys_from_expr(scalar, coord_sys).delop(scalar).doit()
 
 
 def divergence(vect, coord_sys=None):
@@ -133,6 +140,7 @@ def divergence(vect, coord_sys=None):
 
     coord_sys : CoordSysCartesian
         The coordinate system to calculate the gradient in
+        Deprecated since version 1.1
 
     Examples
     ========
@@ -148,7 +156,7 @@ def divergence(vect, coord_sys=None):
 
     """
 
-    return _get_coord_sys_from_expr(vect).delop.dot(vect).doit()
+    return _get_coord_sys_from_expr(vect, coord_sys).delop.dot(vect).doit()
 
 
 def curl(vect, coord_sys=None):
@@ -163,7 +171,8 @@ def curl(vect, coord_sys=None):
         The vector operand
 
     coord_sys : CoordSysCartesian
-        The coordinate system to calculate the gradient in
+        The coordinate system to calculate the gradient in.
+        Deprecated since version 1.1
 
     Examples
     ========
@@ -179,4 +188,4 @@ def curl(vect, coord_sys=None):
 
     """
 
-    return _get_coord_sys_from_expr(vect).delop.cross(vect).doit()
+    return _get_coord_sys_from_expr(vect, coord_sys).delop.cross(vect).doit()
