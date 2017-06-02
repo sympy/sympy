@@ -17,7 +17,6 @@ from sympy.core.compatibility import is_sequence, default_sort_key, range, \
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp, factorial
 from sympy.printing import sstr
@@ -402,6 +401,23 @@ class MatrixShaping(MatrixRequired):
         """
         return self._eval_get_diag_blocks()
 
+    @classmethod
+    def hstack(cls, *args):
+        """Return a matrix formed by joining args horizontally (i.e.
+        by repeated application of row_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.hstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0, 2, 0],
+        [0, 1, 0, 2]])
+        """
+        kls = type(args[0])
+        return reduce(kls.row_join, args)
+
     def reshape(self, rows, cols):
         """Reshape the matrix. Total number of elements must remain the same.
 
@@ -602,6 +618,318 @@ class MatrixShaping(MatrixRequired):
         vech
         """
         return self._eval_vec()
+
+    @classmethod
+    def vstack(cls, *args):
+        """Return a matrix formed by joining args vertically (i.e.
+        by repeated application of col_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.vstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0],
+        [0, 1],
+        [2, 0],
+        [0, 2]])
+        """
+        kls = type(args[0])
+        return reduce(kls.col_join, args)
+
+
+class MatrixSpecial(MatrixRequired):
+    """Construction of special matrices"""
+
+    @classmethod
+    def _eval_diag(cls, rows, cols, diag_dict):
+        """diag_dict is a defaultdict containing
+        all the entries of the diagonal matrix."""
+        def entry(i, j):
+            return diag_dict[(i,j)]
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        def entry(i, j):
+            return S.One if i == j else S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
+        if band == 'lower':
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif j + 1 == i:
+                    return S.One
+                return S.Zero
+        else:
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif i + 1 == j:
+                    return S.One
+                return S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_ones(cls, rows, cols):
+        def entry(i, j):
+            return S.One
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        def entry(i, j):
+            return S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def diag(kls, *args, **kwargs):
+        """Returns a matrix with the specified diagonal.
+        If matrices are passed, a block-diagonal matrix
+        is created.
+
+        kwargs
+        ======
+
+        rows : rows of the resulting matrix; computed if
+               not given.
+        cols : columns of the resulting matrix; computed if
+               not given.
+        cls : class for the resulting matrix
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> Matrix.diag(1, 2, 3)
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+        >>> Matrix.diag([1, 2, 3])
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+
+        The diagonal elements can be matrices; diagonal filling will
+        continue on the diagonal from the last element of the matrix:
+
+        >>> from sympy.abc import x, y, z
+        >>> a = Matrix([x, y, z])
+        >>> b = Matrix([[1, 2], [3, 4]])
+        >>> c = Matrix([[5, 6]])
+        >>> Matrix.diag(a, 7, b, c)
+        Matrix([
+        [x, 0, 0, 0, 0, 0],
+        [y, 0, 0, 0, 0, 0],
+        [z, 0, 0, 0, 0, 0],
+        [0, 7, 0, 0, 0, 0],
+        [0, 0, 1, 2, 0, 0],
+        [0, 0, 3, 4, 0, 0],
+        [0, 0, 0, 0, 5, 6]])
+
+        A given band off the diagonal can be made by padding with a
+        vertical or horizontal "kerning" vector:
+
+        >>> hpad = Matrix(0, 2, [])
+        >>> vpad = Matrix(2, 0, [])
+        >>> Matrix.diag(vpad, 1, 2, 3, hpad) + Matrix.diag(hpad, 4, 5, 6, vpad)
+        Matrix([
+        [0, 0, 4, 0, 0],
+        [0, 0, 0, 5, 0],
+        [1, 0, 0, 0, 6],
+        [0, 2, 0, 0, 0],
+        [0, 0, 3, 0, 0]])
+
+        The type of the resulting matrix can be affected with the ``cls``
+        keyword.
+
+        >>> type(Matrix.diag(1))
+        <class 'sympy.matrices.dense.MutableDenseMatrix'>
+        >>> from sympy.matrices import ImmutableMatrix
+        >>> type(Matrix.diag(1, cls=ImmutableMatrix))
+        <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+        """
+
+        klass = kwargs.get('cls', kls)
+        # allow a sequence to be passed in as the only argument
+        if len(args) == 1 and is_sequence(args[0]) and not isinstance(args[0], MatrixBase):
+            args = args[0]
+
+        def size(m):
+            """Compute the size of the diagonal block"""
+            if hasattr(m, 'rows'):
+                return m.rows, m.cols
+            return 1, 1
+        diag_rows = sum(size(m)[0] for m in args)
+        diag_cols =  sum(size(m)[1] for m in args)
+        rows = kwargs.get('rows', diag_rows)
+        cols = kwargs.get('cols', diag_cols)
+        if rows < diag_rows or cols < diag_cols:
+            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+                             "diagonal of size at least {} x {}.".format(rows, cols,
+                                                                         diag_rows, diag_cols))
+
+        # fill a default dict with the diagonal entries
+        diag_entries = collections.defaultdict(lambda: S.Zero)
+        row_pos, col_pos = 0, 0
+        for m in args:
+            if hasattr(m, 'rows'):
+                # in this case, we're a matrix
+                for i in range(m.rows):
+                    for j in range(m.cols):
+                        diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
+                row_pos += m.rows
+                col_pos += m.cols
+            else:
+                # in this case, we're a single value
+                diag_entries[(row_pos, col_pos)] = m
+                row_pos += 1
+                col_pos += 1
+        return klass._eval_diag(rows, cols, diag_entries)
+
+    @classmethod
+    def eye(kls, rows, cols=None, **kwargs):
+        """Returns an identity matrix.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_eye(rows, cols)
+
+    @classmethod
+    def jordan_block(kls, *args, **kwargs):
+        """Returns a Jordan block with the specified size
+        and eigenvalue.  You may call `jordan_block` with
+        two args (size, eigenvalue) or with keyword arguments.
+
+        kwargs
+        ======
+
+        size : rows and columns of the matrix
+        rows : rows of the matrix (if None, rows=size)
+        cols : cols of the matrix (if None, cols=size)
+        eigenvalue : value on the diagonal of the matrix
+        band : position of off-diagonal 1s.  May be 'upper' or
+               'lower'. (Default: 'upper')
+
+        cls : class of the returned matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> Matrix.jordan_block(4, x)
+        Matrix([
+        [x, 1, 0, 0],
+        [0, x, 1, 0],
+        [0, 0, x, 1],
+        [0, 0, 0, x]])
+        >>> Matrix.jordan_block(4, x, band='lower')
+        Matrix([
+        [x, 0, 0, 0],
+        [1, x, 0, 0],
+        [0, 1, x, 0],
+        [0, 0, 1, x]])
+        >>> Matrix.jordan_block(size=4, eigenvalue=x)
+        Matrix([
+        [x, 1, 0, 0],
+        [0, x, 1, 0],
+        [0, 0, x, 1],
+        [0, 0, 0, x]])
+        """
+
+        klass = kwargs.get('cls', kls)
+        size, eigenvalue = None, None
+        if len(args) == 2:
+            size, eigenvalue = args
+        elif len(args) == 1:
+            size = args[0]
+        elif len(args) != 0:
+            raise ValueError("'jordan_block' accepts 0, 1, or 2 arguments, not {}".format(len(args)))
+        rows, cols = kwargs.get('rows', None), kwargs.get('cols', None)
+        size = kwargs.get('size', size)
+        band = kwargs.get('band', 'upper')
+        # allow for a shortened form of `eigenvalue`
+        eigenvalue = kwargs.get('eigenval', eigenvalue)
+        eigenvalue = kwargs.get('eigenvalue', eigenvalue)
+
+        if eigenvalue is None:
+            raise ValueError("Must supply an eigenvalue")
+
+        if (size, rows, cols) == (None, None, None):
+            raise ValueError("Must supply a matrix size")
+
+        if size is not None:
+            rows, cols = size, size
+        elif rows is not None and cols is None:
+            cols = rows
+        elif cols is not None and rows is None:
+            rows = cols
+
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_jordan_block(rows, cols, eigenvalue, band)
+
+    @classmethod
+    def ones(kls, rows, cols=None, **kwargs):
+        """Returns a matrix of ones.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_ones(rows, cols)
+
+    @classmethod
+    def zeros(kls, rows, cols=None, **kwargs):
+        """Returns a matrix of zeros.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_zeros(rows, cols)
 
 
 class MatrixProperties(MatrixRequired):
@@ -2230,7 +2558,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
 
 
 class MatrixReductions(MatrixDeterminant):
-    """Provides basic matrix inversion operations.
+    """Provides basic matrix row/column operations.
     Should not be instantiated directly."""
 
     def _eval_col_op_swap(self, col1, col2):
@@ -2468,7 +2796,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         """Returns a matrix row-equivalent to `self` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -2477,6 +2805,8 @@ class MatrixReductions(MatrixDeterminant):
             simplify, FunctionType) else _simplify
 
         mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        if with_pivots:
+            return mat, pivots
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
@@ -2648,6 +2978,375 @@ class MatrixReductions(MatrixDeterminant):
         return ret
 
 
+class MatrixSubspaces(MatrixReductions):
+    """Provides methods relating to the fundamental subspaces
+    of a matrix.  Should not be instantiated directly."""
+
+    def columnspace(self, simplify=False):
+        """Returns a list of vectors (Matrix objects) that span columnspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.columnspace()
+        [Matrix([
+        [ 1],
+        [-2],
+        [ 3]]), Matrix([
+        [0],
+        [0],
+        [6]])]
+
+        See Also
+        ========
+
+        nullspace
+        rowspace
+        """
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+
+        return [self.col(i) for i in pivots]
+
+    def nullspace(self, simplify=False):
+        """Returns list of vectors (Matrix objects) that span nullspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.nullspace()
+        [Matrix([
+        [-3],
+        [ 1],
+        [ 0]])]
+
+        See Also
+        ========
+
+        columnspace
+        rowspace
+        """
+
+        reduced, pivots = self.rref(simplify=simplify)
+
+        free_vars = [i for i in range(self.cols) if i not in pivots]
+
+        basis = []
+        for free_var in free_vars:
+            # for each free variable, we will set it to 1 and all others
+            # to 0.  Then, we will use back substitution to solve the system
+            vec = [S.Zero]*self.cols
+            vec[free_var] = S.One
+            for piv_row, piv_col in enumerate(pivots):
+                for pos in pivots[piv_row+1:] + (free_var,):
+                    vec[piv_col] -= reduced[piv_row, pos]
+            basis.append(vec)
+
+        return [self._new(self.cols, 1, b) for b in basis]
+
+    def rowspace(self, simplify=False):
+        """Returns a list of vectors that span the row space of self."""
+
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+
+        return [reduced.row(i) for i in range(len(pivots))]
+
+
+class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
+    """Provides basic matrix eigenvalue/vector operations.
+    Should not be instantiated directly."""
+
+    _cache_is_diagonalizable = None
+    _cache_eigenvects = None
+
+    def diagonalize(self, reals_only=False, sort=False, normalize=False):
+        """
+        Return (P, D), where D is diagonal and
+
+            D = P^-1 * M * P
+
+        where M is current matrix.
+
+        Parameters
+        ==========
+
+        reals_only : bool. Whether to throw an error if complex numbers are need
+                     to diagonalize. (Default: False)
+        sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
+        normalize : bool. If True, normalize the columns of P. (Default: False)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        Matrix([
+        [1,  2, 0],
+        [0,  3, 0],
+        [2, -4, 2]])
+        >>> (P, D) = m.diagonalize()
+        >>> D
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+        >>> P
+        Matrix([
+        [-1, 0, -1],
+        [ 0, 0, -1],
+        [ 2, 1,  2]])
+        >>> P.inv() * m * P
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+
+        See Also
+        ========
+
+        is_diagonal
+        is_diagonalizable
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        if not self.is_diagonalizable(reals_only=reals_only, clear_cache=False):
+            raise MatrixError("Matrix is not diagonalizable")
+
+        eigenvecs = self._cache_eigenvects
+        if eigenvecs is None:
+            eigenvecs = self.eigenvects(simplify=True)
+
+        if sort:
+            eigenvecs = sorted(eigenvecs, key=default_sort_key)
+
+        p_cols, diag = [], []
+        for val, mult, basis in eigenvecs:
+            diag += [val] * mult
+            p_cols += basis
+
+        if normalize:
+            p_cols = [v / v.norm() for v in p_cols]
+
+        return self.hstack(*p_cols), self.diag(*diag)
+
+    def eigenvals(self, **flags):
+        """Return eigenvalues using the Berkowitz agorithm to compute
+        the characteristic polynomial.
+
+        Since the roots routine doesn't always work well with Floats,
+        they will be replaced with Rationals before calling that
+        routine. If this is not desired, set flag ``rational`` to False.
+        """
+        mat = self
+        if not mat:
+            return {}
+        if flags.pop('rational', True):
+            if any(v.has(Float) for v in mat):
+                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        flags.pop('simplify', None)  # pop unsupported flag
+        return roots(mat.charpoly(x=Dummy('x')), **flags)
+
+    def eigenvects(self, **flags):
+        """Return list of triples (eigenval, multiplicity, basis).
+
+        The flag ``simplify`` has two effects:
+            1) if bool(simplify) is True, as_content_primitive()
+            will be used to tidy up normalization artifacts;
+            2) if nullspace needs simplification to compute the
+            basis, the simplify flag will be passed on to the
+            nullspace routine which will interpret it there.
+
+        If the matrix contains any Floats, they will be changed to Rationals
+        for computation purposes, but the answers will be returned after being
+        evaluated with evalf. If it is desired to removed small imaginary
+        portions during the evalf step, pass a value for the ``chop`` flag.
+        """
+        from sympy.matrices import eye
+
+        simplify = flags.get('simplify', True)
+        if not isinstance(simplify, FunctionType):
+            simpfunc = _simplify if simplify else lambda x: x
+        primitive = flags.get('simplify', False)
+        chop = flags.pop('chop', False)
+
+        flags.pop('multiple', None)  # remove this if it's there
+
+        mat = self
+        # roots doesn't like Floats, so replace them with Rationals
+        has_floats = any(v.has(Float) for v in self)
+        if has_floats:
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        def eigenspace(eigenval):
+            """Get a basis for the eigenspace for a particular eigenvalue"""
+            m = mat - eye(mat.rows) * eigenval
+            ret = m.nullspace()
+            # the nullspace for a real eigenvalue should be
+            # non-trivial.  If we didn't find an eigenvector, try once
+            # more a little harder
+            if len(ret) == 0 and simplify:
+                ret = m.nullspace(simplify=True)
+            if len(ret) == 0:
+                raise NotImplementedError(
+                        "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
+            return ret
+
+        eigenvals = mat.eigenvals(rational=False, **flags)
+        ret = [(val, mult, eigenspace(val)) for val, mult in
+                    sorted(eigenvals.items(), key=default_sort_key)]
+        if primitive:
+            # if the primitive flag is set, get rid of any common
+            # integer denominators
+            def denom_clean(l):
+                from sympy import gcd
+                return [simpfunc(v / gcd(list(v))) for v in l]
+            ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
+        if has_floats:
+            # if we had floats to start with, turn the eigenvectors to floats
+            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
+        return ret
+
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        """Returns true if a matrix is diagonalizable.
+
+        Parameters
+        ==========
+
+        reals_only : bool. If reals_only=True, determine whether the matrix can be
+                     diagonalized without complex numbers. (Default: False)
+
+        kwargs
+        ======
+
+        clear_cache : bool. If True, clear the result of any computations when finished.
+                      (Default: True)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        Matrix([
+        [1,  2, 0],
+        [0,  3, 0],
+        [2, -4, 2]])
+        >>> m.is_diagonalizable()
+        True
+        >>> m = Matrix(2, 2, [0, 1, 0, 0])
+        >>> m
+        Matrix([
+        [0, 1],
+        [0, 0]])
+        >>> m.is_diagonalizable()
+        False
+        >>> m = Matrix(2, 2, [0, 1, -1, 0])
+        >>> m
+        Matrix([
+        [ 0, 1],
+        [-1, 0]])
+        >>> m.is_diagonalizable()
+        True
+        >>> m.is_diagonalizable(reals_only=True)
+        False
+
+        See Also
+        ========
+
+        is_diagonal
+        diagonalize
+        """
+
+        clear_cache = kwargs.get('clear_cache', True)
+        if 'clear_subproducts' in kwargs:
+            SymPyDeprecationWarning(useinstead="clear_cache", deprecated_since_version="1.1")
+            clear_cache = kwargs.get('clear_subproducts')
+
+        def cleanup():
+            """Clears any cached values if requested"""
+            if clear_cache:
+                self._cache_eigenvects = None
+                self._cache_is_diagonalizable = None
+
+        if not self.is_square:
+            cleanup()
+            return False
+
+        # use the cached value if we have it
+        if self._cache_is_diagonalizable is not None:
+            ret = self._cache_is_diagonalizable
+            cleanup()
+            return ret
+
+        if all(e.is_real for e in self) and self.is_symmetric():
+            # every real symmetric matrix is real diagonalizable
+            self._cache_is_diagonalizable = True
+            cleanup()
+            return True
+
+        self._cache_eigenvects = self.eigenvects(simplify=True)
+        ret = True
+        for val, mult, basis in self._cache_eigenvects:
+            # if we have a complex eigenvalue
+            if reals_only and not val.is_real:
+                ret = False
+            # if the geometric multiplicity doesn't equal the algebraic
+            if mult != len(basis):
+                ret = False
+        cleanup()
+        return ret
+
+    def left_eigenvects(self, **flags):
+        """Returns left eigenvectors and eigenvalues.
+
+        This function returns the list of triples (eigenval, multiplicity,
+        basis) for the left eigenvectors. Options are the same as for
+        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
+        eigenvects().
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
+        >>> M.eigenvects()
+        [(-1, 1, [Matrix([
+        [-1],
+        [ 1],
+        [ 0]])]), (0, 1, [Matrix([
+        [ 0],
+        [-1],
+        [ 1]])]), (2, 1, [Matrix([
+        [2/3],
+        [1/3],
+        [  1]])])]
+        >>> M.left_eigenvects()
+        [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
+        1, [Matrix([[1, 1, 1]])])]
+
+        """
+        eigs = self.transpose().eigenvects(**flags)
+
+        return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
+
+
 class MatrixDeprecated(MatrixRequired):
     """A class to house deprecated matrix methods."""
 
@@ -2805,7 +3504,7 @@ class MatrixDeprecated(MatrixRequired):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
+class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial):
     # Added just for numpy compatibility
     __array_priority__ = 11
 
@@ -3030,6 +3729,10 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         elif len(args) == 3:
             rows = as_int(args[0])
             cols = as_int(args[1])
+
+            if rows < 0 or cols < 0:
+                raise ValueError("Cannot create a {} x {} matrix. "
+                                 "Both dimensions must be positive".format(rows, cols))
 
             # Matrix(2, 2, lambda i, j: i+j)
             if len(args) == 3 and isinstance(args[2], collections.Callable):
@@ -3386,44 +4089,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky()
 
-    def columnspace(self, simplify=False):
-        """Returns list of vectors (Matrix objects) that span columnspace of self
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.columnspace()
-        [Matrix([
-        [ 1],
-        [-2],
-        [ 3]]), Matrix([
-        [0],
-        [0],
-        [6]])]
-
-        See Also
-        ========
-
-        nullspace
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-        reduced, pivots = self.rref(simplify=simpfunc)
-
-        basis = []
-        # create a set of vectors for the basis
-        for i in range(self.cols):
-            if i in pivots:
-                basis.append(self.col(i))
-        return [self._new(b) for b in basis]
-
     def condition_number(self):
         """Returns the condition number of a matrix.
 
@@ -3565,74 +4230,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False):
-        """
-        Return (P, D), where D is diagonal and
-
-            D = P^-1 * M * P
-
-        where M is current matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-        >>> m
-        Matrix([
-        [1,  2, 0],
-        [0,  3, 0],
-        [2, -4, 2]])
-        >>> (P, D) = m.diagonalize()
-        >>> D
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
-        >>> P
-        Matrix([
-        [-1, 0, -1],
-        [ 0, 0, -1],
-        [ 2, 1,  2]])
-        >>> P.inv() * m * P
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
-
-        See Also
-        ========
-
-        is_diagonal
-        is_diagonalizable
-
-        """
-        from sympy.matrices import diag
-
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self.is_diagonalizable(reals_only, False):
-            self._diagonalize_clear_subproducts()
-            raise MatrixError("Matrix is not diagonalizable")
-        else:
-            if self._eigenvects is None:
-                self._eigenvects = self.eigenvects(simplify=True)
-            if sort:
-                self._eigenvects.sort(key=default_sort_key)
-                self._eigenvects.reverse()
-            diagvals = []
-            P = self._new(self.rows, 0, [])
-            for eigenval, multiplicity, vects in self._eigenvects:
-                for k in range(multiplicity):
-                    diagvals.append(eigenval)
-                    vec = vects[k]
-                    if normalize:
-                        vec = vec / vec.norm()
-                    P = P.col_insert(P.cols, vec)
-            D = diag(*diagvals)
-            self._diagonalize_clear_subproducts()
-            return (P, D)
-
     def diff(self, *args):
         """Calculate the derivative of each element in the matrix.
 
@@ -3753,99 +4350,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             work[l, 0] = acum
 
         return work
-
-    def eigenvals(self, **flags):
-        """Return eigenvalues using the Berkowitz agorithm to compute
-        the characteristic polynomial.
-
-        Since the roots routine doesn't always work well with Floats,
-        they will be replaced with Rationals before calling that
-        routine. If this is not desired, set flag ``rational`` to False.
-        """
-        # roots doesn't like Floats, so replace them with Rationals
-        # unless the nsimplify flag indicates that this has already
-        # been done, e.g. in eigenvects
-        mat = self
-
-        if not mat:
-            return {}
-        if flags.pop('rational', True):
-            if any(v.has(Float) for v in mat):
-                mat = mat._new(mat.rows, mat.cols,
-                               [nsimplify(v, rational=True) for v in mat])
-
-        flags.pop('simplify', None)  # pop unsupported flag
-        return roots(mat.charpoly(x=Dummy('x')), **flags)
-
-    def eigenvects(self, **flags):
-        """Return list of triples (eigenval, multiplicity, basis).
-
-        The flag ``simplify`` has two effects:
-            1) if bool(simplify) is True, as_content_primitive()
-            will be used to tidy up normalization artifacts;
-            2) if nullspace needs simplification to compute the
-            basis, the simplify flag will be passed on to the
-            nullspace routine which will interpret it there.
-
-        If the matrix contains any Floats, they will be changed to Rationals
-        for computation purposes, but the answers will be returned after being
-        evaluated with evalf. If it is desired to removed small imaginary
-        portions during the evalf step, pass a value for the ``chop`` flag.
-        """
-        from sympy.matrices import eye
-
-        simplify = flags.get('simplify', True)
-        primitive = bool(flags.get('simplify', False))
-        chop = flags.pop('chop', False)
-
-        flags.pop('multiple', None)  # remove this if it's there
-
-        # roots doesn't like Floats, so replace them with Rationals
-        float = False
-        mat = self
-        if any(v.has(Float) for v in self):
-            float = True
-            mat = mat._new(mat.rows, mat.cols, [nsimplify(
-                v, rational=True) for v in mat])
-            flags['rational'] = False  # to tell eigenvals not to do this
-
-        out, vlist = [], mat.eigenvals(**flags)
-        vlist = list(vlist.items())
-        vlist.sort(key=default_sort_key)
-        flags.pop('rational', None)
-
-        for r, k in vlist:
-            tmp = mat.as_mutable() - eye(mat.rows) * r
-            basis = tmp.nullspace()
-            # whether tmp.is_symbolic() is True or False, it is possible that
-            # the basis will come back as [] in which case simplification is
-            # necessary.
-            if not basis:
-                # The nullspace routine failed, try it again with simplification
-                basis = tmp.nullspace(simplify=simplify)
-                if not basis:
-                    raise NotImplementedError(
-                        "Can't evaluate eigenvector for eigenvalue %s" % r)
-            if primitive:
-                # the relationship A*e = lambda*e will still hold if we change the
-                # eigenvector; so if simplify is True we tidy up any normalization
-                # artifacts with as_content_primtive (default) and remove any pure Integer
-                # denominators.
-                l = 1
-                for i, b in enumerate(basis[0]):
-                    c, p = signsimp(b).as_content_primitive()
-                    if c is not S.One:
-                        b = c * p
-                        l = ilcm(l, c.q)
-                    basis[0][i] = b
-                if l != 1:
-                    basis[0] *= l
-            if float:
-                out.append((r.evalf(chop=chop), k, [
-                    mat._new(b).evalf(chop=chop) for b in basis]))
-            else:
-                out.append((r, k, [mat._new(b) for b in basis]))
-        return out
 
     def exp(self):
         """Return the exponentiation of a square matrix."""
@@ -4016,23 +4520,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             return sol, tau, free_var_index
         else:
             return sol, tau
-
-    @classmethod
-    def hstack(cls, *args):
-        """Return a matrix formed by joining args horizontally (i.e.
-        by repeated application of row_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.hstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0, 2, 0],
-        [0, 1, 0, 2]])
-        """
-        kls = type(args[0])
-        return reduce(kls.row_join, args)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -4230,69 +4717,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         if method is not None:
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
-
-    def is_diagonalizable(self, reals_only=False, clear_subproducts=True):
-        """Check if matrix is diagonalizable.
-
-        If reals_only==True then check that diagonalized matrix consists of the only not complex values.
-
-        Some subproducts could be used further in other methods to avoid double calculations,
-        By default (if clear_subproducts==True) they will be deleted.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-        >>> m
-        Matrix([
-        [1,  2, 0],
-        [0,  3, 0],
-        [2, -4, 2]])
-        >>> m.is_diagonalizable()
-        True
-        >>> m = Matrix(2, 2, [0, 1, 0, 0])
-        >>> m
-        Matrix([
-        [0, 1],
-        [0, 0]])
-        >>> m.is_diagonalizable()
-        False
-        >>> m = Matrix(2, 2, [0, 1, -1, 0])
-        >>> m
-        Matrix([
-        [ 0, 1],
-        [-1, 0]])
-        >>> m.is_diagonalizable()
-        True
-        >>> m.is_diagonalizable(True)
-        False
-
-        See Also
-        ========
-
-        is_diagonal
-        diagonalize
-        """
-        if not self.is_square:
-            return False
-        res = False
-        self._is_symbolic = self.is_symbolic()
-        self._is_symmetric = self.is_symmetric()
-        self._eigenvects = None
-        self._eigenvects = self.eigenvects(simplify=True)
-        all_iscorrect = True
-        for eigenval, multiplicity, vects in self._eigenvects:
-            if len(vects) != multiplicity:
-                all_iscorrect = False
-                break
-            elif reals_only and not eigenval.is_real:
-                all_iscorrect = False
-                break
-        res = all_iscorrect
-        if clear_subproducts:
-            self._diagonalize_clear_subproducts()
-        return res
 
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
@@ -4626,44 +5050,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
-
-    def left_eigenvects(self, **flags):
-        """Returns left eigenvectors and eigenvalues.
-
-        This function returns the list of triples (eigenval, multiplicity,
-        basis) for the left eigenvectors. Options are the same as for
-        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
-        eigenvects().
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
-        >>> M.eigenvects()
-        [(-1, 1, [Matrix([
-        [-1],
-        [ 1],
-        [ 0]])]), (0, 1, [Matrix([
-        [ 0],
-        [-1],
-        [ 1]])]), (2, 1, [Matrix([
-        [2/3],
-        [1/3],
-        [  1]])])]
-        >>> M.left_eigenvects()
-        [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
-        1, [Matrix([[1, 1, 1]])])]
-
-        """
-        mat = self
-        left_transpose = mat.transpose().eigenvects(**flags)
-
-        left = []
-        for (ev, mult, ltmp) in left_transpose:
-            left.append((ev, mult, [l.transpose() for l in ltmp]))
-
-        return left
 
     def limit(self, *args):
         """Calculate the limit of each element in the matrix.
@@ -5186,63 +5572,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
 
             else:
                 raise NotImplementedError("Matrix Norms under development")
-
-    def nullspace(self, simplify=False):
-        """Returns list of vectors (Matrix objects) that span nullspace of self
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.nullspace()
-        [Matrix([
-        [-3],
-        [ 1],
-        [ 0]])]
-
-        See Also
-        ========
-
-        columnspace
-        """
-        from sympy.matrices import zeros
-
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-        reduced, pivots = self.rref(simplify=simpfunc)
-
-        basis = []
-        # create a set of vectors for the basis
-        for i in range(self.cols - len(pivots)):
-            basis.append(zeros(self.cols, 1))
-        # contains the variable index to which the vector corresponds
-        basiskey, cur = [-1] * len(basis), 0
-        for i in range(self.cols):
-            if i not in pivots:
-                basiskey[cur] = i
-                cur += 1
-        for i in range(self.cols):
-            if i not in pivots:  # free var, just set vector's ith place to 1
-                basis[basiskey.index(i)][i, 0] = 1
-            else:  # add negative of nonpivot entry to corr vector
-                for j in range(i + 1, self.cols):
-                    line = pivots.index(i)
-                    v = reduced[line, j]
-                    if simplify:
-                        v = simpfunc(v)
-                    if v:
-                        if j in pivots:
-                            # XXX: Is this the correct error?
-                            raise NotImplementedError(
-                                "Could not compute the nullspace of `self`.")
-                        basis[basiskey.index(j)][i, 0] = -v
-        return [self._new(b) for b in basis]
 
     def pinv_solve(self, B, arbitrary_matrix=None):
         """Solve Ax = B using the Moore-Penrose pseudoinverse.
@@ -5808,25 +6137,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
                     v[count] = self[i, j]
                     count += 1
         return v
-
-    @classmethod
-    def vstack(cls, *args):
-        """Return a matrix formed by joining args vertically (i.e.
-        by repeated application of col_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.vstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0],
-        [0, 1],
-        [2, 0],
-        [0, 2]])
-        """
-        kls = type(args[0])
-        return reduce(kls.col_join, args)
 
 
 def classof(A, B):

@@ -315,6 +315,11 @@ class SparseMatrix(MatrixBase):
                     rv = rv.col_insert(i, rv.col(i_previous))
         return rv
 
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        entries = {(i,i): S.One for i in range(min(rows, cols))}
+        return cls._new(rows, cols, entries)
+
     def _eval_has(self, *patterns):
         # if the matrix has any zeros, see if S.Zero
         # has the pattern.  If _smat is full length,
@@ -402,6 +407,10 @@ class SparseMatrix(MatrixBase):
 
     def _eval_values(self):
         return [v for k,v in self._smat.items() if not v.is_zero]
+
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        return cls._new(rows, cols, {})
 
     def _LDL_solve(self, rhs):
         # for speed reasons, this is not uncommented, but if you are
@@ -596,12 +605,6 @@ class SparseMatrix(MatrixBase):
 
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
-
-    @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        return cls(n, n, {(i, i): S.One for i in range(n)})
 
     def LDLdecomposition(self):
         """
@@ -836,13 +839,6 @@ class SparseMatrix(MatrixBase):
 
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls(r, c, {})
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
     @classmethod
