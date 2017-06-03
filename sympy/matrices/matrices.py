@@ -3390,13 +3390,23 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
         cleanup()
         return ret
 
-    def jordan_form(self, calc_transform=True):
+    def jordan_form(self, calc_transform=True, **kwargs):
         """Return `(P, J)` where `J` is a Jordan block
         matrix and `P` is a matrix such that
 
             `self == P*J*P**-1`
 
-        If `calc_transform=False`, then only `J` is returned.
+
+        Parameters
+        ==========
+
+        calc_transform : bool
+            If ``False``, then only `J` is returned.
+        chop : bool
+            All matrices are convered to exact types when computing
+            eigenvalues and eigenvectors.  As a result, there may be
+            approximation errors.  If ``chop==True``, these errors
+            will be truncated.
 
         Examples
         ========
@@ -3419,6 +3429,19 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
         if not self.is_square:
             raise NonSquareMatrixError("Only square matrices have Jordan forms")
 
+        chop = kwargs.pop('chop', False)
+        mat = self
+        has_floats = any(v.has(Float) for v in self)
+
+        def restore_floats(*args):
+            """If `has_floats` is `True`, cast all `args` as
+            matrices of floats."""
+            if has_floats:
+                args = [m.evalf(chop=chop) for m in args]
+            if len(args) == 1:
+                return args[0]
+            return args
+
         # cache calculations for some speedup
         mat_cache = {}
         def eig_mat(val, pow):
@@ -3429,7 +3452,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             if (val, pow - 1) in mat_cache:
                 mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
             else:
-                mat_cache[(val, pow)] = (self - val*self.eye(self.rows))**pow
+                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
             return mat_cache[(val, pow)]
 
         # helper functions
@@ -3471,25 +3494,29 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
                 if pivots[-1] == len(small_basis):
                     return v
 
+        # roots doesn't like Floats, so replace them with Rationals
+        if has_floats:
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
         # first calculate the jordan block structure
-        eigs = self.eigenvals()
+        eigs = mat.eigenvals()
 
         # make sure that we found all the roots by counting
         # the algebraic multiplicity
-        if sum(m for m in eigs.values()) != self.cols:
-            raise MatrixError("Could not compute eigenvalues for {}".format(self))
+        if sum(m for m in eigs.values()) != mat.cols:
+            raise MatrixError("Could not compute eigenvalues for {}".format(mat))
 
         # most matrices have distinct eigenvalues
         # and so are diagonalizable.  In this case, don't
         # do extra work!
-        if len(eigs.keys()) == self.cols:
+        if len(eigs.keys()) == mat.cols:
             blocks = list(sorted(eigs.keys(), key=default_sort_key))
-            jordan_mat = self.diag(*blocks)
+            jordan_mat = mat.diag(*blocks)
             if not calc_transform:
-                return jordan_mat
+                return restore_floats(jordan_mat)
             jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
-            basis_mat = self.hstack(*jordan_basis)
-            return basis_mat, jordan_mat
+            basis_mat = mat.hstack(*jordan_basis)
+            return restore_floats(basis_mat, jordan_mat)
 
         block_structre = []
         for eig in sorted(eigs.keys(), key=default_sort_key):
@@ -3505,11 +3532,11 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
 
             block_structre.extend(
                 (eig, size) for size, num in size_nums for _ in range(num))
-        blocks = (self.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structre)
-        jordan_mat = self.diag(*blocks)
+        blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structre)
+        jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
-            return jordan_mat
+            return restore_floats(jordan_mat)
 
         # For each generalized eigenspace, calculate a basis.
         # We start by looking for a vector in null( (A - eig*I)**n )
@@ -3540,9 +3567,9 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
                 eig_basis.extend(new_vecs)
                 jordan_basis.extend(reversed(new_vecs))
 
-        basis_mat = self.hstack(*jordan_basis)
+        basis_mat = mat.hstack(*jordan_basis)
 
-        return basis_mat, jordan_mat
+        return restore_floats(basis_mat, jordan_mat)
 
     def left_eigenvects(self, **flags):
         """Returns left eigenvectors and eigenvalues.
