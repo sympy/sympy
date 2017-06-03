@@ -1255,3 +1255,12 @@ def test_jordan_form():
     # make sure if we cannot factor the characteristic polynomial, we raise an error
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(MatrixError, lambda: m.jordan_form())
+
+    # make sure that if the input has floats, the output does too
+    m = Matrix([
+        [                0.6875, 0.125 + 0.1875*sqrt(3)],
+        [0.125 + 0.1875*sqrt(3),                 0.3125]])
+
+    P, J = m.jordan_form()
+    assert all(isinstance(x, Float) or x == 0 for x in P)
+    assert all(isinstance(x, Float) or x == 0 for x in J)
