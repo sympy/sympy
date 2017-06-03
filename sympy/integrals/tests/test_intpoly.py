@@ -5,6 +5,7 @@ from sympy.geometry.line import Segment2D
 from sympy.geometry.point import Point
 from sympy.abc import x,y
 
+
 def test_is_vertex():
     pass
 
@@ -39,13 +40,13 @@ def test_best_origin():
     l5 = Segment2D(Point(0, 2), Point(1, 1))
     l6 = Segment2D(Point(2, 0), Point(1, 1))
 
-    assert best_origin({x: 2, y: 1}, 3, l1, expr1) == {x: 0, y: 3.0}
-    assert best_origin({x: 2, y: 0}, 3, l2, x ** 7) == {x: 1.5, y: 0}
-    assert best_origin({x: 0, y: 2}, 3, l3, x ** 7) == {x: 0, y: 1.5}
-    assert best_origin({x: 1, y: 1}, 2, l4, x ** 7 * y ** 3) == {x: 0, y: 2.0}
-    assert best_origin({x: 1, y: 1}, 2, l4, x ** 3 * y ** 7) == {x: 2.0, y: 0}
-    assert best_origin({x: 1, y: 1}, 2, l5, x ** 2 * y ** 9) == {x: 0, y: 2.0}
-    assert best_origin({x: 1, y: 1}, 2, l6, x ** 9 * y ** 2) == {x: 2.0, y: 0}
+    assert best_origin((2, 1), 3, l1, expr1) == (0, 3.0)
+    assert best_origin((2, 0), 3, l2, x ** 7) == (1.5, 0)
+    assert best_origin((0, 2), 3, l3, x ** 7) == (0, 1.5)
+    assert best_origin((1, 1), 2, l4, x ** 7 * y ** 3) == (0, 2.0)
+    assert best_origin((1, 1), 2, l4, x ** 3 * y ** 7) == (2.0, 0)
+    assert best_origin((1, 1), 2, l5, x ** 2 * y ** 9) == (0, 2.0)
+    assert best_origin((1, 1), 2, l6, x ** 9 * y ** 2) == (2.0, 0)
 
 
 def test_hyperplane_parameters():

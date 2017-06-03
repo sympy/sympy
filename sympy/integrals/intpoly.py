@@ -6,7 +6,7 @@ from sympy.geometry.point import Point
 from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd
-
+from sympy.abc import x, y
 
 def polytope_integrate(poly, expr, dims=None):
     """This is currently a basic prototype for integrating
@@ -30,13 +30,15 @@ def polytope_integrate(poly, expr, dims=None):
     1/4
 
     """
+    #x, y = Symbol('x'), Symbol('y')#  Symbols to represent axes
     if dims is None:
         if isinstance(expr, Expr):
-            dims = sorted(list(expr.free_symbols), key=lambda x: str(x))
+            dims = list(expr.free_symbols)
         else:
-            dims = (x, y)
-    hp_params = hyperplane_parameters(poly, dims)
+            dims = [x, y]
+
     polys = decompose(expr)
+    hp_params = hyperplane_parameters(poly, dims)
     facets = poly.sides
 
     dim_length = len(dims)
@@ -79,25 +81,24 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
 
     value = 0
     x0 = best_origin(a, b, facets[index], expr)
-    gens = list(x0.keys())
+    gens = [x, y]
     m = len(facets)
-
     for i in range(0, len(dims)):
         df_i = diff(expr, gens[i])
         if df_i != 0:
             value += integration_reduction(facets, index, a, b,
-                                           x0[gens[i]]*df_i, dims, degree - 1)
+                                           x0[i] * df_i, dims, degree - 1)
 
     for j in range(0, m):
         intersect = ()
         if j != index:
             intersect = intersection(facets[index], facets[j])
         if intersect:
-            distance_origin = norm((intersect[0] - x0[gens[0]],
-                                    intersect[1] - x0[gens[1]]))
+            distance_origin = norm((intersect[0] - x0[0],
+                                    intersect[1] - x0[1]))
             if is_vertex(intersect):
                 if isinstance(expr, Expr):
-                    value += distance_origin *\
+                    value += distance_origin * \
                              expr.subs({gens[0]: intersect[0],
                                         gens[1]: intersect[1]})
                 else:
@@ -122,7 +123,6 @@ def hyperplane_parameters(poly, dims):
     params = []
     vertices = list(poly.vertices)
     vertices.append(vertices[0])  # Close the polygon.
-
     for i in range(len(vertices) - 1):
         v1 = vertices[i]
         v2 = vertices[i + 1]
@@ -134,10 +134,10 @@ def hyperplane_parameters(poly, dims):
         factor = igcd(a1, a2, b)
 
         b = b/factor
-        a = {dims[0] : a1/factor, dims[1] : a2/factor}
+        a = (a1/factor, a2/factor)
+        #a = {dims[0] : a1/factor, dims[1] : a2/factor}
 
         params.append((a, b))
-
     return params
 
 
@@ -182,7 +182,7 @@ def best_origin(a, b, lineseg, expr):
     >>> from sympy.geometry.point import *
     >>> l = Segment2D(Point(0, 3), Point(1, 1))
     >>> expr = x**3*y**7
-    >>> best_origin({x:2, y:1}, 3, l, expr)
+    >>> best_origin((2, 1), 3, l, expr)
     {x: 0, y: 3.0}
 
     """
@@ -224,12 +224,11 @@ def best_origin(a, b, lineseg, expr):
         else:
             return ()
 
-    x0 = {}  # Value of best origin.
-
     a1, b1 = lineseg.points[0]
     a2, b2 = lineseg.points[1]
 
-    gens = list(a.keys())
+    x, y = Symbol('x'), Symbol('y')
+    gens = [x, y]
     power_gens = {}
 
     for i in gens:
@@ -238,17 +237,16 @@ def best_origin(a, b, lineseg, expr):
     if len(gens) > 1:
         # Special case for vertical and horizontal lines
         if len(gens) == 2:
-            x, y = Symbol('x'), Symbol('y')
-            if a[x] == 0:
+            if a[0] == 0:
                 if y_axis_cut(lineseg):
-                    return {y: b/a[y], x: 0}
+                    return (0, b/a[1])
                 else:
-                    return {x: a1, y: b1}
-            elif a[y] == 0:
+                    return (a1, b1)
+            elif a[1] == 0:
                 if x_axis_cut(lineseg):
-                    return {x: b/a[x], y: 0}
+                    return (b/a[0], 0)
                 else:
-                    return {x: a1, y: b1}
+                    return (a1, b1)
 
         if isinstance(expr, Expr):  # Find the sum total of power of each
             if expr.is_Add:         # generator and store in a dictionary.
@@ -275,38 +273,31 @@ def best_origin(a, b, lineseg, expr):
             elif expr.is_Symbol:
                 power_gens[expr] += 1
         else:  # If `expr` is a constant take first vertex of the line segment.
-            keys = list(a.keys())
-            return {keys[0]: a1, keys[1]: b1}
+            #keys = list(a.keys())
+            return (a1, b1)
 
         #TODO : This part is quite hacky. Should be made more robust with
         #TODO : respect to symbol names and scalable w.r.t higher dimensions.
         power_gens = sorted(power_gens.items(), key=lambda x: str(x[0]))
-
+        x0 = tuple()
         if power_gens[0][1] >= power_gens[1][1]:
             max_gen, gen2 = power_gens[0][0], power_gens[1][0]
             if y_axis_cut(lineseg):
-                x0[max_gen] = 0
-                x0[gen2] = b / a[gen2]
+                x0 = (0, b / a[1])
             elif x_axis_cut(lineseg):
-                x0[max_gen] = b / a[max_gen]
-                x0[gen2] = 0
+                x0 = (b / a[0], 0)
             else:
-                x0[max_gen] = a1
-                x0[gen2] = b1
+                x0 = (a1, b1)
         else:
             gen2, max_gen = power_gens[0][0], power_gens[1][0]
             if x_axis_cut(lineseg):
-                x0[max_gen] = 0
-                x0[gen2] = b/a[gen2]
+                x0 = (b/a[0], 0)
             elif y_axis_cut(lineseg):
-                x0[max_gen] = b/a[max_gen]
-                x0[gen2] = 0
+                x0 = (0, b/a[1])
             else:
-                x0[max_gen] = b1
-                x0[gen2] = a1
+                x0 = (a1, b1)
     else:
-        x0 = {gens[0]: b/a[gens[0]]}
-
+        x0 = (b/a[0])
     return x0
 
 
@@ -386,15 +377,17 @@ def norm(point):
     7.28010988928052
 
     """
+    h = 0
     if isinstance(point, tuple):
-        return (point[0] ** 2 + point[1] ** 2)**(1/2)
+        h = (point[0] ** 2 + point[1] ** 2) ** 0.5
     elif isinstance(point, Point):
-        return (point.x ** 2 + point.y ** 2) ** (1 / 2)
+        h = (point.x ** 2 + point.y ** 2) ** 0.5
     elif isinstance(point, dict):
         s = 0
         for i in point.values():
             s += i ** 2
-        return s**(1/2)
+        h = s**0.5
+    return h
 
 
 def intersection(lineseg_1, lineseg_2):
