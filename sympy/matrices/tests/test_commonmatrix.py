@@ -1264,7 +1264,6 @@ def test_jordan_form():
     m = Matrix([
         [                0.6875, 0.125 + 0.1875*sqrt(3)],
         [0.125 + 0.1875*sqrt(3),                 0.3125]])
-
     P, J = m.jordan_form()
     assert all(isinstance(x, Float) or x == 0 for x in P)
     assert all(isinstance(x, Float) or x == 0 for x in J)
