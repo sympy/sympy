@@ -3078,7 +3078,7 @@ class MatrixSubspaces(MatrixReductions):
         return [reduced.row(i) for i in range(len(pivots))]
 
     @classmethod
-    def orthogonalize(cls, *vecs, normalize=False):
+    def orthogonalize(cls, *vecs, **kwargs):
         """Apply the Gram-Schmidt orthogonalization procedure
         to vectors supplied in `vecs`.
 
@@ -3089,6 +3089,8 @@ class MatrixSubspaces(MatrixReductions):
         normalize : bool. Whether the returned vectors
                     should be renormalized to be unit vectors.
         """
+
+        normalize = kwargs.get('normalize', False)
 
         def project(a, b):
             return b * (a.dot(b) / b.dot(b))
@@ -3197,9 +3199,16 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
 
         return self.hstack(*p_cols), self.diag(*diag)
 
-    def eigenvals(self, **flags):
+    def eigenvals(self, error_when_incomplete=True, **flags):
         """Return eigenvalues using the Berkowitz agorithm to compute
         the characteristic polynomial.
+
+        Parameters
+        ==========
+
+        error_when_incomplete : bool
+            Raise an error when not all eigenvalues are computed. This is
+            caused by ``roots`` not returning a full list of eigenvalues.
 
         Since the roots routine doesn't always work well with Floats,
         they will be replaced with Rationals before calling that
@@ -3217,12 +3226,12 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
 
         # make sure the algebraic multiplicty sums to the
         # size of the matrix
-        if sum(m for m in eigs.values()) != self.cols:
+        if error_when_incomplete and sum(m for m in eigs.values()) != self.cols:
             raise MatrixError("Could not compute eigenvalues for {}".format(self))
 
         return eigs
 
-    def eigenvects(self, **flags):
+    def eigenvects(self, error_when_incomplete=True, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
 
         The flag ``simplify`` has two effects:
@@ -3231,6 +3240,13 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             2) if nullspace needs simplification to compute the
             basis, the simplify flag will be passed on to the
             nullspace routine which will interpret it there.
+
+        Parameters
+        ==========
+
+        error_when_incomplete : bool
+            Raise an error when not all eigenvalues are computed. This is
+            caused by ``roots`` not returning a full list of eigenvalues.
 
         If the matrix contains any Floats, they will be changed to Rationals
         for computation purposes, but the answers will be returned after being
@@ -3267,7 +3283,9 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
                         "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
             return ret
 
-        eigenvals = mat.eigenvals(rational=False, **flags)
+        eigenvals = mat.eigenvals(rational=False,
+                                  error_when_incomplete=error_when_incomplete,
+                                  **flags)
         ret = [(val, mult, eigenspace(val)) for val, mult in
                     sorted(eigenvals.items(), key=default_sort_key)]
         if primitive:
