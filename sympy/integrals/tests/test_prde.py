@@ -105,6 +105,10 @@ def test_prde_no_cancel():
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**3, x), Poly(1, x)], 3, DE) == \
         ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
                                                                  [0, 1, 0, -1]]))
+    assert prde_no_cancel_b_large(Poly(x, x), [Poly(x**2, x), Poly(1, x)], 1, DE) == \
+        ([Poly(x, x, domain='ZZ'), Poly(0, x, domain='ZZ')], Matrix([[1, -1,  0,  0],
+                                                                    [1,  0, -1,  0],
+                                                                    [0,  1,  0, -1]]))
     # b small
     # XXX: Is there a better example of a monomial with D.degree() > 2?
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**3 + 1, t)]})
