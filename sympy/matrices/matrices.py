@@ -415,6 +415,9 @@ class MatrixShaping(MatrixRequired):
         [1, 0, 2, 0],
         [0, 1, 0, 2]])
         """
+        if len(args) == 0:
+            return cls._new()
+
         kls = type(args[0])
         return reduce(kls.row_join, args)
 
@@ -635,6 +638,9 @@ class MatrixShaping(MatrixRequired):
         [2, 0],
         [0, 2]])
         """
+        if len(args) == 0:
+            return cls._new()
+
         kls = type(args[0])
         return reduce(kls.col_join, args)
 
@@ -2073,7 +2079,7 @@ class MatrixArithmetic(MatrixRequired):
                 elif a.rows == 2 and num > 100000:
                     try:
                         return a._matrix_pow_by_jordan_blocks(num)
-                    except AttributeError:
+                    except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
             elif isinstance(num, (Expr, float)):
@@ -3064,6 +3070,45 @@ class MatrixSubspaces(MatrixReductions):
 
         return [reduced.row(i) for i in range(len(pivots))]
 
+    @classmethod
+    def orthogonalize(cls, *vecs, normalize=False):
+        """Apply the Gram-Schmidt orthogonalization procedure
+        to vectors supplied in `vecs`.
+
+        Arguments
+        =========
+
+        vecs : vectors to be made orthogonal
+        normalize : bool. Whether the returned vectors
+                    should be renormalized to be unit vectors.
+        """
+
+        def project(a, b):
+            return b * (a.dot(b) / b.dot(b))
+
+        def perp_to_subspace(vec, basis):
+            """projects vec onto the subspace given
+            by the orthogonal basis `basis`"""
+            components = [project(vec, b) for b in basis]
+            if len(basis) == 0:
+                return vec
+            return vec - reduce(lambda a, b: a + b, components)
+
+        ret = []
+        # make sure we start with a non-zero vector
+        while len(vecs) > 0 and vecs[0].is_zero:
+            del vecs[0]
+
+        for vec in vecs:
+            perp = perp_to_subspace(vec, ret)
+            if not perp.is_zero:
+                ret.append(perp)
+
+        if normalize:
+            ret = [vec / vec.norm() for vec in ret]
+
+        return ret
+
 
 class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
     """Provides basic matrix eigenvalue/vector operations.
@@ -3161,7 +3206,14 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
                 mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
         flags.pop('simplify', None)  # pop unsupported flag
-        return roots(mat.charpoly(x=Dummy('x')), **flags)
+        eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+
+        # make sure the algebraic multiplicty sums to the
+        # size of the matrix
+        if sum(m for m in eigs.values()) != self.cols:
+            raise MatrixError("Could not compute eigenvalues for {}".format(self))
+
+        return eigs
 
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis).
@@ -3196,7 +3248,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
 
         def eigenspace(eigenval):
             """Get a basis for the eigenspace for a particular eigenvalue"""
-            m = mat - eye(mat.rows) * eigenval
+            m = mat - self.eye(mat.rows) * eigenval
             ret = m.nullspace()
             # the nullspace for a real eigenvalue should be
             # non-trivial.  If we didn't find an eigenvector, try once
@@ -3216,7 +3268,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             # integer denominators
             def denom_clean(l):
                 from sympy import gcd
-                return [simpfunc(v / gcd(list(v))) for v in l]
+                return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
             ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
         if has_floats:
             # if we had floats to start with, turn the eigenvectors to floats
@@ -3312,6 +3364,160 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
                 ret = False
         cleanup()
         return ret
+
+    def jordan_form(self, calc_transform=True):
+        """Return `(P, J)` where `J` is a Jordan block
+        matrix and `P` is a matrix such that
+
+            `self == P*J*P**-1`
+
+        If `calc_transform=False`, then only `J` is returned.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[ 6,  5, -2, -3], [-3, -1,  3,  3], [ 2,  1, -2, -3], [-1,  1,  5,  5]])
+        >>> P, J = m.jordan_form()
+        >>> J
+        Matrix([
+        [2, 1, 0, 0],
+        [0, 2, 0, 0],
+        [0, 0, 2, 1],
+        [0, 0, 0, 2]])
+
+        See Also
+        ========
+
+        jordan_block
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError("Only square matrices have Jordan forms")
+
+        # cache calculations for some speedup
+        mat_cache = {}
+        def eig_mat(val, pow):
+            """Cache computations of (self - val*I)**pow for quick
+            retrieval"""
+            if (val, pow) in mat_cache:
+                return mat_cache[(val, pow)]
+            if (val, pow - 1) in mat_cache:
+                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
+            else:
+                mat_cache[(val, pow)] = (self - val*self.eye(self.rows))**pow
+            return mat_cache[(val, pow)]
+
+        # helper functions
+        def nullity_chain(val):
+            """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
+            until it is constant where `E = self - val*I`"""
+            # mat.rank() is faster than computing the null space,
+            # so use the rank-nullity theorem
+            cols = self.cols
+            ret = [0]
+            nullity = cols - eig_mat(val, 1).rank()
+            i = 2
+            while nullity != ret[-1]:
+                ret.append(nullity)
+                nullity = cols - eig_mat(val, i).rank()
+                i += 1
+            return ret
+
+        def blocks_from_nullity_chain(d):
+            """Return a list of the size of each Jordan block.
+            If d_n is the nullity of E**n, then the number
+            of Jordan blocks of size n is
+
+                2*d_n - d_(n-1) - d_(n+1)"""
+            # d[0] is always the number of columns, so skip past it
+            mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
+            # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
+            # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
+            end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
+            return mid + end
+
+        def pick_vec(small_basis, big_basis):
+            """Picks a vector from big_basis that isn't in
+            the subspace spanned by small_basis"""
+            if len(small_basis) == 0:
+                return big_basis[0]
+            for v in big_basis:
+                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(with_pivots=True)
+                if pivots[-1] == len(small_basis):
+                    return v
+
+        # first calculate the jordan block structure
+        eigs = self.eigenvals()
+
+        # make sure that we found all the roots by counting
+        # the algebraic multiplicity
+        if sum(m for m in eigs.values()) != self.cols:
+            raise MatrixError("Could not compute eigenvalues for {}".format(self))
+
+        # most matrices have distinct eigenvalues
+        # and so are diagonalizable.  In this case, don't
+        # do extra work!
+        if len(eigs.keys()) == self.cols:
+            blocks = list(sorted(eigs.keys(), key=default_sort_key))
+            jordan_mat = self.diag(*blocks)
+            if not calc_transform:
+                return jordan_mat
+            jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
+            basis_mat = self.hstack(*jordan_basis)
+            return basis_mat, jordan_mat
+
+        block_structre = []
+        for eig in sorted(eigs.keys(), key=default_sort_key):
+            chain = nullity_chain(eig)
+            block_sizes = blocks_from_nullity_chain(chain)
+            # if block_sizes == [a, b, c, ...], then the number of
+            # Jordan blocks of size 1 is a, of size 2 is b, etc.
+            # create an array that has (eig, block_size) with one
+            # entry for each block
+            size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
+            # we expect larger Jordan blocks to come earlier
+            size_nums.reverse()
+
+            block_structre.extend(
+                (eig, size) for size, num in size_nums for _ in range(num))
+        blocks = (self.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structre)
+        jordan_mat = self.diag(*blocks)
+
+        if not calc_transform:
+            return jordan_mat
+
+        # For each generalized eigenspace, calculate a basis.
+        # We start by looking for a vector in null( (A - eig*I)**n )
+        # which isn't in null( (A - eig*I)**(n-1) ) where n is
+        # the size of the Jordan block
+        #
+        # Ideally we'd just loop through block_structure and
+        # compute each generalized eigenspace.  However, this
+        # causes a lot of unneeded computation.  Instead, we
+        # go through the eigenvalues separately, since we know
+        # their generalized eigenspaces must have bases that
+        # are linearly independent.
+        jordan_basis = []
+
+        for eig in sorted(eigs.keys(), key=default_sort_key):
+            eig_basis = []
+            for block_eig, size in block_structre:
+                if block_eig != eig:
+                    continue
+                null_big = (eig_mat(eig, size)).nullspace()
+                null_small = (eig_mat(eig, size - 1)).nullspace()
+                # we want to pick something that is in the big basis
+                # and not the small, but also something that is independent
+                # of any other generalized eigenvectors from a different
+                # generalized eigenspace sharing the same eigenvalue.
+                vec = pick_vec(null_small + eig_basis, null_big)
+                new_vecs = [(eig_mat(eig, i))*vec for i in range(size)]
+                eig_basis.extend(new_vecs)
+                jordan_basis.extend(reversed(new_vecs))
+
+        basis_mat = self.hstack(*jordan_basis)
+
+        return basis_mat, jordan_mat
 
     def left_eigenvects(self, **flags):
         """Returns left eigenvectors and eigenvalues.
@@ -3485,6 +3691,15 @@ class MatrixDeprecated(MatrixRequired):
         """
         return self.det(method='lu')
 
+    @deprecated(useinstead="jordan_block", issue=12685, deprecated_since_version="1.1")
+    def jordan_cell(self, eigenval, n):
+        return self.jordan_block(size=n, eigenvalue=eigenval)
+
+    @deprecated(deprecated_since_version="1.1")
+    def jordan_cells(self, calc_transformation=True):
+        P, J = self.jordan_form()
+        return P, J.get_diag_blocks()
+
     @deprecated(useinstead="minor", issue=12389, deprecated_since_version="1.1")
     def minorEntry(self, i, j, method="berkowitz"):
         return self.minor(i, j, method=method)
@@ -3567,29 +3782,13 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
                         bn = bn._eval_expand_func()
                     jc[j, i+j] = l**(n-i)*bn
 
-        P, jordan_cells = self.jordan_cells()
+        P, J = self.jordan_form()
+        jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
-
-    def _matrix_pow_by_recursion(self, num):
-        from sympy.matrices import eye
-        n = int(num)
-        if n < 0:
-            return self.inv()**-n   # A**-2 = (A**-1)**2
-        a = eye(self.cols)
-        s = self
-        while n:
-            if n % 2:
-                a *= s
-                n -= 1
-            if not n:
-                break
-            s *= s
-            n //= 2
-        return self._new(a)
 
     def __repr__(self):
         return sstr(self)
@@ -3762,192 +3961,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
             raise TypeError("Data type not understood")
 
         return rows, cols, flat_list
-
-    def _jordan_block_structure(self):
-        # To every eigenvalue may belong `i` blocks with size s(i)
-        # and a chain of generalized eigenvectors
-        # which will be determined by the following computations:
-        # for every eigenvalue we will add a dictionary
-        # containing, for all blocks, the blocksizes and the attached chain vectors
-        # that will eventually be used to form the transformation P
-        jordan_block_structures = {}
-        _eigenvects = self.eigenvects()
-        ev = self.eigenvals()
-        if len(ev) == 0:
-            raise AttributeError("could not compute the eigenvalues")
-        for eigenval, multiplicity, vects in _eigenvects:
-            l_jordan_chains = {}
-            geometrical = len(vects)
-            if geometrical == multiplicity:
-                # The Jordan chains have all length 1 and consist of only one vector
-                # which is the eigenvector of course
-                chains = []
-                for v in vects:
-                    chain = [v]
-                    chains.append(chain)
-                l_jordan_chains[1] = chains
-                jordan_block_structures[eigenval] = l_jordan_chains
-            elif geometrical == 0:
-                raise MatrixError(
-                    "Matrix has the eigen vector with geometrical multiplicity equal zero.")
-            else:
-                # Up to now we know nothing about the sizes of the blocks of our Jordan matrix.
-                # Note that knowledge of algebraic and geometrical multiplicity
-                # will *NOT* be sufficient to determine this structure.
-                # The blocksize `s` could be defined as the minimal `k` where
-                # `kernel(self-lI)^k = kernel(self-lI)^(k+1)`
-                # The extreme case would be that k = (multiplicity-geometrical+1)
-                # but the blocks could be smaller.
-
-                # Consider for instance the following matrix
-
-                # [2 1 0 0]
-                # [0 2 1 0]
-                # [0 0 2 0]
-                # [0 0 0 2]
-
-                # which coincides with it own Jordan canonical form.
-                # It has only one eigenvalue l=2 of (algebraic) multiplicity=4.
-                # It has two eigenvectors, one belonging to the last row (blocksize 1)
-                # and one being the last part of a jordan chain of length 3 (blocksize of the first block).
-
-                # Note again that it is not not possible to obtain this from the algebraic and geometrical
-                # multiplicity alone. This only gives us an upper limit for the dimension of one of
-                # the subspaces (blocksize of according jordan block) given by
-                # max=(multiplicity-geometrical+1) which is reached for our matrix
-                # but not for
-
-                # [2 1 0 0]
-                # [0 2 0 0]
-                # [0 0 2 1]
-                # [0 0 0 2]
-
-                # although multiplicity=4 and geometrical=2 are the same for this matrix.
-
-                from sympy.matrices import MutableMatrix
-                I = MutableMatrix.eye(self.rows)
-                l = eigenval
-                M = (self - l * I)
-
-                # We will store the matrices `(self-l*I)^k` for further computations
-                # for convenience only we store `Ms[0]=(sefl-lI)^0=I`
-                # so the index is the same as the power for all further Ms entries
-                # We also store the vectors that span these kernels (Ns[0] = [])
-                # and also their dimensions `a_s`
-                # this is mainly done for debugging since the number of blocks of a given size
-                # can be computed from the a_s, in order to check our result which is obtained simpler
-                # by counting the number of Jordan chains for `a` given `s`
-                # `a_0` is `dim(Kernel(Ms[0]) = dim (Kernel(I)) = 0` since `I` is regular
-
-                l_jordan_chains = {}
-                Ms = [I]
-                Ns = [[]]
-                a = [0]
-                smax = 0
-                M_new = Ms[-1] * M
-                Ns_new = M_new.nullspace()
-                a_new = len(Ns_new)
-                Ms.append(M_new)
-                Ns.append(Ns_new)
-                while a_new > a[
-                    -1]:  # as long as the nullspaces increase compute further powers
-                    a.append(a_new)
-                    M_new = Ms[-1] * M
-                    Ns_new = M_new.nullspace()
-                    a_new = len(Ns_new)
-                    Ms.append(M_new)
-                    Ns.append(Ns_new)
-                    smax += 1
-
-                # We now have `Ms[-1]=((self-l*I)**s)=Z=0`.
-                # We also know the size of the biggest Jordan block
-                # associated with `l` to be `s`.
-                # Now let us proceed with the computation of the associate part of the transformation matrix `P`.
-                # We already know the kernel (=nullspace)  `K_l` of (self-lI) which consists of the
-                # eigenvectors belonging to eigenvalue `l`.
-                # The dimension of this space is the geometric multiplicity of eigenvalue `l`.
-                # For every eigenvector ev out of `K_l`, there exists a subspace that is
-                # spanned by the Jordan chain of ev. The dimension of this subspace is
-                # represented by the length `s` of the Jordan block.
-                # The chain itself is given by `{e_0,..,e_s-1}` where:
-                # `e_k+1 =(self-lI)e_k (*)`
-                # and
-                # `e_s-1=ev`
-                # So it would be possible to start with the already known `ev` and work backwards until one
-                # reaches `e_0`. Unfortunately this can not be done by simply solving system (*) since its matrix
-                # is singular (by definition of the eigenspaces).
-                # This approach would force us a choose in every step the degree of freedom undetermined
-                # by (*). This is difficult to implement with computer algebra systems and also quite inefficient.
-                # We therefore reformulate the problem in terms of nullspaces.
-                # To do so we start from the other end and choose `e0`'s out of
-                # `E=Kernel(self-lI)^s / Kernel(self-lI)^(s-1)`
-                # Note that `Kernel(self-lI)^s = Kernel(Z) = V` (the whole vector space).
-                # So in the first step `s=smax` this restriction turns out to actually restrict nothing at all
-                # and the only remaining condition is to choose vectors in `Kernel(self-lI)^(s-1)`.
-                # Subsequently we compute `e_1=(self-lI)e_0`, `e_2=(self-lI)*e_1` and so on.
-                # The subspace `E` can have a dimension larger than one.
-                # That means that we have more than one Jordan block of size `s` for the eigenvalue `l`
-                # and as many Jordan chains (this is the case in the second example).
-                # In this case we start as many Jordan chains and have as many blocks of size `s` in the jcf.
-                # We now have all the Jordan blocks of size `s` but there might be others attached to the same
-                # eigenvalue that are smaller.
-                # So we will do the same procedure also for `s-1` and so on until 1 (the lowest possible order
-                # where the Jordan chain is of length 1 and just represented by the eigenvector).
-
-                for s in reversed(range(1, smax + 1)):
-                    S = Ms[s]
-                    # We want the vectors in `Kernel((self-lI)^s)`,
-                    # but without those in `Kernel(self-lI)^s-1`
-                    # so we will add their adjoints as additional equations
-                    # to the system formed by `S` to get the orthogonal
-                    # complement.
-                    # (`S` will no longer be quadratic.)
-
-                    exclude_vectors = Ns[s - 1]
-                    for k in range(0, a[s - 1]):
-                        S = S.col_join((exclude_vectors[k]).adjoint())
-
-                    # We also want to exclude the vectors
-                    # in the chains for the bigger blocks
-                    # that we have already computed (if there are any).
-                    # (That is why we start with the biggest s).
-
-                    # Since Jordan blocks are not orthogonal in general
-                    # (in the original space), only those chain vectors
-                    # that are on level s (index `s-1` in a chain)
-                    # are added.
-
-                    for chain_list in l_jordan_chains.values():
-                        for chain in chain_list:
-                            S = S.col_join(chain[s - 1].adjoint())
-
-                    e0s = S.nullspace()
-                    # Determine the number of chain leaders
-                    # for blocks of size `s`.
-                    n_e0 = len(e0s)
-                    s_chains = []
-                    # s_cells=[]
-                    for i in range(0, n_e0):
-                        chain = [e0s[i]]
-                        for k in range(1, s):
-                            v = M * chain[k - 1]
-                            chain.append(v)
-
-                        # We want the chain leader appear as the last of the block.
-                        chain.reverse()
-                        s_chains.append(chain)
-                    l_jordan_chains[s] = s_chains
-            jordan_block_structures[eigenval] = l_jordan_chains
-        return jordan_block_structures
-
-    def _jordan_split(self, algebraical, geometrical):
-        """Return a list of integers with sum equal to 'algebraical'
-        and length equal to 'geometrical'"""
-        n1 = algebraical // geometrical
-        res = [n1] * geometrical
-        res[len(res) - 1] += algebraical % geometrical
-        assert sum(res) == algebraical
-        return res
 
     def _setitem(self, key, value):
         """Helper to set value at location given by key.
@@ -4357,7 +4370,8 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
         try:
-            P, cells = self.jordan_cells()
+            P, J = self.jordan_form()
+            cells = J.get_diag_blocks()
         except MatrixError:
             raise NotImplementedError(
                 "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
@@ -4802,123 +4816,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         # m is the number of functions and n is the number of variables
         # computing the Jacobian is now easy:
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
-
-    def jordan_cell(self, eigenval, n):
-        n = int(n)
-        from sympy.matrices import MutableMatrix
-        out = MutableMatrix.zeros(n)
-        for i in range(n - 1):
-            out[i, i] = eigenval
-            out[i, i + 1] = 1
-        out[n - 1, n - 1] = eigenval
-        return type(self)(out)
-
-    def jordan_cells(self, calc_transformation=True):
-        r"""Return a list of Jordan cells of current matrix.
-        This list shape Jordan matrix J.
-
-        If calc_transformation is specified as False, then transformation P such that
-
-              `J = P^{-1} \cdot M \cdot P`
-
-        will not be calculated.
-
-        Notes
-        =====
-
-        Calculation of transformation P is not implemented yet.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, [
-        ...  6,  5, -2, -3,
-        ... -3, -1,  3,  3,
-        ...  2,  1, -2, -3,
-        ... -1,  1,  5,  5])
-
-        >>> P, Jcells = m.jordan_cells()
-        >>> Jcells[0]
-        Matrix([
-        [2, 1],
-        [0, 2]])
-        >>> Jcells[1]
-        Matrix([
-        [2, 1],
-        [0, 2]])
-
-        See Also
-        ========
-
-        jordan_form
-        """
-        n = self.rows
-        Jcells = []
-        Pcols_new = []
-        jordan_block_structures = self._jordan_block_structure()
-        from sympy.matrices import MutableMatrix
-
-        # Order according to default_sort_key, this makes sure the order is the same as in .diagonalize():
-        for eigenval in (
-        sorted(list(jordan_block_structures.keys()), key=default_sort_key)):
-            l_jordan_chains = jordan_block_structures[eigenval]
-            for s in reversed(sorted(
-                    (l_jordan_chains).keys())):  # Start with the biggest block
-                s_chains = l_jordan_chains[s]
-                block = self.jordan_cell(eigenval, s)
-                number_of_s_chains = len(s_chains)
-                for i in range(0, number_of_s_chains):
-                    Jcells.append(type(self)(block))
-                    chain_vectors = s_chains[i]
-                    lc = len(chain_vectors)
-                    assert lc == s
-                    for j in range(0, lc):
-                        generalized_eigen_vector = chain_vectors[j]
-                        Pcols_new.append(generalized_eigen_vector)
-        P = MutableMatrix.zeros(n)
-        for j in range(0, n):
-            P[:, j] = Pcols_new[j]
-
-        return type(self)(P), Jcells
-
-    def jordan_form(self, calc_transformation=True):
-        r"""Return Jordan form J of current matrix.
-
-        Also the transformation P such that
-
-            `J = P^{-1} \cdot M \cdot P`
-
-        and the jordan blocks forming J
-        will be calculated.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix([
-        ...        [ 6,  5, -2, -3],
-        ...        [-3, -1,  3,  3],
-        ...        [ 2,  1, -2, -3],
-        ...        [-1,  1,  5,  5]])
-        >>> P, J = m.jordan_form()
-        >>> J
-        Matrix([
-        [2, 1, 0, 0],
-        [0, 2, 0, 0],
-        [0, 0, 2, 1],
-        [0, 0, 0, 2]])
-
-        See Also
-        ========
-
-        jordan_cells
-        """
-        P, Jcells = self.jordan_cells()
-        from sympy.matrices import diag
-        J = diag(*Jcells)
-        return P, type(self)(J)
 
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
