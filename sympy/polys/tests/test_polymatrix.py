@@ -36,3 +36,5 @@ def test_polymatrix():
     pm4 = PolyMatrix([[Poly(x**2, x, domain='ZZ'), Poly(-x**2, x, domain='ZZ')]])
     v4 = Matrix([1, -1], ring='ZZ[x]')
     assert pm4*v4 == PolyMatrix([[Poly(2*x**2, x, domain='ZZ')]])
+
+    assert len(PolyMatrix()) == 0

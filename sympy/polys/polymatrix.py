@@ -35,13 +35,18 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
     """
     _class_priority = 10
+    # we don't want to sympify the elements of PolyMatrix
     _sympify = staticmethod(lambda x: x)
 
     def __init__(self, *args, **kwargs):
+        # if any non-Poly element is given as input then
+        # 'ring'(default 'None') should be set by the user
         ring = kwargs.get('ring', None)
-        if ring is None:
+        if ring is None and self._mat:
             domain = [p.domain[p.gens] for p in self._mat]
-            ring = reduce(lambda a, b: a.unify(b), domain)
+            ring = domain[0]
+            for i in range(1, len(domain)):
+                ring = ring.unify(domain[i])
         self.ring = ring
 
     def _eval_matrix_mul(self, other):
@@ -61,6 +66,7 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
                 vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                # 'Add' shouldn't be used here
                 new_mat[i] = sum(vec)
 
         return self._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
