@@ -2,7 +2,6 @@ from __future__ import print_function
 
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys.polytools import Poly
-from sympy.core.compatibility import reduce
 
 
 class MutablePolyDenseMatrix(MutableDenseMatrix):
