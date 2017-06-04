@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys.polytools import Poly
+from sympy.core.compatibility import reduce
 
 
 class MutablePolyDenseMatrix(MutableDenseMatrix):
@@ -9,14 +10,17 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     A mutable matrix of objects from poly module or to operate with them.
 
     >>> from sympy.polys.polymatrix import PolyMatrix
-    >>> from sympy import Symbol, Poly
+    >>> from sympy import Symbol, Poly, ZZ
     >>> x = Symbol('x')
     >>> pm1 = PolyMatrix([[Poly(x**2, x), Poly(-x, x)], [Poly(x**3, x), Poly(-1 + x, x)]])
-    >>> v1 = PolyMatrix([[1, 0], [-1, 0]])
+    >>> v1 = PolyMatrix([[1, 0], [-1, 0]], ring='ZZ[x]')
     >>> pm1*v1
     Matrix([
     [    Poly(x**2 + x, x, domain='ZZ'), Poly(0, x, domain='ZZ')],
     [Poly(x**3 - x + 1, x, domain='ZZ'), Poly(0, x, domain='ZZ')]])
+
+    >>> pm1.ring
+    ZZ[x]
 
     >>> v1*pm1
     Matrix([
@@ -25,13 +29,20 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
     >>> pm2 = PolyMatrix([[Poly(x**2, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(1, x, domain='QQ'), \
             Poly(x**3, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(-x**3, x, domain='QQ')]])
-    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0])
+    >>> v2 = PolyMatrix([1, 0, 0, 0, 0, 0], ring='ZZ[x]')
     >>> pm2*v2
     Matrix([[Poly(x**2, x, domain='QQ')]])
 
     """
     _class_priority = 10
     _sympify = staticmethod(lambda x: x)
+
+    def __init__(self, *args, **kwargs):
+        ring = kwargs.get('ring', None)
+        if ring is None:
+            domain = [p.domain[p.gens] for p in self._mat]
+            ring = reduce(lambda a, b: a.unify(b), domain)
+        self.ring = ring
 
     def _eval_matrix_mul(self, other):
         self_rows, self_cols = self.rows, self.cols
