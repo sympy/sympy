@@ -53,7 +53,7 @@ def test_function_return_types():
     # I.e. do MatrixBase methods return the correct class?
     X = ImmutableMatrix([[1, 2], [3, 4]])
     Y = ImmutableMatrix([[1], [0]])
-    q, r = X.QRdecomposition()
+    q, r = X.QR_decomposition()
     assert (type(q), type(r)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert type(X.LUsolve(Y)) == ImmutableMatrix
@@ -62,8 +62,8 @@ def test_function_return_types():
     X = ImmutableMatrix([[1, 2], [2, 1]])
     assert X.T == X
     assert X.is_symmetric
-    assert type(X.cholesky()) == ImmutableMatrix
-    L, D = X.LDLdecomposition()
+    assert type(X.cholesky_decomposition()) == ImmutableMatrix
+    L, D = X.LDL_decomposition()
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
     assert X.is_diagonalizable()

@@ -8,7 +8,8 @@ from sympy import (
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
     MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant,
-    MatrixReductions, MatrixSpecial, MatrixSubspaces, MatrixEigen)
+    MatrixReductions, MatrixSpecial, MatrixSubspaces, MatrixEigen,
+    MatrixCalculus, MatrixDecompositions)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -84,6 +85,12 @@ class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
     pass
 
 class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
+    pass
+
+class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
+    pass
+
+class DecompositionsOnlyMatrix(_MinimalMatrix, MatrixDecompositions):
     pass
 
 
@@ -1263,3 +1270,74 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert all(isinstance(x, Float) or x == 0 for x in P)
     assert all(isinstance(x, Float) or x == 0 for x in J)
+
+def test_singular_values():
+    x = Symbol('x', real=True)
+
+    A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
+    assert A.singular_values() == [2, 1]
+
+    A = eye(3)
+    A[1, 1] = x
+    A[2, 2] = 5
+    vals = A.singular_values()
+    assert 1 in vals and 5 in vals and abs(x) in vals
+
+    A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
+    vals = [sv.trigsimp() for sv in A.singular_values()]
+    assert vals == [S(1), S(1)]
+
+# CalculusOnlyMatrix tests
+def test_diff():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.diff(x) == Matrix(2, 1, [1, 0])
+
+def test_integrate():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.integrate(x) == Matrix(2, 1, [x**2/2, y*x])
+
+def test_jacobian2():
+    rho, phi = symbols("rho,phi")
+    X = CalculusOnlyMatrix(3, 1, [rho*cos(phi), rho*sin(phi), rho**2])
+    Y = CalculusOnlyMatrix(2, 1, [rho, phi])
+    J = Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)],
+        [   2*rho,             0],
+    ])
+    assert X.jacobian(Y) == J
+
+    m = CalculusOnlyMatrix(2, 2, [1, 2, 3, 4])
+    m2 = CalculusOnlyMatrix(4, 1, [1, 2, 3, 4])
+    raises(TypeError, lambda: m.jacobian(Matrix([1,2])))
+    raises(TypeError, lambda: m2.jacobian(m))
+
+def test_limit():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [1/x, y])
+    assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+
+
+# test DecompositionsOnlyMatrix
+def test_cholesky_decomposition():
+    raises(NonSquareMatrixError, lambda: DecompositionsOnlyMatrix(2, 1, (1, 2)).cholesky_decomposition())
+    raises(ValueError, lambda: DecompositionsOnlyMatrix(2, 2, (1, 2, 3, 4)).cholesky_decomposition())
+    A = DecompositionsOnlyMatrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+    Acho = A.cholesky_decomposition()
+    assert Acho*Acho.T == A
+    assert Acho.is_lower
+    assert Acho == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+
+
+def test_LDL_decomposition():
+    raises(NonSquareMatrixError, lambda: DecompositionsOnlyMatrix(2, 1, (1, 2)).LDL_decomposition())
+    raises(ValueError, lambda: DecompositionsOnlyMatrix(2, 2, (1, 2, 3, 4)).LDL_decomposition())
+    A = DecompositionsOnlyMatrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+    L, D = A.LDL_decomposition()
+    assert L * D * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
+    assert D.is_diagonal()
+    assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])

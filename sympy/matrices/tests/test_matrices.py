@@ -582,7 +582,7 @@ def test_LUdecomp():
                       [3, 3, 7, 4],
                       [8, 4, 0, 2],
                       [-2, 6, 3, 4]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
@@ -591,7 +591,7 @@ def test_LUdecomp():
                       [0, 3, 6, 7],
                       [1, -2, 7, 4],
                       [-9, 2, 6, 3]])
-    L, U, p = testmat.LUdecomposition()
+    L, U, p = testmat.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4)
@@ -601,7 +601,7 @@ def test_LUdecomp():
                       [4, 5, 6],
                       [7, 8, 9],
                       [10, 11, 12]])
-    L, U, p = testmat.LUdecomposition(rankcheck=False)
+    L, U, p = testmat.LU_decomposition(rankcheck=False)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == zeros(4, 3)
@@ -610,13 +610,13 @@ def test_LUdecomp():
     testmat = Matrix([[1, 2, 3],
                       [2, 4, 6],
                       [4, 5, 6]])
-    L, U, p = testmat.LUdecomposition(rankcheck=False)
+    L, U, p = testmat.LU_decomposition(rankcheck=False)
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - testmat == zeros(3)
 
     M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
-    L, U, p = M.LUdecomposition()
+    L, U, p = M.LU_decomposition()
     assert L.is_lower
     assert U.is_upper
     assert (L*U).permute_rows(p, 'backward') - M == zeros(3)
@@ -638,20 +638,20 @@ def test_LUdecomp():
     M = Matrix([[1, 3, 3],
                 [3, 2, 6],
                 [3, 2, 2]])
-    P, L, Dee, U = M.LUdecompositionFF()
+    P, L, Dee, U = M.LU_decomposition(method='ff')
     assert P*M == L*Dee.inv()*U
 
     M = Matrix([[1,  2, 3,  4],
                 [3, -1, 2,  3],
                 [3,  1, 3, -2],
                 [6, -1, 0,  2]])
-    P, L, Dee, U = M.LUdecompositionFF()
+    P, L, Dee, U = M.LU_decomposition(method='ff')
     assert P*M == L*Dee.inv()*U
 
     M = Matrix([[0, 0, 1],
                 [2, 3, 0],
                 [3, 1, 4]])
-    P, L, Dee, U = M.LUdecompositionFF()
+    P, L, Dee, U = M.LU_decomposition(method='ff')
     assert P*M == L*Dee.inv()*U
 
 
@@ -786,7 +786,7 @@ def test_jacobian_hessian():
 
 def test_QR():
     A = Matrix([[1, 2], [2, 3]])
-    Q, S = A.QRdecomposition()
+    Q, S = A.QR_decomposition()
     R = Rational
     assert Q == Matrix([
         [  5**R(-1, 2),  (R(2)/5)*(R(1)/5)**R(-1, 2)],
@@ -796,7 +796,7 @@ def test_QR():
     assert Q.T * Q == eye(2)
 
     A = Matrix([[1, 1, 1], [1, 1, 3], [2, 3, 4]])
-    Q, R = A.QRdecomposition()
+    Q, R = A.QR_decomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
@@ -804,13 +804,13 @@ def test_QR():
 
 def test_QR_non_square():
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])
-    Q, R = A.QRdecomposition()
+    Q, R = A.QR_decomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
 
     A = Matrix([[1, -1, 4], [1, 4, -2], [1, 4, 2], [1, -1, 0]])
-    Q, R = A.QRdecomposition()
+    Q, R = A.QR_decomposition()
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
@@ -1317,18 +1317,6 @@ def test_jacobian_metrics():
     assert g == Matrix([[1, 0], [0, rho**2]])
 
 
-def test_jacobian2():
-    rho, phi = symbols("rho,phi")
-    X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-    Y = Matrix([rho, phi])
-    J = Matrix([
-        [cos(phi), -rho*sin(phi)],
-        [sin(phi),  rho*cos(phi)],
-        [   2*rho,             0],
-    ])
-    assert X.jacobian(Y) == J
-
-
 def test_issue_4564():
     X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
     Y = Matrix([x, y, z])
@@ -1747,30 +1735,30 @@ def test_has():
     A = A.subs(x, 2)
     assert not A.has(x)
 
-def test_LUdecomposition_Simple_iszerofunc():
-    # Test if callable passed to matrices.LUdecomposition_Simple() as iszerofunc keyword argument is used inside
-    # matrices.LUdecomposition_Simple()
+def test_LU_decomposition_compact_iszerofunc():
+    # Test if callable passed to matrices.LU_decomposition(method='compact') as iszerofunc keyword argument is used inside
+    # matrices.LU_decomposition(method='compact')
     magic_string = "I got passed in!"
     def goofyiszero(value):
         raise ValueError(magic_string)
 
     try:
-        lu, p = Matrix([[1, 0], [0, 1]]).LUdecomposition_Simple(iszerofunc=goofyiszero)
+        lu, p = Matrix([[1, 0], [0, 1]]).LU_decomposition(iszerofunc=goofyiszero, method='compact')
     except ValueError as err:
         assert magic_string == err.args[0]
         return
 
     assert False
 
-def test_LUdecomposition_iszerofunc():
-    # Test if callable passed to matrices.LUdecomposition() as iszerofunc keyword argument is used inside
-    # matrices.LUdecomposition_Simple()
+def test_LU_decomposition_iszerofunc():
+    # Test if callable passed to matrices.LU_decomposition() as iszerofunc keyword argument is used inside
+    # matrices.LU_decomposition(method='compact')
     magic_string = "I got passed in!"
     def goofyiszero(value):
         raise ValueError(magic_string)
 
     try:
-        l, u, p = Matrix([[1, 0], [0, 1]]).LUdecomposition(iszerofunc=goofyiszero)
+        l, u, p = Matrix([[1, 0], [0, 1]]).LU_decomposition(iszerofunc=goofyiszero)
     except ValueError as err:
         assert magic_string == err.args[0]
         return
@@ -1845,8 +1833,8 @@ def test_errors():
     raises(TypeError, lambda: Matrix([1]).applyfunc(1))
     raises(ShapeError, lambda: Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]])))
     raises(MatrixError, lambda: Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]
-           ]).QRdecomposition())
-    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QRdecomposition())
+           ]).QR_decomposition(rankcheck=True))
+    raises(MatrixError, lambda: Matrix(1, 2, [1, 2]).QR_decomposition())
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor(4, 5))
     raises(ValueError, lambda: Matrix([[1, 2], [3, 4]]).minor_submatrix(4, 5))
     raises(TypeError, lambda: Matrix([1, 2, 3]).cross(1))
@@ -1935,27 +1923,6 @@ def test_hessenberg():
 
     A = zeros(5, 2)
     assert A.is_upper_hessenberg
-
-
-def test_cholesky():
-    raises(NonSquareMatrixError, lambda: Matrix((1, 2)).cholesky())
-    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).cholesky())
-    A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    assert A.cholesky() * A.cholesky().T == A
-    assert A.cholesky().is_lower
-    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
-
-
-def test_LDLdecomposition():
-    raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())
-    raises(ValueError, lambda: Matrix(((1, 2), (3, 4))).LDLdecomposition())
-    A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-    L, D = A.LDLdecomposition()
-    assert L * D * L.T == A
-    assert L.is_lower
-    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
-    assert D.is_diagonal()
-    assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
 
 
 def test_cholesky_solve():
@@ -2121,23 +2088,6 @@ def test_matrix_norm():
                 dif = simplify((alpha*X).norm(order) -
                     (abs(alpha) * X.norm(order)))
                 assert dif == 0
-
-
-def test_singular_values():
-    x = Symbol('x', real=True)
-
-    A = Matrix([[0, 1*I], [2, 0]])
-    assert A.singular_values() == [2, 1]
-
-    A = eye(3)
-    A[1, 1] = x
-    A[2, 2] = 5
-    vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
-
-    A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
-    vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
 
 
 def test_condition_number():
@@ -2949,7 +2899,22 @@ def test_deprecated():
     # removed, the corresponding tests should be removed.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+
+        # jordan_cells()
         m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
         P, Jcells = m.jordan_cells()
         assert Jcells[1] == Matrix(1, 1, [2])
         assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+
+        # cholesky()
+        raises(NonSquareMatrixError, lambda: Matrix(2, 1, (1, 2)).cholesky())
+        raises(ValueError, lambda: Matrix(2, 2, (1, 2, 3, 4)).cholesky())
+        A = Matrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+        Acho = A.cholesky()
+        assert Acho*Acho.T == A
+        assert Acho.is_lower
+        assert Acho == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+
+        # LDLdecomposition()
+        A = Matrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+        assert A.LDLdecomposition() == A.LDL_decomposition()
