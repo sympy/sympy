@@ -474,6 +474,7 @@ class Type(Symbol):
         }
     }
 
+
     default_precision_targets = {  # e.g.:
         # 'real': 'float64',
         # 'integer': 'intc',

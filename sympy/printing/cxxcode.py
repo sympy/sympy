@@ -101,7 +101,7 @@ class CXX98CodePrinter(_CXXCodePrinterBase, C89CodePrinter):
     reserved_words = set(reserved['C++98'])
 
 
-_attach_print_methods(CXX98CodePrinter, _math_functions)
+# _attach_print_methods(CXX98CodePrinter, _math_functions)
 
 
 class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
@@ -127,15 +127,26 @@ class CXX11CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
         ))
     )
 
-_attach_print_methods(CXX11CodePrinter, _math_functions)
+# _attach_print_methods(CXX11CodePrinter, _math_functions)
 
 
 class CXX17CodePrinter(_CXXCodePrinterBase, C99CodePrinter):
     standard = 'C++17'
     reserved_words = set(reserved['C++17'])
 
+    _kf = dict(C99CodePrinter._kf, **_math_functions['C++17'])
 
-_attach_print_methods(CXX17CodePrinter, _math_functions)
+    def _print_beta(self, expr):
+        return self._print_math_func(expr)
+
+    def _print_Ei(self, expr):
+        return self._print_math_func(expr)
+
+    def _print_zeta(self, expr):
+        return self._print_math_func(expr)
+
+
+# _attach_print_methods(CXX17CodePrinter, _math_functions)
 
 cxx_code_printers = {
     'c++98': CXX98CodePrinter,

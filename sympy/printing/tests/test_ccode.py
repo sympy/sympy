@@ -1,8 +1,10 @@
 import warnings
 from sympy.core import (pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq, nan)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             gamma, loggamma, sign, Max, Min)
+from sympy.functions import (Abs, acos, acosh, asin, asinh, atan, atanh, atan2,
+                             ceiling, cos, cosh, erf, erfc, exp, floor, gamma, log,
+                             loggamma, Max, Min, Piecewise,
+                             sign, sin, sinh, sqrt, tan, tanh)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -41,7 +43,8 @@ def test_ccode_Pow():
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
-    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
+    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
+    assert ccode(x**Rational(2, 3), precision=18) == 'powl(x, 2.0L/3.0L)'
     _cond_cfunc = [(lambda base, exp: exp.is_integer, "dpowi"),
                    (lambda base, exp: not exp.is_integer, "pow")]
     assert ccode(x**3, user_functions={'Pow': _cond_cfunc}) == 'dpowi(x, 3)'
@@ -75,12 +78,17 @@ def test_ccode_constants_other():
 
 
 def test_ccode_Rational():
-    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
+    assert ccode(Rational(3, 7)) == "3.0/7.0"
+    assert ccode(Rational(3, 7), precision=18) == "3.0L/7.0L"
     assert ccode(Rational(18, 9)) == "2"
-    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
-    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
-    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
-    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
+    assert ccode(Rational(3, -7)) == "-3.0/7.0"
+    assert ccode(Rational(3, -7), precision=18) == "-3.0L/7.0L"
+    assert ccode(Rational(-3, -7)) == "3.0/7.0"
+    assert ccode(Rational(-3, -7), precision=18) == "3.0L/7.0L"
+    assert ccode(x + Rational(3, 7)) == "x + 3.0/7.0"
+    assert ccode(x + Rational(3, 7), precision=18) == "x + 3.0L/7.0L"
+    assert ccode(Rational(3, 7)*x) == "(3.0/7.0)*x"
+    assert ccode(Rational(3, 7)*x, precision=18) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
@@ -582,6 +590,61 @@ def test_C99CodePrinter():
     assert c99printer.standard == 'C99'
     assert 'restrict' in c99printer.reserved_words
     assert 'using' not in c99printer.reserved_words
+
+
+def test_C99CodePrinter__precision():
+    n = symbols('n', integer=True)
+    f32_printer = C99CodePrinter({'precision': Type('float32')})
+    f64_printer = C99CodePrinter({'precision': Type('float64')})
+    f80_printer = C99CodePrinter({'precision': Type('float80')})
+    assert f32_printer.doprint(sin(x+2.1)) == 'sinf(x + 2.1F)'
+    assert f64_printer.doprint(sin(x+2.1)) == 'sin(x + 2.1)'
+    assert f80_printer.doprint(sin(x+2.1)) == 'sinl(x + 2.1L)'
+
+    for printer, suffix in zip([f32_printer, f64_printer, f80_printer], ['f', '', 'l']):
+        def check(expr, ref):
+            assert printer.doprint(expr) == ref.format(s=suffix, S=suffix.upper())
+        check(Abs(n), 'abs(n)')
+        check(Abs(x + 1.2), 'fabs{s}(x + 1.2{S})')
+        check(sin(x + 4.3)**cos(x - 2.7), 'pow{s}(sin{s}(x + 4.3{S}), cos{s}(x - 2.7{S}))')
+        check(exp(x*1.1), 'exp{s}(1.1{S}*x)')
+        check(exp2(x), 'exp2{s}(x)')
+        check(expm1(x*4.2), 'expm1{s}(4.2{S}*x)')
+        check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
+        check(log10(3*x/2), 'log10{s}((3.0{S}/2.0{S})*x)')
+        check(log2(x*3.1), 'log2{s}(3.1{S}*x)')
+        check(log1p(x), 'log1p{s}(x)')
+        check(2**x, 'pow{s}(2, x)')
+        check(2.1**x, 'pow{s}(2.1{S}, x)')
+        check(x**3, 'pow{s}(x, 3)')
+        check(x**3.1, 'pow{s}(x, 3.1{S})')
+        check(sqrt(3+x), 'sqrt{s}(x + 3)')
+        check(Cbrt(x-2.1), 'cbrt{s}(x - 2.1{S})')
+        check(hypot(x, y), 'hypot{s}(x, y)')
+        check(sin(3.*x + 2.), 'sin{s}(3.0{S}*x + 2.0{S})')
+        check(cos(3.*x - 1.), 'cos{s}(3.0{S}*x - 1.0{S})')
+        check(tan(4.2*y + 2.), 'tan{s}(4.2{S}*y + 2.0{S})')
+        check(asin(3.*x + 2.), 'asin{s}(3.0{S}*x + 2.0{S})')
+        check(acos(3.*x + 2.), 'acos{s}(3.0{S}*x + 2.0{S})')
+        check(atan(3.*x + 2.), 'atan{s}(3.0{S}*x + 2.0{S})')
+        check(atan2(3.*x, 2.*y), 'atan2{s}(3.0{S}*x, 2.0{S}*y)')
+
+        check(sinh(3.*x + 2.), 'sinh{s}(3.0{S}*x + 2.0{S})')
+        check(cosh(3.*x - 1.), 'cosh{s}(3.0{S}*x - 1.0{S})')
+        check(tanh(4.2*y + 2.), 'tanh{s}(4.2{S}*y + 2.0{S})')
+        check(asinh(3.*x + 2.), 'asinh{s}(3.0{S}*x + 2.0{S})')
+        check(acosh(3.*x + 2.), 'acosh{s}(3.0{S}*x + 2.0{S})')
+        check(atanh(3.*x + 2.), 'atanh{s}(3.0{S}*x + 2.0{S})')
+        check(erf(42.*x), 'erf{s}(42.0{S}*x)')
+        check(erfc(42.*x), 'erfc{s}(42.0{S}*x)')
+        check(gamma(x), 'tgamma{s}(x)')
+        check(loggamma(x), 'lgamma{s}(x)')
+
+        check(ceiling(x + 2.), "ceil{s}(x + 2.0{S})")
+        check(floor(x + 2.), "floor{s}(x + 2.0{S})")
+        check(fma(x, y, -z), 'fma{s}(x, y, -z)')
+        check(Max(x, 3.2, x**2.3), 'fmax{s}(3.2{S}, fmax{s}(x, pow{s}(x, 2.3{S})))')
+        check(Min(x, 3.2), 'fmin{s}(3.2{S}, x)')
 
 
 def test_get_math_macros():
