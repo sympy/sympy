@@ -400,7 +400,7 @@ decomposition as well:
 We can perform a `QR` factorization which is handy for solving systems:
 
     >>> A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
-    >>> Q, R = A.QRdecomposition()
+    >>> Q, R = A.QR_decomposition()
     >>> Q
     [  ___     ___      ___ ]
     [\/ 6   -\/ 3    -\/ 2  ]
