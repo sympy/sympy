@@ -33,8 +33,10 @@ class PolynomialRing(Ring, CompositeDomain):
         self.symbols = ring.symbols
         self.domain = ring.domain
 
-        if domain_or_ring.is_Field and domain_or_ring.is_Exact and len(symbols)==1:
-            self.is_PID = True
+
+        if symbols:
+            if ring.domain.is_Field and ring.domain.is_Exact and len(symbols)==1:
+                self.is_PID = True
 
         # TODO: remove this
         self.dom = self.domain

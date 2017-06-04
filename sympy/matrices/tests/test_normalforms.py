@@ -1,7 +1,8 @@
-from sympy import Symbol, Poly
+from __future__ import print_function, division
 
-from sympy.matrices import Matrix
-from sympy.matrices.normalforms import *
+from sympy import Symbol, Poly
+from sympy.polys.solvers import RawMatrix as Matrix
+from sympy.matrices.normalforms import smith_normal_invariants, smith_normal_form
 from sympy.polys.domains import ZZ, QQ
 
 def test_smith_normal():

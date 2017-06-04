@@ -156,7 +156,7 @@ class FpGroup(DefaultPrinting):
         '''
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.matrices import Matrix
+        from sympy.polys.solvers import RawMatrix as Matrix
         from sympy.polys.domains import ZZ
         from sympy.matrices.normalforms import smith_normal_invariants
         for rel in self.relators():

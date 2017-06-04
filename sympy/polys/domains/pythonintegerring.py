@@ -29,11 +29,7 @@ class PythonIntegerRing(IntegerRing):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to ``dtype``. """
-        if isinstance(a, PythonInteger):
-            return a
-        elif isinstance(a, long):
-            return PythonInteger(a)
-        elif a.is_Integer:
+        if a.is_Integer:
             return PythonInteger(a.p)
         elif a.is_Float and int(a) == a:
             return PythonInteger(int(a))
@@ -75,28 +71,20 @@ class PythonIntegerRing(IntegerRing):
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
-        a = self.from_sympy(a)
-        b = self.from_sympy(b)
         return python_gcdex(a, b)
 
     def gcd(self, a, b):
         """Compute GCD of ``a`` and ``b``. """
-        a = self.from_sympy(a)
-        b = self.from_sympy(b)
         return python_gcd(a, b)
 
     def lcm(self, a, b):
         """Compute LCM of ``a`` and ``b``. """
-        a = self.from_sympy(a)
-        b = self.from_sympy(b)
         return python_lcm(a, b)
 
     def sqrt(self, a):
         """Compute square root of ``a``. """
-        a = self.from_sympy(a)
         return python_sqrt(a)
 
     def factorial(self, a):
         """Compute factorial of ``a``. """
-        a = self.from_sympy(a)
         return python_factorial(a)
