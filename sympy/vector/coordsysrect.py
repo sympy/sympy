@@ -5,6 +5,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
+from sympy.vector.lamecoeff import CoeffProvider
 import sympy.vector
 
 
@@ -13,7 +14,7 @@ class CoordSysCartesian(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, location=None, rotation_matrix=None,
+    def __new__(cls, name, curv_coord_name=None, transformation_equations=None, location=None, rotation_matrix=None,
                 parent=None, vector_names=None, variable_names=None):
         """
         The orientation/location parameters are necessary if this system
@@ -24,6 +25,15 @@ class CoordSysCartesian(Basic):
 
         name : str
             The name of the new CoordSysCartesian instance.
+
+        curv_coord_name : str
+            The type of the new coordinate system. It should be
+            None, when transformation_equations are not None.
+
+        transformation_equations : tuple
+            The set of equations, which transforms to desired
+            curvilinear coordinate system from Cartesian ones.
+            It should be None, when curv_coord_name is not None.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -144,6 +154,41 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
+        # Initialize proper class, which provide specific information
+        # on curvilinear coordinate system. Create parameters could be
+        # system of equation in tuple or name of type of coordinate system,
+        # which is implemented in SymPy.
+        if curv_coord_name is not None and transformation_equations is None:
+            coefficients = CoeffProvider(obj).get_coefficients(curv_coord_name)
+        elif curv_coord_name is None and transformation_equations is None:
+            coefficients = CoeffProvider(obj).get_coefficients("cartesian")
+        elif curv_coord_name is None and transformation_equations is not None:
+            from sympy import symbols
+            x, y, z = symbols('x y z')
+            te1 = transformation_equations[0].subs(x, obj._x)
+            te1 = te1.subs(y, obj._y)
+            te1 = te1.subs(z, obj._z)
+            te2 = transformation_equations[1].subs(x, obj._x)
+            te2 = te2.subs(y, obj._y)
+            te2 = te2.subs(z, obj._z)
+            te3 = transformation_equations[2].subs(x, obj._x)
+            te3 = te3.subs(y, obj._y)
+            te3 = te3.subs(z, obj._z)
+            coefficients = CoeffProvider(obj).get_coefficients(eq1=te1, eq2=te2, eq3=te3)
+
+        else:
+            raise ValueError("Type of coordinate system is defined by system of "
+                             "equations or by name of coordinate system")
+
+        # Define Lame coefficients for coordinate system
+        obj._h1 = coefficients.h1()
+        obj._h2 = coefficients.h2()
+        obj._h3 = coefficients.h3()
+
+        # Define transformation equations from Cartesian to just created
+        # coordinate system.
+        obj._transformation_equation = coefficients.transformation_equations()
+
         # Assign a Del operator instance
         from sympy.vector.deloperator import Del
         obj._delop = Del(obj)
@@ -207,6 +252,12 @@ class CoordSysCartesian(Basic):
 
     def base_scalars(self):
         return self._x, self._y, self._z
+
+    def lame_coefficients(self):
+        return self._h1, self._h2, self._h3
+
+    def transformation_equations(self):
+        return self._transformation_equation
 
     @cacheit
     def rotation_matrix(self, other):
@@ -695,7 +746,7 @@ class CoordSysCartesian(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def __init__(self, name, location=None, rotation_matrix=None,
+    def __init__(self, name, curv_coord_name=None, transformation_equations=None, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
