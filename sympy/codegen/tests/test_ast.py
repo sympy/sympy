@@ -220,6 +220,23 @@ def test_Type__cast_check__floating_point():
     f80.cast_check(Float('0.12345678901234567890103'))
     raises(ValueError, lambda: f80.cast_check(Float('0.12345678901234567890123')))
 
+    v10 = 12345.67894
+    raises(ValueError, lambda: f32.cast_check(v10))
+    assert abs(Float(str(v10), 20) - f64.cast_check(v10)) < 1e-16
+
+
+def test_Type__cast_check__complex_floating_point():
+    c64 = Type('complex64')
+    val9_11 = 123.456789049 + 0.123456789049j
+    raises(ValueError, lambda: c64.cast_check(.12345678949 + .12345678949j))
+    assert abs(val9_11 - c64.cast_check(val9_11) - 4.9e-8) < 1e-8
+
+    c128 = Type('complex128')
+    dcm21 = Float('0.123456789012345670499') + 1e-20j  # 21 decimals
+    assert abs(dcm21 - c128.cast_check(dcm21) - 4.99e-19) < 1e-19
+    v19 = Float('0.1234567890123456749') + 1j*Float('0.1234567890123456749')
+    raises(ValueError, lambda: c128.cast_check(v19))
+
 
 def test_Variable():
     v = Variable(x)

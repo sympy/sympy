@@ -694,9 +694,9 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
 
     >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs, Function
     >>> x, tau = symbols("x, tau")
-    >>> ccode((2*tau)**Rational(7, 2), standard='C89')
-    '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-    >>> ccode(sin(x), assign_to="s", standard='C89')
+    >>> ccode((2*tau)**Rational(7, 2))
+    '8*sqrt(2)*pow(tau, 7.0/2.0)'
+    >>> ccode(sin(x), assign_to="s")
     's = sin(x);'
 
     Simple custom printing can be defined for certain types by passing a

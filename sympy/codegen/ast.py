@@ -431,10 +431,17 @@ class Type(Symbol):
     Traceback (most recent call last):
       ...
     ValueError: Casting gives a significantly different value.
-    >>> Type('float64').cast_check(v10)
+    >>> f64 = Type('float64')
+    >>> f64.cast_check(v10)
     12345.67894
     >>> from sympy import Float
-    >>> v22 = Float(0.1234567890123456789015)
+    >>> v18 = Float('0.123456789012345646')
+    >>> f64.cast_check(v18)
+    Traceback (most recent call last):
+      ...
+    ValueError: Casting gives a significantly different value.
+    >>> Type('float80').cast_check(v18)
+    0.123456789012345649
 
     References
     ----------
@@ -473,7 +480,8 @@ class Type(Symbol):
             'decimal_dig': 21,  # LDBL_DECIMAL_DIG
         }
     }
-
+    default_limits['complex64'] = default_limits['float32']
+    default_limits['complex128'] = default_limits['float64']
 
     default_precision_targets = {  # e.g.:
         # 'real': 'float64',
@@ -550,7 +558,7 @@ class Type(Symbol):
         Examples
         --------
         >>> from sympy.codegen.ast import Type
-        >>> Type('integer').cast_check(3.0) is 3
+        >>> Type('integer').cast_check(3.0) == 3
         True
         >>> Type('float32').cast_check(1e-40)  # doctest: +ELLIPSIS
         Traceback (most recent call last):
@@ -559,15 +567,15 @@ class Type(Symbol):
 
         """
         from sympy.functions.elementary.complexes import im, re
-        val = _sympify(value)
         def lim(type_name, key):
             return (limits or self.default_limits).get(type_name, {}).get(key)
+        val = _sympify(value)
 
         name = (precision_targets or self.default_precision_targets).get(self.name, self.name)
-
+        ten = Integer(10)
         if rtol is None:
             exp10 = lim(name, 'decimal_dig')
-            rtol = 1e-15 if exp10 is None else 10**(-exp10)
+            rtol = 1e-15 if exp10 is None else ten**(-exp10)
 
         if atol is None:
             if rtol == 0:
@@ -596,7 +604,9 @@ class Type(Symbol):
             _max = +lim(name, 'max')
             _min = -lim(name, 'max')
             _tiny = lim(name, 'tiny')
-            caster = lambda x: Float(str(x.evalf(lim(name, 'decimal_dig'))))
+            dec_dig = lim(name, 'decimal_dig')
+            val = Float(str(val), dec_dig+3)
+            caster = lambda x: Float(str(x.evalf(dec_dig)), dec_dig+3)
 
         if name.startswith('complex'):
             if name == 'complex':
@@ -606,7 +616,11 @@ class Type(Symbol):
             corresponding_float = 'float%d' % (nbits // 2)
             _max = +lim(corresponding_float, 'max')
             _tiny = lim(corresponding_float, 'tiny')
-            caster = lambda x: Float(str(x.evalf(lim(corresponding_float, 'decimal_dig'))))
+            dec_dig = lim(corresponding_float, 'decimal_dig')
+            caster = lambda x: (
+                Float(str(re(x).evalf(dec_dig)), dec_dig+3) +
+                Float(str(im(x).evalf(dec_dig)), dec_dig+3)*1j
+            )
             if abs(re(val)) > _max or abs(im(val)) > _max:
                 raise ValueError("Maximum value exceeded for data type.")
             if abs(re(val)) < _tiny or abs(im(val)) < _tiny:
