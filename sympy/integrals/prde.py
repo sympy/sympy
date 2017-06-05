@@ -23,6 +23,7 @@ from sympy.matrices import Matrix, zeros, eye
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys.polymatrix import PolyMatrix
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -535,14 +536,14 @@ def param_poly_rischDE(a, b, q, n, DE):
         return [], eye(m)  # Could return A, but this has
                            # the minimum number of rows.
 
-    Mqq = Matrix([qq])  # A single row.
+    Mqq = PolyMatrix([qq])  # A single row.
     r = [(Mqq*vj)[0] for vj in V]  # [r1, ..., ru]
 
     # Solutions of (a/d)*Dp + (b/d)*p = Sum(dj*rj) correspond to
     # solutions alpha*p + Sum(Sum(dj*aji)*betai) of the initial
     # equation. These are equal to alpha*p + Sum(dj*fj) where
     # fj = Sum(aji*betai).
-    Mbeta = Matrix([beta])
+    Mbeta = PolyMatrix([beta])
     f = [(Mbeta*vj)[0] for vj in V]  # [f1, ..., fu]
 
     #
@@ -639,7 +640,7 @@ def param_rischDE(fa, fd, G, DE):
     if not V:  # No non-trivial solution
         return [], eye(m)
 
-    Mq = Matrix([q])  # A single row.
+    Mq = PolyMatrix([q])  # A single row.
     r = [(Mq*vj)[0] for vj in V]  # [r1, ..., ru]
 
     # Solutions of a*Dp + b*p = Sum(dj*rj) correspond to solutions
