@@ -108,16 +108,14 @@ def smith_normal_invariants(m, domain = None):
         if ind:
             m = m.permute_cols([[0, ind[0]]])
 
-    m = clear_column(m)
-    m = clear_row(m)
-    if 1 in m.shape:
-        return [m[0]]
-
-    while not (m[0,1:].is_zero) or not (m[1:,0].is_zero):
+    while any([m[0,i] != 0 for i in range(1,m.cols)]) or any([m[i,0] != 0 for i in range(1,m.rows)]):
         m = clear_column(m)
         m = clear_row(m)
 
-    invs = smith_normal_invariants(m[1:,1:], domain=domain)
+    if 1 in m.shape:
+        invs = []
+    else:
+        invs = smith_normal_invariants(m[1:,1:], domain=domain)
     zeros = []
     result = [m[0]]
     for r in invs:
