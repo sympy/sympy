@@ -5,32 +5,29 @@ from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
 from sympy.core.function import diff
 from sympy.core.expr import Expr
-from sympy.core.numbers import igcd
 from sympy.abc import x, y
+from sympy.polys.polytools import gcd_list
+
 
 def polytope_integrate(poly, expr, dims=None):
     """This is currently a basic prototype for integrating
     univariate/bivariate polynomials over 2-Polytopes.
-
     Parameters
     ==========
     poly : The input Polygon.
     expr : The input polynomial.
     dims : The tuple of symbols denoting axes.
-
     Example
     =======
-    >>> from sympy.abc import *
+    >>> from sympy.abc import x, y
     >>> from sympy.geometry.polygon import Polygon
     >>> from sympy.geometry.point import Point
-    >>> from sympy.integrals.intpoly import *
+    >>> from sympy.integrals.intpoly import polytope_integrate
     >>> poly = Polygon(Point(0,0), Point(0,1), Point(1,1), Point(1,0))
     >>> expr = x*y
     >>> polytope_integrate(poly, expr)
     1/4
-
     """
-    #x, y = Symbol('x'), Symbol('y')#  Symbols to represent axes
     if dims is None:
         if isinstance(expr, Expr):
             dims = list(expr.free_symbols)
@@ -38,9 +35,8 @@ def polytope_integrate(poly, expr, dims=None):
             dims = [x, y]
 
     polys = decompose(expr)
-    hp_params = hyperplane_parameters(poly, dims)
+    hp_params = hyperplane_parameters(poly)
     facets = poly.sides
-
     dim_length = len(dims)
     result = 0
 
@@ -64,7 +60,6 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     """Helper method for polytope_integrate.
     Returns the value of the input expression evaluated over the
     polytope facet referenced by a given index.
-
     Parameters
     ===========
     facets : List of facets of the polytope.
@@ -74,7 +69,6 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     expr : The expression to integrate over the facet.
     dims : List of symbols denoting axes.
     degree : Degree of the homogeneous polynomial.
-
     """
     if expr == 0:
         return expr
@@ -91,7 +85,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
 
     for j in range(0, m):
         intersect = ()
-        if j != index:
+        if j == (index - 1) % m or j == (index + 1) % m:
             intersect = intersection(facets[index], facets[j])
         if intersect:
             distance_origin = norm((intersect[0] - x0[0],
@@ -110,15 +104,13 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     return value/(len(dims) + degree - 1)
 
 
-def hyperplane_parameters(poly, dims):
+def hyperplane_parameters(poly):
     """A helper function to return the hyperplane parameters
     of which the facets of the polygon are a part of.
     Currently works for only 2-Polytopes.
-
     Parameters
     ==========
     poly : The input Polygon
-    dims : List of symbols denoting axes.
     """
     params = []
     vertices = list(poly.vertices)
@@ -131,11 +123,10 @@ def hyperplane_parameters(poly, dims):
         a2 = v2[0] - v1[0]
         b = v2[0] * v1[1] - v2[1] * v1[0]
 
-        factor = igcd(a1, a2, b)
+        factor = gcd_list([a1, a2, b])
 
         b = b/factor
         a = (a1/factor, a2/factor)
-        #a = {dims[0] : a1/factor, dims[1] : a2/factor}
 
         params.append((a, b))
     return params
@@ -146,14 +137,12 @@ def best_origin(a, b, lineseg, expr):
     Returns a point on the lineseg whose vector inner product with the
     divergence of `expr` yields an expression with the least maximum
     total power.
-
     Parameters
     ==========
     a : Hyperplane parameter denoting direction.
     b : Hyperplane parameter denoting distance.
     lineseg : Line segment on which to find the origin.
     expr : The expression which determines the best point.
-
     Algorithm(currently works only for 2D use case)
     ===============================================
     1 > Firstly, check for edge cases. Here that would refer to vertical
@@ -162,7 +151,7 @@ def best_origin(a, b, lineseg, expr):
     2 > If input expression is a polynomial containing more than one generator
         then find out the total power of each of the generators.
 
-        Example : x**2 + 3 + x*y + x**4*y**5 ---> {x: 7, y: 6}
+        x**2 + 3 + x*y + x**4*y**5 ---> {x: 7, y: 6}
 
         If expression is a constant value then pick the first boundary point
         of the line segment.
@@ -173,7 +162,6 @@ def best_origin(a, b, lineseg, expr):
         constraints then pick the first boundary point of the line segement.
         Actually, any point lying on the segment can be picked as best origin
         in the last case.
-
     Examples
     ========
     >>> from sympy.integrals.intpoly import *
@@ -183,51 +171,44 @@ def best_origin(a, b, lineseg, expr):
     >>> l = Segment2D(Point(0, 3), Point(1, 1))
     >>> expr = x**3*y**7
     >>> best_origin((2, 1), 3, l, expr)
-    {x: 0, y: 3.0}
-
+    (0, 3.0)
     """
     def x_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the x-axis.
-
         Parameters:
         ===========
         ls : Line segment
-
         """
-        a, b = ls.points
-        if a.y == 0:
-            return tuple(a)
-        elif b.y == 0:
-            return tuple(b)
-        elif a.y/b.y < 0:
-            return tuple(a.y * (a.x - b.x)/(b.y - a.y) + a.x, 0)
+        p, q = ls.points
+        if p.y == 0:
+            return tuple(p)
+        elif q.y == 0:
+            return tuple(q)
+        elif p.y/q.y < 0:
+            return p.y * (p.x - q.x)/(q.y - p.y) + p.x, 0
         else:
             return ()
 
     def y_axis_cut(ls):
         """Returns the point where the input line segment
         intersects the y-axis.
-
         Parameters:
         ===========
         ls : Line segment
-
         """
-        a, b = ls.points
-        if a.x == 0:
-            return tuple(a)
-        elif b.x == 0:
-            return tuple(b)
-        elif a.x/b.x < 0:
-            return tuple(0, a.x * (a.y - b.y)/(b.x - a.x) + a.y)
+        p, q = ls.points
+        if p.x == 0:
+            return tuple(p)
+        elif q.x == 0:
+            return tuple(q)
+        elif p.x/q.x < 0:
+            return 0, p.x * (p.y - q.y)/(q.x - p.x) + p.y
         else:
             return ()
 
     a1, b1 = lineseg.points[0]
-    a2, b2 = lineseg.points[1]
 
-    x, y = Symbol('x'), Symbol('y')
     gens = [x, y]
     power_gens = {}
 
@@ -239,14 +220,14 @@ def best_origin(a, b, lineseg, expr):
         if len(gens) == 2:
             if a[0] == 0:
                 if y_axis_cut(lineseg):
-                    return (0, b/a[1])
+                    return 0, b/a[1]
                 else:
-                    return (a1, b1)
+                    return a1, b1
             elif a[1] == 0:
                 if x_axis_cut(lineseg):
-                    return (b/a[0], 0)
+                    return b/a[0], 0
                 else:
-                    return (a1, b1)
+                    return a1, b1
 
         if isinstance(expr, Expr):  # Find the sum total of power of each
             if expr.is_Add:         # generator and store in a dictionary.
@@ -273,15 +254,12 @@ def best_origin(a, b, lineseg, expr):
             elif expr.is_Symbol:
                 power_gens[expr] += 1
         else:  # If `expr` is a constant take first vertex of the line segment.
-            #keys = list(a.keys())
-            return (a1, b1)
+            return a1, b1
 
-        #TODO : This part is quite hacky. Should be made more robust with
-        #TODO : respect to symbol names and scalable w.r.t higher dimensions.
-        power_gens = sorted(power_gens.items(), key=lambda x: str(x[0]))
-        x0 = tuple()
+        #  TODO : This part is quite hacky. Should be made more robust with
+        #  TODO : respect to symbol names and scalable w.r.t higher dimensions.
+        power_gens = sorted(power_gens.items(), key=lambda k: str(k[0]))
         if power_gens[0][1] >= power_gens[1][1]:
-            max_gen, gen2 = power_gens[0][0], power_gens[1][0]
             if y_axis_cut(lineseg):
                 x0 = (0, b / a[1])
             elif x_axis_cut(lineseg):
@@ -289,7 +267,6 @@ def best_origin(a, b, lineseg, expr):
             else:
                 x0 = (a1, b1)
         else:
-            gen2, max_gen = power_gens[0][0], power_gens[1][0]
             if x_axis_cut(lineseg):
                 x0 = (b/a[0], 0)
             elif y_axis_cut(lineseg):
@@ -304,21 +281,17 @@ def best_origin(a, b, lineseg, expr):
 def decompose(expr):
     """Decomposes an input polynomial into homogeneous ones of
     smaller or equal degree.
-
     Returns a dictionary with keys as the degree of the smaller
     constituting polynomials. Values are the constituting polynomials.
-
     Parameters
     ==========
     expr : Polynomial(SymPy expression)
-
     Examples
     ========
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import decompose
     >>> decompose(x**2 + x*y + x + y + x**3*y**2 + y**5)
     {1: x + y, 2: x**2 + x*y, 5: x**3*y**2 + y**5}
-
     """
     poly_dict = {}
     if isinstance(expr, Expr):
@@ -364,36 +337,33 @@ def decompose(expr):
 
 def norm(point):
     """Returns the Euclidean norm of a point from origin.
-
     Parameters
     ==========
     point: This denotes a point in the dimensional space.
-
     Examples
     ========
     >>> from sympy.integrals.intpoly import norm
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
-    7.28010988928052
-
+    sqrt(53)
     """
     h = 0
+    half = S(1)/2
     if isinstance(point, tuple):
-        h = (point[0] ** 2 + point[1] ** 2) ** 0.5
+        h = (point[0] ** 2 + point[1] ** 2) ** half
     elif isinstance(point, Point):
-        h = (point.x ** 2 + point.y ** 2) ** 0.5
+        h = (point.x ** 2 + point.y ** 2) ** half
     elif isinstance(point, dict):
         s = 0
         for i in point.values():
             s += i ** 2
-        h = s**0.5
+        h = s**half
     return h
 
 
 def intersection(lineseg_1, lineseg_2):
     """Returns intersection between lines of which
     the input line segments are a part of.
-
     Note that this function is meant for use in integration_reduction
     and at that point in the calling function the lines denoted by the
     segments surely intersect within segment boundaries. Coincident lines
@@ -431,11 +401,9 @@ def intersection(lineseg_1, lineseg_2):
 
 def is_vertex(ent):
     """If the input entity is a vertex return True
-
     Parameter
     =========
     ent : Denotes a geometric entity representing a point
-
     """
     if isinstance(ent, tuple):
         if len(ent) in [2, 3]:
@@ -448,11 +416,9 @@ def is_vertex(ent):
 def plot_polytope(poly):
     """Plots the 2D polytope using the functions written in plotting
     module which in turn uses matplotlib backend.
-
     Parameter
     =========
     poly: Denotes a 2-Polytope
-
     """
     from sympy.plotting.plot import Plot, List2DSeries
     xl, yl = list(), list()
@@ -469,11 +435,9 @@ def plot_polytope(poly):
 def plot_polynomial(expr):
     """Plots the polynomial using the functions written in
     plotting module which in turn uses matplotlib backend.
-
     Parameter
     =========
     expr: Denotes a polynomial(SymPy expression)
-
     """
     from sympy.plotting.plot import plot
     p = plot(expr, axes='label_axes=True')
