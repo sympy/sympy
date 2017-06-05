@@ -18,7 +18,7 @@ from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import exp, factorial
+from sympy.functions import Abs, exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
@@ -1929,6 +1929,9 @@ class MatrixArithmetic(MatrixRequired):
 
     _op_priority = 10.01
 
+    def _eval_Abs(self):
+        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
+
     def _eval_add(self, other):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
@@ -1973,6 +1976,10 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     # python arithmetic functions
+    def __abs__(self):
+        """Returns a new matrix with entry-wise absolute values."""
+        return self._eval_Abs()
+
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
