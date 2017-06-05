@@ -5,11 +5,11 @@ from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, N, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, oo, pi, signsimp, simplify, sin, sqrt, symbols,
     sympify, trigsimp, tan, sstr, diff)
-from sympy.matrices.matrices import (ShapeError, MatrixError,
-    NonSquareMatrixError, DeferredVector, _MinimalMatrix, MatrixShaping,
-    MatrixProperties, MatrixOperations, MatrixArithmetic, MatrixDeterminant,
-    MatrixReductions, MatrixSpecial, MatrixSubspaces, MatrixEigen,
-    MatrixCalculus, MatrixDecompositions)
+from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError,
+    _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
+    MatrixSpecial)
+from sympy.matrices.matrices import (DeferredVector, MatrixDeterminant,
+    MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus, MatrixDecompositions)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
