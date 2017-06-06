@@ -8,7 +8,7 @@ from sympy.polys.domains import ZZ, QQ
 def test_smith_normal():
     m = Matrix([[12, 6, 4,8],[3,9,6,12],[2,16,14,28],[20,10,10,20]])
     setattr(m, 'ring', ZZ)
-    smf = Matrix([[0, 0, 0, 0], [0, 1, 0, 0], [0, 0, 10, 0], [0, 0, 0, -30]])
+    smf = Matrix([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, -30, 0], [0, 0, 0, 0]])
     assert smith_normal_form(m) == smf
 
     x = Symbol('x')

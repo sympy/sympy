@@ -22,7 +22,7 @@ def smith_normal_form(m, domain = None):
     Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
 
     '''
-    invs = smith_normal_invariants(m)
+    invs = smith_normal_invariants(m, domain=domain)
     smf = diag(*invs)
     n = len(invs)
     if m.rows > n:
@@ -36,6 +36,12 @@ def smith_normal_invariants(m, domain = None):
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)
 
+    References
+    ==========
+
+    [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
+    [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
+
     '''
     if not domain:
         if not (hasattr(m, "ring") and m.ring.is_PID):
@@ -43,6 +49,9 @@ def smith_normal_invariants(m, domain = None):
                 "The matrix entries must be over a principal ideal domain")
         else:
             domain = m.ring
+
+    if len(m) == 0:
+        return ()
 
     m = m[:, :]
 
@@ -100,6 +109,7 @@ def smith_normal_invariants(m, domain = None):
                 pivot = g
         return m
 
+    # permute the rows and columns until m[0,0] is non-zero if possible
     ind = [i for i in range(m.rows) if m[i,0] != 0]
     if ind:
         m = m.permute_rows([[0, ind[0]]])
@@ -108,29 +118,28 @@ def smith_normal_invariants(m, domain = None):
         if ind:
             m = m.permute_cols([[0, ind[0]]])
 
-    while any([m[0,i] != 0 for i in range(1,m.cols)]) or any([m[i,0] != 0 for i in range(1,m.rows)]):
+    # make the first row and column except m[0,0] zero
+    while (any([m[0,i] != 0 for i in range(1,m.cols)]) or
+           any([m[i,0] != 0 for i in range(1,m.rows)])):
         m = clear_column(m)
         m = clear_row(m)
 
     if 1 in m.shape:
-        invs = []
+        invs = ()
     else:
         invs = smith_normal_invariants(m[1:,1:], domain=domain)
-    zeros = []
-    result = [m[0]]
-    for r in invs:
-        if r == 0:
-            zeros.append(r)
-        else:
-            result.append(r)
-    # in case m[0] doesn't divide the invariants of the rest of the matrix
-    if result[0]:
+
+    if m[0,0]:
+        result = [m[0,0]]
+        result.extend(invs)
+        # in case m[0] doesn't divide the invariants of the rest of the matrix
         for i in range(len(result)-1):
-            if domain.div(result[i+1], result[i])[1] != 0:
+            if result[i] and domain.div(result[i+1], result[i])[1] != 0:
                 g = domain.gcd(result[i+1], result[i])
                 result[i+1] = domain.div(result[i], g)[0]*result[i+1]
                 result[i] = g
             else:
                 break
-    result = zeros + result
+    else:
+        result = invs + (m[0,0],)
     return tuple(result)
