@@ -4021,9 +4021,16 @@ class Poly(Expr):
 
     @_sympifyit('g', NotImplemented)
     def __divmod__(f, g):
+        if not f.is_Poly:
+            sym_list = f.free_symbols
+            f = f.as_poly(sym_list)
+            if not g.is_Poly:
+                g = f.__class__(g, *f.gens)
+            result = f.div(g)            
+            return result[0].args[0], result[1].args[0]
         if not g.is_Poly:
-            g = f.__class__(g, *f.gens)
-
+                g = f.__class__(g, *f.gens)
+                
         return f.div(g)
 
     @_sympifyit('g', NotImplemented)
