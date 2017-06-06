@@ -4,10 +4,9 @@ from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo,
                    Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
                    Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs)
 from sympy.solvers.inequalities import (reduce_inequalities,
-                                        solve_poly_inequality as psolve,
-                                        reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality)
+    solve_poly_inequality as psolve, reduce_rational_inequalities,
+    solve_univariate_inequality as isolve, reduce_abs_inequality,
+    _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -375,3 +374,13 @@ def test_issue_10671_12466():
     assert solveset((1/x).diff(x) < 0, x, i) == i
     assert solveset((log(x - 6)/x) <= 0, x, S.Reals) == \
         Interval.Lopen(6, 7)
+
+
+def test__solve_inequality():
+    for op in (Gt, Lt, Le, Ge, Eq, Ne):
+        assert _solve_inequality(op(x, 1), x).lhs == x
+        assert _solve_inequality(op(S.One, x), x).lhs == x
+    ie = Eq(S.One, y)
+    assert _solve_inequality(ie, x) == ie
+    a = Symbol('a', positive=True)
+    assert _solve_inequality(a/x > 1, x) == (S.Zero < x) & (x < a)

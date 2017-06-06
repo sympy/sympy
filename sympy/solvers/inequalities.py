@@ -483,7 +483,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         if rv is None:
             solns = solvify(e, gen, domain)
             if solns is None:
-                raise NotImplementedError(filldedent('''The inequality cannot be
+                raise NotImplementedError(filldedent('''
+                    The inequality cannot be
                     solved using solve_univariate_inequality.'''))
             singularities = []
             for d in denoms(expr, gen):
@@ -517,7 +518,15 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     discontinuities))).intersection(
                     Interval(domain.inf, domain.sup,
                     domain.inf not in domain, domain.sup not in domain))
-                reals = _nsort(critical_points, separated=True)[0]
+                if all(r.is_number for r in critical_points):
+                    reals = _nsort(critical_points, separated=True)[0]
+                else:
+                    from sympy.utilities.iterables import sift
+                    sifted = sift(critical_points, lambda x: x.is_real)
+                    try:
+                        reals = list(sorted(sifted[True]))
+                    except TypeError:
+                        raise NotImplementedError
             except NotImplementedError:
                 raise NotImplementedError('sorting of these roots is not supported')
 
@@ -574,6 +583,12 @@ def _pt(start, end):
 def _solve_inequality(ie, s):
     """ A hacky replacement for solve, since the latter only works for
         univariate inequalities. """
+    if s not in ie.free_symbols:
+        return ie
+    if ie.rhs == s:
+        ie = ie.reversed
+    if ie.lhs == s and s not in ie.rhs.free_symbols:
+        return ie
     expr = ie.lhs - ie.rhs
     try:
         p = Poly(expr, s)

@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, exp, Abs, Not, Symbol, S
+    cos, exp, Abs, Not, Symbol, S, Ne
 )
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
@@ -196,14 +196,16 @@ def test_piecewise_integrate():
 
     g = Piecewise((0, Or(x <= -1, x >= 1)), (1 - x, x > 0), (1 + x, True))
     assert integrate(g, (x, -5, 1)) == 1
+    assert g._sort_expr_cond(x, -5, 1) == [
+        [-5, -1, 0], [-1, 0, x + 1], [0, 1, -x + 1]]
     assert integrate(g, (x, -5, y)).subs(y, 1) == 1
     assert integrate(g, (x, y, 1)).subs(y, -5) == 1
     assert integrate(g, (x, 1, -5)) == -1
     assert integrate(g, (x, 1, y)).subs(y, -5) == -1
     assert integrate(g, (x, y, -5)).subs(y, 1) == -1
-    assert integrate(g, (x, -5, y)) == Piecewise((0, y <= -1), (1, y >= 1),
+    assert integrate(g, (x, -5, y)) == Piecewise((1, y >= 1), (0, y <= -1),
         (-y**2/2 + y + 0.5, y > 0), (y**2/2 + y + 0.5, True))
-    assert integrate(g, (x, y, 1)) == Piecewise((1, y <= -1), (0, y >= 1),
+    assert integrate(g, (x, y, 1)) == Piecewise((0, y >= 1), (1, y <= -1),
         (y**2/2 - y + 0.5, y > 0), (-y**2/2 - y + 0.5, True))
 
 
@@ -495,3 +497,71 @@ def test_S_srepr_is_identity():
     p = Piecewise((10, Eq(x, 0)), (12, True))
     q = S(srepr(p))
     assert p == q
+
+
+def test_issue_11045():
+    c = Abs(x**(-2)) > 1
+    p = Piecewise((x, c), (2, True))
+    assert p._sort_expr_cond(x, 1, 2, None) == [[1, 2, 2]]
+
+    # handle And with Or arguments
+    assert Piecewise((1, And(Or(x < 1, x > 3), x < 2)), (0, True)
+        ).integrate((x, 0, 3)) == 1
+
+    # handle updating of int_expr when there is overlap
+    assert Piecewise(
+        (1, And(5 > x, x > 1)),
+        (2, Or(x < 3, x > 7)),
+        (4, x < 8))._sort_expr_cond(x, 0, 10) == \
+        [[0, 1, 2], [1, 5, 1], [5, 7, 4], [7, 10, 2]]
+
+    # confirm _sympification or handling of targetcond
+    assert Piecewise((1, x > 1), (2, True)
+        )._sort_expr_cond(x, 0, 3, True) == [(0, 1, None)]
+    # x-independent targetcond
+    assert Piecewise((1, x > 1), (3, y < 1), (2, True)
+        )._sort_expr_cond(x, 0, 3, y < 1) == \
+        [(0, 3, None)]
+
+    # hidden false
+    assert Piecewise((1, x > 1), (2, x > x + 1), (3, True)
+        )._sort_expr_cond(x,0,1) == [[0, 1, 3]]
+    # targetcond is Eq
+    assert Piecewise((1, x > 1), (2, Eq(1, x)), (3, True)
+        )._sort_expr_cond(x, 0, 2, Eq(1, x)) == [(1, 1, None)]
+    # And has Relational needing to be solved
+    assert Piecewise((1, And(2*x > x + 1, x < 2)), (0, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 0], [1, 2, 1], [2, 3, 0]]
+    # Or has Relational needing to be solved
+    assert Piecewise((1, Or(2*x > x + 2, x < 1)), (0, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 1], [1, 2, 0], [2, 3, 1]]
+    # ignore hidden false (handled in canonicalization)
+    assert Piecewise((1, x > 1), (2, x > x + 1), (3, True)
+        )._sort_expr_cond(x, 0, 3) == [[0, 1, 3], [1, 3, 1]]
+    # watch for hidden True Piecewise
+    assert Piecewise((2, Eq(1 - x, x*(1/x - 1))), (0, True)
+        )._sort_expr_cond(x, 0, 3, True) == [(0, 3, None)]
+
+    # targetcond must be an existing condition
+    A = And(x < 1, x > 0)
+    B = And((x < 1).reversed, x > 0)
+    assert A.as_set() == B.as_set()
+    assert A != B
+    raises(ValueError, lambda: Piecewise((1, A), (0, True)
+        )._sort_expr_cond(x, -oo, oo, B))
+    # overlapping conditions of targetcond are recognized and ignored;
+    # the condition x > 3 will be pre-empted by the first condition
+    assert Piecewise((1, Or(x < 1, x > 2)), (2, x > 3), (3, True)
+        )._sort_expr_cond(x, 0, 4, x > 3) == []
+
+    # convert Ne to Or
+    assert Piecewise((1, Ne(x, 0)), (2, True)
+        ).integrate((x, -1, 1)) == 2
+
+
+def test_issue_7305():
+    k = Symbol('k', integer=True)
+    m = Symbol('m', integer=True)
+    x = Symbol('x', real=True)
+    assert (exp(I*m*x)*exp(I*k*x)).integrate((x, 0, 2*pi)
+        ).simplify() == Piecewise((2*pi, Eq(k, -m)), (0, True))
