@@ -713,6 +713,36 @@ def test_Add_is_algebraic():
     assert (na + x).is_algebraic is None
 
 
+def test_Add_is_complex():
+    r  = Symbol('r', infinite=True, real=True)
+    p = Symbol('p', infinite=True, positive=True)
+    n = Symbol('n', infinite=True, negative=True)
+    i = Symbol('i', infinite=True, imaginary=True)
+    z = Symbol('z', infinite=True, imaginary=False, real=False, complex=True)
+    assert (p + r).is_complex is None
+    assert (n + r).is_complex is None
+    assert (z + r).is_complex is None
+    assert (z + p).is_complex is None
+    assert (z + n).is_complex is None
+    assert (z + i).is_complex is None
+    assert (p + r).is_real is None
+    assert (n + r).is_real is None
+    assert (r + 1).is_complex is None
+    assert (p + r).is_real is None
+    # infinite/finite not mentioned
+    x = Symbol('x', real=True)
+    y = Symbol('y', positive=True)
+    assert (x+y).is_real
+    assert (x+y).is_complex
+
+
+def test_Add_is_finite():
+    p = Symbol('p', infinite=True, positive=True)
+    nn = Symbol('nn', nonnegative=True, infinite=True)
+    assert (p + nn).is_finite is False
+    assert (p + 1).is_finite is False
+
+
 def test_Mul_is_algebraic():
     a = Symbol('a', algebraic=True)
     b = Symbol('a', algebraic=True)
