@@ -38,7 +38,7 @@ class AssumptionKeys(object):
         """
         Hermitian predicate.
 
-        ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
+        ``ask(Q.hermitian(x))`` is true if ``x`` belongs to the set of
         Hermitian operators.
 
         References
@@ -55,7 +55,7 @@ class AssumptionKeys(object):
         """
         Antihermitian predicate.
 
-        ``Q.antihermitian(x)`` is true iff ``x`` belongs to the field of
+        ``Q.antihermitian(x)`` is true if ``x`` belongs to the field of
         antihermitian operators, i.e., operators in the form ``x*I``, where
         ``x`` is Hermitian.
 
@@ -73,7 +73,7 @@ class AssumptionKeys(object):
         r"""
         Real number predicate.
 
-        ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
+        ``Q.real(x)`` is true if ``x`` is a real number, i.e., it is in the
         interval `(-\infty, \infty)`.  Note that, in particular the infinities
         are not real. Use ``Q.extended_real`` if you want to consider those as
         well.
@@ -130,7 +130,7 @@ class AssumptionKeys(object):
         r"""
         Extended real predicate.
 
-        ``Q.extended_real(x)`` is true iff ``x`` is a real number or
+        ``Q.extended_real(x)`` is true if ``x`` is a real number or
         `\{-\infty, \infty\}`.
 
         See documentation of ``Q.real`` for more information about related facts.
@@ -154,7 +154,7 @@ class AssumptionKeys(object):
         """
         Imaginary number predicate.
 
-        ``Q.imaginary(x)`` is true iff ``x`` can be written as a real
+        ``Q.imaginary(x)`` is true if ``x`` can be written as a real
         number multiplied by the imaginary unit ``I``. Please note that ``0``
         is not considered to be an imaginary number.
 
@@ -182,7 +182,7 @@ class AssumptionKeys(object):
         """
         Complex number predicate.
 
-        ``Q.complex(x)`` is true iff ``x`` belongs to the set of complex
+        ``Q.complex(x)`` is true if ``x`` belongs to the set of complex
         numbers. Note that every complex number is finite.
 
         Examples
@@ -210,7 +210,7 @@ class AssumptionKeys(object):
         r"""
         Algebraic number predicate.
 
-        ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
+        ``Q.algebraic(x)`` is true if ``x`` belongs to the set of
         algebraic numbers. ``x`` is algebraic if there is some polynomial
         in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
 
@@ -274,7 +274,7 @@ class AssumptionKeys(object):
         """
         Rational number predicate.
 
-        ``Q.rational(x)`` is true iff ``x`` belongs to the set of
+        ``Q.rational(x)`` is true if ``x`` belongs to the set of
         rational numbers.
 
         Examples
@@ -301,7 +301,7 @@ class AssumptionKeys(object):
         """
         Irrational number predicate.
 
-        ``Q.irrational(x)`` is true iff ``x``  is any real number that
+        ``Q.irrational(x)`` is true if ``x``  is any real number that
         cannot be expressed as a ratio of integers.
 
         Examples
@@ -397,7 +397,7 @@ class AssumptionKeys(object):
         r"""
         Positive real number predicate.
 
-        ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
+        ``Q.positive(x)`` is true if ``x`` is real and `x > 0`, that is if ``x``
         is in the interval `(0, \infty)`.  In particular, infinity is not
         positive.
 
@@ -435,7 +435,7 @@ class AssumptionKeys(object):
         r"""
         Negative number predicate.
 
-        ``Q.negative(x)`` is true iff ``x`` is a real number and :math:`x < 0`, that is,
+        ``Q.negative(x)`` is true if ``x`` is a real number and :math:`x < 0`, that is,
         it is in the interval :math:`(-\infty, 0)`.  Note in particular that negative
         infinity is not negative.
 
@@ -473,7 +473,7 @@ class AssumptionKeys(object):
         """
         Zero number predicate.
 
-        ``ask(Q.zero(x))`` is true iff the value of ``x`` is zero.
+        ``ask(Q.zero(x))`` is true if the value of ``x`` is zero.
 
         Examples
         ========
