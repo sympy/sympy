@@ -989,6 +989,9 @@ class Basic(with_metaclass(ManagedProperties)):
               on any of its summation variables.
         """
 
+        from sympy.core.numbers import oo
+        from sympy.series.limits import limit
+
         def fallback(self, old, new):
             """
             Try to replace old with new in any of self's arguments.
@@ -1026,7 +1029,10 @@ class Basic(with_metaclass(ManagedProperties)):
 
         rv = self._eval_subs(old, new)
         if rv is None:
-            rv = fallback(self, old, new)
+            if new is oo :
+                rv = limit(self,old,new)
+            else:
+                rv = fallback(self, old, new)
         return rv
 
     def _eval_subs(self, old, new):
