@@ -2,7 +2,7 @@ from __future__ import division
 
 from sympy.assumptions.ask import Q
 from sympy.core.numbers import oo
-from sympy.core.relational import Equality
+from sympy.core.relational import Equality, Unequality
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.sets.sets import (EmptySet, Interval, Union)
@@ -55,7 +55,37 @@ def test_And():
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
-    assert And(g, l, ge, le) == And(l, le)
+    assert And(g, l, ge, le) == l
+    # last one that is not redundant should be returned
+    for a, b in ((g, l), (l, g)):
+        assert And(a, b) == b
+        assert And(a.reversed, b) == b
+        assert And(a.reversed, b.reversed) == b.reversed
+        assert And(a, b.reversed) == b.reversed
+
+    # equality detection
+    ans = Equality(A, 0)
+    a, b = (A <= 0, A >= 0)
+    for a, b in ((a, b), (b, a)):
+        assert And(a, b) == ans
+        assert And(a.reversed, b) == ans
+        assert And(a.reversed, b.reversed) == ans
+        assert And(a, b.reversed) == ans
+
+    # strong/weak detection
+    s, w = (A < 0, A <= 0)
+    assert And(s, w) == s
+    assert And(s.reversed, w) == s.reversed
+    assert And(s.reversed, w.reversed) == s.reversed
+    assert And(s, w.reversed) == s
+    assert And(w, s) == s
+    assert And(w, s.reversed) == s.reversed
+    assert And(w.reversed, s.reversed) == s.reversed
+    assert And(w.reversed, s) == s
+
+    assert And(A < 0, A > 0) is S.false
+    # denesting
+    assert And(And(A > 0, A > B), A >= 0) == And(A > 0, A > B, A >= 0)
 
 
 def test_Or():
@@ -78,6 +108,36 @@ def test_Or():
     assert Or(e, e.canonical) == e
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert Or(g, l, ge, le) == Or(g, ge)
+    # first one that is not redundant should be returned
+    for a, b in ((g, l), (l, g)):
+        assert Or(a, b) == a
+        assert Or(a.reversed, b) == a.reversed
+        assert Or(a.reversed, b.reversed) == a.reversed
+        assert Or(a, b.reversed) == a
+
+    # unequality detection
+    ans = Unequality(A, 0)
+    a, b = (A < 0, A > 0)
+    for a, b in ((a, b), (b, a)):
+        assert Or(a, b) == ans
+        assert Or(a.reversed, b) == ans
+        assert Or(a.reversed, b.reversed) == ans
+        assert Or(a, b.reversed) == ans
+
+    # strong/weak detection
+    s, w = (A < 0, A <= 0)
+    assert Or(s, w) == w
+    assert Or(s.reversed, w) == w
+    assert Or(s, w.reversed) == w.reversed
+    assert Or(s.reversed, w.reversed) == w.reversed
+    assert Or(w, s) == w
+    assert Or(w, s.reversed) == w
+    assert Or(w.reversed, s) == w.reversed
+    assert Or(w.reversed, s.reversed) == w.reversed
+
+    assert Or(A <= 0, A >= 0) is S.true
+    # denesting
+    assert Or(Or(A > 0, A > B), A >= 0) == Or(A > 0, A > B, A >= 0)
 
 
 def test_Xor():
