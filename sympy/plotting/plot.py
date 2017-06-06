@@ -67,6 +67,9 @@ def _arity(f):
        return len([p for p in param if p.kind == p.POSITIONAL_OR_KEYWORD])
 
 
+plot_backends = {}
+
+
 class Plot(object):
     """The central class of the plotting module.
 
@@ -180,8 +183,8 @@ class Plot(object):
 
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
-        # (thanks to the parent attribute of the backend).
-        self.backend = DefaultBackend
+        # (thanks to the parent attribute of the backend). kwargs.pop('usebackend')
+        self.backend = plot_backends[kwargs.pop('usebackend')]
 
         # The keyword arguments should only contain options for the plot.
         for key, val in kwargs.items():
@@ -1069,11 +1072,9 @@ class DefaultBackend(BaseBackend):
             return TextBackend(parent)
 
 
-plot_backends = {
-    'matplotlib': MatplotlibBackend,
-    'text': TextBackend,
-    'default': DefaultBackend
-}
+plot_backends['matplotlib'] = MatplotlibBackend
+plot_backends['text'] = TextBackend
+plot_backends['default'] = DefaultBackend
 
 
 ##############################################################################
