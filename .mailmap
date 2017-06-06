@@ -1,4 +1,4 @@
-# Prevent git from showing duplicate names with commands like "git shortlog"
+﻿# Prevent git from showing duplicate names with commands like "git shortlog"
 # See the manpage of git-shortlog for details.
 # The syntax is:
 # Name that should be used <email that should be used> Bad name <bad email>
