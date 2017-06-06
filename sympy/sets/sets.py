@@ -1064,6 +1064,9 @@ class Interval(Set, EvalfMixin):
                 other is S.ComplexInfinity) or other.is_real is False:
             return false
 
+        if other is S.NegativeInfinity or other is S.Infinity:
+            return false
+
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
             if not other.is_real is None:
                 return other.is_real
