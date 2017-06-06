@@ -6,7 +6,7 @@ from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 
-# TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
+# TODO
 
 # creating, each time, Wild's and sin/cos/Mul is expensive. Also, our match &
 # subs are very slow when not cached, and if we create Wild each time, we
@@ -22,10 +22,12 @@ def _integer_instance(n):
 @cacheit
 def _pat_sincos(x):
     a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c')
     n, m = [Wild(s, exclude=[x], properties=[_integer_instance])
                 for s in 'nm']
-    pat = sin(a*x)**n * cos(a*x)**m
-    return pat, a, n, m
+    pat = c * sin(a*x)**n * cos(b*x)**m
+    return pat, a, b, c, n, m
 
 _u = Dummy('u')
 
@@ -58,7 +60,7 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral
     """
     from sympy.integrals.integrals import integrate
-    pat, a, n, m = _pat_sincos(x)
+    pat, a, b, c, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')
     M = f.match(pat)
@@ -72,7 +74,15 @@ def trigintegrate(f, x, conds='piecewise'):
     zz = x if n is S.Zero else S.Zero
 
     a = M[a]
+    c = M[c]
 
+    if m == 1 and n == 1:
+        b = M[b]
+        if a == b:
+            return c/2 * -cos(2*a*x)/(2*a)
+        else:
+            sol = c * ((-cos((a+b)*x)/(2*(a+b))) - (cos((a-b)*x)/(2*(a-b))))
+            return sol
     if n.is_odd or m.is_odd:
         u = _u
         n_, m_ = n.is_odd, m.is_odd
@@ -97,8 +107,8 @@ def trigintegrate(f, x, conds='piecewise'):
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         if conds == 'piecewise':
-            return Piecewise((zz, Eq(a, 0)), (fx / a, True))
-        return fx / a
+            return c * Piecewise((zz, Eq(a, 0)), (fx / a, True))
+        return fx/a * c
 
     # n & m are both even
     #
@@ -225,8 +235,8 @@ def trigintegrate(f, x, conds='piecewise'):
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
     if conds == 'piecewise':
-        return Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
-    return res.subs(x, a*x) / a
+        return c * Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
+    return res.subs(x, a*x) / a * c
 
 
 def _sin_pow_integrate(n, x):
