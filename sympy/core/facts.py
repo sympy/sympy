@@ -468,8 +468,15 @@ class FactRules(object):
 
 class InconsistentAssumptions(ValueError):
     def __str__(self):
+        from textwrap import fill, dedent
+        filldedent = lambda s: '\n' + fill(dedent(s).strip('\n'))
         kb, fact, value = self.args
-        return "%s, %s=%s" % (kb, fact, value)
+        sorted_kb = '{%s}' % ', '.join(["'%s': %s" % (k, v) for
+                    k, v in sorted(kb.items())])
+        return filldedent('''
+        The assumption '%s=%s' is inconsistent with the existing
+        value of '%s' in the current knowledge base for this object: %s
+        ''' % (fact, value, kb[fact], sorted_kb))
 
 
 class FactKB(dict):
