@@ -130,3 +130,10 @@ def test_rewrite():
     assert 5*x*y*Heaviside(y + 1).rewrite(SingularityFunction) == 5*x*y*SingularityFunction(y, -1, 0)
     assert ((x - 3)**3*Heaviside(x - 3)).rewrite(SingularityFunction) == (x - 3)**3*SingularityFunction(x, 3, 0)
     assert Heaviside(0).rewrite(SingularityFunction) == SingularityFunction(0, 0, 0)
+
+def test_issue_11855_fix():
+    t1 = symbols('t1', nonzero=True)
+    assert DiracDelta(t1) == 0
+
+    t2 = symbols('t2', real=True)
+    assert DiracDelta(t2) == DiracDelta(t2, evaluate=False)
