@@ -1195,7 +1195,8 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
     if not expr.has(symbol):
         return
     if isinstance(expr, AppliedPredicate):
-        if expr.arg == symbol:
+        if (expr.arg == symbol) or ((expr.func == Q.positive and expr.arg - symbol < 0) or
+        (expr.func == Q.negative and expr.arg - symbol > 0 )):
             return expr.func
         else:
             return

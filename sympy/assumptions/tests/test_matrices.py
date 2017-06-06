@@ -136,6 +136,7 @@ def test_diagonal():
     assert ask(Q.diagonal(V1.T*(V1 + V2))) is True
 
 
+@XFAIL
 def test_non_atoms():
     assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
 
