@@ -24,8 +24,7 @@ known_functions = {
     'add': 'add',
     'sub': 'sub',
     'mul': 'mul',
-    'pow': 'pow',
-    'abs': 'abs'
+    'pow': 'pow'
 }
 
 class GLSLPrinter(CodePrinter):
@@ -138,6 +137,27 @@ class GLSLPrinter(CodePrinter):
             close_lines.append("}")
         return open_lines, close_lines
 
+    def _print_Function_with_args(self, func, *args):
+        if func in self.known_functions:
+            cond_func = self.known_functions[func]
+            func = None
+            if isinstance(cond_func, str):
+                func = cond_func
+            else:
+                for cond, func in cond_func:
+                    if cond(args):
+                        break
+            if func is not None:
+                try:
+                    return func(*[self.parenthesize(item, 0) for item in args])
+                except TypeError:
+                    return "%s(%s)" % (func, self.stringify(args, ", "))
+        elif isinstance(func, Lambda):
+            # inlined function
+            return self._print(func(*args))
+        else:
+            return self._print_not_supported(func)
+
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
@@ -194,10 +214,8 @@ class GLSLPrinter(CodePrinter):
                 e = self._print(float(expr.exp))
             except TypeError:
                 e = self._print(expr.exp)
-            return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
-
-    def _print_Abs(self, expr):
-        return self.known_functions['abs']+'(%s)' % self._print(expr.args[0])
+            # return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
+            return self._print_Function_with_args('pow',self._print(expr.base),e)
 
     def _print_int(self, expr):
         return str(float(expr))
@@ -211,14 +229,16 @@ class GLSLPrinter(CodePrinter):
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
         def add(a,b):
-            return self.known_functions['add']+'(%s, %s)' % (a,b)
+            return self._print_Function_with_args('add',a,b)
+            # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
         if(len(neg) > 0):
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
-            s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
+            s = self._print_Function_with_args('sub',pos,neg)
+            # s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
         return s
 
     def _print_Mul(self, expr, order=None):
@@ -226,7 +246,9 @@ class GLSLPrinter(CodePrinter):
             return CodePrinter._print_Mul(self,expr)
         terms = expr.as_ordered_factors()
         def mul(a,b):
-            return self.known_functions['mul']+'(%s, %s)' % (a,b)
+            # return self.known_functions['mul']+'(%s, %s)' % (a,b)
+            return self._print_Function_with_args('mul',a,b)
+
         s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t),terms))
         return s
 
@@ -284,13 +306,19 @@ def glsl_code(expr,assign_to=None,**settings):
 
     >>> custom_functions = {
     ...   "ceiling": "CEIL",
-    ...   "Abs": [(lambda x: not x.is_Integer, "fabs"),
-    ...           (lambda x: x.is_Integer, "ABS")]
+    ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
+    ...           (lambda x: x.is_integer, "ABS")]
     ... }
     >>> glsl_code(Abs(x) + ceiling(x), user_functions=custom_functions)
     'fabs(x) + CEIL(x)'
 
-    Addition, subtraction, multiplication and
+    If further control is needed, addition, subtraction, multiplication and
+    division operators can be substituted with ``add``, ``sub``, and ``mul``
+    functions.  This is done by passing ``use_operators = False``:
+
+    >>> x,y,z = symbols('x,y,z')
+    >>> glsl_code(x*(y+z), use_operators = False)
+    'mul(x, add(y, z))'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise
