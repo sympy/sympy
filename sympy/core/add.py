@@ -600,10 +600,12 @@ class Add(Expr, AssocOp):
     def _eval_is_nonnegative(self):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
-            c, a = self.as_coeff_Add()
-            if not c.is_zero and a.is_nonnegative:
+            c, a = self.as_independent(*self.free_symbols)
+            if c.is_zero is False:
                 v = _monotonic_sign(a)
                 if v is not None:
+                    if not v.is_zero and v.is_integer and a.is_nonpositive:
+                        return
                     s = v + c
                     if s.is_nonnegative:
                         return True
@@ -615,10 +617,12 @@ class Add(Expr, AssocOp):
     def _eval_is_nonpositive(self):
         from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
-            c, a = self.as_coeff_Add()
-            if not c.is_zero and a.is_nonpositive:
+            c, a = self.as_independent(*self.free_symbols)
+            if c.is_zero is False:
                 v = _monotonic_sign(a)
                 if v is not None:
+                    if not v.is_zero and v.is_integer and a.is_nonnegative:
+                        return
                     s = v + c
                     if s.is_nonpositive:
                         return True

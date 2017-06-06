@@ -1008,5 +1008,12 @@ def test_issue_10302():
     assert (a + x + I).is_imaginary is None
     assert (a + r*I + I).is_imaginary is None
 
+
+def test_issue_10458():
+    x = Symbol('x', integer=True, positive=True)
+    assert (1/x - 1).is_nonpositive
+    assert (1/x - 1).is_nonnegative is None
+
+
 def test_complex_reciprocal_imaginary():
-    assert (1 / (4 + 3*I)).is_imaginary is False
+    assert (1/(4 + 3*I)).is_imaginary is False

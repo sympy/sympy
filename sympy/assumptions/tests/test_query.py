@@ -2099,10 +2099,9 @@ def test_issue_7246():
     assert ask(Q.positive(asin(x)), Q.positive(x) & Q.nonpositive(x - 1)) is True
     assert ask(Q.positive(asin(x)), Q.negative(x) & Q.nonnegative(x + 1)) is False
 
-    assert ask(Q.positive(acos(p)), Q.positive(p)) is None
+    assert ask(Q.positive(acos(x)), Q.zero(x)) is True
     assert ask(Q.positive(acos(Rational(1, 7)))) is True
     assert ask(Q.positive(acos(x)), Q.nonnegative(x + 1) & Q.nonpositive(x - 1)) is True
-    assert ask(Q.positive(acos(x)), Q.nonnegative(x - 1)) is None
 
     assert ask(Q.positive(acot(x)), Q.positive(x)) is True
     assert ask(Q.positive(acot(x)), Q.real(x)) is True
@@ -2112,9 +2111,10 @@ def test_issue_7246():
 
 @XFAIL
 def test_issue_7246_failing():
-    #Move this test to test_issue_7246 once
-    #the new assumptions module is improved.
-    assert ask(Q.positive(acos(x)), Q.zero(x)) is True
+    # Move these to test_issue_7246 once
+    # the new assumptions module is improved.
+    assert ask(Q.positive(acos(p)), Q.positive(p)) is None
+    assert ask(Q.positive(acos(x)), Q.nonnegative(x - 1)) is None
 
 
 def test_deprecated_Q_bounded():
@@ -2202,6 +2202,12 @@ def test_issue_9636():
     assert ask(Q.composite(4.0)) is False
     assert ask(Q.even(2.0)) is False
     assert ask(Q.odd(3.0)) is False
+
+
+def test_issue_10458():
+    x = symbols('x', integer=True, positive=True)
+    assert ask(Q.nonpositive(1/x - 1))
+    assert ask(Q.nonnegative(1/x - 1)) is None
 
 
 @XFAIL
