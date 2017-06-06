@@ -39,6 +39,10 @@ class Manifold(Basic):
         return obj
 
     def _latex(self, printer, *args):
+        if len(self.name) == 1:
+            if self.name.isupper():
+                return r'\mathbb{%s}^{%s}' % (self.name, self.dim)
+
         return r'\mathrm{%s}' % self.name
 
 
