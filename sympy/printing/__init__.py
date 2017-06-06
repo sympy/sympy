@@ -6,6 +6,7 @@ from .latex import latex, print_latex
 from .mathml import mathml, print_mathml
 from .python import python, print_python
 from .ccode import ccode, print_ccode
+from .glsl import glslcode, print_glsl
 from .cxxcode import cxxcode
 from .fcode import fcode, print_fcode
 from .rcode import rcode, print_rcode
