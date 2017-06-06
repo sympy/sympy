@@ -3,13 +3,16 @@ from __future__ import print_function, division
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
 
+
 class ReorderError(NotImplementedError):
     """
     Exception raised when trying to reorder dependent limits.
     """
+
     def __init__(self, expr, msg):
         super(ReorderError, self).__init__(
             "%s could not be reordered: %s." % (expr, msg))
+
 
 class ExprWithIntLimits(ExprWithLimits):
     def change_index(self, var, trafo, newvar=None):
@@ -23,7 +26,7 @@ class ExprWithIntLimits(ExprWithLimits):
         Usage
         =====
 
-        ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the
+        ``change_index(expr, var, trafo, newvar = None)`` where ``var`` specifies the
         index variable `x` to transform. The transformation ``trafo`` must be linear
         and given in terms of ``var``. If the optional argument ``newvar`` is
         provided then ``var`` gets replaced by ``newvar`` in the final expression.
@@ -113,18 +116,18 @@ class ExprWithIntLimits(ExprWithLimits):
                 beta = p.coeff_monomial(S.One)
                 if alpha.is_number:
                     if alpha == S.One:
-                        limits.append((newvar, alpha*limit[1] + beta, alpha*limit[2] + beta))
+                        limits.append((newvar, alpha * limit[1] + beta, alpha * limit[2] + beta))
                     elif alpha == S.NegativeOne:
-                        limits.append((newvar, alpha*limit[2] + beta, alpha*limit[1] + beta))
+                        limits.append((newvar, alpha * limit[2] + beta, alpha * limit[1] + beta))
                     else:
                         raise ValueError("Linear transformation results in non-linear summation stepsize")
                 else:
                     # Note that the case of alpha being symbolic can give issues if alpha < 0.
-                    limits.append((newvar, alpha*limit[2] + beta, alpha*limit[1] + beta))
+                    limits.append((newvar, alpha * limit[2] + beta, alpha * limit[1] + beta))
             else:
                 limits.append(limit)
 
-        function = self.function.subs(var, (var - beta)/alpha)
+        function = self.function.subs(var, (var - beta) / alpha)
         function = function.subs(var, newvar)
 
         return self.func(function, *limits)
@@ -267,9 +270,9 @@ class ExprWithIntLimits(ExprWithLimits):
         limit_y = expr.limits[y]
 
         if (len(set(limit_x[1].free_symbols).intersection(var)) == 0 and
-            len(set(limit_x[2].free_symbols).intersection(var)) == 0 and
-            len(set(limit_y[1].free_symbols).intersection(var)) == 0 and
-            len(set(limit_y[2].free_symbols).intersection(var)) == 0):
+                    len(set(limit_x[2].free_symbols).intersection(var)) == 0 and
+                    len(set(limit_y[1].free_symbols).intersection(var)) == 0 and
+                    len(set(limit_y[2].free_symbols).intersection(var)) == 0):
 
             limits = []
             for i, limit in enumerate(expr.limits):
