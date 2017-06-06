@@ -31,4 +31,5 @@ from .inequalities import reduce_inequalities, reduce_abs_inequality, \
 
 from .decompogen import decompogen
 
-from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
+from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution, \
+    domain_check, solvify, solveset_real, solveset_complex
