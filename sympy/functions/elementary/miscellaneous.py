@@ -483,7 +483,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
-class Max(MinMaxBase, Application):
+class Max(MinMaxBase, Application) :
     """
     Return, if possible, the maximum value of the list.
 
