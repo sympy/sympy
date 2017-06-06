@@ -92,7 +92,7 @@ class DenseNDimArray(NDimArray):
         from sympy.matrices import Matrix
 
         if self.rank() != 2:
-            raise ValueError('Dimensions must be of size of 2')
+            raise ValueError('Only rank 2 arrays can be converted to matrices')
 
         return Matrix(self.shape[0], self.shape[1], self._array)
 
