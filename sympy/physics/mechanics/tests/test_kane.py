@@ -123,6 +123,55 @@ def test_pend():
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
+def test_ladder():
+    # Ladder Example
+    # A ladder is placed on a floor and is leaning against a wall.
+    # Both of the surfaces in contact with the ladder are frictionless
+    # There are two reaction forces on the ladder (one from the floor and
+    # one from the wall). The ladder falls under the influence of gravity.
+    # We need only one angle to fully define the position of the ladder.
+    # The mass, length and moment of intertia of the ladder are given.
+    q, u = dynamicsymbols('q u')
+    qd, ud = dynamicsymbols('q u', 1)
+    m, l, g, Izz = symbols('m l g Izz')
+
+    # We define the inertial frame and a lean frame for the ladder
+    N = ReferenceFrame('N')
+    L = N.orientnew('L', 'Axis', [q, N.z])
+    L.set_ang_vel(N, u * N.z)
+
+    # Now the origin and the center of mass of the ladder are defined
+    O = Point('O')
+    A = Point('A')
+
+    A.set_pos(O, -l / 2 * cos(q) * N.x + l / 2 * sin(q) * N.y)
+
+    O.set_vel(N, 0)
+    A.set_vel(N, l / 2 * u * sin(q) * N.x + l / 2 * u * cos(q) * N.y)
+
+    # The ladder can be defined as a rigid body
+    ladder = RigidBody('ladder', A, L, m, (inertia(L, 0, 0, Izz), A))
+
+    # Now we set up all the inputs to Kanes Method
+    kd = [u - qd]
+    bodyList = [ladder]
+    forceList = [(A, -m * g * N.y)]
+
+    # Finally we solve the dynamics
+    KM = KanesMethod(N, q_ind = [q], u_ind = [u], kd_eqs = kd)
+    KM.kanes_equations(forceList, bodyList)
+
+    MM = KM.mass_matrix
+    forcing = KM.forcing
+
+    rhs = MM.inv() * forcing
+    kdd = KM.kindiffdict()
+
+    rhs = rhs.subs(kdd)
+    rhs.simplify()
+
+    eq = expand(rhs[0]) - expand(-g * l * m * cos(q)/(2 * (Izz + l**2 * m / 4)))
+    assert eq.simplify() == 0
 
 def test_rolling_disc():
     # Rolling Disc Example
