@@ -23,6 +23,9 @@ def test_DiracDelta():
     assert DiracDelta(5, 7) == 0
     assert DiracDelta(i) == 0
     assert DiracDelta(j) == 0
+    assert DiracDelta(3*x-2)== DiracDelta(3*x-2)
+    assert DiracDelta((-2)*x)== DiracDelta(x)/2
+    assert DiracDelta((-2/3)*y)== DiracDelta(y)/(2/3)
     assert DiracDelta(k) == 0
     assert DiracDelta(nan) == nan
     assert DiracDelta(0).func is DiracDelta
@@ -43,7 +46,6 @@ def test_DiracDelta():
     assert DiracDelta(x, 1).diff(x) == DiracDelta(x, 2)
 
     assert DiracDelta(x).is_simple(x) is True
-    assert DiracDelta(3*x).is_simple(x) is True
     assert DiracDelta(x**2).is_simple(x) is False
     assert DiracDelta(sqrt(x)).is_simple(x) is False
     assert DiracDelta(x).is_simple(y) is False

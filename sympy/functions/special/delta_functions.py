@@ -189,6 +189,14 @@ class DiracDelta(Function):
             raise ValueError("Error: the second argument of DiracDelta must be \
             a non-negative integer, %s given instead." % (k,))
         arg = sympify(arg)
+        free = arg.free_symbols
+        if len(free)==1:
+            wrt = free.pop()
+            darg = abs(diff(arg, wrt))
+            freed = darg.free_symbols
+            if len(freed)==0 and not arg.is_Add and darg!=1 and not wrt.is_nonzero and not wrt.is_positive and not wrt.is_negative and not wrt.is_zero:
+                return cls(wrt)/darg
+
         if arg is S.NaN:
             return S.NaN
         if arg.is_nonzero:
