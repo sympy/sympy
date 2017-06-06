@@ -6,93 +6,93 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-from sympy import glslcode
+from sympy import glsl_code
 
 x, y, z = symbols('x,y,z')
 
 
 def test_printmethod():
-    assert glslcode(Abs(x)) == "abs(x)"
+    assert glsl_code(Abs(x)) == "abs(x)"
 
 
-def test_glslcode_sqrt():
-    assert glslcode(sqrt(x)) == "sqrt(x)"
-    assert glslcode(x**0.5) == "sqrt(x)"
-    assert glslcode(sqrt(x)) == "sqrt(x)"
+def test_glsl_code_sqrt():
+    assert glsl_code(sqrt(x)) == "sqrt(x)"
+    assert glsl_code(x**0.5) == "sqrt(x)"
+    assert glsl_code(sqrt(x)) == "sqrt(x)"
 
 
-def test_glslcode_Pow():
+def test_glsl_code_Pow():
     g = implemented_function('g', Lambda(x, 2*x))
-    assert glslcode(x**3) == "pow(x, 3.0)"
-    assert glslcode(x**(y**3)) == "pow(x, pow(y, 3.0))"
-    assert glslcode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
+    assert glsl_code(x**3) == "pow(x, 3.0)"
+    assert glsl_code(x**(y**3)) == "pow(x, pow(y, 3.0))"
+    assert glsl_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*2*x, -x + pow(y, x))/(pow(x, 2.0) + y)"
-    assert glslcode(x**-1.0) == '1.0/x'
+    assert glsl_code(x**-1.0) == '1.0/x'
 
 
-def test_glslcode_constants_mathh():
-    assert glslcode(exp(1)) == "float E = 2.7182818284590452353602874713527;\nE"
-    assert glslcode(pi) == "float pi = 3.1415926535897932384626433832795;\npi"
-    # assert glslcode(oo) == "Number.POSITIVE_INFINITY"
-    # assert glslcode(-oo) == "Number.NEGATIVE_INFINITY"
+def test_glsl_code_constants_mathh():
+    assert glsl_code(exp(1)) == "float E = 2.7182818284590452353602874713527;\nE"
+    assert glsl_code(pi) == "float pi = 3.1415926535897932384626433832795;\npi"
+    # assert glsl_code(oo) == "Number.POSITIVE_INFINITY"
+    # assert glsl_code(-oo) == "Number.NEGATIVE_INFINITY"
 
 
-def test_glslcode_constants_other():
-    assert glslcode(2*GoldenRatio) == "float GoldenRatio = 1.6180339887498948482045868343656;\n2*GoldenRatio"
-    assert glslcode(2*Catalan) == "float Catalan = 0.91596559417721901505460351493238;\n2*Catalan"
-    assert glslcode(2*EulerGamma) == "float EulerGamma = 0.5772156649015328606065120900824;\n2*EulerGamma"
+def test_glsl_code_constants_other():
+    assert glsl_code(2*GoldenRatio) == "float GoldenRatio = 1.6180339887498948482045868343656;\n2*GoldenRatio"
+    assert glsl_code(2*Catalan) == "float Catalan = 0.91596559417721901505460351493238;\n2*Catalan"
+    assert glsl_code(2*EulerGamma) == "float EulerGamma = 0.5772156649015328606065120900824;\n2*EulerGamma"
 
 
-def test_glslcode_Rational():
-    assert glslcode(Rational(3, 7)) == "3/7"
-    assert glslcode(Rational(18, 9)) == "2"
-    assert glslcode(Rational(3, -7)) == "-3/7"
-    assert glslcode(Rational(-3, -7)) == "3/7"
+def test_glsl_code_Rational():
+    assert glsl_code(Rational(3, 7)) == "3/7"
+    assert glsl_code(Rational(18, 9)) == "2"
+    assert glsl_code(Rational(3, -7)) == "-3/7"
+    assert glsl_code(Rational(-3, -7)) == "3/7"
 
 
-def test_glslcode_Integer():
-    assert glslcode(Integer(67)) == "67"
-    assert glslcode(Integer(-1)) == "-1"
+def test_glsl_code_Integer():
+    assert glsl_code(Integer(67)) == "67"
+    assert glsl_code(Integer(-1)) == "-1"
 
 
-def test_glslcode_functions():
-    assert glslcode(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
+def test_glsl_code_functions():
+    assert glsl_code(sin(x) ** cos(x)) == "pow(sin(x), cos(x))"
 
 
-def test_glslcode_inline_function():
+def test_glsl_code_inline_function():
     x = symbols('x')
     g = implemented_function('g', Lambda(x, 2*x))
-    assert glslcode(g(x)) == "2*x"
+    assert glsl_code(g(x)) == "2*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
-    assert glslcode(g(x)) == "float Catalan = 0.91596559417721901505460351493238;\n2*x/Catalan"
+    assert glsl_code(g(x)) == "float Catalan = 0.91596559417721901505460351493238;\n2*x/Catalan"
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
-    assert glslcode(g(A[i]), assign_to=A[i]) == (
+    assert glsl_code(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
         "   A[i] = (A[i] + 1)*(A[i] + 2)*A[i];\n"
         "}"
     )
 
 
-def test_glslcode_exceptions():
-    assert glslcode(ceiling(x)) == "ceil(x)"
-    assert glslcode(Abs(x)) == "abs(x)"
+def test_glsl_code_exceptions():
+    assert glsl_code(ceiling(x)) == "ceil(x)"
+    assert glsl_code(Abs(x)) == "abs(x)"
 
 
-def test_glslcode_boolean():
-    assert glslcode(x & y) == "x && y"
-    assert glslcode(x | y) == "x || y"
-    assert glslcode(~x) == "!x"
-    assert glslcode(x & y & z) == "x && y && z"
-    assert glslcode(x | y | z) == "x || y || z"
-    assert glslcode((x & y) | z) == "z || x && y"
-    assert glslcode((x | y) & z) == "z && (x || y)"
+def test_glsl_code_boolean():
+    assert glsl_code(x & y) == "x && y"
+    assert glsl_code(x | y) == "x || y"
+    assert glsl_code(~x) == "!x"
+    assert glsl_code(x & y & z) == "x && y && z"
+    assert glsl_code(x | y | z) == "x || y || z"
+    assert glsl_code((x & y) | z) == "z || x && y"
+    assert glsl_code((x | y) & z) == "z && (x || y)"
 
 
-def test_glslcode_Piecewise():
+def test_glsl_code_Piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
-    p = glslcode(expr)
+    p = glsl_code(expr)
     s = \
 """\
 ((x < 1) ? (
@@ -103,7 +103,7 @@ def test_glslcode_Piecewise():
 ))\
 """
     assert p == s
-    assert glslcode(expr, assign_to="c") == (
+    assert glsl_code(expr, assign_to="c") == (
     "if (x < 1) {\n"
     "   c = x;\n"
     "}\n"
@@ -112,11 +112,11 @@ def test_glslcode_Piecewise():
     "}")
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))
-    raises(ValueError, lambda: glslcode(expr))
+    raises(ValueError, lambda: glsl_code(expr))
 
 
-def test_glslcode_Piecewise_deep():
-    p = glslcode(2*Piecewise((x, x < 1), (x**2, True)))
+def test_glsl_code_Piecewise_deep():
+    p = glsl_code(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
 2*((x < 1) ? (
@@ -129,11 +129,11 @@ def test_glslcode_Piecewise_deep():
     assert p == s
 
 
-def test_glslcode_settings():
-    raises(TypeError, lambda: glslcode(sin(x), method="garbage"))
+def test_glsl_code_settings():
+    raises(TypeError, lambda: glsl_code(sin(x), method="garbage"))
 
 
-def test_glslcode_Indexed():
+def test_glsl_code_Indexed():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
@@ -151,7 +151,7 @@ def test_glslcode_Indexed():
     assert p._not_c == set()
 
 
-def test_glslcode_loops_matrix_vector():
+def test_glsl_code_loops_matrix_vector():
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -170,7 +170,7 @@ def test_glslcode_loops_matrix_vector():
         '}'
     )
 
-    c = glslcode(A[i, j]*x[j], assign_to=y[i])
+    c = glsl_code(A[i, j]*x[j], assign_to=y[i])
     assert c == s
 
 
@@ -185,11 +185,11 @@ def test_dummy_loops():
         '   y[i_%(icount)i] = x[i_%(icount)i];\n'
         '}'
     ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
-    code = glslcode(x[i], assign_to=y[i])
+    code = glsl_code(x[i], assign_to=y[i])
     assert code == expected
 
 
-def test_glslcode_loops_add():
+def test_glsl_code_loops_add():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m = symbols('n m', integer=True)
@@ -210,11 +210,11 @@ def test_glslcode_loops_add():
         '   }\n'
         '}'
     )
-    c = glslcode(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
+    c = glsl_code(A[i, j]*x[j] + x[i] + z[i], assign_to=y[i])
     assert c == s
 
 
-def test_glslcode_loops_multiple_contractions():
+def test_glsl_code_loops_multiple_contractions():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -240,11 +240,11 @@ def test_glslcode_loops_multiple_contractions():
         '   }\n'
         '}'
     )
-    c = glslcode(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
+    c = glsl_code(b[j, k, l]*a[i, j, k, l], assign_to=y[i])
     assert c == s
 
 
-def test_glslcode_loops_addfactor():
+def test_glsl_code_loops_addfactor():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -271,11 +271,11 @@ def test_glslcode_loops_addfactor():
         '   }\n'
         '}'
     )
-    c = glslcode((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
+    c = glsl_code((a[i, j, k, l] + b[i, j, k, l])*c[j, k, l], assign_to=y[i])
     assert c == s
 
 
-def test_glslcode_loops_multiple_terms():
+def test_glsl_code_loops_multiple_terms():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
@@ -315,7 +315,7 @@ def test_glslcode_loops_multiple_terms():
         '   }\n'
         '}\n'
     )
-    c = glslcode(
+    c = glsl_code(
         b[j]*a[i, j] + b[k]*a[i, k] + b[j]*b[k]*c[i, j, k], assign_to=y[i])
     assert (c == s0 + s1 + s2 + s3[:-1] or
             c == s0 + s1 + s3 + s2[:-1] or
@@ -325,41 +325,41 @@ def test_glslcode_loops_multiple_terms():
             c == s0 + s3 + s2 + s1[:-1])
 
 
-# def test_Matrix_printing():
-#     # Test returning a Matrix
-#     mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
-#     A = MatrixSymbol('A', 3, 1)
-#     assert glslcode(A) == (
-#         "A[0] = x*y;\n"
-#         "if (y > 0) {\n"
-#         "   A[1] = x + 2;\n"
-#         "}\n"
-#         "else {\n"
-#         "   A[1] = y;\n"
-#         "}\n"
-#         "A[2] = sin(z);")
-#     # Test using MatrixElements in expressions
-#     expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
-#     assert glslcode(expr) == (
-#         "((x > 0) ? (\n"
-#         "   2*A[2]\n"
-#         ")\n"
-#         ": (\n"
-#         "   A[2]\n"
-#         ")) + sin(A[1]) + A[0]")
-#     # Test using MatrixElements in a Matrix
-#     q = MatrixSymbol('q', 5, 1)
-#     M = MatrixSymbol('M', 3, 3)
-#     m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
-#         [q[1,0] + q[2,0], q[3, 0], 5],
-#         [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
-#     assert glslcode(M) == (
-#         "M[0] = sin(q[1]);\n"
-#         "M[1] = 0;\n"
-#         "M[2] = cos(q[2]);\n"
-#         "M[3] = q[1] + q[2];\n"
-#         "M[4] = q[3];\n"
-#         "M[5] = 5;\n"
-#         "M[6] = 2*q[4]/q[1];\n"
-#         "M[7] = sqrt(q[0]) + 4;\n"
-#         "M[8] = 0;")
+def test_Matrix_printing():
+    # Test returning a Matrix
+    mat = Matrix([x*y, Piecewise((2 + x, y>0), (y, True)), sin(z)])
+    A = MatrixSymbol('A', 3, 1)
+    assert glsl_code(mat, assign_to=A) == (
+        "A[0] = x*y;\n"
+        "if (y > 0) {\n"
+        "   A[1] = x + 2;\n"
+        "}\n"
+        "else {\n"
+        "   A[1] = y;\n"
+        "}\n"
+        "A[2] = sin(z);")
+    # Test using MatrixElements in expressions
+    expr = Piecewise((2*A[2, 0], x > 0), (A[2, 0], True)) + sin(A[1, 0]) + A[0, 0]
+    assert glsl_code(expr) == (
+        "((x > 0) ? (\n"
+        "   2*A[2]\n"
+        ")\n"
+        ": (\n"
+        "   A[2]\n"
+        ")) + sin(A[1]) + A[0]")
+    # Test using MatrixElements in a Matrix
+    q = MatrixSymbol('q', 5, 1)
+    M = MatrixSymbol('M', 3, 3)
+    m = Matrix([[sin(q[1,0]), 0, cos(q[2,0])],
+        [q[1,0] + q[2,0], q[3, 0], 5],
+        [2*q[4, 0]/q[1,0], sqrt(q[0,0]) + 4, 0]])
+    assert glsl_code(m,M) == (
+        "M[0] = sin(q[1]);\n"
+        "M[1] = 0;\n"
+        "M[2] = cos(q[2]);\n"
+        "M[3] = q[1] + q[2];\n"
+        "M[4] = q[3];\n"
+        "M[5] = 5;\n"
+        "M[6] = 2*q[4]/q[1];\n"
+        "M[7] = sqrt(q[0]) + 4;\n"
+        "M[8] = 0;")

@@ -20,6 +20,12 @@ known_functions = {
     'sign': 'sign',
     'exp': 'exp',
     'log': 'log',
+    'add': 'add',
+    'sub': 'sub',
+    'mul': 'mul',
+    'pow': 'pow',
+    'abs': 'abs'
+    ''
 }
 
 class GLSLPrinter(CodePrinter):
@@ -46,12 +52,6 @@ class GLSLPrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'use_operators': True,
-        'element_wrap': '%s',
-        'add_wrap': 'add(%s, %s)',
-        'sub_wrap': 'sub(%s, %s)',
-        'mul_wrap': 'mul(%s, %s)',
-        'pow_wrap': 'pow(%s, %s)',
-        'abs_wrap': 'abs(%s)'
     }
 
     def __init__(self, settings={}):
@@ -59,8 +59,6 @@ class GLSLPrinter(CodePrinter):
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-
-###########################
 
     def _rate_index_position(self, p):
         return p*5
@@ -104,6 +102,27 @@ class GLSLPrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _print_MatrixBase(self, A):
+        if A.cols == 1:
+            return "[%s]" % ", ".join(self._print(a) for a in A)
+        else:
+            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
+
+    def _print_MatrixBase(self, A):
+        if A.cols == 1:
+            return "[%s]" % ", ".join(self._print(a) for a in A)
+        else:
+            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
+
+
+    _print_Matrix = \
+        _print_MatrixElement = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        _print_MatrixBase
+
     def _traverse_matrix_indices(self, mat):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
@@ -111,6 +130,10 @@ class GLSLPrinter(CodePrinter):
     def _print_MatrixElement(self, expr):
         return "{0}[{1}]".format(expr.parent, expr.j +
                 expr.i*expr.parent.shape[1])
+
+    def _print_Matrix(self, expr):
+        return "%s[%s]" % (expr.parent,
+                           expr.j + expr.i*expr.parent.shape[1])
 
     def _get_loop_opening_ending(self, indices):
         open_lines = []
@@ -124,13 +147,6 @@ class GLSLPrinter(CodePrinter):
                 'end': self._print(i.upper + 1)})
             close_lines.append("}")
         return open_lines, close_lines
-
-
-    # def _print_Exp1(self, expr):
-    #     return '2.7182818284590452353602874713527'
-    #
-    # def _print_Pi(self, expr):
-    #     return '3.1415926535897932384626433832795'
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -177,9 +193,6 @@ class GLSLPrinter(CodePrinter):
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
-###############################
-
-
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
@@ -191,14 +204,10 @@ class GLSLPrinter(CodePrinter):
                 e = self._print(float(expr.exp))
             except TypeError:
                 e = self._print(expr.exp)
-            return self._settings['pow_wrap'] % (self._print(expr.base),e)
-    #
-    # def _print_Pow(self, expr):
-    #     return self._settings['pow_wrap'] % (self._print(expr.base),
-    #                              self._print(float(expr.exp)))
+            return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
 
     def _print_Abs(self, expr):
-        return self._settings['abs_wrap'] % self._print(expr.args[0])
+        return self.known_functions['abs']+'(%s)' % self._print(expr.args[0])
 
     def _print_int(self, expr):
         return str(float(expr))
@@ -212,14 +221,14 @@ class GLSLPrinter(CodePrinter):
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
         def add(a,b):
-            return self._settings['add_wrap'] % (a,b)
+            return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
         s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
         if(len(neg) > 0):
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
             # then subtract them from the positive terms
-            s = self._settings['sub_wrap'] % (pos,neg)
+            s = self.known_functions['sub']+'(%s, %s)' % (pos,neg)
         return s
 
     def _print_Mul(self, expr, order=None):
@@ -230,14 +239,11 @@ class GLSLPrinter(CodePrinter):
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
         def mul(a,b):
-            return self._settings['mul_wrap'] % (a,b)
+            return self.known_functions['mul']+'(%s, %s)' % (a,b)
         s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t),terms))
         return s
 
-    # def makeGL(self,expr,assign_to=None,):
-    #         return self.doprint(expr,assign_to)
-
-def glslcode(expr,assign_to=None,**settings):
+def glsl_code(expr,assign_to=None,**settings):
     return GLSLPrinter(settings).doprint(expr,assign_to)
 
 def print_glsl(expr, **settings):
@@ -245,4 +251,4 @@ def print_glsl(expr, **settings):
 
        See GLSLPrinter init function for settings.
     """
-    print(glslcode(expr, **settings))
+    print(glsl_code(expr, **settings))
