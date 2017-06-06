@@ -655,9 +655,12 @@ def roots_quintic(f):
 
 
 def _quintic_simplify(expr):
+    from sympy.simplify.sqrtdenest import sqrtdenest2
     expr = powsimp(expr)
     expr = cancel(expr)
-    return together(expr)
+    expr = together(expr)
+    expr = sqrtdenest2(expr)
+    return expr
 
 
 def _integer_basis(poly):
