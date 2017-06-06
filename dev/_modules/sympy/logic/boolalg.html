@@ -1,0 +1,1225 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.logic.boolalg &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.logic.boolalg</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Boolean algebra module for SymPy&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">sympy.core.decorators</span> <span class="kn">import</span> <span class="n">deprecated</span>
+<span class="kn">from</span> <span class="nn">sympy.core.operations</span> <span class="kn">import</span> <span class="n">LatticeOp</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Application</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">ordered</span><span class="p">,</span> <span class="nb">xrange</span>
+
+
+<span class="k">class</span> <span class="nc">Boolean</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A boolean object is an object for which logic operations make sense.&quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overloading for &amp; operator&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overloading for |&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overloading for ~&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Not</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overloading for &gt;&gt;&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Implies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Overloading for &lt;&lt;&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Implies</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Xor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BooleanFunction</span><span class="p">(</span><span class="n">Application</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Boolean function is a function that lives in a boolean space</span>
+<span class="sd">    It is used as base class for And, Or, Not, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_Boolean</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">arg</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">measure</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">simplify_logic</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="And"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.And">[docs]</a><span class="k">class</span> <span class="nc">And</span><span class="p">(</span><span class="n">LatticeOp</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical AND function.</span>
+
+<span class="sd">    It evaluates its arguments in order, giving False immediately</span>
+<span class="sd">    if any of them are False, and True if they are all True.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.core import symbols</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import And</span>
+<span class="sd">    &gt;&gt;&gt; x &amp; y</span>
+<span class="sd">    And(x, y)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    The operator operator ``&amp;`` will perform bitwise operations</span>
+<span class="sd">    on integers and for convenience will construct an Add when</span>
+<span class="sd">    the arguments are symbolic, but the And function does not</span>
+<span class="sd">    perform bitwise operations and when any argument is True it</span>
+<span class="sd">    is simply removed from the arguments:</span>
+
+<span class="sd">    &gt;&gt;&gt; And(x, y).subs(x, 1)</span>
+<span class="sd">    y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">identity</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new_args_filter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">True</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="bp">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LatticeOp</span><span class="o">.</span><span class="n">_new_args_filter</span><span class="p">(</span><span class="n">newargs</span><span class="p">,</span> <span class="n">And</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Or"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Or">[docs]</a><span class="k">class</span> <span class="nc">Or</span><span class="p">(</span><span class="n">LatticeOp</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical OR function</span>
+
+<span class="sd">    It evaluates its arguments in order, giving True immediately</span>
+<span class="sd">    if any of them are True, and False if they are all False.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.core import symbols</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import Or</span>
+<span class="sd">    &gt;&gt;&gt; x | y</span>
+<span class="sd">    Or(x, y)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    The operator operator ``|`` will perform bitwise operations</span>
+<span class="sd">    on integers and for convenience will construct an Or when</span>
+<span class="sd">    the arguments are symbolic, but the Or function does not</span>
+<span class="sd">    perform bitwise operations and when any argument is False it</span>
+<span class="sd">    is simply removed from the arguments:</span>
+
+<span class="sd">    &gt;&gt;&gt; Or(x, y).subs(x, 0)</span>
+<span class="sd">    y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">identity</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new_args_filter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">True</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="bp">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LatticeOp</span><span class="o">.</span><span class="n">_new_args_filter</span><span class="p">(</span><span class="n">newargs</span><span class="p">,</span> <span class="n">Or</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Not"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Not">[docs]</a><span class="k">class</span> <span class="nc">Not</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical Not function (negation)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    De Morgan rules are applied automatically.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_Not</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logical Not function (negation)</span>
+
+<span class="sd">        Returns True if the statement is False</span>
+<span class="sd">        Returns False if the statement is True</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Not, And, Or</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; Not(True)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Not(False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Not(And(True, False))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Not(Or(True, False))</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Not(And(And(True, x), Or(x, False)))</span>
+<span class="sd">        Not(x)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arg</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span> <span class="k">if</span> <span class="n">arg</span> <span class="k">else</span> <span class="bp">True</span>
+        <span class="c"># apply De Morgan Rules</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">And</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Not</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Or</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Not</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="Xor"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Xor">[docs]</a><span class="k">class</span> <span class="nc">Xor</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical XOR (exclusive OR) function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logical XOR (exclusive OR) function.</span>
+
+<span class="sd">        Returns True if an odd number of the arguments are True</span>
+<span class="sd">            and the rest are False.</span>
+<span class="sd">        Returns False if an even number of the arguments are True</span>
+<span class="sd">            and the rest are False.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Xor</span>
+<span class="sd">        &gt;&gt;&gt; Xor(True, False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Xor(True, True)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &gt;&gt;&gt; Xor(True, False, True, True, False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Xor(True, False, True, False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Not</span><span class="p">(</span><span class="n">B</span><span class="p">)),</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">A</span>
+
+</div>
+<div class="viewcode-block" id="Nand"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Nand">[docs]</a><span class="k">class</span> <span class="nc">Nand</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical NAND function.</span>
+
+<span class="sd">    It evaluates its arguments in order, giving True immediately if any</span>
+<span class="sd">    of them are False, and False if they are all True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logical NAND function.</span>
+
+<span class="sd">        Returns True if any of the arguments are False</span>
+<span class="sd">        Returns False if all arguments are True</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Nand</span>
+<span class="sd">        &gt;&gt;&gt; Nand(False, True)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Nand(True, True)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Not</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="Nor"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Nor">[docs]</a><span class="k">class</span> <span class="nc">Nor</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical NOR function.</span>
+
+<span class="sd">    It evaluates its arguments in order, giving False immediately if any</span>
+<span class="sd">    of them are True, and True if they are all False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logical NOR function.</span>
+
+<span class="sd">        Returns False if any argument is True</span>
+<span class="sd">        Returns True if all arguments are False</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Nor</span>
+<span class="sd">        &gt;&gt;&gt; Nor(True, False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Nor(True, True)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Nor(False, True)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Nor(False, False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Not</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="Implies"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Implies">[docs]</a><span class="k">class</span> <span class="nc">Implies</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logical implication.</span>
+
+<span class="sd">    A implies B is equivalent to !A v B</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Logical implication.</span>
+
+<span class="sd">        Accepts two Boolean arguments; A and B.</span>
+<span class="sd">        Returns False if A is True and B is False</span>
+<span class="sd">        Returns True otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Implies</span>
+<span class="sd">        &gt;&gt;&gt; Implies(True, False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Implies(False, False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Implies(True, True)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Implies(False, True)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">True</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="bp">False</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">newargs</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;</span><span class="si">%d</span><span class="s"> operand(s) used for an Implies &quot;</span>
+                <span class="s">&quot;(pairs are required): </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">or</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">or</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">or</span> <span class="n">B</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Equivalent"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.Equivalent">[docs]</a><span class="k">class</span> <span class="nc">Equivalent</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Equivalence relation.</span>
+
+<span class="sd">    Equivalent(A, B) is True iff A and B are both True or both False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Equivalence relation.</span>
+
+<span class="sd">        Returns True if all of the arguments are logically equivalent.</span>
+<span class="sd">        Returns False otherwise.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import Equivalent, And</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; Equivalent(False, False, False)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Equivalent(True, False, False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Equivalent(x, And(x, True))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">True</span> <span class="k">if</span> <span class="n">x</span> <span class="k">else</span> <span class="bp">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">argset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">newargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argset</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="bp">True</span> <span class="ow">in</span> <span class="n">argset</span><span class="p">:</span>
+            <span class="n">argset</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">argset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">False</span> <span class="ow">in</span> <span class="n">argset</span><span class="p">:</span>
+            <span class="n">argset</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Nor</span><span class="p">(</span><span class="o">*</span><span class="n">argset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="ITE"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.ITE">[docs]</a><span class="k">class</span> <span class="nc">ITE</span><span class="p">(</span><span class="n">BooleanFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If then else clause.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If then else clause</span>
+
+<span class="sd">        ITE(A, B, C) evaluates and returns the result of B if A is true</span>
+<span class="sd">        else it returns the result of C</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.logic.boolalg import ITE, And, Xor, Or</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">        &gt;&gt;&gt; x = True</span>
+<span class="sd">        &gt;&gt;&gt; y = False</span>
+<span class="sd">        &gt;&gt;&gt; z = True</span>
+<span class="sd">        &gt;&gt;&gt; ITE(x, y, z)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; ITE(Or(x, y), And(x, z), Xor(z, x))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;ITE expects 3 arguments, but got </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                         <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+
+<span class="c">### end class definitions. Some useful methods</span>
+
+</div>
+<span class="k">def</span> <span class="nf">conjuncts</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of the conjuncts in the expr s.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import conjuncts</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B</span>
+<span class="sd">    &gt;&gt;&gt; conjuncts(A &amp; B)</span>
+<span class="sd">    frozenset([A, B])</span>
+<span class="sd">    &gt;&gt;&gt; conjuncts(A | B)</span>
+<span class="sd">    frozenset([Or(A, B)])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">And</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">disjuncts</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of the disjuncts in the sentence s.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import disjuncts</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B</span>
+<span class="sd">    &gt;&gt;&gt; disjuncts(A | B)</span>
+<span class="sd">    frozenset([A, B])</span>
+<span class="sd">    &gt;&gt;&gt; disjuncts(A &amp; B)</span>
+<span class="sd">    frozenset([And(A, B)])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Or</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">distribute_and_over_or</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a sentence s consisting of conjunctions and disjunctions</span>
+<span class="sd">    of literals, return an equivalent sentence in CNF.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import distribute_and_over_or, And, Or, Not</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C</span>
+<span class="sd">    &gt;&gt;&gt; distribute_and_over_or(Or(A, And(Not(B), Not(C))))</span>
+<span class="sd">    And(Or(A, Not(B)), Or(A, Not(C)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_distribute</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">distribute_or_over_and</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a sentence s consisting of conjunctions and disjunctions</span>
+<span class="sd">    of literals, return an equivalent sentence in DNF.</span>
+
+<span class="sd">    Note that the output is NOT simplified.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C</span>
+<span class="sd">    &gt;&gt;&gt; distribute_or_over_and(And(Or(Not(A), B), C))</span>
+<span class="sd">    Or(And(B, C), And(C, Not(A)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_distribute</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">And</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_distribute</span><span class="p">(</span><span class="n">info</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Distributes info[1] over info[2] with respect to info[0].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">conj</span> <span class="o">=</span> <span class="n">arg</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">](</span><span class="o">*</span><span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">conj</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_distribute</span><span class="p">,</span>
+            <span class="p">[(</span><span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">](</span><span class="n">c</span><span class="p">,</span> <span class="n">rest</span><span class="p">),</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conj</span><span class="o">.</span><span class="n">args</span><span class="p">])))</span>
+    <span class="k">elif</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_distribute</span><span class="p">,</span>
+            <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">])))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="to_cnf"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.to_cnf">[docs]</a><span class="k">def</span> <span class="nf">to_cnf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a propositional logical sentence s to conjunctive normal form.</span>
+<span class="sd">    That is, of the form ((A | ~B | ...) &amp; (B | C | ...) &amp; ...)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import to_cnf</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, D</span>
+<span class="sd">    &gt;&gt;&gt; to_cnf(~(A | B) | D)</span>
+<span class="sd">    And(Or(D, Not(A)), Or(D, Not(B)))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">simplified_expr</span> <span class="o">=</span> <span class="n">distribute_and_over_or</span><span class="p">(</span><span class="n">simplify_logic</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">simplified_expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_cnf</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">simplified_expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">to_cnf</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="c"># Don&#39;t convert unless we have to</span>
+    <span class="k">if</span> <span class="n">is_cnf</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">eliminate_implications</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">distribute_and_over_or</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="to_dnf"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.to_dnf">[docs]</a><span class="k">def</span> <span class="nf">to_dnf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a propositional logical sentence s to disjunctive normal form.</span>
+<span class="sd">    That is, of the form ((A &amp; ~B &amp; ...) | (B &amp; C &amp; ...) | ...)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import to_dnf</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C, D</span>
+<span class="sd">    &gt;&gt;&gt; to_dnf(B &amp; (A | C))</span>
+<span class="sd">    Or(And(A, B), And(B, C))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">simplified_expr</span> <span class="o">=</span> <span class="n">distribute_or_over_and</span><span class="p">(</span><span class="n">simplify_logic</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">simplified_expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_dnf</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">simplified_expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">to_dnf</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="c"># Don&#39;t convert unless we have to</span>
+    <span class="k">if</span> <span class="n">is_dnf</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">eliminate_implications</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">distribute_or_over_and</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_cnf"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.is_cnf">[docs]</a><span class="k">def</span> <span class="nf">is_cnf</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test whether or not an expression is in conjunctive normal form.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import is_cnf</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C</span>
+<span class="sd">    &gt;&gt;&gt; is_cnf(A | B | C)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_cnf(A &amp; B &amp; C)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_cnf((A &amp; B) | C)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_is_form</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_dnf"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.is_dnf">[docs]</a><span class="k">def</span> <span class="nf">is_dnf</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test whether or not an expression is in disjunctive normal form.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import is_dnf</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C</span>
+<span class="sd">    &gt;&gt;&gt; is_dnf(A | B | C)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_dnf(A &amp; B &amp; C)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_dnf((A &amp; B) | C)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_dnf(A &amp; (B | C))</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_is_form</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">And</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_is_form</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">function1</span><span class="p">,</span> <span class="n">function2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test whether or not an expression is of the required form.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="c"># Special case of an Atom</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="c"># Special case of a single expression of function2</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">function2</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">lit</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lit</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">lit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">lit</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="c"># Special case of a single negation</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">function1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">cls</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">function2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">lit</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lit</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">lit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">lit</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+
+<span class="k">def</span> <span class="nf">eliminate_implications</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change &gt;&gt;, &lt;&lt;, and Equivalent into &amp;, |, and ~. That is, return an</span>
+<span class="sd">    expression that is equivalent to s, but has only &amp;, |, and ~ as logical</span>
+<span class="sd">    operators.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import Implies, Equivalent, \</span>
+<span class="sd">         eliminate_implications</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import A, B, C</span>
+<span class="sd">    &gt;&gt;&gt; eliminate_implications(Implies(A, B))</span>
+<span class="sd">    Or(B, Not(A))</span>
+<span class="sd">    &gt;&gt;&gt; eliminate_implications(Equivalent(A, B))</span>
+<span class="sd">    And(Or(A, Not(B)), Or(B, Not(A)))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>  <span class="c"># (Atoms are unchanged.)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">eliminate_implications</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Implies</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">~</span><span class="n">a</span><span class="p">)</span> <span class="o">|</span> <span class="n">b</span>
+    <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Equivalent</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">|</span> <span class="n">Not</span><span class="p">(</span><span class="n">b</span><span class="p">))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">b</span> <span class="o">|</span> <span class="n">Not</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<span class="nd">@deprecated</span><span class="p">(</span>
+    <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;sympify&quot;</span><span class="p">,</span> <span class="n">issue</span><span class="o">=</span><span class="mi">3451</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.3&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compile_rule</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transforms a rule into a SymPy expression</span>
+<span class="sd">    A rule is a string of the form &quot;symbol1 &amp; symbol2 | ...&quot;</span>
+
+<span class="sd">    Note: This function is deprecated.  Use sympify() instead.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+    <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">r&#39;([a-zA-Z_][a-zA-Z0-9_]*)&#39;</span><span class="p">,</span> <span class="s">r&#39;Symbol(&quot;\1&quot;)&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">to_int_repr</span><span class="p">(</span><span class="n">clauses</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes clauses in CNF format and puts them into an integer representation.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import to_int_repr</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Convert the symbol list into a dict</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))))</span>
+
+    <span class="k">def</span> <span class="nf">append_symbol</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">symbols</span><span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">symbols</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">append_symbol</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">Or</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">clauses</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_check_pair</span><span class="p">(</span><span class="n">minterm1</span><span class="p">,</span> <span class="n">minterm2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if a pair of minterms differs by only one bit. If yes, returns</span>
+<span class="sd">    index, else returns -1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">minterm1</span><span class="p">,</span> <span class="n">minterm2</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">index</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_to_varsSOP</span><span class="p">(</span><span class="n">minterm</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a term in the expansion of a function from binary to it&#39;s</span>
+<span class="sd">    variable form (for SOP).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">minterm</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c"># ignore the 3s</span>
+    <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">temp</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_to_varsPOS</span><span class="p">(</span><span class="n">maxterm</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a term in the expansion of a function from binary to it&#39;s</span>
+<span class="sd">    variable form (for POS).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">maxterm</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c"># ignore the 3s</span>
+    <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">temp</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_simplified_pairs</span><span class="p">(</span><span class="n">terms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reduces a set of minterms, if possible, to a simplified set of minterms</span>
+<span class="sd">    with one less variable in the terms using QM method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simplified_terms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">todo</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ti</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">terms</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">j_i</span><span class="p">,</span> <span class="n">tj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">terms</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):]):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">_check_pair</span><span class="p">(</span><span class="n">ti</span><span class="p">,</span> <span class="n">tj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">todo</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">todo</span><span class="p">[</span><span class="n">j_i</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">newterm</span> <span class="o">=</span> <span class="n">ti</span><span class="p">[:]</span>
+                <span class="n">newterm</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+                <span class="k">if</span> <span class="n">newterm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">simplified_terms</span><span class="p">:</span>
+                    <span class="n">simplified_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newterm</span><span class="p">)</span>
+    <span class="n">simplified_terms</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">todo</span> <span class="k">if</span> <span class="n">_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">simplified_terms</span>
+
+
+<span class="k">def</span> <span class="nf">_compare_term</span><span class="p">(</span><span class="n">minterm</span><span class="p">,</span> <span class="n">term</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if a binary term is satisfied by the given term. Used</span>
+<span class="sd">    for recognizing prime implicants.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">term</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">minterm</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+
+<span class="k">def</span> <span class="nf">_rem_redundancy</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">terms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    After the truth table has been sufficiently simplified, use the prime</span>
+<span class="sd">    implicant table method to recognize and eliminate redundant pairs,</span>
+<span class="sd">    and return the essential arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">essential</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="n">temporary</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">l1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_compare_term</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="n">temporary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temporary</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">temporary</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">essential</span><span class="p">:</span>
+                <span class="n">essential</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temporary</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">essential</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_compare_term</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">l1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_compare_term</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">z</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">essential</span><span class="p">:</span>
+                        <span class="n">essential</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">essential</span>
+
+
+<div class="viewcode-block" id="SOPform"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.SOPform">[docs]</a><span class="k">def</span> <span class="nf">SOPform</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The SOPform function uses simplified_pairs and a redundant group-</span>
+<span class="sd">    eliminating algorithm to convert the list of all input combos that</span>
+<span class="sd">    generate &#39;1&#39; (the minterms) into the smallest Sum of Products form.</span>
+
+<span class="sd">    The variables must be given as the first argument.</span>
+
+<span class="sd">    Return a logical Or function (i.e., the &quot;sum of products&quot; or &quot;SOP&quot;</span>
+<span class="sd">    form) that gives the desired outcome. If there are inputs that can</span>
+<span class="sd">    be ignored, pass them as a list, too.</span>
+
+<span class="sd">    The result will be one of the (perhaps many) functions that satisfy</span>
+<span class="sd">    the conditions.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic import SOPform</span>
+<span class="sd">    &gt;&gt;&gt; minterms = [[0, 0, 0, 1], [0, 0, 1, 1],</span>
+<span class="sd">    ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; SOPform([&#39;w&#39;,&#39;x&#39;,&#39;y&#39;,&#39;z&#39;], minterms, dontcares)</span>
+<span class="sd">    Or(And(Not(w), z), And(y, z))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Symbol</span>
+
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">Symbol</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span>
+                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">minterms</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">minterms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">minterms</span><span class="p">]</span>
+    <span class="n">dontcares</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dontcares</span> <span class="ow">or</span> <span class="p">[])]</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dontcares</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">minterms</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> in minterms is also in dontcares&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="n">old</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="n">minterms</span> <span class="o">+</span> <span class="n">dontcares</span>
+    <span class="k">while</span> <span class="n">new</span> <span class="o">!=</span> <span class="n">old</span><span class="p">:</span>
+        <span class="n">old</span> <span class="o">=</span> <span class="n">new</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">_simplified_pairs</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="n">essential</span> <span class="o">=</span> <span class="n">_rem_redundancy</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">minterms</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">_convert_to_varsSOP</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">essential</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="POSform"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.POSform">[docs]</a><span class="k">def</span> <span class="nf">POSform</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The POSform function uses simplified_pairs and a redundant-group</span>
+<span class="sd">    eliminating algorithm to convert the list of all input combinations</span>
+<span class="sd">    that generate &#39;1&#39; (the minterms) into the smallest Product of Sums form.</span>
+
+<span class="sd">    The variables must be given as the first argument.</span>
+
+<span class="sd">    Return a logical And function (i.e., the &quot;product of sums&quot; or &quot;POS&quot;</span>
+<span class="sd">    form) that gives the desired outcome. If there are inputs that can</span>
+<span class="sd">    be ignored, pass them as a list, too.</span>
+
+<span class="sd">    The result will be one of the (perhaps many) functions that satisfy</span>
+<span class="sd">    the conditions.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic import POSform</span>
+<span class="sd">    &gt;&gt;&gt; minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1],</span>
+<span class="sd">    ...             [1, 0, 1, 1], [1, 1, 1, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]</span>
+<span class="sd">    &gt;&gt;&gt; POSform([&#39;w&#39;,&#39;x&#39;,&#39;y&#39;,&#39;z&#39;], minterms, dontcares)</span>
+<span class="sd">    And(Or(Not(w), y), z)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Symbol</span>
+
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">Symbol</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span>
+                 <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">minterms</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">minterms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">minterms</span><span class="p">]</span>
+    <span class="n">dontcares</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dontcares</span> <span class="ow">or</span> <span class="p">[])]</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dontcares</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">minterms</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> in minterms is also in dontcares&#39;</span> <span class="o">%</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="n">maxterms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">minterms</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dontcares</span><span class="p">):</span>
+            <span class="n">maxterms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">old</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="n">maxterms</span> <span class="o">+</span> <span class="n">dontcares</span>
+    <span class="k">while</span> <span class="n">new</span> <span class="o">!=</span> <span class="n">old</span><span class="p">:</span>
+        <span class="n">old</span> <span class="o">=</span> <span class="n">new</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">_simplified_pairs</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+    <span class="n">essential</span> <span class="o">=</span> <span class="n">_rem_redundancy</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">maxterms</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">_convert_to_varsPOS</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">essential</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="simplify_logic"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.simplify_logic">[docs]</a><span class="k">def</span> <span class="nf">simplify_logic</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function simplifies a boolean function to its</span>
+<span class="sd">    simplified version in SOP or POS form. The return type is an</span>
+<span class="sd">    Or or And object in SymPy. The input can be a string or a boolean</span>
+<span class="sd">    expression.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic import simplify_logic</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; b = &#39;(~x &amp; ~y &amp; ~z) | ( ~x &amp; ~y &amp; z)&#39;</span>
+<span class="sd">    &gt;&gt;&gt; simplify_logic(b)</span>
+<span class="sd">    And(Not(x), Not(y))</span>
+
+<span class="sd">    &gt;&gt;&gt; S(b)</span>
+<span class="sd">    Or(And(Not(x), Not(y), Not(z)), And(Not(x), Not(y), z))</span>
+<span class="sd">    &gt;&gt;&gt; simplify_logic(_)</span>
+<span class="sd">    And(Not(x), Not(y))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span>
+    <span class="n">truthtable</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">product</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">t</span><span class="p">)))</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">truthtable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">truthtable</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))):</span>
+        <span class="k">return</span> <span class="n">SOPform</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">truthtable</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">POSform</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">truthtable</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_finger</span><span class="p">(</span><span class="n">eq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign a 5-item fingerprint to each symbol in the equation:</span>
+<span class="sd">    [</span>
+<span class="sd">    # of times it appeared as a Symbol,</span>
+<span class="sd">    # of times it appeared as a Not(symbol),</span>
+<span class="sd">    # of times it appeared as a Symbol in an And or Or,</span>
+<span class="sd">    # of times it appeared as a Not(Symbol) in an And or Or,</span>
+<span class="sd">    sum of the number of arguments with which it appeared,</span>
+<span class="sd">    counting Symbol as 1 and Not(Symbol) as 2</span>
+<span class="sd">    ]</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.logic.boolalg import _finger as finger</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import And, Or, Not</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import a, b, x, y</span>
+<span class="sd">    &gt;&gt;&gt; eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))</span>
+<span class="sd">    &gt;&gt;&gt; dict(finger(eq))</span>
+<span class="sd">    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 8): [y]}</span>
+
+<span class="sd">    So y and x have unique fingerprints, but a and b do not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">free_symbols</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span> <span class="k">for</span> <span class="n">fi</span> <span class="ow">in</span> <span class="n">f</span><span class="p">])))</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Not</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ai</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span> <span class="k">for</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ai</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">ai</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">ai</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">o</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">ai</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">ai</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">o</span>
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())):</span>
+        <span class="n">inv</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inv</span>
+
+
+<div class="viewcode-block" id="bool_equal"><a class="viewcode-back" href="../../../modules/logic.html#sympy.logic.boolalg.bool_equal">[docs]</a><span class="k">def</span> <span class="nf">bool_equal</span><span class="p">(</span><span class="n">bool1</span><span class="p">,</span> <span class="n">bool2</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the two expressions represent the same logical</span>
+<span class="sd">    behavior for some correspondence between the variables of each</span>
+<span class="sd">    (which may be different). For example, And(x, y) is logically</span>
+<span class="sd">    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the</span>
+<span class="sd">    mapping is desired, then set ``info`` to True and the simplified</span>
+<span class="sd">    form of the functions and the mapping of variables will be</span>
+<span class="sd">    returned.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import SOPform, bool_equal, Or, And, Not, Xor</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import w, x, y, z, a, b, c, d</span>
+<span class="sd">    &gt;&gt;&gt; function1 = SOPform([&#39;x&#39;,&#39;z&#39;,&#39;y&#39;],[[1, 0, 1], [0, 0, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; function2 = SOPform([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;],[[1, 0, 1], [1, 0, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; bool_equal(function1, function2, info=True)</span>
+<span class="sd">    (And(Not(z), y), {y: a, z: b})</span>
+
+<span class="sd">    The results are not necessarily unique, but they are canonical. Here,</span>
+<span class="sd">    ``(w, z)`` could be ``(a, d)`` or ``(d, a)``:</span>
+
+<span class="sd">    &gt;&gt;&gt; eq =  Or(And(Not(y), w), And(Not(y), z), And(x, y))</span>
+<span class="sd">    &gt;&gt;&gt; eq2 = Or(And(Not(c), a), And(Not(c), d), And(b, c))</span>
+<span class="sd">    &gt;&gt;&gt; bool_equal(eq, eq2)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bool_equal(eq, eq2, info=True)</span>
+<span class="sd">    (Or(And(Not(y), w), And(Not(y), z), And(x, y)), {w: a, x: b, y: c, z: d})</span>
+<span class="sd">    &gt;&gt;&gt; eq = And(Xor(a, b), c, And(c,d))</span>
+<span class="sd">    &gt;&gt;&gt; bool_equal(eq, eq.subs(c, x), info=True)</span>
+<span class="sd">    (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">function1</span><span class="p">,</span> <span class="n">function2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the mapping that equates variables between two</span>
+<span class="sd">        simplified boolean expressions if possible.</span>
+
+<span class="sd">        By &quot;simplified&quot; we mean that a function has been denested</span>
+<span class="sd">        and is either an And (or an Or) whose arguments are either</span>
+<span class="sd">        symbols (x), negated symbols (Not(x)), or Or (or an And) whose</span>
+<span class="sd">        arguments are only symbols or negated symbols. For example,</span>
+<span class="sd">        And(x, Not(y), Or(w, Not(z))).</span>
+
+<span class="sd">        Basic.match is not robust enough (see issue 1736) so this is</span>
+<span class="sd">        a workaround that is valid for simplified boolean expressions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># do some quick checks</span>
+        <span class="k">if</span> <span class="n">function1</span><span class="o">.</span><span class="n">__class__</span> <span class="o">!=</span> <span class="n">function2</span><span class="o">.</span><span class="n">__class__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">function1</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">function2</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">function1</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">function1</span><span class="p">:</span> <span class="n">function2</span><span class="p">}</span>
+
+        <span class="c"># get the fingerprint dictionaries</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">_finger</span><span class="p">(</span><span class="n">function1</span><span class="p">)</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="n">_finger</span><span class="p">(</span><span class="n">function2</span><span class="p">)</span>
+
+        <span class="c"># more quick checks</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="c"># assemble the match dictionary if possible</span>
+        <span class="n">matchdict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">f1</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f1</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f2</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f1</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                <span class="n">matchdict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">f2</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">matchdict</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">simplify_logic</span><span class="p">(</span><span class="n">bool1</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">simplify_logic</span><span class="p">(</span><span class="n">bool2</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">match</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">info</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">m</span>
+    <span class="k">return</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

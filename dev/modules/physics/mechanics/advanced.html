@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="index.html" />
+    <link rel="next" title="References for Physics/Mechanics" href="reference.html" />
+    <link rel="prev" title="A bicycle" href="bicycle_example.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="References for Physics/Mechanics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bicycle_example.html" title="A bicycle"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="potential-issues-advanced-topics-future-features-in-physics-mechanics-module">
+<h1>Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module<a class="headerlink" href="#potential-issues-advanced-topics-future-features-in-physics-mechanics-module" title="Permalink to this headline">¶</a></h1>
+<p>This document will describe some of the more advanced functionality that this
+module offers but which is not part of the &#8220;official&#8221; interface. Here, some of
+the features that will be implemented in the future will also be covered, along
+with unanswered questions about proper functionality. Also, common problems
+will be discussed, along with some solutions.</p>
+<div class="section" id="common-issues">
+<h2>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h2>
+<p>Here issues with numerically integrating code, choice of <span class="math">\(dynamicsymbols\)</span> for
+coordinate and speed representation, printing, differentiating, and
+substitution will occur.</p>
+<div class="section" id="numerically-integrating-code">
+<h3>Numerically Integrating Code<a class="headerlink" href="#numerically-integrating-code" title="Permalink to this headline">¶</a></h3>
+<p>See Future Features: Code Output</p>
+</div>
+<div class="section" id="choice-of-coordinates-and-speeds">
+<h3>Choice of Coordinates and Speeds<a class="headerlink" href="#choice-of-coordinates-and-speeds" title="Permalink to this headline">¶</a></h3>
+<p>The Kane object is set up with the assumption that the generalized speeds are
+not the same symbol as the time derivatives of the generalized coordinates.
+This isn&#8217;t to say that they can&#8217;t be the same, just that they have to have a
+different symbol. If you did this:</p>
+<div class="highlight-python"><pre>&gt;&gt; KM.coords([q1, q2, q3])
+&gt;&gt; KM.speeds([q1d, q2d, q3d])</pre>
+</div>
+<p>Your code would not work. Currently, kinematic differential equations are
+required to be provided. It is at this point that we hope the user will
+discover they should not attempt the behavior shown in the code above.</p>
+<p>This behavior might not be true for other methods of forming the equations of
+motion though.</p>
+</div>
+<div class="section" id="printing">
+<h3>Printing<a class="headerlink" href="#printing" title="Permalink to this headline">¶</a></h3>
+<p>The default printing options are to use sorting for <tt class="docutils literal"><span class="pre">Vector</span></tt> and <tt class="docutils literal"><span class="pre">Dyad</span></tt>
+measure numbers, and have unsorted output from the <tt class="docutils literal"><span class="pre">mprint</span></tt>, <tt class="docutils literal"><span class="pre">mpprint</span></tt>, and
+<tt class="docutils literal"><span class="pre">mlatex</span></tt> functions. If you are printing something large, please use one of
+those functions, as the sorting can increase printing time from seconds to
+minutes.</p>
+</div>
+<div class="section" id="differentiating">
+<h3>Differentiating<a class="headerlink" href="#differentiating" title="Permalink to this headline">¶</a></h3>
+<p>Differentiation of very large expressions can take some time in SymPy; it is
+possible for large expressions to take minutes for the derivative to be
+evaluated. This will most commonly come up in linearization.</p>
+</div>
+<div class="section" id="substitution">
+<h3>Substitution<a class="headerlink" href="#substitution" title="Permalink to this headline">¶</a></h3>
+<p>Substitution into large expressions can be slow, and take a few minutes.</p>
+</div>
+<div class="section" id="linearization">
+<h3>Linearization<a class="headerlink" href="#linearization" title="Permalink to this headline">¶</a></h3>
+<p>Currently, the <tt class="docutils literal"><span class="pre">Kane</span></tt> object&#8217;s <tt class="docutils literal"><span class="pre">linearize</span></tt> method doesn&#8217;t support cases
+where there are non-coordinate, non-speed dynamic symbols outside of the
+&#8220;dynamic equations&#8221;. It also does not support cases where time derivatives of
+these types of dynamic symbols show up. This means if you have kinematic
+differential equations which have a non-coordinate, non-speed dynamic symbol,
+it will not work. It also means if you have defined a system parameter (say a
+length or distance or mass) as a dynamic symbol, its time derivative is likely
+to show up in the dynamic equations, and this will prevent linearization.</p>
+</div>
+<div class="section" id="acceleration-of-points">
+<h3>Acceleration of Points<a class="headerlink" href="#acceleration-of-points" title="Permalink to this headline">¶</a></h3>
+<p>At a minimum, points need to have their velocities defined, as the acceleration
+can be calculated by taking the time derivative of the velocity in the same
+frame. If the 1 point or 2 point theorems were used to compute the velocity,
+the time derivative of the velocity expression will most likely be more complex
+than if you were to use the acceleration level 1 point and 2 point theorems.
+Using the acceleration level methods can result in shorted expressions at this
+point, which will result in shorter expressions later (such as when forming
+Kane&#8217;s equations).</p>
+</div>
+</div>
+<div class="section" id="advanced-interfaces">
+<h2>Advanced Interfaces<a class="headerlink" href="#advanced-interfaces" title="Permalink to this headline">¶</a></h2>
+<p>Here we will cover advanced options in: <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>, <tt class="docutils literal"><span class="pre">dynamicsymbols</span></tt>,
+and some associated functionality.</p>
+<div class="section" id="referenceframe">
+<h3>ReferenceFrame<a class="headerlink" href="#referenceframe" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> is shown as having a <tt class="docutils literal"><span class="pre">.name</span></tt> attribute and <tt class="docutils literal"><span class="pre">.x</span></tt>, <tt class="docutils literal"><span class="pre">.y</span></tt>,
+and <tt class="docutils literal"><span class="pre">.z</span></tt> attributes for accessing the basis vectors, as well as a fairly
+rigidly defined print output. If you wish to have a different set of indices
+defined, there is an option for this. This will also require a different
+interface for accessing the basis vectors.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">mprint</span><span class="p">,</span> <span class="n">mpprint</span><span class="p">,</span> <span class="n">mlatex</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="s">&#39;j&#39;</span><span class="p">,</span> <span class="s">&#39;k&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">[</span><span class="s">&#39;i&#39;</span><span class="p">]</span>
+<span class="go">N[&#39;i&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">N[&#39;i&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">&#39;\\mathbf{\\hat{n}_{i}}&#39;</span>
+</pre></div>
+</div>
+<p>Also, the latex output can have custom strings; rather than just indices
+though, the entirety of each basis vector can be specified. The custom latex
+strings can occur without custom indices, and also overwrites the latex string
+that would be used if there were custom indices.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">mlatex</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="n">latexs</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;n1&#39;</span><span class="p">,</span><span class="s">&#39;\mathbf{n}_2&#39;</span><span class="p">,</span><span class="s">&#39;cat&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">&#39;n1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">&#39;\\mathbf{n}_2&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="go">&#39;cat&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dynamicsymbols">
+<h3>dynamicsymbols<a class="headerlink" href="#dynamicsymbols" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">dynamicsymbols</span></tt> function also has &#8216;hidden&#8217; functionality; the variable
+which is associated with time can be changed, as well as the notation for
+printing derivatives.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span><span class="p">,</span> <span class="n">mprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span>
+<span class="go">q1(t)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2</span>
+<span class="go">q2(T)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span>
+<span class="go">q1(t)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">q1d</span><span class="p">)</span>
+<span class="go">q1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="s">&#39;d&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">q1d</span><span class="p">)</span>
+<span class="go">q1d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that only dynamic symbols created after the change are different. The same
+is not true for the <span class="math">\(._str\)</span> attribute; this affects the printing output only,
+so dynamic symbols created before or after will print the same way.</p>
+<p>Also note that <tt class="docutils literal"><span class="pre">Vector</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">.dt</span></tt> method uses the <tt class="docutils literal"><span class="pre">._t</span></tt> attribute of
+<tt class="docutils literal"><span class="pre">dynamicsymbols</span></tt>, along with a number of other important functions and
+methods. Don&#8217;t mix and match symbols representing time.</p>
+</div>
+<div class="section" id="advanced-functionality">
+<h3>Advanced Functionality<a class="headerlink" href="#advanced-functionality" title="Permalink to this headline">¶</a></h3>
+<p>Remember that the <tt class="docutils literal"><span class="pre">Kane</span></tt> object supports bodies which have time-varying
+masses and inertias, although this functionality isn&#8217;t completely compatible
+with the linearization method.</p>
+<p>Operators were discussed earlier as a potential way to do mathematical
+operations on <tt class="docutils literal"><span class="pre">Vector</span></tt> and <tt class="docutils literal"><span class="pre">Dyad</span></tt> objects. The majority of the code in this
+module is actually coded with them, as it can (subjectively) result in cleaner,
+shorter, more readable code. If using this interface in your code, remember to
+take care and use parentheses; the default order of operations in Python
+results in addition occurring before some of the vector products, so use
+parentheses liberally.</p>
+</div>
+</div>
+<div class="section" id="future-features">
+<h2>Future Features<a class="headerlink" href="#future-features" title="Permalink to this headline">¶</a></h2>
+<p>This will cover the planned features to be added to this submodule.</p>
+<div class="section" id="code-output">
+<h3>Code Output<a class="headerlink" href="#code-output" title="Permalink to this headline">¶</a></h3>
+<p>A function for generating code output for numerical integration is the highest
+priority feature to implement next. There are a number of considerations here.</p>
+<p>Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
+and SciPy is the goal. Things to be considered include: use of <tt class="docutils literal"><span class="pre">cse</span></tt> on large
+expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
+whether compiled languages will benefit from common subexpression elimination,
+especially considering that it is a common part of compiler optimization, and
+there can be a significant time penalty when calling <tt class="docutils literal"><span class="pre">cse</span></tt>.</p>
+<p>Care needs to be taken when constructing the strings for these expressions, as
+well as handling of input parameters, and other dynamic symbols. How to deal
+with output quantities when integrating also needs to be decided, with the
+potential for multiple options being considered.</p>
+</div>
+<div class="section" id="additional-options-on-initialization-of-kane-rigidbody-and-particle">
+<h3>Additional Options on Initialization of Kane, RigidBody, and Particle<a class="headerlink" href="#additional-options-on-initialization-of-kane-rigidbody-and-particle" title="Permalink to this headline">¶</a></h3>
+<p>This would allow a user to specify all relevant information using keyword
+arguments when creating these objects. This is fairly clear for <tt class="docutils literal"><span class="pre">RigidBody</span></tt>
+and <tt class="docutils literal"><span class="pre">Point</span></tt>. For <tt class="docutils literal"><span class="pre">Kane</span></tt>, everything but the force and body lists will be
+able to be entered, as computation of Fr and Fr* can take a while, and produce
+an output.</p>
+</div>
+<div class="section" id="additional-methods-for-rigidbody-and-particle">
+<h3>Additional Methods for RigidBody and Particle<a class="headerlink" href="#additional-methods-for-rigidbody-and-particle" title="Permalink to this headline">¶</a></h3>
+<p>For <tt class="docutils literal"><span class="pre">RigidBody</span></tt> and <tt class="docutils literal"><span class="pre">Particle</span></tt> (not all methods for <tt class="docutils literal"><span class="pre">Particle</span></tt> though),
+add methods for getting: momentum, angular momentum, and kinetic energy.
+Additionally, adding a attribute and method for defining potential energy would
+allow for a total energy method/property.</p>
+<p>Also possible is including the method which creates a transformation matrix for
+3D animations; this would require a &#8220;reference orientation&#8221; for a camera as
+well as a &#8220;reference point&#8221; for distance to the camera. Development of this
+could also be tied into code output.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module</a><ul>
+<li><a class="reference internal" href="#common-issues">Common Issues</a><ul>
+<li><a class="reference internal" href="#numerically-integrating-code">Numerically Integrating Code</a></li>
+<li><a class="reference internal" href="#choice-of-coordinates-and-speeds">Choice of Coordinates and Speeds</a></li>
+<li><a class="reference internal" href="#printing">Printing</a></li>
+<li><a class="reference internal" href="#differentiating">Differentiating</a></li>
+<li><a class="reference internal" href="#substitution">Substitution</a></li>
+<li><a class="reference internal" href="#linearization">Linearization</a></li>
+<li><a class="reference internal" href="#acceleration-of-points">Acceleration of Points</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-interfaces">Advanced Interfaces</a><ul>
+<li><a class="reference internal" href="#referenceframe">ReferenceFrame</a></li>
+<li><a class="reference internal" href="#dynamicsymbols">dynamicsymbols</a></li>
+<li><a class="reference internal" href="#advanced-functionality">Advanced Functionality</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#future-features">Future Features</a><ul>
+<li><a class="reference internal" href="#code-output">Code Output</a></li>
+<li><a class="reference internal" href="#additional-options-on-initialization-of-kane-rigidbody-and-particle">Additional Options on Initialization of Kane, RigidBody, and Particle</a></li>
+<li><a class="reference internal" href="#additional-methods-for-rigidbody-and-particle">Additional Methods for RigidBody and Particle</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="bicycle_example.html"
+                        title="previous chapter">A bicycle</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="next chapter">References for Physics/Mechanics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/advanced.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="References for Physics/Mechanics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bicycle_example.html" title="A bicycle"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

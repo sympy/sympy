@@ -1,0 +1,910 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.galgebra.printing &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.galgebra.printing</h1><div class="highlight"><pre>
+<span class="c"># sympy/galgebra/printing.py</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">printing.py implements GA_Printer and GA_LatexPrinter classes for</span>
+<span class="sd">multivectors by derivation from the SymPy Printer and LatexPrinter</span>
+<span class="sd">classes.  Where we wish to change the behavior of printing for</span>
+<span class="sd">existing SymPy types the required function have been rewritten</span>
+<span class="sd">and included in GA_Printer and GA_LatexPrinter.  For example</span>
+<span class="sd">we have rewritten:</span>
+
+<span class="sd">    _print_Derivative</span>
+<span class="sd">    _print_Function</span>
+<span class="sd">    _print_Matrix</span>
+<span class="sd">    _print_Pow</span>
+<span class="sd">    _print_Symbol</span>
+
+<span class="sd">for GA_LatexPrinter and</span>
+
+<span class="sd">    _print_Derivative</span>
+<span class="sd">    _print_Function</span>
+
+<span class="sd">for GA_Printer.</span>
+
+<span class="sd">There is also and enhanced_print class that allows multivectors,</span>
+<span class="sd">multivector functions, and multivector derivatives to print out</span>
+<span class="sd">in different colors on ansi terminals.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">C</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Matrix</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.str</span> <span class="kn">import</span> <span class="n">StrPrinter</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.latex</span> <span class="kn">import</span> <span class="n">LatexPrinter</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.conventions</span> <span class="kn">import</span> <span class="n">split_super_sub</span>
+
+<span class="n">SYS_CMD</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;linux2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;rm&#39;</span><span class="p">:</span> <span class="s">&#39;rm&#39;</span><span class="p">,</span> <span class="s">&#39;evince&#39;</span><span class="p">:</span> <span class="s">&#39;evince&#39;</span><span class="p">,</span> <span class="s">&#39;null&#39;</span><span class="p">:</span> <span class="s">&#39; &gt; /dev/null&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;&#39;</span><span class="p">:</span> <span class="s">&#39;&amp;&#39;</span><span class="p">},</span>
+           <span class="s">&#39;win32&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;rm&#39;</span><span class="p">:</span> <span class="s">&#39;del&#39;</span><span class="p">,</span> <span class="s">&#39;evince&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;null&#39;</span><span class="p">:</span> <span class="s">&#39; &gt; NUL&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">},</span>
+           <span class="s">&#39;darwin&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;rm&#39;</span><span class="p">:</span> <span class="s">&#39;rm&#39;</span><span class="p">,</span> <span class="s">&#39;evince&#39;</span><span class="p">:</span> <span class="s">&#39;open&#39;</span><span class="p">,</span> <span class="s">&#39;null&#39;</span><span class="p">:</span> <span class="s">&#39; &gt; /dev/null&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;&#39;</span><span class="p">:</span> <span class="s">&#39;&amp;&#39;</span><span class="p">}}</span>
+
+<span class="n">ColorCode</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;black&#39;</span><span class="p">:</span>        <span class="s">&#39;0;30&#39;</span><span class="p">,</span>         <span class="s">&#39;bright gray&#39;</span><span class="p">:</span>   <span class="s">&#39;0;37&#39;</span><span class="p">,</span>
+    <span class="s">&#39;blue&#39;</span><span class="p">:</span>         <span class="s">&#39;0;34&#39;</span><span class="p">,</span>         <span class="s">&#39;white&#39;</span><span class="p">:</span>         <span class="s">&#39;1;37&#39;</span><span class="p">,</span>
+    <span class="s">&#39;green&#39;</span><span class="p">:</span>        <span class="s">&#39;0;32&#39;</span><span class="p">,</span>         <span class="s">&#39;bright blue&#39;</span><span class="p">:</span>   <span class="s">&#39;1;34&#39;</span><span class="p">,</span>
+    <span class="s">&#39;cyan&#39;</span><span class="p">:</span>         <span class="s">&#39;0;36&#39;</span><span class="p">,</span>         <span class="s">&#39;bright green&#39;</span><span class="p">:</span>  <span class="s">&#39;1;32&#39;</span><span class="p">,</span>
+    <span class="s">&#39;red&#39;</span><span class="p">:</span>          <span class="s">&#39;0;31&#39;</span><span class="p">,</span>         <span class="s">&#39;bright cyan&#39;</span><span class="p">:</span>   <span class="s">&#39;1;36&#39;</span><span class="p">,</span>
+    <span class="s">&#39;purple&#39;</span><span class="p">:</span>       <span class="s">&#39;0;35&#39;</span><span class="p">,</span>         <span class="s">&#39;bright red&#39;</span><span class="p">:</span>    <span class="s">&#39;1;31&#39;</span><span class="p">,</span>
+    <span class="s">&#39;yellow&#39;</span><span class="p">:</span>       <span class="s">&#39;0;33&#39;</span><span class="p">,</span>         <span class="s">&#39;bright purple&#39;</span><span class="p">:</span> <span class="s">&#39;1;35&#39;</span><span class="p">,</span>
+    <span class="s">&#39;dark gray&#39;</span><span class="p">:</span>    <span class="s">&#39;1;30&#39;</span><span class="p">,</span>         <span class="s">&#39;bright yellow&#39;</span><span class="p">:</span> <span class="s">&#39;1;33&#39;</span><span class="p">,</span>
+    <span class="s">&#39;normal&#39;</span><span class="p">:</span>       <span class="s">&#39;0&#39;</span>
+<span class="p">}</span>
+
+<span class="n">InvColorCode</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ColorCode</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">ColorCode</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+<span class="n">accepted_latex_functions</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;arcsin&#39;</span><span class="p">,</span> <span class="s">&#39;arccos&#39;</span><span class="p">,</span> <span class="s">&#39;arctan&#39;</span><span class="p">,</span> <span class="s">&#39;sin&#39;</span><span class="p">,</span> <span class="s">&#39;cos&#39;</span><span class="p">,</span> <span class="s">&#39;tan&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;gamma&#39;</span><span class="p">,</span> <span class="s">&#39;sinh&#39;</span><span class="p">,</span> <span class="s">&#39;cosh&#39;</span><span class="p">,</span> <span class="s">&#39;tanh&#39;</span><span class="p">,</span> <span class="s">&#39;sqrt&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;ln&#39;</span><span class="p">,</span> <span class="s">&#39;log&#39;</span><span class="p">,</span> <span class="s">&#39;sec&#39;</span><span class="p">,</span> <span class="s">&#39;csc&#39;</span><span class="p">,</span> <span class="s">&#39;cot&#39;</span><span class="p">,</span> <span class="s">&#39;coth&#39;</span><span class="p">,</span> <span class="s">&#39;re&#39;</span><span class="p">,</span> <span class="s">&#39;im&#39;</span><span class="p">,</span> <span class="s">&#39;frac&#39;</span><span class="p">,</span> <span class="s">&#39;root&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;arg&#39;</span><span class="p">,</span> <span class="s">&#39;zeta&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="find_executable"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.find_executable">[docs]</a><span class="k">def</span> <span class="nf">find_executable</span><span class="p">(</span><span class="n">executable</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Try to find &#39;executable&#39; in the directories listed in &#39;path&#39; (a</span>
+<span class="sd">    string listing directories separated by &#39;os.pathsep&#39;; defaults to</span>
+<span class="sd">    os.environ[&#39;PATH&#39;]).  Returns the complete filename or None if not</span>
+<span class="sd">    found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PATH&#39;</span><span class="p">]</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+    <span class="n">extlist</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;os2&#39;</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="c"># executable files on OS/2 can have an arbitrary extension, but</span>
+        <span class="c"># .exe is automatically appended if no dot is present in the name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
+            <span class="n">executable</span> <span class="o">=</span> <span class="n">executable</span> <span class="o">+</span> <span class="s">&quot;.exe&quot;</span>
+    <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s">&#39;win32&#39;</span><span class="p">:</span>
+        <span class="n">pathext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;PATHEXT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">executable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pathext</span><span class="p">:</span>
+            <span class="n">extlist</span> <span class="o">=</span> <span class="n">pathext</span>
+    <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">extlist</span><span class="p">:</span>
+        <span class="n">execname</span> <span class="o">=</span> <span class="n">executable</span> <span class="o">+</span> <span class="n">ext</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">execname</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">execname</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">execname</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="enhance_print"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.enhance_print">[docs]</a><span class="k">class</span> <span class="nc">enhance_print</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for color coding the string printing going to a terminal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">normal</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">fct</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">deriv</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">bold</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fct</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">deriv</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;win&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;blue&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">base</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">fct</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;red&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">fct</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">deriv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;cyan&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">deriv</span><span class="p">]</span>
+                <span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[0m&#39;</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;dark gray&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">base</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">fct</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;red&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">fct</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">deriv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="s">&#39;cyan&#39;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">=</span> <span class="n">ColorCode</span><span class="p">[</span><span class="n">deriv</span><span class="p">]</span>
+                <span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[0m&#39;</span>
+
+            <span class="k">if</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Enhanced Printing is on:&#39;</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Base/Blade color is &#39;</span> <span class="o">+</span> <span class="n">InvColorCode</span><span class="p">[</span><span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span><span class="p">])</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Function color is &#39;</span> <span class="o">+</span> <span class="n">InvColorCode</span><span class="p">[</span><span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span><span class="p">])</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Derivative color is &#39;</span> <span class="o">+</span> <span class="n">InvColorCode</span><span class="p">[</span><span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+            <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[&#39;</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">+</span> <span class="s">&#39;m&#39;</span>
+            <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[&#39;</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">+</span> <span class="s">&#39;m&#39;</span>
+            <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[&#39;</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">+</span> <span class="s">&#39;m&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">enhance_base</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">enhance_fct</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">fct</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">enhance_deriv</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">deriv</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">strip_base</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="n">new_s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">enhance_print</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">new_s</span> <span class="o">=</span> <span class="n">new_s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">enhance_print</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_s</span>
+
+</div>
+<div class="viewcode-block" id="GA_Printer"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.GA_Printer">[docs]</a><span class="k">class</span> <span class="nc">GA_Printer</span><span class="p">(</span><span class="n">StrPrinter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An enhanced string printer that is galgebra-aware.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">function_names</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;acos&#39;</span><span class="p">,</span> <span class="s">&#39;acosh&#39;</span><span class="p">,</span> <span class="s">&#39;acot&#39;</span><span class="p">,</span> <span class="s">&#39;acoth&#39;</span><span class="p">,</span> <span class="s">&#39;arg&#39;</span><span class="p">,</span> <span class="s">&#39;asin&#39;</span><span class="p">,</span> <span class="s">&#39;asinh&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;atan&#39;</span><span class="p">,</span> <span class="s">&#39;atan2&#39;</span><span class="p">,</span> <span class="s">&#39;atanh&#39;</span><span class="p">,</span> <span class="s">&#39;ceiling&#39;</span><span class="p">,</span> <span class="s">&#39;conjugate&#39;</span><span class="p">,</span> <span class="s">&#39;cos&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;cosh&#39;</span><span class="p">,</span> <span class="s">&#39;cot&#39;</span><span class="p">,</span> <span class="s">&#39;coth&#39;</span><span class="p">,</span> <span class="s">&#39;exp&#39;</span><span class="p">,</span> <span class="s">&#39;floor&#39;</span><span class="p">,</span> <span class="s">&#39;im&#39;</span><span class="p">,</span> <span class="s">&#39;log&#39;</span><span class="p">,</span> <span class="s">&#39;re&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;root&#39;</span><span class="p">,</span> <span class="s">&#39;sin&#39;</span><span class="p">,</span> <span class="s">&#39;sinh&#39;</span><span class="p">,</span> <span class="s">&#39;sqrt&#39;</span><span class="p">,</span> <span class="s">&#39;sign&#39;</span><span class="p">,</span> <span class="s">&#39;tan&#39;</span><span class="p">,</span> <span class="s">&#39;tanh&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">nargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">GA_Printer</span><span class="o">.</span><span class="n">function_names</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s">&quot;(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">stringify</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s">&quot;, &quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">enhance_fct</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_print_Derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">diff_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">enhance_print</span><span class="o">.</span><span class="n">enhance_deriv</span><span class="p">(</span><span class="s">&#39;D{</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">diff_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">))</span> <span class="o">+</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">diff_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_MV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;0&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">print_blades</span><span class="p">:</span>
+                <span class="n">expr</span><span class="o">.</span><span class="n">base_to_blade</span><span class="p">()</span>
+            <span class="n">ostr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">get_normal_order_str</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">ostr</span>
+
+    <span class="k">def</span> <span class="nf">_print_Vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;0&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ostr</span> <span class="o">=</span> <span class="n">GA_Printer</span><span class="p">()</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+            <span class="n">ostr</span> <span class="o">=</span> <span class="n">ostr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ostr</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">on</span><span class="p">():</span>
+        <span class="n">GA_Printer</span><span class="o">.</span><span class="n">Basic__str__</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span>
+        <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="n">GA_Printer</span><span class="p">()</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">off</span><span class="p">():</span>
+        <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="n">GA_Printer</span><span class="o">.</span><span class="n">Basic__str__</span>
+        <span class="k">return</span>
+
+</div>
+<div class="viewcode-block" id="GA_LatexPrinter"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.GA_LatexPrinter">[docs]</a><span class="k">class</span> <span class="nc">GA_LatexPrinter</span><span class="p">(</span><span class="n">LatexPrinter</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    An enhanced LaTeX printer that is galgebra-aware.</span>
+
+<span class="sd">    The latex printer is turned on with the function (in ga.py) -</span>
+
+<span class="sd">        Format(Fmode=True,Dmode=True,ipy=False)</span>
+
+<span class="sd">    where Fmode is the function printing mode that surpresses printing arguments,</span>
+<span class="sd">    Dmode is the derivative printing mode that does not use fractions, and</span>
+<span class="sd">    ipy=True is the Ipython notebook mode that does not redirect the print output.</span>
+
+<span class="sd">    The latex output is post processed and displayed with the function (in GAPrint.py) -</span>
+
+<span class="sd">        xdvi(filename=&#39;tmplatex.tex&#39;,debug=False)</span>
+
+<span class="sd">    where filename is the name of the tex file one would keep for future</span>
+<span class="sd">    inclusion in documents and debug=True would display the tex file</span>
+<span class="sd">    immediately.</span>
+
+<span class="sd">    There are three options for printing multivectors in latex.  They are</span>
+<span class="sd">    acessed with the multivector member function -</span>
+
+<span class="sd">        A.Fmt(self,fmt=1,title=None)</span>
+
+<span class="sd">    where fmt=1, 2, or 3 determines whether the entire multivector A is</span>
+<span class="sd">    printed entirely on one line, or one grade is printed per line, or</span>
+<span class="sd">    one base is printed per line.  If title is not None then the latex</span>
+<span class="sd">    string generated is of the form -</span>
+
+<span class="sd">        title+&#39; = &#39;+str(A)</span>
+
+<span class="sd">    where it is assumed that title is a latex math mode string. If title</span>
+<span class="sd">    contains &#39;%&#39; it is treated as a pure latex math mode string.  If it</span>
+<span class="sd">    does not contain &#39;%&#39; then the following character mappings are applied -</span>
+
+<span class="sd">        - &#39;grad&#39; replaced by &#39;\\bm{\\nabla} &#39;</span>
+<span class="sd">        - &#39;*&#39; replaced by &#39;&#39;</span>
+<span class="sd">        - &#39;^&#39; replaced by &#39;\\W &#39;</span>
+<span class="sd">        - &#39;|&#39; replaced by &#39;\\cdot &#39;</span>
+<span class="sd">        - &#39;&gt;&#39; replaced by &#39;\\lfloor &#39;</span>
+<span class="sd">        - &#39;&lt;&#39; replaced by &#39;\\rfloor &#39;</span>
+
+<span class="sd">    In the case of a print statement of the form -</span>
+
+<span class="sd">        print(title,A)</span>
+
+<span class="sd">    everthing in the title processing still applies except that the multivector</span>
+<span class="sd">    formatting is one multivector per line.</span>
+
+<span class="sd">    For print statements of the form -</span>
+
+<span class="sd">        print(title)</span>
+
+<span class="sd">    where no program variables are printed if title contains &#39;#&#39; then title</span>
+<span class="sd">    is printed as regular latex line.  If title does not contain &#39;#&#39; then</span>
+<span class="sd">    title is printed in equation mode. &#39;%&#39; has the same effect in title as</span>
+<span class="sd">    in the Fmt() member function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">preamble</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">\\pagestyle{empty}</span>
+<span class="sd">\\usepackage[latin1]{inputenc}</span>
+<span class="sd">\\usepackage{amsmath}</span>
+<span class="sd">\\usepackage{bm}</span>
+<span class="sd">\\usepackage{amsfonts}</span>
+<span class="sd">\\usepackage{amssymb}</span>
+<span class="sd">\\usepackage{amsbsy}</span>
+<span class="sd">\\usepackage{tensor}</span>
+<span class="sd">\\usepackage{listings}</span>
+<span class="sd">\\usepackage{color}</span>
+<span class="sd">\\definecolor{gray}{rgb}{0.95,0.95,0.95}</span>
+<span class="sd">\\setlength{\\parindent}{0pt}</span>
+<span class="sd">\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}</span>
+<span class="sd">\\newcommand{\\lp}{\\left (}</span>
+<span class="sd">\\newcommand{\\rp}{\\right )}</span>
+<span class="sd">\\newcommand{\\half}{\\frac{1}{2}}</span>
+<span class="sd">\\newcommand{\\llt}{\\left &lt;}</span>
+<span class="sd">\\newcommand{\\rgt}{\\right &gt;}</span>
+<span class="sd">\\newcommand{\\abs}[1]{\\left |{#1}\\right | }</span>
+<span class="sd">\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}</span>
+<span class="sd">\\newcommand{\\lbrc}{\\left \\{}</span>
+<span class="sd">\\newcommand{\\rbrc}{\\right \\}}</span>
+<span class="sd">\\newcommand{\\W}{\\wedge}</span>
+<span class="sd">\\newcommand{\\prm}[1]{{#1}&#39;}</span>
+<span class="sd">\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}</span>
+<span class="sd">\\newcommand{\\R}{\\dagger}</span>
+<span class="sd">\\newcommand{\\deriv}[3]{\\bfrac{d^{#3}#1}{d{#2}^{#3}}}</span>
+<span class="sd">\\newcommand{\\grade}[1]{\\left &lt; {#1} \\right &gt;}</span>
+<span class="sd">\\newcommand{\\f}[2]{{#1}\\lp{#2}\\rp}</span>
+<span class="sd">\\newcommand{\\eval}[2]{\\left . {#1} \\right |_{#2}}</span>
+<span class="sd">\\usepackage{float}</span>
+<span class="sd">\\floatstyle{plain} % optionally change the style of the new float</span>
+<span class="sd">\\newfloat{Code}{H}{myc}</span>
+<span class="sd">\\lstloadlanguages{Python}</span>
+
+<span class="sd">\\begin{document}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="n">postscript</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">end{document}</span><span class="se">\n</span><span class="s">&#39;</span>
+
+    <span class="n">Dmode</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># True - Print derivative contracted</span>
+    <span class="n">Fmode</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># True - Print function contracted</span>
+    <span class="n">latex_flg</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">redirect</span><span class="p">(</span><span class="n">ipy</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">ipy</span> <span class="o">=</span> <span class="n">ipy</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">latex_flg</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Basic__str__</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Matrix__str__</span> <span class="o">=</span> <span class="n">Matrix</span><span class="o">.</span><span class="n">__str__</span>
+        <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="n">GA_LatexPrinter</span><span class="p">()</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">Matrix</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="n">GA_LatexPrinter</span><span class="p">()</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ipy</span><span class="p">:</span>
+            <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">restore</span><span class="p">():</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">latex_flg</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">ipy</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">stdout</span>
+        <span class="n">Basic</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Basic__str__</span>
+        <span class="n">Matrix</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Matrix__str__</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_print_Pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="s">&#39;^&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39;cdot&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mode</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="c"># Treat x**Rational(1,n) as special case</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">expq</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span>
+
+            <span class="k">if</span> <span class="n">expq</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\sqrt{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="n">base</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;itex&#39;</span><span class="p">]:</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\root{</span><span class="si">%d</span><span class="s">}{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expq</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\sqrt[</span><span class="si">%d</span><span class="s">]{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expq</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">r&quot;\frac{1}{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="n">tex</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tex</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;fold_frac_powers&#39;</span><span class="p">]</span> \
+            <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> \
+                <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span>
+            <span class="k">if</span> <span class="n">mode</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">r&quot;{\lp </span><span class="si">%s</span><span class="s"> \rp}^{</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s">^{</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_negative</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_Function</span><span class="p">:</span>
+            <span class="c"># Things like 1/x</span>
+            <span class="k">return</span> <span class="s">r&quot;\frac{</span><span class="si">%s</span><span class="s">}{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> \
+                <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">-</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_Function</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    solves issue 1030</span>
+<span class="sd">                    As Mul always simplify 1/x to x**-1</span>
+<span class="sd">                    The objective is achieved with this hack</span>
+<span class="sd">                    first we get the latex for -1 * expr,</span>
+<span class="sd">                    which is a Mul expression</span>
+<span class="sd">                    &quot;&quot;&quot;</span>
+                    <span class="n">tex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span> <span class="o">*</span> <span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="c"># the result comes with a minus and a space, so we remove</span>
+                    <span class="k">if</span> <span class="n">tex</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;-&quot;</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">tex</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_needs_brackets</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">):</span>
+                    <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\left(</span><span class="si">%s</span><span class="s">\right)^{</span><span class="si">%s</span><span class="s">}&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">mode</span><span class="p">:</span>
+                        <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;{\lp </span><span class="si">%s</span><span class="s"> \rp}^{</span><span class="si">%s</span><span class="s">}&quot;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s">^{</span><span class="si">%s</span><span class="s">}&quot;</span>
+
+                <span class="k">return</span> <span class="n">tex</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_print_Symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">str_symbol</span><span class="p">(</span><span class="n">name_str</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">supers</span><span class="p">,</span> <span class="n">subs</span><span class="p">)</span> <span class="o">=</span> <span class="n">split_super_sub</span><span class="p">(</span><span class="n">name_str</span><span class="p">)</span>
+
+            <span class="c"># translate name, supers and subs to tex keywords</span>
+            <span class="n">greek</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="s">&#39;gamma&#39;</span><span class="p">,</span> <span class="s">&#39;delta&#39;</span><span class="p">,</span> <span class="s">&#39;epsilon&#39;</span><span class="p">,</span> <span class="s">&#39;zeta&#39;</span><span class="p">,</span>
+                         <span class="s">&#39;eta&#39;</span><span class="p">,</span> <span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="s">&#39;iota&#39;</span><span class="p">,</span> <span class="s">&#39;kappa&#39;</span><span class="p">,</span> <span class="s">&#39;lambda&#39;</span><span class="p">,</span> <span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;nu&#39;</span><span class="p">,</span>
+                         <span class="s">&#39;xi&#39;</span><span class="p">,</span> <span class="s">&#39;omicron&#39;</span><span class="p">,</span> <span class="s">&#39;pi&#39;</span><span class="p">,</span> <span class="s">&#39;rho&#39;</span><span class="p">,</span> <span class="s">&#39;sigma&#39;</span><span class="p">,</span> <span class="s">&#39;tau&#39;</span><span class="p">,</span> <span class="s">&#39;upsilon&#39;</span><span class="p">,</span>
+                         <span class="s">&#39;phi&#39;</span><span class="p">,</span> <span class="s">&#39;chi&#39;</span><span class="p">,</span> <span class="s">&#39;psi&#39;</span><span class="p">,</span> <span class="s">&#39;omega&#39;</span><span class="p">])</span>
+
+            <span class="n">greek_translated</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;lamda&#39;</span><span class="p">:</span> <span class="s">&#39;lambda&#39;</span><span class="p">,</span> <span class="s">&#39;Lamda&#39;</span><span class="p">:</span> <span class="s">&#39;Lambda&#39;</span><span class="p">}</span>
+
+            <span class="n">other</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;aleph&#39;</span><span class="p">,</span> <span class="s">&#39;beth&#39;</span><span class="p">,</span> <span class="s">&#39;daleth&#39;</span><span class="p">,</span> <span class="s">&#39;gimel&#39;</span><span class="p">,</span> <span class="s">&#39;ell&#39;</span><span class="p">,</span> <span class="s">&#39;eth&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;hbar&#39;</span><span class="p">,</span> <span class="s">&#39;hslash&#39;</span><span class="p">,</span> <span class="s">&#39;mho&#39;</span><span class="p">])</span>
+
+            <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">tmp</span> <span class="ow">in</span> <span class="n">greek</span> <span class="ow">or</span> <span class="n">tmp</span> <span class="ow">in</span> <span class="n">other</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s">&quot;</span><span class="se">\\</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">s</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">greek_translated</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s">&quot;</span><span class="se">\\</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">greek_translated</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">s</span>
+
+            <span class="n">name</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">supers</span> <span class="o">!=</span> <span class="p">[]:</span>
+                <span class="n">supers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">translate</span><span class="p">,</span> <span class="n">supers</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">subs</span> <span class="o">!=</span> <span class="p">[]:</span>
+                <span class="n">subs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">translate</span><span class="p">,</span> <span class="n">subs</span><span class="p">))</span>
+
+            <span class="c"># glue all items together:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">supers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="s">&quot;^{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">supers</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="s">&quot;_{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">subs</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;symbol_names&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;symbol_names&#39;</span><span class="p">][</span><span class="n">expr</span><span class="p">]</span>
+
+        <span class="n">name_str</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="s">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">name_str</span> <span class="ow">and</span> <span class="n">name_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;(&#39;</span> <span class="ow">and</span> <span class="n">name_str</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;)&#39;</span><span class="p">:</span>
+            <span class="n">name_str</span> <span class="o">=</span> <span class="n">name_str</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">name_lst</span> <span class="o">=</span> <span class="n">name_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">name_str</span> <span class="o">=</span> <span class="s">r&#39;\lp &#39;</span> <span class="o">+</span> <span class="n">str_symbol</span><span class="p">(</span><span class="n">name_lst</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s">r&#39;\cdot &#39;</span> <span class="o">+</span> <span class="n">str_symbol</span><span class="p">(</span><span class="n">name_lst</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s">r&#39;\rp &#39;</span>
+            <span class="k">return</span> <span class="n">name_str</span>
+
+        <span class="k">return</span> <span class="n">str_symbol</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">exp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">func</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_print_&#39;</span> <span class="o">+</span> <span class="n">func</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_print_&#39;</span> <span class="o">+</span> <span class="n">func</span><span class="p">)(</span><span class="n">expr</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+            <span class="c"># How inverse trig functions should be displayed, formats are:</span>
+            <span class="c"># abbreviated: asin, full: arcsin, power: sin^-1</span>
+            <span class="n">inv_trig_style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;inv_trig_style&#39;</span><span class="p">]</span>
+            <span class="c"># If we are dealing with a power-style inverse trig function</span>
+            <span class="n">inv_trig_power_case</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="c"># If it is applicable to fold the argument brackets</span>
+            <span class="n">can_fold_brackets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;fold_func_brackets&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_needs_function_brackets</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">inv_trig_table</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;asin&quot;</span><span class="p">,</span> <span class="s">&quot;acos&quot;</span><span class="p">,</span> <span class="s">&quot;atan&quot;</span><span class="p">,</span> <span class="s">&quot;acot&quot;</span><span class="p">]</span>
+
+            <span class="c"># If the function is an inverse trig function, handle the style</span>
+            <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">inv_trig_table</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">inv_trig_style</span> <span class="o">==</span> <span class="s">&quot;abbreviated&quot;</span><span class="p">:</span>
+                    <span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+                <span class="k">elif</span> <span class="n">inv_trig_style</span> <span class="o">==</span> <span class="s">&quot;full&quot;</span><span class="p">:</span>
+                    <span class="n">func</span> <span class="o">=</span> <span class="s">&quot;arc&quot;</span> <span class="o">+</span> <span class="n">func</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">elif</span> <span class="n">inv_trig_style</span> <span class="o">==</span> <span class="s">&quot;power&quot;</span><span class="p">:</span>
+                    <span class="n">func</span> <span class="o">=</span> <span class="n">func</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="n">inv_trig_power_case</span> <span class="o">=</span> <span class="bp">True</span>
+
+                    <span class="c"># Can never fold brackets if we&#39;re raised to a power</span>
+                    <span class="k">if</span> <span class="n">exp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">can_fold_brackets</span> <span class="o">=</span> <span class="bp">False</span>
+
+            <span class="k">if</span> <span class="n">inv_trig_power_case</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">r&quot;\</span><span class="si">%s</span><span class="s">^{-1}&quot;</span> <span class="o">%</span> <span class="n">func</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">r&quot;\operatorname{</span><span class="si">%s</span><span class="s">}^{-1}&quot;</span> <span class="o">%</span> <span class="n">func</span>
+            <span class="k">elif</span> <span class="n">exp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">r&quot;\</span><span class="si">%s</span><span class="s">^{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">latex</span><span class="p">(</span><span class="n">Symbol</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="s">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">func</span> <span class="ow">or</span> <span class="s">&#39;^&#39;</span> <span class="ow">in</span> <span class="n">func</span><span class="p">:</span>
+                        <span class="n">name</span> <span class="o">=</span> <span class="s">r&#39;{\lp &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">r&#39;\rp }^{&#39;</span> <span class="o">+</span> <span class="n">exp</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">name</span> <span class="o">+=</span> <span class="s">&#39;^{&#39;</span> <span class="o">+</span> <span class="n">exp</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">r&quot;\</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">func</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">latex</span><span class="p">(</span><span class="n">Symbol</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">exp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="s">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">name</span> <span class="ow">or</span> <span class="s">&#39;^&#39;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                            <span class="n">name</span> <span class="o">=</span> <span class="s">r&#39;\lp &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">r&#39;\rp^{&#39;</span> <span class="o">+</span> <span class="n">exp</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">name</span> <span class="o">+=</span> <span class="s">&#39;^{&#39;</span> <span class="o">+</span> <span class="n">exp</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+
+            <span class="k">if</span> <span class="n">can_fold_brackets</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span><span class="p">:</span>
+                    <span class="c"># Wrap argument safely to avoid parse-time conflicts</span>
+                    <span class="c"># with the function name itself</span>
+                    <span class="n">name</span> <span class="o">+=</span> <span class="s">r&quot; {</span><span class="si">%s</span><span class="s">}&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Fmode</span><span class="p">:</span>
+                        <span class="n">name</span> <span class="o">+=</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Fmode</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">+=</span> <span class="s">r&quot;{\left (</span><span class="si">%s</span><span class="s"> \right )}&quot;</span>
+
+            <span class="k">if</span> <span class="n">inv_trig_power_case</span> <span class="ow">and</span> <span class="n">exp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">+=</span> <span class="s">r&quot;^{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="n">exp</span>
+
+            <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">accepted_latex_functions</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Fmode</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">name</span> <span class="o">%</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">name</span> <span class="o">%</span> <span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">_print_Derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+
+        <span class="n">imax</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Dmode</span><span class="p">:</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\partial_{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\frac{\partial}{\partial </span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">multiplicity</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">tex</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;&quot;</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">symbol</span> <span class="o">==</span> <span class="n">current</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">multiplicity</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+                    <span class="n">current</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">symbol</span><span class="p">,</span> <span class="mi">1</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">imax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">imax</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">multiplicity</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">Dmode</span> <span class="ow">and</span> <span class="n">imax</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="n">dim</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">multiplicity</span><span class="p">:</span>
+                    <span class="n">dim</span> <span class="o">+=</span> <span class="n">i</span>
+                    <span class="n">tmp</span> <span class="o">+=</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">)</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\partial^{</span><span class="si">%s</span><span class="s">}_{&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">tmp</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">multiplicity</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">tex</span> <span class="o">+=</span> <span class="s">r&quot;\partial </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">tex</span> <span class="o">+=</span> <span class="s">r&quot;\partial^{</span><span class="si">%s</span><span class="s">} </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+                <span class="n">tex</span> <span class="o">=</span> <span class="s">r&quot;\frac{\partial^{</span><span class="si">%s</span><span class="s">}}{</span><span class="si">%s</span><span class="s">} &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">tex</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">AssocOp</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s">\left(</span><span class="si">%s</span><span class="s">\right)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tex</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">r&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tex</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_print_MV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;0 </span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">print_blades</span><span class="p">:</span>
+                <span class="n">expr</span><span class="o">.</span><span class="n">base_to_blade</span><span class="p">()</span>
+            <span class="n">ostr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">get_latex_normal_order_str</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">ostr</span>
+
+    <span class="k">def</span> <span class="nf">_print_Matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span> <span class="n">rows</span><span class="p">):</span>  <span class="c"># horrible, should be &#39;rows&#39;</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot; &amp; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">[</span><span class="n">line</span><span class="p">,</span> <span class="p">:]]))</span>
+
+        <span class="n">ncols</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">[</span><span class="n">line</span><span class="p">,</span> <span class="p">:]:</span>
+            <span class="n">ncols</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">out_str</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">left [ </span><span class="se">\\</span><span class="s">begin{array}{&#39;</span> <span class="o">+</span> <span class="n">ncols</span> <span class="o">*</span> <span class="s">&#39;c&#39;</span> <span class="o">+</span> <span class="s">&#39;} &#39;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="n">line</span> <span class="o">+</span> <span class="s">&#39; </span><span class="se">\\\\</span><span class="s"> &#39;</span>
+        <span class="n">out_str</span> <span class="o">+=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; </span><span class="se">\\</span><span class="s">end{array}</span><span class="se">\\</span><span class="s">right ] &#39;</span>
+        <span class="k">return</span> <span class="n">out_str</span>
+
+</div>
+<div class="viewcode-block" id="latex"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.latex">[docs]</a><span class="k">def</span> <span class="nf">latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="s">&quot;Return the LaTeX representation of the given expression.&quot;</span>
+    <span class="k">return</span> <span class="n">GA_LatexPrinter</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="print_latex"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.print_latex">[docs]</a><span class="k">def</span> <span class="nf">print_latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="s">&quot;Print the LaTeX representation of the given expression.&quot;</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="xdvi"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.xdvi">[docs]</a><span class="k">def</span> <span class="nf">xdvi</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">paper</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">11</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Post processes LaTeX output (see comments below), adds preamble and</span>
+<span class="sd">    postscript, generates tex file, inputs file to latex, displays resulting</span>
+<span class="sd">    pdf file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">ipy</span><span class="p">:</span>
+        <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">ipy</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">sys_cmd</span> <span class="o">=</span> <span class="n">SYS_CMD</span><span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">]</span>
+
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+    <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">restore</span><span class="p">()</span>
+    <span class="n">latex_lst</span> <span class="o">=</span> <span class="n">latex_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="n">lhs</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">code_flg</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">latex_line</span> <span class="ow">in</span> <span class="n">latex_lst</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">latex_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s">&#39;##&#39;</span> <span class="o">==</span> <span class="n">latex_line</span><span class="p">[:</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">code_flg</span><span class="p">:</span>
+                <span class="n">code_flg</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">code_flg</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="k">elif</span> <span class="n">code_flg</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">latex_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="s">&#39;#&#39;</span> <span class="ow">in</span> <span class="n">latex_line</span><span class="p">:</span>  <span class="c"># Non equation mode output (comment)</span>
+            <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&#39;%&#39;</span> <span class="ow">in</span> <span class="n">latex_line</span><span class="p">:</span>  <span class="c"># Equation mode with no variables to print (comment)</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">begin{equation*} &#39;</span> <span class="o">+</span> <span class="n">latex_line</span> <span class="o">+</span> <span class="s">&#39; </span><span class="se">\\</span><span class="s">end{equation*}</span><span class="se">\n</span><span class="s">&#39;</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">r&#39; \cdot &#39;</span><span class="p">)</span>  <span class="c"># For components of metric tensor</span>
+            <span class="k">if</span> <span class="s">&#39;=&#39;</span> <span class="ow">in</span> <span class="n">latex_line</span><span class="p">:</span>  <span class="c"># determing lhs of equation/align</span>
+                <span class="n">eq_index</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">lhs</span> <span class="o">=</span> <span class="n">latex_line</span><span class="p">[:</span><span class="n">eq_index</span><span class="p">]</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s">&#39;%&#39;</span> <span class="ow">in</span> <span class="n">lhs</span><span class="p">:</span>  <span class="c"># Do not preprocess lhs of equation/align</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c"># preprocess lhs of equation/align</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">,</span> <span class="s">r&#39;\cdot &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;^&#39;</span><span class="p">,</span> <span class="s">r&#39;\W &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;grad&#39;</span><span class="p">,</span> <span class="s">r&#39;\bm{\nabla} &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;&lt;&#39;</span><span class="p">,</span> <span class="s">r&#39;\rfloor &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;&#39;</span><span class="p">,</span> <span class="s">r&#39;\rfloor &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&gt;&gt;&#39;</span><span class="p">,</span> <span class="s">r&#39;\lfloor &#39;</span><span class="p">)</span>
+                    <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&gt;&#39;</span><span class="p">,</span> <span class="s">r&#39;\lfloor &#39;</span><span class="p">)</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">lhs</span> <span class="o">+</span> <span class="n">latex_line</span>
+
+            <span class="k">if</span> <span class="s">r&#39;\begin{align*}&#39;</span> <span class="ow">in</span> <span class="n">latex_line</span><span class="p">:</span>  <span class="c"># insert lhs of align environment</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">r&#39;\begin{align*}&#39;</span><span class="p">,</span> <span class="s">r&#39;\begin{align*} &#39;</span> <span class="o">+</span> <span class="n">lhs</span><span class="p">)</span>
+                <span class="n">lhs</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># normal sympy equation</span>
+                <span class="n">latex_line</span> <span class="o">=</span> <span class="n">latex_line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">latex_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">latex_line</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">begin{equation*} &#39;</span> <span class="o">+</span> <span class="n">latex_line</span> <span class="o">+</span> <span class="s">&#39; </span><span class="se">\\</span><span class="s">end{equation*}&#39;</span>
+
+        <span class="n">latex_str</span> <span class="o">+=</span> <span class="n">latex_line</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="n">latex_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">latex_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">paper</span> <span class="o">==</span> <span class="s">&#39;letter&#39;</span><span class="p">:</span>
+        <span class="n">paper_size</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">\\documentclass[10pt,fleqn]{report}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">paper_size</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">\\documentclass[10pt,fleqn]{report}</span>
+<span class="sd">\\usepackage[vcentering]{geometry}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="n">paper_size</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">geometry{papersize={&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">paper</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> \
+                      <span class="s">&#39;in,&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">paper</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;in},total={&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">paper</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> \
+                      <span class="s">&#39;in,&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">paper</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;in}}</span><span class="se">\n</span><span class="s">&#39;</span>
+
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="n">paper_size</span> <span class="o">+</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">preamble</span> <span class="o">+</span> <span class="n">latex_str</span> <span class="o">+</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">postscript</span>
+
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">pyfilename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rootfilename</span> <span class="o">=</span> <span class="n">pyfilename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.py&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">rootfilename</span> <span class="o">+</span> <span class="s">&#39;.tex&#39;</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;latex file =&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">latex_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">latex_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">latex_str</span><span class="p">)</span>
+    <span class="n">latex_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">latex_str</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">pdflatex</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s">&#39;pdflatex&#39;</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;pdflatex path =&#39;</span><span class="p">,</span> <span class="n">pdflatex</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pdflatex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">latex_str</span> <span class="o">=</span> <span class="s">&#39;pdflatex&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">latex_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>  <span class="c"># Display latex excution output for debugging purposes</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">latex_str</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c"># Works for Linux don&#39;t know about Windows</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">latex_str</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">sys_cmd</span><span class="p">[</span><span class="s">&#39;null&#39;</span><span class="p">])</span>
+
+        <span class="n">print_cmd</span> <span class="o">=</span> <span class="n">sys_cmd</span><span class="p">[</span><span class="s">&#39;evince&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.pdf &#39;</span> <span class="o">+</span> <span class="n">sys_cmd</span><span class="p">[</span><span class="s">&#39;&amp;&#39;</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">print_cmd</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">print_cmd</span><span class="p">)</span>
+        <span class="nb">raw_input</span><span class="p">(</span><span class="s">&#39;!!!!Return to continue!!!!</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">sys_cmd</span><span class="p">[</span><span class="s">&#39;rm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.aux &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.log&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">sys_cmd</span><span class="p">[</span><span class="s">&#39;rm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.aux &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.log &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;.tex&#39;</span><span class="p">)</span>
+    <span class="k">return</span>
+
+</div>
+<span class="n">prog_str</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+<span class="n">off_mode</span> <span class="o">=</span> <span class="bp">False</span>
+
+
+<div class="viewcode-block" id="Get_Program"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.Get_Program">[docs]</a><span class="k">def</span> <span class="nf">Get_Program</span><span class="p">(</span><span class="n">off</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">prog_str</span><span class="p">,</span> <span class="n">off_mode</span>
+    <span class="n">off_mode</span> <span class="o">=</span> <span class="n">off</span>
+    <span class="k">if</span> <span class="n">off_mode</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">prog_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">prog_str</span> <span class="o">=</span> <span class="n">prog_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">prog_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span>
+
+</div>
+<div class="viewcode-block" id="Print_Function"><a class="viewcode-back" href="../../../modules/galgebra/printing.html#sympy.galgebra.printing.Print_Function">[docs]</a><span class="k">def</span> <span class="nf">Print_Function</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">prog_str</span><span class="p">,</span> <span class="n">off_mode</span>
+    <span class="k">if</span> <span class="n">off_mode</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">fct_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="n">ifct</span> <span class="o">=</span> <span class="n">prog_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;def &#39;</span> <span class="o">+</span> <span class="n">fct_name</span><span class="p">)</span>
+    <span class="n">iend</span> <span class="o">=</span> <span class="n">prog_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;def &#39;</span><span class="p">,</span> <span class="n">ifct</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">tmp_str</span> <span class="o">=</span> <span class="n">prog_str</span><span class="p">[</span><span class="n">ifct</span><span class="p">:</span><span class="n">iend</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">fct_name</span> <span class="o">=</span> <span class="n">fct_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">GA_LatexPrinter</span><span class="o">.</span><span class="n">latex_flg</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;##</span><span class="se">\\</span><span class="s">begin{lstlisting}[language=Python,showspaces=false,&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;showstringspaces=false,backgroundcolor=\color{gray},frame=single]&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp_str</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;##</span><span class="se">\\</span><span class="s">end{lstlisting}&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;#Code Output:&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="mi">80</span> <span class="o">*</span> <span class="s">&#39;*&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">tmp_str</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;Code output:</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

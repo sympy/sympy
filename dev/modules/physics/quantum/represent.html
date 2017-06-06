@@ -1,0 +1,441 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Represent &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Spin" href="spin.html" />
+    <link rel="prev" title="Qapply" href="qapply.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spin.html" title="Spin"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qapply.html" title="Qapply"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.represent">
+<span id="represent"></span><h1>Represent<a class="headerlink" href="#module-sympy.physics.quantum.represent" title="Permalink to this headline">¶</a></h1>
+<p>Logic for representing operators in state in various bases.</p>
+<p>TODO:</p>
+<ul class="simple">
+<li>Get represent working with continuous hilbert spaces.</li>
+<li>Document default basis functionality.</li>
+</ul>
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.represent">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">represent</tt><big>(</big><em>expr</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#represent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.represent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represent the quantum expression in the given basis.</p>
+<p>In quantum mechanics abstract states and operators can be represented in
+various basis sets. Under this operation the follow transforms happen:</p>
+<ul class="simple">
+<li>Ket -&gt; column vector or function</li>
+<li>Bra -&gt; row vector of function</li>
+<li>Operator -&gt; matrix or differential operator</li>
+</ul>
+<p>This function is the top-level interface for this action.</p>
+<p>This function walks the sympy expression tree looking for <tt class="docutils literal"><span class="pre">QExpr</span></tt>
+instances that have a <tt class="docutils literal"><span class="pre">_represent</span></tt> method. This method is then called
+and the object is replaced by the representation returned by this method.
+By default, the <tt class="docutils literal"><span class="pre">_represent</span></tt> method will dispatch to other methods
+that handle the representation logic for a particular basis set. The
+naming convention for these methods is the following:</p>
+<div class="highlight-python"><pre>def _represent_FooBasis(self, e, basis, **options)</pre>
+</div>
+<p>This function will have the logic for representing instances of its class
+in the basis set having a class named <tt class="docutils literal"><span class="pre">FooBasis</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Expr</p>
+<blockquote>
+<div><p>The expression to represent.</p>
+</div></blockquote>
+<p><strong>basis</strong> : Operator, basis set</p>
+<blockquote>
+<div><p>An object that contains the information about the basis set. If an
+operator is used, the basis is assumed to be the orthonormal
+eigenvectors of that operator. In general though, the basis argument
+can be any object that contains the basis set information.</p>
+</div></blockquote>
+<p><strong>options</strong> : dict</p>
+<blockquote>
+<div><p>Key/value pairs of options that are passed to the underlying method
+that finds the representation. These options can be used to
+control how the representation is done. For example, this is where
+the size of the basis set would be set.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>e</strong> : Expr</p>
+<blockquote class="last">
+<div><p>The SymPy expression of the represented quantum expression.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Here we subclass <tt class="docutils literal"><span class="pre">Operator</span></tt> and <tt class="docutils literal"><span class="pre">Ket</span></tt> to create the z-spin operator
+and its spin 1/2 up eigenstate. By definining the <tt class="docutils literal"><span class="pre">_represent_SzOp</span></tt>
+method, the ket can be represented in the z-spin basis.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">represent</span><span class="p">,</span> <span class="n">Ket</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SzUpKet</span><span class="p">(</span><span class="n">Ket</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_represent_SzOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">Matrix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SzOp</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sz</span> <span class="o">=</span> <span class="n">SzOp</span><span class="p">(</span><span class="s">&#39;Sz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">up</span> <span class="o">=</span> <span class="n">SzUpKet</span><span class="p">(</span><span class="s">&#39;up&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">up</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="n">sz</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[1],</span>
+<span class="go">[0]])</span>
+</pre></div>
+</div>
+<p>Here we see an example of representations in a continuous
+basis. We see that the result of representing various combinations
+of cartesian position operators and kets give us continuous
+expressions involving DiracDelta functions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">XBra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">XOp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">XKet</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">XBra</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="go">x*DiracDelta(x - x_2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="go">x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.rep_innerproduct">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">rep_innerproduct</tt><big>(</big><em>expr</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#rep_innerproduct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.rep_innerproduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an innerproduct like representation (e.g. <tt class="docutils literal"><span class="pre">&lt;x'|x&gt;</span></tt>) for the
+given state.</p>
+<p>Attempts to calculate inner product with a bra from the specified
+basis. Should only be passed an instance of KetBase or BraBase</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : KetBase or BraBase</p>
+<blockquote class="last">
+<div><p>The expression to be represented</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">rep_innerproduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">PxOp</span><span class="p">,</span> <span class="n">PxKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_innerproduct</span><span class="p">(</span><span class="n">XKet</span><span class="p">())</span>
+<span class="go">DiracDelta(x - x_1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_innerproduct</span><span class="p">(</span><span class="n">XKet</span><span class="p">(),</span> <span class="n">basis</span><span class="o">=</span><span class="n">PxOp</span><span class="p">())</span>
+<span class="go">sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_innerproduct</span><span class="p">(</span><span class="n">PxKet</span><span class="p">(),</span> <span class="n">basis</span><span class="o">=</span><span class="n">XOp</span><span class="p">())</span>
+<span class="go">sqrt(2)*exp(I*px*x_1/hbar)/(2*sqrt(hbar)*sqrt(pi))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.rep_expectation">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">rep_expectation</tt><big>(</big><em>expr</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#rep_expectation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.rep_expectation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an <tt class="docutils literal"><span class="pre">&lt;x'|A|x&gt;</span></tt> type representation for the given operator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Operator</p>
+<blockquote class="last">
+<div><p>Operator to be represented in the specified basis</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">PxOp</span><span class="p">,</span> <span class="n">PxKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">rep_expectation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_expectation</span><span class="p">(</span><span class="n">XOp</span><span class="p">())</span>
+<span class="go">x_1*DiracDelta(x_1 - x_2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_expectation</span><span class="p">(</span><span class="n">XOp</span><span class="p">(),</span> <span class="n">basis</span><span class="o">=</span><span class="n">PxOp</span><span class="p">())</span>
+<span class="go">&lt;px_2|*X*|px_1&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rep_expectation</span><span class="p">(</span><span class="n">XOp</span><span class="p">(),</span> <span class="n">basis</span><span class="o">=</span><span class="n">PxKet</span><span class="p">())</span>
+<span class="go">&lt;px_2|*X*|px_1&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.integrate_result">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">integrate_result</tt><big>(</big><em>orig_expr</em>, <em>result</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#integrate_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.integrate_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the result of integrating over any unities <tt class="docutils literal"><span class="pre">(|x&gt;&lt;x|)</span></tt> in
+the given expression. Intended for integrating over the result of
+representations in continuous bases.</p>
+<p>This function integrates over any unities that may have been
+inserted into the quantum expression and returns the result.
+It uses the interval of the Hilbert space of the basis state
+passed to it in order to figure out the limits of integration.
+The unities option must be
+specified for this to work.</p>
+<p>Note: This is mostly used internally by represent(). Examples are
+given merely to show the use cases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>orig_expr</strong> : quantum expression</p>
+<blockquote>
+<div><p>The original expression which was to be represented</p>
+</div></blockquote>
+<p><strong>result: Expr</strong> :</p>
+<blockquote class="last">
+<div><p>The resulting representation that we wish to integrate over</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">DiracDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">integrate_result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">XKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x_ket</span> <span class="o">=</span> <span class="n">XKet</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_op</span> <span class="o">=</span> <span class="n">XOp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">x_1</span><span class="p">,</span> <span class="n">x_2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, x_1, x_2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate_result</span><span class="p">(</span><span class="n">X_op</span><span class="o">*</span><span class="n">x_ket</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">x_1</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x_1</span><span class="o">-</span><span class="n">x_2</span><span class="p">))</span>
+<span class="go">x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate_result</span><span class="p">(</span><span class="n">X_op</span><span class="o">*</span><span class="n">x_ket</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">x_1</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x_1</span><span class="o">-</span><span class="n">x_2</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">unities</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">x*DiracDelta(x - x_2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.get_basis">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">get_basis</tt><big>(</big><em>expr</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#get_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.get_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a basis state instance corresponding to the basis specified in
+options=s. If no basis is specified, the function tries to form a default
+basis state of the given expression.</p>
+<p>There are three behaviors:</p>
+<ol class="arabic simple">
+<li>The basis specified in options is already an instance of StateBase. If
+this is the case, it is simply returned. If the class is specified but
+not an instance, a default instance is returned.</li>
+<li>The basis specified is an operator or set of operators. If this
+is the case, the operator_to_state mapping method is used.</li>
+<li>No basis is specified. If expr is a state, then a default instance of
+its class is returned.  If expr is an operator, then it is mapped to the
+corresponding state.  If it is neither, then we cannot obtain the basis
+state.</li>
+</ol>
+<p>If the basis cannot be mapped, then it is not changed.</p>
+<p>This will be called from within represent, and represent will
+only pass QExpr&#8217;s.</p>
+<p>TODO (?): Support for Muls and other types of expressions?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Operator or StateBase</p>
+<blockquote class="last">
+<div><p>Expression whose basis is sought</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">get_basis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">PxOp</span><span class="p">,</span> <span class="n">PxKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">XKet</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">XOp</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_basis</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">|x&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_basis</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="go">|x&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_basis</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="n">PxOp</span><span class="p">())</span>
+<span class="go">|px&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_basis</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="n">PxKet</span><span class="p">)</span>
+<span class="go">|px&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.represent.enumerate_states">
+<tt class="descclassname">sympy.physics.quantum.represent.</tt><tt class="descname">enumerate_states</tt><big>(</big><em>*args</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/represent.html#enumerate_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.represent.enumerate_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns instances of the given state with dummy indices appended</p>
+<p>Operates in two different modes:</p>
+<ol class="arabic simple">
+<li>Two arguments are passed to it. The first is the base state which is to
+be indexed, and the second argument is a list of indices to append.</li>
+<li>Three arguments are passed. The first is again the base state to be
+indexed. The second is the start index for counting.  The final argument
+is the number of kets you wish to receive.</li>
+</ol>
+<p>Tries to call state._enumerate_state. If this fails, returns an empty list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : list</p>
+<blockquote class="last">
+<div><p>See list of operation modes above for explanation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XBra</span><span class="p">,</span> <span class="n">XKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">enumerate_states</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test</span> <span class="o">=</span> <span class="n">XKet</span><span class="p">(</span><span class="s">&#39;foo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">enumerate_states</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">[|foo_1&gt;, |foo_2&gt;, |foo_3&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test2</span> <span class="o">=</span> <span class="n">XBra</span><span class="p">(</span><span class="s">&#39;bar&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">enumerate_states</span><span class="p">(</span><span class="n">test2</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="go">[&lt;bar_4|, &lt;bar_5|, &lt;bar_10|]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qapply.html"
+                        title="previous chapter">Qapply</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="spin.html"
+                        title="next chapter">Spin</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/represent.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spin.html" title="Spin"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qapply.html" title="Qapply"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

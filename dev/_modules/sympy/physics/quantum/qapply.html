@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.qapply &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.qapply</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Logic for applying operators to states.</span>
+
+<span class="sd">Todo:</span>
+<span class="sd">* Sometimes the final result needs to be expanded, we should do this by hand.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">S</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.anticommutator</span> <span class="kn">import</span> <span class="n">AntiCommutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.commutator</span> <span class="kn">import</span> <span class="n">Commutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.innerproduct</span> <span class="kn">import</span> <span class="n">InnerProduct</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">OuterProduct</span><span class="p">,</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">State</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">,</span> <span class="n">Wavefunction</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.tensorproduct</span> <span class="kn">import</span> <span class="n">TensorProduct</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;qapply&#39;</span>
+<span class="p">]</span>
+
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Main code</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="qapply"><a class="viewcode-back" href="../../../../modules/physics/quantum/qapply.html#sympy.physics.quantum.qapply.qapply">[docs]</a><span class="k">def</span> <span class="nf">qapply</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply operators to states in a quantum expression.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    e : Expr</span>
+<span class="sd">        The expression containing operators and states. This expression tree</span>
+<span class="sd">        will be walked to find operators acting on states symbolically.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        A dict of key/value pairs that determine how the operator actions</span>
+<span class="sd">        are carried out.</span>
+
+<span class="sd">        The following options are valid:</span>
+
+<span class="sd">        * ``dagger``: try to apply Dagger operators to the left</span>
+<span class="sd">          (default: False).</span>
+<span class="sd">        * ``ip_doit``: call ``.doit()`` in inner products when they are</span>
+<span class="sd">          encountered (default: True).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    e : Expr</span>
+<span class="sd">        The original expression, but with the operators applied to states.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.physics.quantum.density</span> <span class="kn">import</span> <span class="n">Density</span>
+
+    <span class="n">dagger</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dagger&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="c"># This may be a bit aggressive but ensures that everything gets expanded</span>
+    <span class="c"># to its simplest form before trying to apply operators. This includes</span>
+    <span class="c"># things like (A+B+C)*|a&gt; and A*(|a&gt;+|b&gt;) and all Commutators and</span>
+    <span class="c"># TensorProducts. The only problem with this is that if we can&#39;t apply</span>
+    <span class="c"># all the Operators, we have just expanded everything.</span>
+    <span class="c"># TODO: don&#39;t expand the scalars in front of each Mul.</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">commutator</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">tensorproduct</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># If we just have a raw ket, return it.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+    <span class="c"># We have an Add(a, b, c, ...) and compute</span>
+    <span class="c"># Add(qapply(a), qapply(b), ...)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c"># For a Density operator call qapply on its state</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Density</span><span class="p">):</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">qapply</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">),</span> <span class="n">prob</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span>
+                     <span class="n">prob</span><span class="p">)</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Density</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+
+    <span class="c"># For a raw TensorProduct, call qapply on its args.</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">qapply</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="c"># For a Pow, call qapply on its base.</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">**</span><span class="n">e</span><span class="o">.</span><span class="n">exp</span>
+
+    <span class="c"># We have a Mul where there might be actual operators to apply to kets.</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">qapply_Mul</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">e</span> <span class="ow">and</span> <span class="n">dagger</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Dagger</span><span class="p">(</span><span class="n">qapply_Mul</span><span class="p">(</span><span class="n">Dagger</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c"># In all other cases (State, Operator, Pow, Commutator, InnerProduct,</span>
+    <span class="c"># OuterProduct) we won&#39;t ever have operators to apply to kets.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+</div>
+<span class="k">def</span> <span class="nf">qapply_Mul</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+
+    <span class="n">ip_doit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ip_doit&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c"># If we only have 0 or 1 args, we have nothing to do and return.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">lhs</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="c"># Make sure we have two non-commutative objects before proceeding.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Wavefunction</span><span class="p">))</span> <span class="ow">or</span> \
+            <span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">lhs</span><span class="p">)</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">Wavefunction</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+    <span class="c"># For a Pow with an integer exponent, apply one of them and reduce the</span>
+    <span class="c"># exponent by one.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">Pow</span><span class="p">)</span> <span class="ow">and</span> <span class="n">lhs</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">base</span><span class="o">**</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">exp</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">base</span>
+
+    <span class="c"># Pull OuterProduct apart</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">OuterProduct</span><span class="p">):</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">ket</span><span class="p">)</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">bra</span>
+
+   <span class="c"># Call .doit() on Commutator/AntiCommutator.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="p">(</span><span class="n">Commutator</span><span class="p">,</span> <span class="n">AntiCommutator</span><span class="p">)):</span>
+        <span class="n">comm</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">comm</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rhs</span><span class="p">]))</span> <span class="o">+</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">comm</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rhs</span><span class="p">])),</span>
+                <span class="o">**</span><span class="n">options</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span><span class="o">*</span><span class="n">comm</span><span class="o">*</span><span class="n">rhs</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="c"># Apply tensor products of operators to states</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">lhs</span><span class="o">.</span><span class="n">args</span><span class="p">])</span> <span class="ow">and</span> \
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">State</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">rhs</span><span class="o">.</span><span class="n">args</span><span class="p">])</span> <span class="ow">and</span> \
+            <span class="nb">len</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">qapply</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">*</span><span class="n">rhs</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">args</span><span class="p">))])</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">tensorproduct</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">qapply_Mul</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">*</span><span class="n">result</span>
+
+    <span class="c"># Now try to actually apply the operator and build an inner product.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">_apply_operator</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">_apply_operator</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ip_doit</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># TODO: I may need to expand before returning the final result.</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">elif</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># We had two args to begin with so args=[].</span>
+            <span class="k">return</span> <span class="n">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">qapply_Mul</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">lhs</span><span class="p">])),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">*</span><span class="n">rhs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">InnerProduct</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">*</span><span class="n">qapply_Mul</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c"># result is a scalar times a Mul, Add or TensorProduct</span>
+        <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span><span class="o">*</span><span class="n">result</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

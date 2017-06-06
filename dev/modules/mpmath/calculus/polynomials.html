@@ -1,0 +1,271 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Polynomials &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Numerical calculus" href="index.html" />
+    <link rel="next" title="Root-finding and optimization" href="optimization.html" />
+    <link rel="prev" title="Numerical calculus" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="optimization.html" title="Root-finding and optimization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Numerical calculus"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="polynomials">
+<h1>Polynomials<a class="headerlink" href="#polynomials" title="Permalink to this headline">¶</a></h1>
+<p>See also <tt class="xref py py-func docutils literal"><span class="pre">taylor()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">chebyfit()</span></tt> for
+approximation of functions by polynomials.</p>
+<div class="section" id="polynomial-evaluation-polyval">
+<h2>Polynomial evaluation (<tt class="docutils literal"><span class="pre">polyval</span></tt>)<a class="headerlink" href="#polynomial-evaluation-polyval" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.polyval">
+<tt class="descclassname">mpmath.</tt><tt class="descname">polyval</tt><big>(</big><em>ctx</em>, <em>coeffs</em>, <em>x</em>, <em>derivative=False</em><big>)</big><a class="headerlink" href="#mpmath.polyval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coefficients <span class="math">\([c_n, \ldots, c_2, c_1, c_0]\)</span> and a number <span class="math">\(x\)</span>,
+<a class="reference internal" href="#mpmath.polyval" title="mpmath.polyval"><tt class="xref py py-func docutils literal"><span class="pre">polyval()</span></tt></a> evaluates the polynomial</p>
+<div class="math">
+\[P(x) = c_n x^n + \ldots + c_2 x^2 + c_1 x + c_0.\]</div>
+<p>If <em>derivative=True</em> is set, <a class="reference internal" href="#mpmath.polyval" title="mpmath.polyval"><tt class="xref py py-func docutils literal"><span class="pre">polyval()</span></tt></a> simultaneously
+evaluates <span class="math">\(P(x)\)</span> with the derivative, <span class="math">\(P'(x)\)</span>, and returns the
+tuple <span class="math">\((P(x), P'(x))\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polyval</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">2.75</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polyval</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">derivative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(2.75, 3.0)</span>
+</pre></div>
+</div>
+<p>The coefficients and the evaluation point may be any combination
+of real or complex numbers.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="polynomial-roots-polyroots">
+<h2>Polynomial roots (<tt class="docutils literal"><span class="pre">polyroots</span></tt>)<a class="headerlink" href="#polynomial-roots-polyroots" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.polyroots">
+<tt class="descclassname">mpmath.</tt><tt class="descname">polyroots</tt><big>(</big><em>ctx</em>, <em>coeffs</em>, <em>maxsteps=50</em>, <em>cleanup=True</em>, <em>extraprec=10</em>, <em>error=False</em><big>)</big><a class="headerlink" href="#mpmath.polyroots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes all roots (real or complex) of a given polynomial. The roots are
+returned as a sorted list, where real roots appear first followed by
+complex conjugate roots as adjacent elements. The polynomial should be
+given as a list of coefficients, in the format used by <a class="reference internal" href="#mpmath.polyval" title="mpmath.polyval"><tt class="xref py py-func docutils literal"><span class="pre">polyval()</span></tt></a>.
+The leading coefficient must be nonzero.</p>
+<p>With <em>error=True</em>, <a class="reference internal" href="#mpmath.polyroots" title="mpmath.polyroots"><tt class="xref py py-func docutils literal"><span class="pre">polyroots()</span></tt></a> returns a tuple <em>(roots, err)</em> where
+<em>err</em> is an estimate of the maximum error among the computed roots.</p>
+<p><strong>Examples</strong></p>
+<p>Finding the three real roots of <span class="math">\(x^3 - x^2 - 14x + 24\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">polyroots</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">14</span><span class="p">,</span><span class="mi">24</span><span class="p">]),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[-4.0, 2.0, 3.0]</span>
+</pre></div>
+</div>
+<p>Finding the two complex conjugate roots of <span class="math">\(4x^2 + 3x + 2\)</span>, with an
+error estimate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">roots</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">polyroots</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">error</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">(-0.375 + 0.59947894041409j)</span>
+<span class="go">(-0.375 - 0.59947894041409j)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">err</span>
+<span class="go">2.22044604925031e-16</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polyval</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">roots</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">(2.22044604925031e-16 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polyval</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">roots</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">(2.22044604925031e-16 + 0.0j)</span>
+</pre></div>
+</div>
+<p>The following example computes all the 5th roots of unity; that is,
+the roots of <span class="math">\(x^5 - 1\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">polyroots</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">1.0</span>
+<span class="go">(-0.8090169943749474241 + 0.58778525229247312917j)</span>
+<span class="go">(-0.8090169943749474241 - 0.58778525229247312917j)</span>
+<span class="go">(0.3090169943749474241 + 0.95105651629515357212j)</span>
+<span class="go">(0.3090169943749474241 - 0.95105651629515357212j)</span>
+</pre></div>
+</div>
+<p><strong>Precision and conditioning</strong></p>
+<p>Provided there are no repeated roots, <a class="reference internal" href="#mpmath.polyroots" title="mpmath.polyroots"><tt class="xref py py-func docutils literal"><span class="pre">polyroots()</span></tt></a> can typically
+compute all roots of an arbitrary polynomial to high precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">60</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">polyroots</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">r</span>
+<span class="gp">...</span>
+<span class="go">-3.14626436994197234232913506571557044551247712918732870123249</span>
+<span class="go">-0.317837245195782244725757617296174288373133378433432554879127</span>
+<span class="go">0.317837245195782244725757617296174288373133378433432554879127</span>
+<span class="go">3.14626436994197234232913506571557044551247712918732870123249</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">3.14626436994197234232913506571557044551247712918732870123249</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.317837245195782244725757617296174288373133378433432554879127</span>
+</pre></div>
+</div>
+<p><strong>Algorithm</strong></p>
+<p><a class="reference internal" href="#mpmath.polyroots" title="mpmath.polyroots"><tt class="xref py py-func docutils literal"><span class="pre">polyroots()</span></tt></a> implements the Durand-Kerner method [1], which
+uses complex arithmetic to locate all roots simultaneously.
+The Durand-Kerner method can be viewed as approximately performing
+simultaneous Newton iteration for all the roots. In particular,
+the convergence to simple roots is quadratic, just like Newton&#8217;s
+method.</p>
+<p>Although all roots are internally calculated using complex arithmetic,
+any root found to have an imaginary part smaller than the estimated
+numerical error is truncated to a real number. Real roots are placed
+first in the returned list, sorted by value. The remaining complex
+roots are sorted by real their parts so that conjugate roots end up
+next to each other.</p>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Durand-Kerner_method">http://en.wikipedia.org/wiki/Durand-Kerner_method</a></li>
+</ol>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Polynomials</a><ul>
+<li><a class="reference internal" href="#polynomial-evaluation-polyval">Polynomial evaluation (<tt class="docutils literal"><span class="pre">polyval</span></tt>)</a></li>
+<li><a class="reference internal" href="#polynomial-roots-polyroots">Polynomial roots (<tt class="docutils literal"><span class="pre">polyroots</span></tt>)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Numerical calculus</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="optimization.html"
+                        title="next chapter">Root-finding and optimization</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/calculus/polynomials.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="optimization.html" title="Root-finding and optimization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Numerical calculus"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

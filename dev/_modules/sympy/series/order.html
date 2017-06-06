@@ -1,0 +1,443 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.series.order &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.series.order</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">expand_power_base</span><span class="p">,</span> <span class="n">expand_log</span>
+<span class="kn">from</span> <span class="nn">sympy.core.cache</span> <span class="kn">import</span> <span class="n">cacheit</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+
+
+<div class="viewcode-block" id="Order"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.order.Order">[docs]</a><span class="k">class</span> <span class="nc">Order</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Represents the limiting behavior of some function</span>
+
+<span class="sd">    The order of a function characterizes the function based on the limiting</span>
+<span class="sd">    behavior of the function as it goes to some limit. Only taking the limit</span>
+<span class="sd">    point to be 0 or positive infinity is currently supported. This is</span>
+<span class="sd">    expressed in big O notation [1]_.</span>
+
+<span class="sd">    The formal definition for the order of a function `g(x)` about a point `a`</span>
+<span class="sd">    is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any</span>
+<span class="sd">    `\delta &gt; 0` there exists a `M &gt; 0` such that `|g(x)| \leq M|f(x)|` for</span>
+<span class="sd">    `|x-a| &lt; \delta`. This is equivalent to `\lim_{x \rightarrow a}</span>
+<span class="sd">    |g(x)/f(x)| &lt; \infty`.</span>
+
+<span class="sd">    Let&#39;s illustrate it on the following example by taking the expansion of</span>
+<span class="sd">    `\sin(x)` about 0:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \sin(x) = x - x^3/3! + O(x^5)</span>
+
+<span class="sd">    where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition</span>
+<span class="sd">    of `O`, for any `\delta &gt; 0` there is an `M` such that:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        |x^5/5! - x^7/7! + ....| &lt;= M|x^5| \text{ for } |x| &lt; \delta</span>
+
+<span class="sd">    or by the alternate definition:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \lim_{x \rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| &lt; \infty</span>
+
+<span class="sd">    which surely is true, because</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        \lim_{x \rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| = 1/5!</span>
+
+
+<span class="sd">    As it is usually used, the order of a function can be intuitively thought</span>
+<span class="sd">    of representing all terms of powers greater than the one specified. For</span>
+<span class="sd">    example, `O(x^3)` corresponds to any terms proportional to `x^3,</span>
+<span class="sd">    x^4,\ldots` and any higher power. For a polynomial, this leaves terms</span>
+<span class="sd">    proportional to `x^2`, `x` and constants.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import O</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; O(x)</span>
+<span class="sd">    O(x)</span>
+<span class="sd">    &gt;&gt;&gt; O(x)*x</span>
+<span class="sd">    O(x**2)</span>
+<span class="sd">    &gt;&gt;&gt; O(x)-O(x)</span>
+<span class="sd">    O(x)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] `Big O notation &lt;http://en.wikipedia.org/wiki/Big_O_notation&gt;`_</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    In ``O(f(x), x)`` the expression ``f(x)`` is assumed to have a leading</span>
+<span class="sd">    term.  ``O(f(x), x)`` is automatically transformed to</span>
+<span class="sd">    ``O(f(x).as_leading_term(x),x)``.</span>
+
+<span class="sd">        ``O(expr*f(x), x)`` is ``O(f(x), x)``</span>
+
+<span class="sd">        ``O(expr, x)`` is ``O(1)``</span>
+
+<span class="sd">        ``O(0, x)`` is 0.</span>
+
+<span class="sd">    Multivariate O is also supported:</span>
+
+<span class="sd">        ``O(f(x, y), x, y)`` is transformed to</span>
+<span class="sd">        ``O(f(x, y).as_leading_term(x,y).as_leading_term(y), x, y)``</span>
+
+<span class="sd">    In the multivariate case, it is assumed the limits w.r.t. the various</span>
+<span class="sd">    symbols commute.</span>
+
+<span class="sd">    If no symbols are passed then all symbols in the expression are used.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_Order</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">):</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+
+        <span class="n">point</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">symbols</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">symbols</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">):</span>
+                <span class="n">point</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">symbols</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s">&#39;Order at points other than 0 or oo not supported.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Order</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">v</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">symbols</span> <span class="o">==</span> <span class="n">v</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">symbols</span><span class="p">:</span>
+
+            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">point</span><span class="p">,)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c"># XXX: better way?  We need this expand() to</span>
+                <span class="c"># workaround e.g: expr = x*(x + y).</span>
+                <span class="c"># (x*(x + y)).as_leading_term(x, y) currently returns</span>
+                <span class="c"># x*y (wrong order term!).  That&#39;s why we want to deal with</span>
+                <span class="c"># expand()&#39;ed expr (handled in &quot;if expr.is_Add&quot; branch below).</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">extract_leading_order</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">expr</span> <span class="k">for</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="n">expr</span><span class="p">:</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_leading_term</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="n">as_Add</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">expand_power_base</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">expand_log</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c"># The definition of O(f(x)) symbol explicitly stated that</span>
+                    <span class="c"># the argument of f(x) is irrelevant.  That&#39;s why we can</span>
+                    <span class="c"># combine some power exponents (only &quot;on top&quot; of the</span>
+                    <span class="c"># expression tree for f(x)), e.g.:</span>
+                    <span class="c"># x**p * (-x)**q -&gt; x**(p+q) for real p, q.</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">margs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Mul</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span>
+                        <span class="n">expr</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">as_Add</span><span class="o">=</span><span class="bp">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">margs</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+                            <span class="n">b</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">args</span>
+                            <span class="k">if</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span> <span class="n">q</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">q</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                                <span class="n">margs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="n">q</span>
+                            <span class="k">elif</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                                <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">args</span>
+                                <span class="k">if</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                                    <span class="n">margs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">q</span><span class="p">)</span>
+                            <span class="k">elif</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Mul</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                                <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">b</span>
+                                <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                                    <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">args</span>
+                                    <span class="k">if</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                                        <span class="n">margs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">q</span><span class="p">)</span>
+
+                    <span class="n">expr</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">margs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+        <span class="c"># create Order instance:</span>
+        <span class="n">symbols</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">expr</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">point</span><span class="p">,)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">oseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_nseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">b</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">expr</span> <span class="o">**</span> <span class="n">e</span><span class="p">,</span> <span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">as_expr_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order_symbols</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">order_symbols</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">order_symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">order_symbols</span><span class="p">:</span>
+                    <span class="n">order_symbols</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="p">,)</span> <span class="o">+</span> <span class="n">order_symbols</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">order_symbols</span>
+
+    <span class="k">def</span> <span class="nf">removeO</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">getO</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@cacheit</span>
+<div class="viewcode-block" id="Order.contains"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.order.Order.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if expr belongs to Order(self.expr, \*self.variables).</span>
+<span class="sd">        Return False if self belongs to expr.</span>
+<span class="sd">        Return None if the inclusion relation cannot be determined</span>
+<span class="sd">        (e.g. when self and expr have different symbols).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># NOTE: when multiplying out series a lot of queries like</span>
+        <span class="c">#       O(...).contains(a*x**b) with many a and few b are made.</span>
+        <span class="c">#       Separating out the independent part allows for better caching.</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">m</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Mul(*m) == 1, and O(1) treatment is somewhat peculiar ...</span>
+            <span class="c"># some day this else should not be necessary</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</div>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">powsimp</span><span class="p">,</span> <span class="n">limit</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Order</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">point</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">expr</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+                <span class="c"># O(1) + O(1), O(1) + O(1, x), etc.</span>
+                <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">any</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="n">common_symbols</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="n">common_symbols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">common_symbols</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">variables</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">common_symbols</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">common_symbols</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">limit</span><span class="p">(</span><span class="n">powsimp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">/</span><span class="n">expr</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                    <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">),</span> <span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="n">l</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+                        <span class="k">return</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">+</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,)</span>
+        <span class="n">obj1</span> <span class="o">=</span> <span class="n">Order</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">+</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,)</span>
+        <span class="n">obj2</span> <span class="o">=</span> <span class="n">Order</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">obj1</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">obj2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">old</span><span class="o">.</span><span class="n">is_Symbol</span> <span class="ow">and</span> <span class="n">old</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">),)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> \
+                    <span class="p">(</span><span class="n">new</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">,)</span>
+                <span class="k">return</span> <span class="n">Order</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+            <span class="n">newexpr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">newexpr</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">newexpr</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span> <span class="o">+</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">**</span><span class="p">(</span><span class="n">new</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">is_number</span><span class="o">*</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),)</span>
+            <span class="k">return</span> <span class="n">Order</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Order</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_eval_conjugate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="ow">or</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_eval_transpose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">def</span> <span class="nf">_sage_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#XXX: SAGE doesn&#39;t have Order yet. Let&#39;s return 0 instead.</span>
+        <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">_sage_</span><span class="p">()</span>
+</div>
+<span class="n">O</span> <span class="o">=</span> <span class="n">Order</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

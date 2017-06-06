@@ -1,0 +1,449 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.tensorproduct &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.tensorproduct</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Abstract tensor product.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.core.trace</span> <span class="kn">import</span> <span class="n">Tr</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.commutator</span> <span class="kn">import</span> <span class="n">Commutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.anticommutator</span> <span class="kn">import</span> <span class="n">AntiCommutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.matrixutils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">numpy_ndarray</span><span class="p">,</span>
+    <span class="n">scipy_sparse_matrix</span><span class="p">,</span>
+    <span class="n">matrix_tensor_product</span>
+<span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;TensorProduct&#39;</span><span class="p">,</span>
+    <span class="s">&#39;tensor_product_simp&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Tensor product</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="TensorProduct"><a class="viewcode-back" href="../../../../modules/physics/quantum/tensorproduct.html#sympy.physics.quantum.tensorproduct.TensorProduct">[docs]</a><span class="k">class</span> <span class="nc">TensorProduct</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The tensor product of two or more arguments.</span>
+
+<span class="sd">    For matrices, this uses ``matrix_tensor_product`` to compute the Kronecker</span>
+<span class="sd">    or tensor product matrix. For other objects a symbolic ``TensorProduct``</span>
+<span class="sd">    instance is returned. The tensor product is a non-commutative</span>
+<span class="sd">    multiplication that is used primarily with operators and states in quantum</span>
+<span class="sd">    mechanics.</span>
+
+<span class="sd">    Currently, the tensor product distinguishes between commutative and non-</span>
+<span class="sd">    commutative arguments.  Commutative arguments are assumed to be scalars and</span>
+<span class="sd">    are pulled out in front of the ``TensorProduct``. Non-commutative arguments</span>
+<span class="sd">    remain in the resulting ``TensorProduct``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : tuple</span>
+<span class="sd">        A sequence of the objects to take the tensor product of.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Start with a simple tensor product of sympy matrices::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import I, Matrix, symbols</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum import TensorProduct</span>
+
+<span class="sd">        &gt;&gt;&gt; m1 = Matrix([[1,2],[3,4]])</span>
+<span class="sd">        &gt;&gt;&gt; m2 = Matrix([[1,0],[0,1]])</span>
+<span class="sd">        &gt;&gt;&gt; TensorProduct(m1, m2)</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 2, 0],</span>
+<span class="sd">        [0, 1, 0, 2],</span>
+<span class="sd">        [3, 0, 4, 0],</span>
+<span class="sd">        [0, 3, 0, 4]])</span>
+<span class="sd">        &gt;&gt;&gt; TensorProduct(m2, m1)</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2, 0, 0],</span>
+<span class="sd">        [3, 4, 0, 0],</span>
+<span class="sd">        [0, 0, 1, 2],</span>
+<span class="sd">        [0, 0, 3, 4]])</span>
+
+<span class="sd">    We can also construct tensor products of non-commutative symbols:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; A = Symbol(&#39;A&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; B = Symbol(&#39;B&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; tp = TensorProduct(A, B)</span>
+<span class="sd">        &gt;&gt;&gt; tp</span>
+<span class="sd">        AxB</span>
+
+<span class="sd">    We can take the dagger of a tensor product (note the order does NOT reverse</span>
+<span class="sd">    like the dagger of a normal product):</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum import Dagger</span>
+<span class="sd">        &gt;&gt;&gt; Dagger(tp)</span>
+<span class="sd">        Dagger(A)xDagger(B)</span>
+
+<span class="sd">    Expand can be used to distribute a tensor product across addition:</span>
+
+<span class="sd">        &gt;&gt;&gt; C = Symbol(&#39;C&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; tp = TensorProduct(A+B,C)</span>
+<span class="sd">        &gt;&gt;&gt; tp</span>
+<span class="sd">        (A + B)xC</span>
+<span class="sd">        &gt;&gt;&gt; tp.expand(tensorproduct=True)</span>
+<span class="sd">        AxC + BxC</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">numpy_ndarray</span><span class="p">,</span> <span class="n">scipy_sparse_matrix</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">matrix_tensor_product</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">c_part</span><span class="p">,</span> <span class="n">new_args</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">c_part</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">c_part</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c_part</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c_part</span><span class="o">*</span><span class="n">new_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tp</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">c_part</span><span class="o">*</span><span class="n">tp</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c"># TODO: disallow nested TensorProducts.</span>
+        <span class="n">c_part</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">nc_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">cp</span><span class="p">,</span> <span class="n">ncp</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="n">c_part</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cp</span><span class="p">))</span>
+            <span class="n">nc_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">ncp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">c_part</span><span class="p">,</span> <span class="n">nc_parts</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Dagger</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">sargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span> <span class="n">t</span><span class="o">.</span><span class="n">_eval_rewrite</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sargs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">tensorproduct</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing.str</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;(&#39;</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;x&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">next_pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)):</span>
+                <span class="n">next_pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">next_pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">next_pform</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">printer</span><span class="o">.</span><span class="n">_use_unicode</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u2a02</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39;x&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pform</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">left(&#39;</span>
+            <span class="c"># The extra {} brackets are needed to get matplotlib&#39;s latex</span>
+            <span class="c"># rendered to render this properly.</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;{&#39;</span> <span class="o">+</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;}&#39;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">right)&#39;</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">otimes &#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_tensorproduct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Distribute TensorProducts across addition.&quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">add_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Add</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="n">tp</span> <span class="o">=</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">aa</span><span class="p">,)</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">):</span>
+                        <span class="n">tp</span> <span class="o">=</span> <span class="n">tp</span><span class="o">.</span><span class="n">_eval_expand_tensorproduct</span><span class="p">()</span>
+                    <span class="n">add_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tp</span><span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">add_args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">add_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;indices&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="n">tensor_product_simp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Tr</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">exp</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Tr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span> <span class="k">else</span> <span class="n">value</span>
+                        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">args</span><span class="p">)])</span>
+
+</div>
+<span class="k">def</span> <span class="nf">tensor_product_simp_Mul</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simplify a Mul with TensorProducts.</span>
+
+<span class="sd">    Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s</span>
+<span class="sd">    to a ``TensorProduct`` of ``Muls``. It currently only works for relatively</span>
+<span class="sd">    simple cases where the initial ``Mul`` only has scalars and raw</span>
+<span class="sd">    ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s of</span>
+<span class="sd">    ``TensorProduct``s.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    e : Expr</span>
+<span class="sd">        A ``Mul`` of ``TensorProduct``s to be simplified.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    e : Expr</span>
+<span class="sd">        A ``TensorProduct`` of ``Mul``s.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    This is an example of the type of simplification that this function</span>
+<span class="sd">    performs::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.tensorproduct import \</span>
+<span class="sd">                    tensor_product_simp_Mul, TensorProduct</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; A = Symbol(&#39;A&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; B = Symbol(&#39;B&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; C = Symbol(&#39;C&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; D = Symbol(&#39;D&#39;,commutative=False)</span>
+<span class="sd">        &gt;&gt;&gt; e = TensorProduct(A,B)*TensorProduct(C,D)</span>
+<span class="sd">        &gt;&gt;&gt; e</span>
+<span class="sd">        AxB*CxD</span>
+<span class="sd">        &gt;&gt;&gt; tensor_product_simp_Mul(e)</span>
+<span class="sd">        (A*C)x(B*D)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO: This won&#39;t work with Muls that have other composites of</span>
+    <span class="c"># TensorProducts, like an Add, Pow, Commutator, etc.</span>
+    <span class="c"># TODO: This only works for the equivalent of single Qbit gates.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span>
+    <span class="n">c_part</span><span class="p">,</span> <span class="n">nc_part</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+    <span class="n">n_nc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nc_part</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_nc</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_nc</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">):</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">nc_part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;TensorProduct expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">current</span><span class="p">)</span>
+        <span class="n">n_terms</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="nb">next</span> <span class="ow">in</span> <span class="n">nc_part</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="c"># TODO: check the hilbert spaces of next and current here.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">n_terms</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                        <span class="s">&#39;TensorProducts of different lengths: </span><span class="si">%r</span><span class="s"> and </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                        <span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="nb">next</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_args</span><span class="p">)):</span>
+                    <span class="n">new_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">next</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># this won&#39;t quite work as we don&#39;t want next in the TensorProduct</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_args</span><span class="p">)):</span>
+                    <span class="n">new_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">next</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="nb">next</span>
+        <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">c_part</span><span class="p">)</span><span class="o">*</span><span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+
+<div class="viewcode-block" id="tensor_product_simp"><a class="viewcode-back" href="../../../../modules/physics/quantum/tensorproduct.html#sympy.physics.quantum.tensorproduct.tensor_product_simp">[docs]</a><span class="k">def</span> <span class="nf">tensor_product_simp</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Try to simplify and combine TensorProducts.</span>
+
+<span class="sd">    In general this will try to pull expressions inside of ``TensorProducts``.</span>
+<span class="sd">    It currently only works for relatively simple cases where the products have</span>
+<span class="sd">    only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``, ``Commutators``</span>
+<span class="sd">    of ``TensorProducts``. It is best to see what it does by showing examples.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import tensor_product_simp</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import TensorProduct</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">    &gt;&gt;&gt; A = Symbol(&#39;A&#39;,commutative=False)</span>
+<span class="sd">    &gt;&gt;&gt; B = Symbol(&#39;B&#39;,commutative=False)</span>
+<span class="sd">    &gt;&gt;&gt; C = Symbol(&#39;C&#39;,commutative=False)</span>
+<span class="sd">    &gt;&gt;&gt; D = Symbol(&#39;D&#39;,commutative=False)</span>
+
+<span class="sd">    First see what happens to products of tensor products:</span>
+
+<span class="sd">    &gt;&gt;&gt; e = TensorProduct(A,B)*TensorProduct(C,D)</span>
+<span class="sd">    &gt;&gt;&gt; e</span>
+<span class="sd">    AxB*CxD</span>
+<span class="sd">    &gt;&gt;&gt; tensor_product_simp(e)</span>
+<span class="sd">    (A*C)x(B*D)</span>
+
+<span class="sd">    This is the core logic of this function, and it works inside, powers, sums,</span>
+<span class="sd">    commutators and anticommutators as well:</span>
+
+<span class="sd">    &gt;&gt;&gt; tensor_product_simp(e**2)</span>
+<span class="sd">    (A*C)x(B*D)**2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">tensor_product_simp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tensor_product_simp</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">base</span><span class="p">)</span><span class="o">**</span><span class="n">e</span><span class="o">.</span><span class="n">exp</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tensor_product_simp_Mul</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Commutator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">tensor_product_simp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">AntiCommutator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AntiCommutator</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">tensor_product_simp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.core.sets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.core.sets</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">_sympify</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">Singleton</span><span class="p">,</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.evalf</span> <span class="kn">import</span> <span class="n">EvalfMixin</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Float</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">with_metaclass</span>
+
+<span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">mpi</span><span class="p">,</span> <span class="n">mpf</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions</span> <span class="kn">import</span> <span class="n">ask</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+
+
+<div class="viewcode-block" id="Set"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set">[docs]</a><span class="k">class</span> <span class="nc">Set</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base class for any kind of set.</span>
+
+<span class="sd">    This is not meant to be used directly as a container of items.</span>
+<span class="sd">    It does not behave like the builtin set; see FiniteSet for that.</span>
+
+<span class="sd">    Real intervals are represented by the Interval class and unions of sets</span>
+<span class="sd">    by the Union class. The empty set is represented by the EmptySet class</span>
+<span class="sd">    and available as a singleton as S.EmptySet.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_number</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_iterable</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_interval</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">is_FiniteSet</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Interval</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_ProductSet</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Union</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Intersection</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">is_EmptySet</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">is_UniversalSet</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Set.sort_key"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.sort_key">[docs]</a>    <span class="k">def</span> <span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Give sort_key of infimum (if possible) else sort_key of the set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">infimum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inf</span>
+            <span class="k">if</span> <span class="n">infimum</span><span class="o">.</span><span class="n">is_comparable</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">default_sort_key</span><span class="p">(</span><span class="n">infimum</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">default_sort_key</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_args</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_key</span><span class="p">(),</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">args</span><span class="p">),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">.</span><span class="n">class_key</span><span class="p">(),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+</div>
+<div class="viewcode-block" id="Set.union"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the union of &#39;self&#39; and &#39;other&#39;.</span>
+
+<span class="sd">        As a shortcut it is possible to use the &#39;+&#39; operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, FiniteSet</span>
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).union(Interval(2, 3))</span>
+<span class="sd">        [0, 1] U [2, 3]</span>
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1) + Interval(2, 3)</span>
+<span class="sd">        [0, 1] U [2, 3]</span>
+<span class="sd">        &gt;&gt;&gt; Interval(1, 2, True, True) + FiniteSet(2, 3)</span>
+<span class="sd">        (1, 2] U {3}</span>
+
+<span class="sd">        Similarly it is possible to use the &#39;-&#39; operator for set differences:</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 2) - Interval(0, 1)</span>
+<span class="sd">        (1, 2]</span>
+<span class="sd">        &gt;&gt;&gt; Interval(1, 3) - FiniteSet(2)</span>
+<span class="sd">        [1, 2) U (2, 3]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Set.intersect"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.intersect">[docs]</a>    <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the intersection of &#39;self&#39; and &#39;other&#39;.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(1, 3).intersect(Interval(1, 2))</span>
+<span class="sd">        [1, 2]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        self._intersect(other) returns a new, intersected set if self knows how</span>
+<span class="sd">        to intersect itself with other, otherwise it returns None</span>
+
+<span class="sd">        When making a new set class you can be assured that other will not</span>
+<span class="sd">        be a Union, FiniteSet, or EmptySet</span>
+
+<span class="sd">        Used within the Intersection class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        self._union(other) returns a new, joined set if self knows how</span>
+<span class="sd">        to join itself with other, otherwise it returns None.</span>
+<span class="sd">        It may also return a python set of SymPy Sets if they are somehow</span>
+<span class="sd">        simpler. If it does this it must be idempotent i.e. the sets returned</span>
+<span class="sd">        must return None with _union&#39;ed with each other</span>
+
+<span class="sd">        Used within the Union class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Set.complement"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.complement">[docs]</a>    <span class="k">def</span> <span class="nf">complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The complement of &#39;self&#39;.</span>
+
+<span class="sd">        As a shortcut it is possible to use the &#39;~&#39; or &#39;-&#39; operators:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).complement</span>
+<span class="sd">        (-oo, 0) U (1, oo)</span>
+<span class="sd">        &gt;&gt;&gt; ~Interval(0, 1)</span>
+<span class="sd">        (-oo, 0) U (1, oo)</span>
+<span class="sd">        &gt;&gt;&gt; -Interval(0, 1)</span>
+<span class="sd">        (-oo, 0) U (1, oo)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_complement</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;(</span><span class="si">%s</span><span class="s">)._complement&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Set.inf"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.inf">[docs]</a>    <span class="k">def</span> <span class="nf">inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The infimum of &#39;self&#39;</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, Union</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).inf</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; Union(Interval(0, 1), Interval(2, 3)).inf</span>
+<span class="sd">        0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inf</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;(</span><span class="si">%s</span><span class="s">)._inf&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Set.sup"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.sup">[docs]</a>    <span class="k">def</span> <span class="nf">sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The supremum of &#39;self&#39;</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, Union</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).sup</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; Union(Interval(0, 1), Interval(2, 3)).sup</span>
+<span class="sd">        3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sup</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;(</span><span class="si">%s</span><span class="s">)._sup&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Set.contains"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if &#39;other&#39; is contained in &#39;self&#39; as an element.</span>
+
+<span class="sd">        As a shortcut it is possible to use the &#39;in&#39; operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).contains(0.5)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; 0.5 in Interval(0, 1)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+</div>
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;(</span><span class="si">%s</span><span class="s">)._contains(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Set.subset"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.subset">[docs]</a>    <span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if &#39;other&#39; is a subset of &#39;self&#39;.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).contains(0)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1, left_open=True).contains(0)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Unknown argument &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Set.measure"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.measure">[docs]</a>    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The (Lebesgue) measure of &#39;self&#39;</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, Union</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).measure</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; Union(Interval(0, 1), Interval(2, 3)).measure</span>
+<span class="sd">        2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure</span>
+</div>
+<div class="viewcode-block" id="Set.transform"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Set.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Image of set under transformation ``f``</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            { f(x) | x \in self }</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, Symbol</span>
+<span class="sd">        &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 2).transform(x, 2*x)</span>
+<span class="sd">        [0, 4]</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 2).transform(lambda x: 2*x)</span>
+<span class="sd">        [0, 4]</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            TransformationSet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Lambda</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">,</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.sets.fancysets</span> <span class="kn">import</span> <span class="n">TransformationSet</span>
+        <span class="k">return</span> <span class="n">TransformationSet</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;(</span><span class="si">%s</span><span class="s">)._measure&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ProductSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sympify</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">exp</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">: Exponent must be a positive Integer&quot;</span> <span class="o">%</span> <span class="n">exp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ProductSet</span><span class="p">([</span><span class="bp">self</span><span class="p">]</span><span class="o">*</span><span class="n">exp</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">complement</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complement</span>
+
+    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">complement</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">symb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">symb</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;contains did not evaluate to a bool: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">symb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="ProductSet"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.ProductSet">[docs]</a><span class="k">class</span> <span class="nc">ProductSet</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a Cartesian Product of Sets.</span>
+
+<span class="sd">    Returns a Cartesian product given several sets as either an iterable</span>
+<span class="sd">    or individual arguments.</span>
+
+<span class="sd">    Can use &#39;*&#39; operator on any sets for convenient shorthand.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval, FiniteSet, ProductSet</span>
+
+<span class="sd">        &gt;&gt;&gt; I = Interval(0, 5); S = FiniteSet(1, 2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; ProductSet(I, S)</span>
+<span class="sd">        [0, 5] x {1, 2, 3}</span>
+
+<span class="sd">        &gt;&gt;&gt; (2, 2) in ProductSet(I, S)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1) * Interval(0, 1) # The unit square</span>
+<span class="sd">        [0, 1] x [0, 1]</span>
+
+<span class="sd">        &gt;&gt;&gt; coin = FiniteSet(&#39;H&#39;, &#39;T&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; set(coin**2)</span>
+<span class="sd">        set([(H, H), (H, T), (T, H), (T, T)])</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+<span class="sd">    - Passes most operations down to the argument sets</span>
+<span class="sd">    - Flattens Products of ProductSets</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    http://en.wikipedia.org/wiki/Cartesian_product</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_ProductSet</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">sets</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Set</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_ProductSet</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">),</span> <span class="p">[])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">iterable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="p">),</span> <span class="p">[])</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Input must be Sets or iterables of Sets&quot;</span><span class="p">)</span>
+        <span class="n">sets</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sets</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">EmptySet</span><span class="p">()</span> <span class="ow">in</span> <span class="n">sets</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">sets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EmptySet</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">sets</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &#39;in&#39; operator for ProductSets</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; (2, 3) in Interval(0, 5) * Interval(0, 5)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; (10, 10) in Interval(0, 5) * Interval(0, 5)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        Passes operation on to constituent sets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c"># maybe element isn&#39;t an iterable</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="nb">set</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">,</span> <span class="n">element</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        See Set._intersect for docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">is_ProductSet</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+        <span class="k">return</span> <span class="n">ProductSet</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">sets</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># For each set consider it or it&#39;s complement</span>
+        <span class="c"># We need at least one of the sets to be complemented</span>
+        <span class="c"># Consider all 2^n combinations.</span>
+        <span class="c"># We can conveniently represent these options easily using a ProductSet</span>
+        <span class="n">switch_sets</span> <span class="o">=</span> <span class="n">ProductSet</span><span class="p">(</span><span class="n">FiniteSet</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">complement</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span>
+        <span class="n">product_sets</span> <span class="o">=</span> <span class="p">(</span><span class="n">ProductSet</span><span class="p">(</span><span class="o">*</span><span class="nb">set</span><span class="p">)</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="n">switch_sets</span><span class="p">)</span>
+        <span class="c"># Union of all combinations but this one</span>
+        <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product_sets</span> <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">is_real</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_iterable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">is_iterable</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_iterable</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Not all constituent sets are iterable&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">measure</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sets</span><span class="p">:</span>
+            <span class="n">measure</span> <span class="o">*=</span> <span class="nb">set</span><span class="o">.</span><span class="n">measure</span>
+        <span class="k">return</span> <span class="n">measure</span>
+
+</div>
+<div class="viewcode-block" id="Interval"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval">[docs]</a><span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">Set</span><span class="p">,</span> <span class="n">EvalfMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a real interval as a Set.</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">        Returns an interval with end points &quot;start&quot; and &quot;end&quot;.</span>
+
+<span class="sd">        For left_open=True (default left_open is False) the interval</span>
+<span class="sd">        will be open on the left. Similarly, for right_open=True the interval</span>
+<span class="sd">        will be open on the right.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, Interval</span>
+
+<span class="sd">    &gt;&gt;&gt; Interval(0, 1)</span>
+<span class="sd">    [0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; Interval(0, 1, False, True)</span>
+<span class="sd">    [0, 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&#39;a&#39;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; Interval(0, a)</span>
+<span class="sd">    [0, a]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+<span class="sd">    - Only real end points are supported</span>
+<span class="sd">    - Interval(a, b) with a &gt; b will return the empty set</span>
+<span class="sd">    - Use the evalf() method to turn an Interval into an mpmath</span>
+<span class="sd">      &#39;mpi&#39; interval instance</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    &lt;http://en.wikipedia.org/wiki/Interval_(mathematics)&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_Interval</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">left_open</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">right_open</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="c"># Only allow real intervals (use symbols with &#39;is_real=True&#39;).</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">end</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Only real intervals are supported&quot;</span><span class="p">)</span>
+
+        <span class="c"># Make sure that the created interval will be valid.</span>
+        <span class="k">if</span> <span class="n">end</span><span class="o">.</span><span class="n">is_comparable</span> <span class="ow">and</span> <span class="n">start</span><span class="o">.</span><span class="n">is_comparable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">start</span> <span class="ow">and</span> <span class="p">(</span><span class="n">left_open</span> <span class="ow">or</span> <span class="n">right_open</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">start</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">left_open</span> <span class="ow">or</span> <span class="n">right_open</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="c"># Make sure infinite interval end points are open.</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+            <span class="n">left_open</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+            <span class="n">right_open</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.start"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The left end point of &#39;self&#39;.</span>
+
+<span class="sd">        This property takes the same value as the &#39;inf&#39; property.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).start</span>
+<span class="sd">        0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="n">_inf</span> <span class="o">=</span> <span class="n">left</span> <span class="o">=</span> <span class="n">start</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.end"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The right end point of &#39;self&#39;.</span>
+
+<span class="sd">        This property takes the same value as the &#39;sup&#39; property.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1).end</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="n">_sup</span> <span class="o">=</span> <span class="n">right</span> <span class="o">=</span> <span class="n">end</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.left_open"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.left_open">[docs]</a>    <span class="k">def</span> <span class="nf">left_open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if &#39;self&#39; is left-open.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1, left_open=True).left_open</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1, left_open=False).left_open</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.right_open"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.right_open">[docs]</a>    <span class="k">def</span> <span class="nf">right_open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if &#39;self&#39; is right-open.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1, right_open=True).right_open</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Interval(0, 1, right_open=False).right_open</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        See Set._intersect for docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># We only know how to intersect with other intervals</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Interval</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="c"># We can&#39;t intersect [0,3] with [x,6] -- we don&#39;t know if x&gt;0 or x&lt;0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_comparable</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="n">empty</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="c"># Get topology right.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">left_open</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">left_open</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">left_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">left_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">left_open</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span>
+                <span class="n">right_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span>
+                <span class="n">right_open</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">right_open</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span>
+                <span class="n">right_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">right_open</span>
+
+            <span class="k">if</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">left_open</span> <span class="ow">or</span> <span class="n">right_open</span><span class="p">):</span>
+                <span class="n">empty</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">empty</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        See Set._union for docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Interval</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_comparable</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
+            <span class="c"># Non-overlapping intervals</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span> <span class="ow">or</span>
+               <span class="p">(</span><span class="n">end</span> <span class="o">==</span> <span class="n">start</span> <span class="ow">and</span> <span class="p">(</span><span class="n">end</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">end</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="p">))):</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+                <span class="n">left_open</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">!=</span> <span class="n">start</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">)</span> <span class="ow">and</span>
+                             <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">start</span> <span class="o">!=</span> <span class="n">start</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">left_open</span><span class="p">))</span>
+                <span class="n">right_open</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">!=</span> <span class="n">end</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">)</span> <span class="ow">and</span>
+                              <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">end</span> <span class="o">!=</span> <span class="n">end</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">right_open</span><span class="p">))</span>
+
+                <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span><span class="p">)</span>
+
+        <span class="c"># If I have open end points and these endpoints are contained in other</span>
+        <span class="k">if</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">left_open</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right_open</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">)):</span>
+            <span class="c"># Fill in my end points and return</span>
+            <span class="n">open_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span>
+            <span class="n">open_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span>
+            <span class="n">new_self</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">open_left</span><span class="p">,</span> <span class="n">open_right</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">((</span><span class="n">new_self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">other</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">other</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">other</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">other</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="c"># TODO: manage left_open and right_open better</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
+        <span class="n">_left</span><span class="p">,</span> <span class="n">_right</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="n">_left</span><span class="p">,</span> <span class="n">_right</span><span class="p">),</span> <span class="n">Max</span><span class="p">(</span><span class="n">_left</span><span class="p">,</span> <span class="n">_right</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_right</span> <span class="o">==</span> <span class="n">left</span><span class="p">:</span> <span class="c"># switch happened</span>
+            <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+
+    <span class="k">def</span> <span class="nf">to_mpi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">53</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mpi</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)),</span> <span class="n">mpf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span>
+          <span class="n">left_open</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">,</span> <span class="n">right_open</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_is_comparable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">is_comparable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">is_comparable</span>
+        <span class="n">is_comparable</span> <span class="o">&amp;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">is_comparable</span>
+        <span class="n">is_comparable</span> <span class="o">&amp;=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">is_comparable</span>
+        <span class="n">is_comparable</span> <span class="o">&amp;=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">is_comparable</span>
+
+        <span class="k">return</span> <span class="n">is_comparable</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.is_left_unbounded"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.is_left_unbounded">[docs]</a>    <span class="k">def</span> <span class="nf">is_left_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if the left endpoint is negative infinity. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">==</span> <span class="n">Float</span><span class="p">(</span><span class="s">&quot;-inf&quot;</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Interval.is_right_unbounded"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.is_right_unbounded">[docs]</a>    <span class="k">def</span> <span class="nf">is_right_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return ``True`` if the right endpoint is positive infinity. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">==</span> <span class="n">Float</span><span class="p">(</span><span class="s">&quot;+inf&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Interval.as_relational"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Interval.as_relational">[docs]</a>    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rewrite an interval in terms of inequalities and logic operators. &quot;&quot;&quot;</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_open</span><span class="p">:</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="n">other</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="n">other</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">if</span> <span class="n">right</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">other</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">other</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_open</span><span class="p">:</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">free_symbols</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">free_symbols</span>
+</div>
+<div class="viewcode-block" id="Union"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Union">[docs]</a><span class="k">class</span> <span class="nc">Union</span><span class="p">(</span><span class="n">Set</span><span class="p">,</span> <span class="n">EvalfMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a union of sets as a Set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Union, Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Union(Interval(1, 2), Interval(3, 4))</span>
+<span class="sd">        [1, 2] U [3, 4]</span>
+
+<span class="sd">        The Union constructor will always try to merge overlapping intervals,</span>
+<span class="sd">        if possible. For example:</span>
+
+<span class="sd">        &gt;&gt;&gt; Union(Interval(1, 2), Interval(2, 3))</span>
+<span class="sd">        [1, 3]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    Intersection</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    &lt;http://en.wikipedia.org/wiki/Union_(set_theory)&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_Union</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">evaluate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;evaluate&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># flatten inputs to merge intersections and iterables</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Set</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Union</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">),</span> <span class="p">[])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>  <span class="c"># and not isinstance(arg, Set) (implicit)</span>
+                <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="p">),</span> <span class="p">[])</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Input must be Sets or iterables of Sets&quot;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c"># Union of no sets is EmptySet</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+
+        <span class="c"># Reduce sets using known rules</span>
+        <span class="k">if</span> <span class="n">evaluate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Union</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Union.reduce"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Union.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simplify a Union using known rules</span>
+
+<span class="sd">        We first start with global rules like</span>
+<span class="sd">        &#39;Merge all FiniteSets&#39;</span>
+
+<span class="sd">        Then we iterate through all pairs and ask the constituent sets if they</span>
+<span class="sd">        can simplify themselves with any other constituent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># ===== Global Rules =====</span>
+        <span class="c"># Merge all finite sets</span>
+        <span class="n">finite_sets</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_FiniteSet</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">finite_sets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">finite_set</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="n">finite_sets</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">finite_set</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_FiniteSet</span><span class="p">]</span>
+
+        <span class="c"># ===== Pair-wise Rules =====</span>
+        <span class="c"># Here we depend on rules built into the constituent sets</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">new_args</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">new_args</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">args</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,)):</span>
+                    <span class="n">new_set</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">_union</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                    <span class="c"># This returns None if s does not know how to intersect</span>
+                    <span class="c"># with t. Returns the newly intersected set otherwise</span>
+                    <span class="k">if</span> <span class="n">new_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_set</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                            <span class="n">new_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">new_set</span><span class="p">,</span> <span class="p">))</span>
+                        <span class="n">new_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)))</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">new_set</span><span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">new_args</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">new_args</span>
+                    <span class="k">break</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># We use Min so that sup is meaningful in combination with symbolic</span>
+        <span class="c"># interval end points.</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Min</span>
+        <span class="k">return</span> <span class="n">Min</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">inf</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># We use Max so that sup is meaningful in combination with symbolic</span>
+        <span class="c"># end points.</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Max</span>
+        <span class="k">return</span> <span class="n">Max</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">sup</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># De Morgan&#39;s formula.</span>
+        <span class="n">complement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">complement</span>
+        <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">complement</span> <span class="o">=</span> <span class="n">complement</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">complement</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">complement</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">or_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">the_set</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="n">the_set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">or_args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Measure of a union is the sum of the measures of the sets minus</span>
+        <span class="c"># the sum of their pairwise intersections plus the sum of their</span>
+        <span class="c"># triple-wise intersections minus ... etc...</span>
+
+        <span class="c"># Sets is a collection of intersections and a set of elementary</span>
+        <span class="c"># sets which made up those intersections (called &quot;sos&quot; for set of sets)</span>
+        <span class="c"># An example element might of this list might be:</span>
+        <span class="c">#    ( {A,B,C}, A.intersect(B).intersect(C) )</span>
+
+        <span class="c"># Start with just elementary sets (  ({A}, A), ({B}, B), ... )</span>
+        <span class="c"># Then get and subtract (  ({A,B}, (A int B), ... ) while non-zero</span>
+        <span class="n">sets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">FiniteSet</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="n">measure</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parity</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">sets</span><span class="p">:</span>
+            <span class="c"># Add up the measure of these sets and add or subtract it to total</span>
+            <span class="n">measure</span> <span class="o">+=</span> <span class="n">parity</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">inter</span><span class="o">.</span><span class="n">measure</span> <span class="k">for</span> <span class="n">sos</span><span class="p">,</span> <span class="n">inter</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">)</span>
+
+            <span class="c"># For each intersection in sets, compute the intersection with every</span>
+            <span class="c"># other set not already part of the intersection.</span>
+            <span class="n">sets</span> <span class="o">=</span> <span class="p">((</span><span class="n">sos</span> <span class="o">+</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">newset</span><span class="p">),</span> <span class="n">newset</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">intersection</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">sos</span><span class="p">,</span> <span class="n">intersection</span> <span class="ow">in</span> <span class="n">sets</span> <span class="k">for</span> <span class="n">newset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+                    <span class="k">if</span> <span class="n">newset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sos</span><span class="p">)</span>
+
+            <span class="c"># Clear out sets with no measure</span>
+            <span class="n">sets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">sos</span><span class="p">,</span> <span class="n">inter</span><span class="p">)</span> <span class="k">for</span> <span class="n">sos</span><span class="p">,</span> <span class="n">inter</span> <span class="ow">in</span> <span class="n">sets</span> <span class="k">if</span> <span class="n">inter</span><span class="o">.</span><span class="n">measure</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="c"># Clear out duplicates</span>
+            <span class="n">sos_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">sets_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="n">sets</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">sos_list</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sos_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">sets_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+            <span class="n">sets</span> <span class="o">=</span> <span class="n">sets_list</span>
+
+            <span class="c"># Flip Parity - next time subtract/add if we added/subtracted here</span>
+            <span class="n">parity</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="n">measure</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Union.as_relational"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Union.as_relational">[docs]</a>    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rewrite a Union in terms of equalities and logic operators. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">as_relational</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_iterable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">is_iterable</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Not all sets are evalf-able&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">itertools</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">is_iterable</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Not all constituent sets are iterable&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">is_real</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Intersection"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Intersection">[docs]</a><span class="k">class</span> <span class="nc">Intersection</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an intersection of sets as a Set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Intersection, Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; Intersection(Interval(1, 3), Interval(2, 4))</span>
+<span class="sd">        [2, 3]</span>
+
+<span class="sd">        We often use the .intersect method</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(1,3).intersect(Interval(2,4))</span>
+<span class="sd">        [2, 3]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    Union</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    &lt;http://en.wikipedia.org/wiki/Intersection_(set_theory)&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_Intersection</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">evaluate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;evaluate&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># flatten inputs to merge intersections and iterables</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Set</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Intersection</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">),</span> <span class="p">[])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>  <span class="c"># and not isinstance(arg, Set) (implicit)</span>
+                <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">flatten</span><span class="p">,</span> <span class="n">arg</span><span class="p">),</span> <span class="p">[])</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Input must be Sets or iterables of Sets&quot;</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c"># Intersection of no sets is everything</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">UniversalSet</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+
+        <span class="c"># Reduce sets using known rules</span>
+        <span class="k">if</span> <span class="n">evaluate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Intersection</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_iterable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">is_iterable</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Intersection</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">And</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_iterable</span><span class="p">:</span>
+                <span class="n">other_sets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,))</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">Intersection</span><span class="p">(</span><span class="n">other_sets</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;None of the constituent sets are iterable&quot;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Intersection.reduce"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Intersection.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simplify an intersection using known rules</span>
+
+<span class="sd">        We first start with global rules like</span>
+<span class="sd">        &#39;if any empty sets return empty set&#39; and &#39;distribute any unions&#39;</span>
+
+<span class="sd">        Then we iterate through all pairs and ask the constituent sets if they</span>
+<span class="sd">        can simplify themselves with any other constituent</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># ===== Global Rules =====</span>
+        <span class="c"># If any EmptySets return EmptySet</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">is_EmptySet</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+        <span class="c"># If any FiniteSets see which elements of that finite set occur within</span>
+        <span class="c"># all other sets in the intersection</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_FiniteSet</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span>
+                        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">args</span><span class="p">))</span>
+
+        <span class="c"># If any of the sets are unions, return a Union of Intersections</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_Union</span><span class="p">:</span>
+                <span class="n">other_sets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,))</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">Intersection</span><span class="p">(</span><span class="n">other_sets</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">Intersection</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="c"># At this stage we are guaranteed not to have any</span>
+        <span class="c"># EmptySets, FiniteSets, or Unions in the intersection</span>
+
+        <span class="c"># ===== Pair-wise Rules =====</span>
+        <span class="c"># Here we depend on rules built into the constituent sets</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">new_args</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">new_args</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">args</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,)):</span>
+                    <span class="n">new_set</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">_intersect</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                    <span class="c"># This returns None if s does not know how to intersect</span>
+                    <span class="c"># with t. Returns the newly intersected set otherwise</span>
+                    <span class="k">if</span> <span class="n">new_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">new_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span> <span class="o">-</span> <span class="nb">set</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)))</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">new_set</span><span class="p">,</span> <span class="p">)))</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">new_args</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">new_args</span>
+                    <span class="k">break</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Intersection</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Intersection.as_relational"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.Intersection.as_relational">[docs]</a>    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rewrite an Intersection in terms of equalities and logic operators&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">set</span><span class="o">.</span><span class="n">as_relational</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="nb">set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+</div></div>
+<div class="viewcode-block" id="EmptySet"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.EmptySet">[docs]</a><span class="k">class</span> <span class="nc">EmptySet</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Set</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the empty set. The empty set is available as a singleton</span>
+<span class="sd">    as S.EmptySet.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S, Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; S.EmptySet</span>
+<span class="sd">        EmptySet()</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(1, 2).intersect(S.EmptySet)</span>
+<span class="sd">        EmptySet()</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    UniversalSet</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    http://en.wikipedia.org/wiki/Empty_set</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_EmptySet</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">UniversalSet</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="UniversalSet"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.UniversalSet">[docs]</a><span class="k">class</span> <span class="nc">UniversalSet</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Set</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the set of all things.</span>
+<span class="sd">    The universal set is available as a singleton as S.UniversalSet</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S, Interval</span>
+
+<span class="sd">        &gt;&gt;&gt; S.UniversalSet</span>
+<span class="sd">        UniversalSet()</span>
+
+<span class="sd">        &gt;&gt;&gt; Interval(1, 2).intersect(S.UniversalSet)</span>
+<span class="sd">        [1, 2]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    EmptySet</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    http://en.wikipedia.org/wiki/Universal_set</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_UniversalSet</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+</div>
+<div class="viewcode-block" id="FiniteSet"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.FiniteSet">[docs]</a><span class="k">class</span> <span class="nc">FiniteSet</span><span class="p">(</span><span class="n">Set</span><span class="p">,</span> <span class="n">EvalfMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a finite set of discrete numbers</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import FiniteSet</span>
+
+<span class="sd">        &gt;&gt;&gt; FiniteSet(1, 2, 3, 4)</span>
+<span class="sd">        {1, 2, 3, 4}</span>
+<span class="sd">        &gt;&gt;&gt; 3 in FiniteSet(1, 2, 3, 4)</span>
+<span class="sd">        True</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    http://en.wikipedia.org/wiki/Finite_set</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_FiniteSet</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_iterable</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">evaluate</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;evaluate&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">evaluate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">iterable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">EmptySet</span><span class="p">()</span>
+
+
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>  <span class="c"># remove duplicates</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_elements</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        See Set._intersect for docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_elements</span> <span class="o">&amp;</span> <span class="n">other</span><span class="o">.</span><span class="n">_elements</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">el</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function should only be used internally</span>
+
+<span class="sd">        See Set._union for docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_FiniteSet</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_elements</span> <span class="o">|</span> <span class="n">other</span><span class="o">.</span><span class="n">_elements</span><span class="p">))</span>
+
+        <span class="c"># If other set contains one of my elements, remove it from myself</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">((</span>
+                <span class="n">FiniteSet</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">),</span>
+                <span class="n">other</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests whether an element, other, is in the set.</span>
+
+<span class="sd">        Relies on Python&#39;s set class. This tests for object equality</span>
+<span class="sd">        All inputs are sympified</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import FiniteSet</span>
+
+<span class="sd">        &gt;&gt;&gt; 1 in FiniteSet(1, 2)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; 5 in FiniteSet(1, 2)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elements</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The complement of a real finite set is the Union of open Intervals</span>
+<span class="sd">        between the elements of the set.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import FiniteSet</span>
+<span class="sd">        &gt;&gt;&gt; FiniteSet(1, 2, 3).complement</span>
+<span class="sd">        (-oo, 1) U (1, 2) U (2, 3) U (3, oo)</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">is_number</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">: Complement not defined for symbolic inputs&quot;</span>
+                    <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="c"># as there are only numbers involved, a straight sort is sufficient;</span>
+        <span class="c"># default_sort_key is not needed</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">intervals</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># Build up a list of intervals between the elements</span>
+        <span class="n">intervals</span> <span class="o">+=</span> <span class="p">[</span><span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>  <span class="c"># open intervals</span>
+        <span class="n">intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Union</span><span class="p">(</span><span class="n">intervals</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Min</span>
+        <span class="k">return</span> <span class="n">Min</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Max</span>
+        <span class="k">return</span> <span class="n">Max</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">el</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">el</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FiniteSet.as_relational"><a class="viewcode-back" href="../../../modules/sets.html#sympy.core.sets.FiniteSet.as_relational">[docs]</a>    <span class="k">def</span> <span class="nf">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rewrite a FiniteSet in terms of equalities and logic operators. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Eq</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Eq</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">is_real</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="nb">hash</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_elements</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sorted_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

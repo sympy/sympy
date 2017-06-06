@@ -1,0 +1,1340 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.polynomials &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.polynomials</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module mainly implements special orthogonal polynomials.</span>
+
+<span class="sd">See also functions.combinatorial.numbers which contains some</span>
+<span class="sd">combinatorial polynomials.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">gamma</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.factorials</span> <span class="kn">import</span> <span class="n">factorial</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.orthopolys</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">jacobi_poly</span><span class="p">,</span>
+    <span class="n">gegenbauer_poly</span><span class="p">,</span>
+    <span class="n">chebyshevt_poly</span><span class="p">,</span>
+    <span class="n">chebyshevu_poly</span><span class="p">,</span>
+    <span class="n">laguerre_poly</span><span class="p">,</span>
+    <span class="n">hermite_poly</span><span class="p">,</span>
+    <span class="n">legendre_poly</span>
+<span class="p">)</span>
+
+<span class="n">_x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">OrthogonalPolynomial</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for orthogonal polynomials.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_at_order</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ortho_poly</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">_x</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Jacobi polynomials</span>
+<span class="c">#</span>
+
+
+<div class="viewcode-block" id="jacobi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.jacobi">[docs]</a><span class="k">class</span> <span class="nc">jacobi</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`</span>
+
+<span class="sd">    jacobi(n, alpha, beta, x) gives the nth Jacobi polynomial</span>
+<span class="sd">    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.</span>
+
+<span class="sd">    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect</span>
+<span class="sd">    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import jacobi, S, conjugate, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n,a,b,x</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(0, a, b, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; jacobi(1, a, b, x)</span>
+<span class="sd">    a/2 - b/2 + x*(a/2 + b/2 + 1)</span>
+<span class="sd">    &gt;&gt;&gt; jacobi(2, a, b, x)   # doctest:+SKIP</span>
+<span class="sd">    (a**2/8 - a*b/4 - a/8 + b**2/8 - b/8 + x**2*(a**2/8 + a*b/4 + 7*a/8 +</span>
+<span class="sd">    b**2/8 + 7*b/8 + 3/2) + x*(a**2/4 + 3*a/4 - b**2/4 - 3*b/4) - 1/2)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, a, b, x)</span>
+<span class="sd">    jacobi(n, a, b, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, a, a, x)</span>
+<span class="sd">    RisingFactorial(a + 1, n)*gegenbauer(n,</span>
+<span class="sd">        a + 1/2, x)/RisingFactorial(2*a + 1, n)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, 0, 0, x)</span>
+<span class="sd">    legendre(n, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, S(1)/2, S(1)/2, x)</span>
+<span class="sd">    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(n + 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, -S(1)/2, -S(1)/2, x)</span>
+<span class="sd">    RisingFactorial(1/2, n)*chebyshevt(n, x)/factorial(n)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, a, b, -x)</span>
+<span class="sd">    (-1)**n*jacobi(n, b, a, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi(n, a, b, 0)</span>
+<span class="sd">    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))</span>
+<span class="sd">    &gt;&gt;&gt; jacobi(n, a, b, 1)</span>
+<span class="sd">    RisingFactorial(a + 1, n)/factorial(n)</span>
+
+<span class="sd">    &gt;&gt;&gt; conjugate(jacobi(n, a, b, x))</span>
+<span class="sd">    jacobi(n, conjugate(a), conjugate(b), conjugate(x))</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(jacobi(n,a,b,x), x)</span>
+<span class="sd">    (a/2 + b/2 + n/2 + 1/2)*jacobi(n - 1, a + 1, b + 1, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    gegenbauer,</span>
+<span class="sd">    chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly,</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Jacobi_polynomials</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># Simplify to other polynomials</span>
+        <span class="c"># P^{a, a}_n(x)</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">chebyshevt</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chebyshevu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">b</span> <span class="o">==</span> <span class="o">-</span><span class="n">a</span><span class="p">:</span>
+            <span class="c"># P^{a, -a}_n(x)</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">assoc_legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="o">-</span><span class="n">b</span><span class="p">:</span>
+            <span class="c"># P^{-b, b}_n(x)</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">b</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">b</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">assoc_legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result P^{a,b}_n(x)</span>
+            <span class="c"># P^{a,b}_n(-x)  ---&gt;  (-1)**n * P^{b,a}_n(-x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">*</span>
+                        <span class="n">C</span><span class="o">.</span><span class="n">hyper</span><span class="p">([</span><span class="o">-</span><span class="n">b</span> <span class="o">-</span> <span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">n</span><span class="p">],</span> <span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="c"># TODO: Make sure a+b+2*n \notin Z</span>
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">return</span> <span class="n">jacobi_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt a</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span>
+                  <span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">f1</span> <span class="o">*</span> <span class="p">(</span><span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2</span><span class="o">*</span><span class="n">jacobi</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c"># Diff wrt b</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span>
+                  <span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">f1</span> <span class="o">*</span> <span class="p">(</span><span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2</span><span class="o">*</span><span class="n">jacobi</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">*</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">jacobi</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># TODO: Make sure n \in N</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span>
+                <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">b</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">x</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="jacobi_normalized"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.jacobi_normalized">[docs]</a><span class="k">def</span> <span class="nf">jacobi_normalized</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Jacobi polynomial :math:`P_n^{\left(\alpha, \beta\right)}(x)`</span>
+
+<span class="sd">    jacobi_normalized(n, alpha, beta, x) gives the nth Jacobi polynomial</span>
+<span class="sd">    in x, :math:`P_n^{\left(\alpha, \beta\right)}(x)`.</span>
+
+<span class="sd">    The Jacobi polynomials are orthogonal on :math:`[-1, 1]` with respect</span>
+<span class="sd">    to the weight :math:`\left(1-x\right)^\alpha \left(1+x\right)^\beta`.</span>
+
+<span class="sd">    This functions returns the polynomials normilzed:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \int_{-1}^{1}</span>
+<span class="sd">          P_m^{\left(\alpha, \beta\right)}(x)</span>
+<span class="sd">          P_n^{\left(\alpha, \beta\right)}(x)</span>
+<span class="sd">          (1-x)^{\alpha} (1+x)^{\beta} \mathrm{d}x</span>
+<span class="sd">        = \delta_{m,n}</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import jacobi_normalized</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n,a,b,x</span>
+
+<span class="sd">    &gt;&gt;&gt; jacobi_normalized(n, a, b, x)</span>
+<span class="sd">    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    gegenbauer,</span>
+<span class="sd">    chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly,</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Jacobi_polynomials</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/JacobiP/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nfactor</span> <span class="o">=</span> <span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+               <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nfactor</span><span class="p">)</span>
+
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Gegenbauer polynomials</span>
+<span class="c">#</span>
+
+</div>
+<div class="viewcode-block" id="gegenbauer"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.gegenbauer">[docs]</a><span class="k">class</span> <span class="nc">gegenbauer</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Gegenbauer polynomial :math:`C_n^{\left(\alpha\right)}(x)`</span>
+
+<span class="sd">    gegenbauer(n, alpha, x) gives the nth Gegenbauer polynomial</span>
+<span class="sd">    in x, :math:`C_n^{\left(\alpha\right)}(x)`.</span>
+
+<span class="sd">    The Gegenbauer polynomials are orthogonal on :math:`[-1, 1]` with</span>
+<span class="sd">    respect to the weight :math:`\left(1-x^2\right)^{\alpha-\frac{1}{2}}`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import gegenbauer, conjugate, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n,a,x</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(0, a, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(1, a, x)</span>
+<span class="sd">    2*a*x</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(2, a, x)</span>
+<span class="sd">    -a + x**2*(2*a**2 + 2*a)</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(3, a, x)</span>
+<span class="sd">    x**3*(4*a**3/3 + 4*a**2 + 8*a/3) + x*(-2*a**2 - 2*a)</span>
+
+<span class="sd">    &gt;&gt;&gt; gegenbauer(n, a, x)</span>
+<span class="sd">    gegenbauer(n, a, x)</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(n, a, -x)</span>
+<span class="sd">    (-1)**n*gegenbauer(n, a, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; gegenbauer(n, a, 0)</span>
+<span class="sd">    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))</span>
+<span class="sd">    &gt;&gt;&gt; gegenbauer(n, a, 1)</span>
+<span class="sd">    gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))</span>
+
+<span class="sd">    &gt;&gt;&gt; conjugate(gegenbauer(n, a, x))</span>
+<span class="sd">    gegenbauer(n, conjugate(a), conjugate(x))</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(gegenbauer(n, a, x), x)</span>
+<span class="sd">    2*a*gegenbauer(n - 1, a + 1, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi,</span>
+<span class="sd">    chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Gegenbauer_polynomials</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/GegenbauerPolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/GegenbauerC3/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># For negative n the polynomials vanish</span>
+        <span class="c"># See http://functions.wolfram.com/Polynomials/GegenbauerC3/03/01/03/0012/</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="c"># Some special values for fixed a</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">chebyshevu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Handle this before the general sign extraction rule</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">re</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c"># No sec function available yet</span>
+                    <span class="c">#return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * C.gamma(2*a+n) /</span>
+                    <span class="c">#            (C.gamma(2*a) * C.gamma(n+1)))</span>
+                    <span class="k">return</span> <span class="n">cls</span>
+
+            <span class="c"># Symbolic result C^a_n(x)</span>
+            <span class="c"># C^a_n(-x)  ---&gt;  (-1)**n * C^a_n(x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="o">*</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span>
+                        <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">return</span> <span class="n">gegenbauer_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt a</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+            <span class="n">factor1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">k</span> <span class="o">+</span>
+                           <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span>
+            <span class="n">factor2</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> \
+                <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">kern</span> <span class="o">=</span> <span class="n">factor1</span><span class="o">*</span><span class="n">gegenbauer</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">factor2</span><span class="o">*</span><span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="o">/</span>
+                <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">x</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Chebyshev polynomials of first and second kind</span>
+<span class="c">#</span>
+
+</div>
+<div class="viewcode-block" id="chebyshevt"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.chebyshevt">[docs]</a><span class="k">class</span> <span class="nc">chebyshevt</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Chebyshev polynomial of the first kind, :math:`T_n(x)`</span>
+
+<span class="sd">    chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first</span>
+<span class="sd">    kind) in x, :math:`T_n(x)`.</span>
+
+<span class="sd">    The Chebyshev polynomials of the first kind are orthogonal on</span>
+<span class="sd">    :math:`[-1, 1]` with respect to the weight :math:`\frac{1}{\sqrt{1-x^2}}`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import chebyshevt, chebyshevu, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n,x</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(1, x)</span>
+<span class="sd">    x</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(2, x)</span>
+<span class="sd">    2*x**2 - 1</span>
+
+<span class="sd">    &gt;&gt;&gt; chebyshevt(n, x)</span>
+<span class="sd">    chebyshevt(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(n, -x)</span>
+<span class="sd">    (-1)**n*chebyshevt(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(-n, x)</span>
+<span class="sd">    chebyshevt(n, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; chebyshevt(n, 0)</span>
+<span class="sd">    cos(pi*n/2)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(n, -1)</span>
+<span class="sd">    (-1)**n</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(chebyshevt(n, x), x)</span>
+<span class="sd">    n*chebyshevu(n - 1, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html</span>
+<span class="sd">    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/</span>
+<span class="sd">    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_ortho_poly</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">chebyshevt_poly</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result T_n(x)</span>
+            <span class="c"># T_n(-x)  ---&gt;  (-1)**n * T_n(x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">chebyshevt</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># T_{-n}(x)  ---&gt;  T_n(x)</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">chebyshevt</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="c"># T_{-n}(x) == T_n(x)</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="n">chebyshevu</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="chebyshevu"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.chebyshevu">[docs]</a><span class="k">class</span> <span class="nc">chebyshevu</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Chebyshev polynomial of the second kind, :math:`U_n(x)`</span>
+
+<span class="sd">    chebyshevu(n, x) gives the nth Chebyshev polynomial of the second</span>
+<span class="sd">    kind in x, :math:`U_n(x)`.</span>
+
+<span class="sd">    The Chebyshev polynomials of the second kind are orthogonal on</span>
+<span class="sd">    :math:`[-1, 1]` with respect to the weight :math:`\sqrt{1-x^2}`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import chebyshevt, chebyshevu, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n,x</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(1, x)</span>
+<span class="sd">    2*x</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(2, x)</span>
+<span class="sd">    4*x**2 - 1</span>
+
+<span class="sd">    &gt;&gt;&gt; chebyshevu(n, x)</span>
+<span class="sd">    chebyshevu(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(n, -x)</span>
+<span class="sd">    (-1)**n*chebyshevu(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(-n, x)</span>
+<span class="sd">    -chebyshevu(n - 2, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; chebyshevu(n, 0)</span>
+<span class="sd">    cos(pi*n/2)</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(n, 1)</span>
+<span class="sd">    n + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(chebyshevu(n, x), x)</span>
+<span class="sd">    (-x*chebyshevu(n, x) + (n + 1)*chebyshevt(n + 1, x))/(x**2 - 1)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Chebyshev_polynomial</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ChebyshevPolynomialoftheFirstKind.html</span>
+<span class="sd">    .. [3] http://mathworld.wolfram.com/ChebyshevPolynomialoftheSecondKind.html</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/ChebyshevT/</span>
+<span class="sd">    .. [5] http://functions.wolfram.com/Polynomials/ChebyshevU/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_ortho_poly</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">chebyshevu_poly</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result U_n(x)</span>
+            <span class="c"># U_n(-x)  ---&gt;  (-1)**n * U_n(x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">chebyshevu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># U_{-n}(x)  ---&gt;  -U_{n-2}(x)</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="n">chebyshevu</span><span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="o">+</span> <span class="n">n</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="c"># U_{-n}(x)  ---&gt;  -U_{n-2}(x)</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">chebyshevt</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span> <span class="o">*</span> <span class="n">chebyshevu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span>
+            <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="chebyshevt_root"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.chebyshevt_root">[docs]</a><span class="k">class</span> <span class="nc">chebyshevt_root</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    chebyshev_root(n, k) returns the kth root (indexed from zero) of</span>
+<span class="sd">    the nth Chebyshev polynomial of the first kind; that is, if</span>
+<span class="sd">    0 &lt;= k &lt; n, chebyshevt(n, chebyshevt_root(n, k)) == 0.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import chebyshevt, chebyshevt_root</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt_root(3, 2)</span>
+<span class="sd">    -sqrt(3)/2</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevt(3, chebyshevt_root(3, 2))</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;must have 0 &lt;= k &lt; n&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="chebyshevu_root"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.chebyshevu_root">[docs]</a><span class="k">class</span> <span class="nc">chebyshevu_root</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    chebyshevu_root(n, k) returns the kth root (indexed from zero) of the</span>
+<span class="sd">    nth Chebyshev polynomial of the second kind; that is, if 0 &lt;= k &lt; n,</span>
+<span class="sd">    chebyshevu(n, chebyshevu_root(n, k)) == 0.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import chebyshevu, chebyshevu_root</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu_root(3, 2)</span>
+<span class="sd">    -sqrt(2)/2</span>
+<span class="sd">    &gt;&gt;&gt; chebyshevu(3, chebyshevu_root(3, 2))</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;must have 0 &lt;= k &lt; n&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="o">*</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Legendre polynomials and Associated Legendre polynomials</span>
+<span class="c">#</span>
+
+</div>
+<div class="viewcode-block" id="legendre"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.legendre">[docs]</a><span class="k">class</span> <span class="nc">legendre</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    legendre(n, x) gives the nth Legendre polynomial of x, :math:`P_n(x)`</span>
+
+<span class="sd">    The Legendre polynomials are orthogonal on [-1, 1] with respect to</span>
+<span class="sd">    the constant weight 1. They satisfy :math:`P_n(1) = 1` for all n; further,</span>
+<span class="sd">    :math:`P_n` is odd for odd n and even for even n.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import legendre, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n</span>
+<span class="sd">    &gt;&gt;&gt; legendre(0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; legendre(1, x)</span>
+<span class="sd">    x</span>
+<span class="sd">    &gt;&gt;&gt; legendre(2, x)</span>
+<span class="sd">    3*x**2/2 - 1/2</span>
+<span class="sd">    &gt;&gt;&gt; legendre(n, x)</span>
+<span class="sd">    legendre(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; diff(legendre(n,x), x)</span>
+<span class="sd">    n*(x*legendre(n, x) - legendre(n - 1, x))/(x**2 - 1)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Legendre_polynomial</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_ortho_poly</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">legendre_poly</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result L_n(x)</span>
+            <span class="c"># L_n(-x)  ---&gt;  (-1)**n * L_n(x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># L_{-n}(x)  ---&gt;  L_{n-1}(x)</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">legendre</span><span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">-</span> <span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="o">+</span> <span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&quot;The index n must be nonnegative integer (got </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="c"># Find better formula, this is unsuitable for x = 1</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">n</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="n">k</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="assoc_legendre"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.assoc_legendre">[docs]</a><span class="k">class</span> <span class="nc">assoc_legendre</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    assoc_legendre(n,m, x) gives :math:`P_n^m(x)`, where n and m are</span>
+<span class="sd">    the degree and order or an expression which is related to the nth</span>
+<span class="sd">    order Legendre polynomial, :math:`P_n(x)` in the following manner:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        P_n^m(x) = (-1)^m (1 - x^2)^{\frac{m}{2}}</span>
+<span class="sd">                   \frac{\mathrm{d}^m P_n(x)}{\mathrm{d} x^m}</span>
+
+<span class="sd">    Associated Legendre polynomial are orthogonal on [-1, 1] with:</span>
+
+<span class="sd">    - weight = 1            for the same m, and different n.</span>
+<span class="sd">    - weight = 1/(1-x**2)   for the same n, and different m.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import assoc_legendre</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, m, n</span>
+<span class="sd">    &gt;&gt;&gt; assoc_legendre(0,0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; assoc_legendre(1,0, x)</span>
+<span class="sd">    x</span>
+<span class="sd">    &gt;&gt;&gt; assoc_legendre(1,1, x)</span>
+<span class="sd">    -sqrt(-x**2 + 1)</span>
+<span class="sd">    &gt;&gt;&gt; assoc_legendre(n,m,x)</span>
+<span class="sd">    assoc_legendre(n, m, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Associated_Legendre_polynomials</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LegendrePolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/LegendreP/</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/LegendreP2/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_at_order</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">legendre_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">((</span><span class="n">_x</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">_x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="n">Rational</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">P</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+            <span class="c"># P^{-m}_n  ---&gt;  F * P^m_n</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span> <span class="o">*</span> <span class="n">assoc_legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># P^0_n  ---&gt;  L_n</span>
+            <span class="k">return</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">m</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> : 1st index must be nonnegative integer (got </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> : abs(&#39;2nd index&#39;) must be &lt;= &#39;1st index&#39; (got </span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">)))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt m</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="c"># Find better formula, this is unsuitable for x = 1</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">assoc_legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">assoc_legendre</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span>
+            <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">m</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)))</span>
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Hermite polynomials</span>
+<span class="c">#</span>
+
+</div>
+<div class="viewcode-block" id="hermite"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.hermite">[docs]</a><span class="k">class</span> <span class="nc">hermite</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    hermite(n, x) gives the nth Hermite polynomial in x, :math:`H_n(x)`</span>
+
+<span class="sd">    The Hermite polynomials are orthogonal on :math:`(-\infty, \infty)`</span>
+<span class="sd">    with respect to the weight :math:`\exp\left(-\frac{x^2}{2}\right)`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import hermite, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n</span>
+<span class="sd">    &gt;&gt;&gt; hermite(0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; hermite(1, x)</span>
+<span class="sd">    2*x</span>
+<span class="sd">    &gt;&gt;&gt; hermite(2, x)</span>
+<span class="sd">    4*x**2 - 2</span>
+<span class="sd">    &gt;&gt;&gt; hermite(n, x)</span>
+<span class="sd">    hermite(n, x)</span>
+<span class="sd">    &gt;&gt;&gt; diff(hermite(n,x), x)</span>
+<span class="sd">    2*n*hermite(n - 1, x)</span>
+<span class="sd">    &gt;&gt;&gt; diff(hermite(n,x), x)</span>
+<span class="sd">    2*n*hermite(n - 1, x)</span>
+<span class="sd">    &gt;&gt;&gt; hermite(n, -x)</span>
+<span class="sd">    (-1)**n*hermite(n, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    laguerre, assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Hermite_polynomial</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/HermitePolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/HermiteH/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_ortho_poly</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">hermite_poly</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result H_n(x)</span>
+            <span class="c"># H_n(-x)  ---&gt;  (-1)**n * H_n(x)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">hermite</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">((</span><span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&quot;The index n must be nonnegative integer (got </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_at_order</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">hermite</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Laguerre polynomials</span>
+<span class="c">#</span>
+
+</div>
+<div class="viewcode-block" id="laguerre"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.laguerre">[docs]</a><span class="k">class</span> <span class="nc">laguerre</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Returns the nth Laguerre polynomial in x, :math:`L_n(x)`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    n : int</span>
+<span class="sd">        Degree of Laguerre polynomial. Must be ``n &gt;= 0``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import laguerre, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n</span>
+<span class="sd">    &gt;&gt;&gt; laguerre(0, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; laguerre(1, x)</span>
+<span class="sd">    -x + 1</span>
+<span class="sd">    &gt;&gt;&gt; laguerre(2, x)</span>
+<span class="sd">    x**2/2 - 2*x + 1</span>
+<span class="sd">    &gt;&gt;&gt; laguerre(3, x)</span>
+<span class="sd">    -x**3/6 + 3*x**2/2 - 3*x + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; laguerre(n, x)</span>
+<span class="sd">    laguerre(n, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(laguerre(n, x), x)</span>
+<span class="sd">    -assoc_laguerre(n - 1, 1, x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    assoc_laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LaguerrePolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># Symbolic result L_n(x)</span>
+            <span class="c"># L_{n}(-x)  ---&gt;  exp(-x) * L_{-n-1}(x)</span>
+            <span class="c"># L_{-n}(x)  ---&gt;  exp(x) * L_{n-1}(-x)</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">laguerre</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&quot;The index n must be nonnegative integer (got </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">laguerre_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">assoc_laguerre</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># TODO: Should make sure n is in N_0</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="n">k</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="assoc_laguerre"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.polynomials.assoc_laguerre">[docs]</a><span class="k">class</span> <span class="nc">assoc_laguerre</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Returns the nth generalized Laguerre polynomial in x, :math:`L_n(x)`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    n : int</span>
+<span class="sd">        Degree of Laguerre polynomial. Must be ``n &gt;= 0``.</span>
+
+<span class="sd">    alpha : Expr</span>
+<span class="sd">        Arbitrary expression. For ``alpha=0`` regular Laguerre</span>
+<span class="sd">        polynomials will be generated.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import laguerre, assoc_laguerre, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n, a</span>
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(0, a, x)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(1, a, x)</span>
+<span class="sd">    a - x + 1</span>
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(2, a, x)</span>
+<span class="sd">    a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1</span>
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(3, a, x)</span>
+<span class="sd">    a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(a/2 + 3/2) +</span>
+<span class="sd">        x*(-a**2/2 - 5*a/2 - 3) + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(n, a, 0)</span>
+<span class="sd">    binomial(a + n, a)</span>
+
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(n, a, x)</span>
+<span class="sd">    assoc_laguerre(n, a, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; assoc_laguerre(n, 0, x)</span>
+<span class="sd">    laguerre(n, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(assoc_laguerre(n, a, x), x)</span>
+<span class="sd">    -assoc_laguerre(n - 1, a + 1, x)</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(assoc_laguerre(n, a, x), a)</span>
+<span class="sd">    Sum(assoc_laguerre(_k, a, x)/(-a + n), (_k, 0, n - 1))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jacobi, gegenbauer,</span>
+<span class="sd">    chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root,</span>
+<span class="sd">    legendre, assoc_legendre,</span>
+<span class="sd">    hermite,</span>
+<span class="sd">    laguerre,</span>
+<span class="sd">    sympy.polys.orthopolys.jacobi_poly</span>
+<span class="sd">    sympy.polys.orthopolys.gegenbauer_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevt_poly</span>
+<span class="sd">    sympy.polys.orthopolys.chebyshevu_poly</span>
+<span class="sd">    sympy.polys.orthopolys.hermite_poly</span>
+<span class="sd">    sympy.polys.orthopolys.legendre_poly</span>
+<span class="sd">    sympy.polys.orthopolys.laguerre_poly</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Laguerre_polynomial#Assoc_laguerre_polynomials</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/AssociatedLaguerrePolynomial.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/Polynomials/LaguerreL/</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Polynomials/LaguerreL3/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># L_{n}^{0}(x)  ---&gt;  L_{n}(x)</span>
+        <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">laguerre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="c"># We can evaluate for some special values of x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># n is a given fixed integer, evaluate into polynomial</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&quot;The index n must be nonnegative integer (got </span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">laguerre_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># Diff wrt n</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Diff wrt alpha</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">assoc_laguerre</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c"># Diff wrt x</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">assoc_laguerre</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polynomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c"># TODO: Should make sure n is in N_0</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="n">kern</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">RisingFactorial</span><span class="p">(</span>
+            <span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="n">k</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">kern</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

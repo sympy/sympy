@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.ntheory.primetest &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.ntheory.primetest</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Primality testing</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="c"># pseudoprimes that will pass through last mr_safe test</span>
+<span class="n">_pseudos</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span>
+            <span class="mi">669094855201</span><span class="p">,</span>
+           <span class="mi">1052516956501</span><span class="p">,</span> <span class="mi">2007193456621</span><span class="p">,</span> <span class="mi">2744715551581</span><span class="p">,</span> <span class="mi">9542968210729</span><span class="p">,</span>
+          <span class="mi">17699592963781</span><span class="p">,</span> <span class="mi">19671510288601</span><span class="p">,</span>
+          <span class="mi">24983920772821</span><span class="p">,</span> <span class="mi">24984938689453</span><span class="p">,</span> <span class="mi">29661584268781</span><span class="p">,</span> <span class="mi">37473222618541</span><span class="p">,</span>
+          <span class="mi">46856248255981</span><span class="p">,</span> <span class="mi">47922612926653</span><span class="p">,</span> <span class="mi">48103703944453</span><span class="p">,</span> <span class="mi">49110566041153</span><span class="p">,</span>
+          <span class="mi">49752242681221</span><span class="p">,</span> <span class="mi">91206655032481</span><span class="p">,</span> <span class="mi">91481980096033</span><span class="p">,</span> <span class="mi">119034193492321</span><span class="p">,</span>
+         <span class="mi">123645258399601</span><span class="p">,</span> <span class="mi">128928036060253</span><span class="p">,</span> <span class="mi">137364148720147</span><span class="p">,</span> <span class="mi">150753857310253</span><span class="p">,</span>
+         <span class="mi">153131886327421</span><span class="p">,</span> <span class="mi">155216912613121</span><span class="p">,</span> <span class="mi">185610214763821</span><span class="p">,</span> <span class="mi">224334357392701</span><span class="p">,</span>
+         <span class="mi">227752294950181</span><span class="p">,</span> <span class="mi">230058334559041</span><span class="p">,</span> <span class="mi">304562854940401</span><span class="p">,</span> <span class="mi">306001576998253</span><span class="p">,</span>
+         <span class="mi">335788261073821</span><span class="p">,</span> <span class="mi">377133492079081</span><span class="p">,</span> <span class="mi">379242177424951</span><span class="p">,</span> <span class="mi">389970770948461</span><span class="p">,</span>
+         <span class="mi">397319638319521</span><span class="p">,</span> <span class="mi">448114903362253</span><span class="p">,</span> <span class="mi">523235160050221</span><span class="p">,</span> <span class="mi">628999496281621</span><span class="p">,</span>
+         <span class="mi">699349238838253</span><span class="p">,</span> <span class="mi">746667678235753</span><span class="p">,</span> <span class="mi">790198268451301</span><span class="p">,</span> <span class="mi">794036495175661</span><span class="p">,</span>
+         <span class="mi">823820871230281</span><span class="p">,</span> <span class="mi">867739535711821</span><span class="p">,</span> <span class="mi">1039918661294761</span><span class="p">,</span> <span class="mi">1099127938585141</span><span class="p">,</span>
+        <span class="mi">1104388025338153</span><span class="p">,</span> <span class="mi">1173374598605653</span><span class="p">,</span> <span class="mi">1262797719066157</span><span class="p">,</span> <span class="mi">1265872947674653</span><span class="p">,</span>
+        <span class="mi">1325898212229667</span><span class="p">,</span> <span class="mi">1327034517143653</span><span class="p">,</span> <span class="mi">1418575746675583</span><span class="p">,</span> <span class="mi">1666122072463621</span><span class="p">,</span>
+        <span class="mi">1837400535259453</span><span class="p">,</span> <span class="mi">1857422490084961</span><span class="p">,</span> <span class="mi">1870756820971741</span><span class="p">,</span> <span class="mi">1914550540480717</span><span class="p">,</span>
+        <span class="mi">2018963273468221</span><span class="p">,</span> <span class="mi">2163829000939453</span><span class="p">,</span> <span class="mi">2206020317369221</span><span class="p">,</span> <span class="mi">2301037384029121</span><span class="p">,</span>
+        <span class="mi">2416062055125421</span><span class="p">,</span> <span class="mi">2435076500074921</span><span class="p">,</span> <span class="mi">2545656135020833</span><span class="p">,</span> <span class="mi">2594428516569781</span><span class="p">,</span>
+        <span class="mi">2669983768115821</span><span class="p">,</span> <span class="mi">2690937050990653</span><span class="p">,</span> <span class="mi">2758640869506607</span><span class="p">,</span> <span class="mi">2833525461416653</span><span class="p">,</span>
+        <span class="mi">2876662942007221</span><span class="p">,</span> <span class="mi">2932155806957821</span><span class="p">,</span> <span class="mi">2957010595723801</span><span class="p">,</span> <span class="mi">3183606449929153</span><span class="p">,</span>
+        <span class="mi">3220133449185901</span><span class="p">,</span> <span class="mi">3424103775720253</span><span class="p">,</span> <span class="mi">3625360152399541</span><span class="p">,</span> <span class="mi">3939300299037421</span><span class="p">,</span>
+        <span class="mi">3947917710714841</span><span class="p">,</span> <span class="mi">3980273496750253</span><span class="p">,</span> <span class="mi">4182256679324041</span><span class="p">,</span> <span class="mi">4450605887818261</span><span class="p">,</span>
+        <span class="mi">4727893739521501</span><span class="p">,</span> <span class="mi">4750350311306953</span><span class="p">,</span> <span class="mi">4755334362931153</span><span class="p">,</span> <span class="mi">5756440863559753</span><span class="p">,</span>
+        <span class="mi">5760976603475341</span><span class="p">,</span> <span class="mi">5794399356078761</span><span class="p">,</span> <span class="mi">5954850603819253</span><span class="p">,</span> <span class="mi">6125544931991761</span><span class="p">,</span>
+        <span class="mi">6320931714094861</span><span class="p">,</span> <span class="mi">6347593619672581</span><span class="p">,</span> <span class="mi">6406268028524101</span><span class="p">,</span> <span class="mi">6510632945054941</span><span class="p">,</span>
+        <span class="mi">6620082224794741</span><span class="p">,</span> <span class="mi">6627325072566061</span><span class="p">,</span> <span class="mi">6844056606431101</span><span class="p">,</span> <span class="mi">6989404981060153</span><span class="p">,</span>
+        <span class="mi">7144293947609521</span><span class="p">,</span> <span class="mi">7288348593229021</span><span class="p">,</span> <span class="mi">7288539837129253</span><span class="p">,</span> <span class="mi">7406102904971689</span><span class="p">,</span>
+        <span class="mi">7430233301822341</span><span class="p">,</span> <span class="mi">7576425305871193</span><span class="p">,</span> <span class="mi">7601696719033861</span><span class="p">,</span> <span class="mi">7803926845356487</span><span class="p">,</span>
+        <span class="mi">7892007967006633</span><span class="p">,</span> <span class="mi">7947797946559453</span><span class="p">,</span> <span class="mi">8207000460596953</span><span class="p">,</span> <span class="mi">8295064717807513</span><span class="p">,</span>
+        <span class="mi">8337196000698841</span><span class="p">,</span> <span class="mi">8352714234009421</span><span class="p">,</span> <span class="mi">8389755717406381</span><span class="p">,</span> <span class="mi">8509654470665701</span><span class="p">,</span>
+        <span class="mi">8757647355282841</span><span class="p">,</span> <span class="mi">8903933671696381</span><span class="p">,</span> <span class="mi">8996133652295653</span><span class="p">,</span> <span class="mi">9074421465661261</span><span class="p">,</span>
+        <span class="mi">9157536631454221</span><span class="p">,</span> <span class="mi">9188353522314541</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_test</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Miller-Rabin strong pseudoprime test for one base.</span>
+<span class="sd">    Return False if n is definitely composite, True if n is</span>
+<span class="sd">    probably prime, with a probability greater than 3/4.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># do the Fermat test</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">b</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+<div class="viewcode-block" id="mr"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.primetest.mr">[docs]</a><span class="k">def</span> <span class="nf">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform a Miller-Rabin strong pseudoprime test on n using a</span>
+<span class="sd">    given list of bases/witnesses.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    - Richard Crandall &amp; Carl Pomerance (2005), &quot;Prime Numbers:</span>
+<span class="sd">      A Computational Perspective&quot;, Springer, 2nd edition, 135-138</span>
+
+<span class="sd">    A list of thresholds and the bases they require are here:</span>
+<span class="sd">    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory.primetest import mr</span>
+<span class="sd">    &gt;&gt;&gt; mr(1373651, [2, 3])</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; mr(479001599, [31, 73])</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">trailing</span>
+    <span class="kn">from</span> <span class="nn">sympy.polys.domains</span> <span class="kn">import</span> <span class="n">ZZ</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="c"># remove powers of 2 from n = t * 2**s</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">trailing</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="n">s</span>
+    <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">ZZ</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_test</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_mr_safe</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For n &lt; 10**16, use the Miller-Rabin test to determine with</span>
+<span class="sd">    certainty (unless the code is buggy!) whether n is prime.</span>
+
+<span class="sd">    Although the primes 2 through 17 are sufficient to confirm that a number</span>
+<span class="sd">    less than 341550071728322 (that is not prime 2 through 17) is prime, this</span>
+<span class="sd">    range is broken up into smaller ranges with earlier ranges requiring less</span>
+<span class="sd">    work. For example, for n &lt; 1373653 only the bases 2 and 3 need be tested.</span>
+
+<span class="sd">    What makes this a &quot;safe&quot; Miller-Rabin routine is that for n less than</span>
+<span class="sd">    the indicated limit, the given bases have been confirmed to detect all</span>
+<span class="sd">    composite numbers. What can potentially make this routine &quot;unsafe&quot; is</span>
+<span class="sd">    including ranges for which previous tests do not removes prime factors of</span>
+<span class="sd">    the bases being used. For example, this routine assumes that 2 and 3 have</span>
+<span class="sd">    already been removed as prime; but if the first test were the one for</span>
+<span class="sd">    n &lt; 170584961 (that uses bases 350 and 3958281543) the routine would have</span>
+<span class="sd">    to ensure that the primes 5, 7, 29, 67, 679067 are already removed or else</span>
+<span class="sd">    they will be reported as being composite. For this reason it is helpful to</span>
+<span class="sd">    list the prime factors of the bases being tested as is done below. The</span>
+<span class="sd">    _mr_safe_helper can be used to generate this info-tag.</span>
+
+<span class="sd">    References for the bounds:</span>
+<span class="sd">    ==========================</span>
+
+<span class="sd">    1. http://primes.utm.edu/prove/prove2_3.html</span>
+<span class="sd">    2. http://www.trnicely.net/misc/mpzspsp.html</span>
+<span class="sd">    3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#</span>
+<span class="sd">        Accuracy_of_the_test</span>
+<span class="sd">    4. http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=</span>
+<span class="sd">        Next&amp;_c11_BlogPart_handle=cns!C95152CB25EF2037!</span>
+<span class="sd">        138&amp;_c11_BlogPart_BlogPart=blogview&amp;_c=BlogPart</span>
+<span class="sd">    5. http://primes.utm.edu/glossary/xpage/Pseudoprime.html</span>
+<span class="sd">    6. http://uucode.com/obf/dalbec/alg.html#sprp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1373653</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="c">#[2, 3] stot = 1 clear == bases</span>
+        <span class="c"># these two (and similar below) are commented out since they are</span>
+        <span class="c"># more expensive in terms of stot than a later test.</span>
+        <span class="c">#if n &lt; 9080191: return mr(n, [31, 73]) # ref [3]</span>
+        <span class="c"># [31, 73] stot = 4 clear == bases</span>
+        <span class="c">#if n &lt; 25326001: return mr(n, [2, 3, 5])</span>
+        <span class="c"># [2, 3, 5] stot = 3 clear == bases</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">170584961</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">350</span><span class="p">,</span> <span class="mi">3958281543</span><span class="p">])</span>
+        <span class="c"># [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">4759123141</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">61</span><span class="p">])</span>  <span class="c"># ref [3]</span>
+        <span class="c"># [2, 7, 61] stot = 3 clear == bases</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">75792980677</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">379215</span><span class="p">,</span> <span class="mi">457083754</span><span class="p">])</span>
+        <span class="c"># [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]</span>
+        <span class="c">#if n &lt; 118670087467: return n is not 3215031751 and mr(n, [2, 3, 5, 7]) # ref [3]</span>
+        <span class="c"># [2, 3, 5, 7] stot = 4 clear == bases</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1000000000000</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">1662803</span><span class="p">])</span>
+        <span class="c"># [2, 13, 23, 1662803] stot = 4 clear == bases</span>
+        <span class="c">#if n &lt; 2152302898747: return mr(n, [2, 3, 5, 7, 11])</span>
+        <span class="c"># [2, 3, 5, 7, 11] stot = 5 clear == bases</span>
+        <span class="c">#if n &lt; 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])</span>
+        <span class="c"># [2, 3, 5, 7, 11, 13] stot = 7 clear == bases</span>
+        <span class="c">#if n &lt; 21652684502221: return mr(n, [2, 1215, 34862, 574237825])</span>
+        <span class="c"># [2, 1215, 34862, 574237825] stot = 8 clear [2, 3, 5, 7, 17431, 3281359]</span>
+        <span class="c">#if n &lt; 341550071728321: return mr(n, [2, 3, 5, 7, 11, 13, 17])</span>
+        <span class="c"># [2, 3, 5, 7, 11, 13, 17] stot = 11 clear == bases</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">10000000000000000</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">24251</span><span class="p">])</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_pseudos</span>
+        <span class="c"># [2, 3, 7, 61, 24251] stot = 5 clear == bases</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;n too large&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="isprime"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.primetest.isprime">[docs]</a><span class="k">def</span> <span class="nf">isprime</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test if n is a prime number (True) or not (False). For n &lt; 10**16 the</span>
+<span class="sd">    answer is accurate; greater n values have a small probability of actually</span>
+<span class="sd">    being pseudoprimes.</span>
+
+<span class="sd">    Negative primes (e.g. -2) are not considered prime.</span>
+
+<span class="sd">    The function first looks for trivial factors, and if none is found,</span>
+<span class="sd">    performs a safe Miller-Rabin strong pseudoprime test with bases</span>
+<span class="sd">    that are known to prove a number prime. Finally, a general Miller-Rabin</span>
+<span class="sd">    test is done with the first k bases which will report a pseudoprime as a</span>
+<span class="sd">    prime with an error of about 4**-k. The current value of k is 46 so the</span>
+<span class="sd">    error is about 2 x 10**-28.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory import isprime</span>
+<span class="sd">    &gt;&gt;&gt; isprime(13)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; isprime(15)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.ntheory.generate.primerange : Generates all primes in a given range</span>
+<span class="sd">    sympy.ntheory.generate.primepi : Return the number of primes less than or equal to n</span>
+<span class="sd">    sympy.ntheory.generate.prime : Return the nth prime</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">23001</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">341</span><span class="p">,</span> <span class="mi">561</span><span class="p">,</span> <span class="mi">645</span><span class="p">,</span> <span class="mi">1105</span><span class="p">,</span> <span class="mi">1387</span><span class="p">,</span> <span class="mi">1729</span><span class="p">,</span>
+                                               <span class="mi">1905</span><span class="p">,</span> <span class="mi">2047</span><span class="p">,</span> <span class="mi">2465</span><span class="p">,</span> <span class="mi">2701</span><span class="p">,</span> <span class="mi">2821</span><span class="p">,</span>
+                                               <span class="mi">3277</span><span class="p">,</span> <span class="mi">4033</span><span class="p">,</span> <span class="mi">4369</span><span class="p">,</span> <span class="mi">4371</span><span class="p">,</span> <span class="mi">4681</span><span class="p">,</span>
+                                               <span class="mi">5461</span><span class="p">,</span> <span class="mi">6601</span><span class="p">,</span> <span class="mi">7957</span><span class="p">,</span> <span class="mi">8321</span><span class="p">,</span> <span class="mi">8481</span><span class="p">,</span>
+                                               <span class="mi">8911</span><span class="p">,</span> <span class="mi">10261</span><span class="p">,</span> <span class="mi">10585</span><span class="p">,</span> <span class="mi">11305</span><span class="p">,</span>
+                                               <span class="mi">12801</span><span class="p">,</span> <span class="mi">13741</span><span class="p">,</span> <span class="mi">13747</span><span class="p">,</span> <span class="mi">13981</span><span class="p">,</span>
+                                               <span class="mi">14491</span><span class="p">,</span> <span class="mi">15709</span><span class="p">,</span> <span class="mi">15841</span><span class="p">,</span> <span class="mi">16705</span><span class="p">,</span>
+                                               <span class="mi">18705</span><span class="p">,</span> <span class="mi">18721</span><span class="p">,</span> <span class="mi">19951</span><span class="p">,</span> <span class="mi">23001</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_mr_safe</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c"># prime list to use when number must be tested as a probable prime;</span>
+        <span class="c"># these are the 46 primes less than 200</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">43</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span>
+            <span class="mi">53</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">67</span><span class="p">,</span> <span class="mi">71</span><span class="p">,</span> <span class="mi">73</span><span class="p">,</span> <span class="mi">79</span><span class="p">,</span> <span class="mi">83</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">97</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">103</span><span class="p">,</span> <span class="mi">107</span><span class="p">,</span>
+            <span class="mi">109</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">131</span><span class="p">,</span> <span class="mi">137</span><span class="p">,</span> <span class="mi">139</span><span class="p">,</span> <span class="mi">149</span><span class="p">,</span> <span class="mi">151</span><span class="p">,</span> <span class="mi">157</span><span class="p">,</span> <span class="mi">163</span><span class="p">,</span> <span class="mi">167</span><span class="p">,</span>
+            <span class="mi">173</span><span class="p">,</span> <span class="mi">179</span><span class="p">,</span> <span class="mi">181</span><span class="p">,</span> <span class="mi">191</span><span class="p">,</span> <span class="mi">193</span><span class="p">,</span> <span class="mi">197</span><span class="p">,</span> <span class="mi">199</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">mr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_mr_safe_helper</span><span class="p">(</span><span class="n">_s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyze a (new) mr_safe line for for total number of s&#39;s to</span>
+<span class="sd">    be tested in _test along with the primes that must be cleared</span>
+<span class="sd">    by a previous test.</span>
+
+<span class="sd">    e.g.</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory.primetest import _mr_safe_helper</span>
+<span class="sd">    &gt;&gt;&gt; print(_mr_safe_helper(&quot;if n &lt; 170584961: return mr(n, [350, 3958281543])&quot;))</span>
+<span class="sd">     # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]</span>
+<span class="sd">    &gt;&gt;&gt; print(_mr_safe_helper(&#39;return mr(n, [2, 379215, 457083754])&#39;))</span>
+<span class="sd">     # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_info</span><span class="p">(</span><span class="n">bases</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze the list of bases, reporting the number of &#39;j-loops&#39; that</span>
+<span class="sd">        will be required if this list is passed to _test (stot) and the primes</span>
+<span class="sd">        that must be cleared by a previous test.</span>
+
+<span class="sd">        This info tag should then be appended to any new mr_safe line</span>
+<span class="sd">        that is added so someone can easily see whether that line satisfies</span>
+<span class="sd">        the requirements of mr_safe (see docstring there for details).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">factorint</span><span class="p">,</span> <span class="n">trailing</span>
+
+        <span class="n">factors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="n">tot</span> <span class="o">+=</span> <span class="n">trailing</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">factorint</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">factors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">factors</span><span class="p">))</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">bases</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">bases</span> <span class="o">==</span> <span class="n">factors</span><span class="p">:</span>
+            <span class="n">factors</span> <span class="o">=</span> <span class="s">&#39;== bases&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">factors</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">factors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39; # </span><span class="si">%s</span><span class="s"> stot = </span><span class="si">%s</span><span class="s"> clear </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">bases</span><span class="p">),</span> <span class="n">tot</span><span class="p">,</span> <span class="n">factors</span><span class="p">)])</span>
+
+    <span class="n">_r</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">_x</span><span class="p">)</span> <span class="k">for</span> <span class="n">_x</span> <span class="ow">in</span> <span class="n">_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;[&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">_info</span><span class="p">(</span><span class="n">_r</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

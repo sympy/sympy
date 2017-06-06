@@ -1,0 +1,1929 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.densearith &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.densearith</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.densebasic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">dup_LC</span><span class="p">,</span> <span class="n">dmp_LC</span><span class="p">,</span>
+    <span class="n">dup_degree</span><span class="p">,</span> <span class="n">dmp_degree</span><span class="p">,</span>
+    <span class="n">dup_normal</span><span class="p">,</span>
+    <span class="n">dup_strip</span><span class="p">,</span> <span class="n">dmp_strip</span><span class="p">,</span>
+    <span class="n">dmp_zero_p</span><span class="p">,</span> <span class="n">dmp_zero</span><span class="p">,</span>
+    <span class="n">dmp_one_p</span><span class="p">,</span> <span class="n">dmp_one</span><span class="p">,</span>
+    <span class="n">dmp_ground</span><span class="p">,</span> <span class="n">dmp_zeros</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ExactQuotientFailed</span><span class="p">,</span> <span class="n">PolynomialDivisionFailed</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="k">def</span> <span class="nf">dup_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add ``c*x**i`` to ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_add_term(x**2 - 1, ZZ(2), 4)</span>
+<span class="sd">    2*x**4 + x**2 - 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">[:</span><span class="n">m</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+
+<div class="viewcode-block" id="dmp_add_term"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_add_term">[docs]</a><span class="k">def</span> <span class="nf">dmp_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add ``c(x_2..x_u)*x_0**i`` to ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_add_term(x*y + 1, 2, 2)</span>
+<span class="sd">    2*x**2 + x*y + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span><span class="n">dmp_add</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">dmp_zeros</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">[:</span><span class="n">m</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">dmp_add</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_sub_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract ``c*x**i`` from ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_sub_term(2*x**4 + x**2 - 1, ZZ(2), 4)</span>
+<span class="sd">    x**2 - 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">[:</span><span class="n">m</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">-</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+
+<div class="viewcode-block" id="dmp_sub_term"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_sub_term">[docs]</a><span class="k">def</span> <span class="nf">dmp_sub_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract ``c(x_2..x_u)*x_0**i`` from ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_sub_term(2*x**2 + x*y + 1, 2, 2)</span>
+<span class="sd">    x*y + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span><span class="n">dmp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">dmp_neg</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)]</span> <span class="o">+</span> <span class="n">dmp_zeros</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">[:</span><span class="n">m</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">dmp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_mul_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply ``f`` by ``c*x**i`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_mul_term(x**2 - 1, ZZ(3), 2)</span>
+<span class="sd">    3*x**4 - 3*x**2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">cf</span> <span class="o">*</span> <span class="n">c</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="n">i</span>
+
+
+<div class="viewcode-block" id="dmp_mul_term"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_mul_term">[docs]</a><span class="k">def</span> <span class="nf">dmp_mul_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply ``f`` by ``c(x_2..x_u)*x_0**i`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_mul_term(x**2*y + x, 3*y, 2)</span>
+<span class="sd">    3*x**4*y**2 + 3*x**3*y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_mul_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span> <span class="o">+</span> <span class="n">dmp_zeros</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_add_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add an element of the ground domain to ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_add_ground(x**3 + 2*x**2 + 3*x + 4, ZZ(4))</span>
+<span class="sd">    x**3 + 2*x**2 + 3*x + 8</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_add_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_add_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_add_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add an element of the ground domain to ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_add_ground(x**3 + 2*x**2 + 3*x + 4, ZZ(4))</span>
+<span class="sd">    x**3 + 2*x**2 + 3*x + 8</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_add_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_sub_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract an element of the ground domain from ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_sub_ground(x**3 + 2*x**2 + 3*x + 4, ZZ(4))</span>
+<span class="sd">    x**3 + 2*x**2 + 3*x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_sub_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_sub_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_sub_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_sub_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract an element of the ground domain from ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_sub_ground(x**3 + 2*x**2 + 3*x + 4, ZZ(4))</span>
+<span class="sd">    x**3 + 2*x**2 + 3*x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_sub_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_mul_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply ``f`` by a constant value in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_mul_ground(x**2 + 2*x - 1, ZZ(3))</span>
+<span class="sd">    3*x**2 + 6*x - 3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">cf</span> <span class="o">*</span> <span class="n">c</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_mul_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_mul_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_mul_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply ``f`` by a constant value in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_mul_ground(2*x + 2*y, ZZ(3))</span>
+<span class="sd">    6*x + 6*y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_mul_ground</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_quo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quotient by a constant in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_quo_ground(3*x**2 + 2, ZZ(2))</span>
+<span class="sd">    x**2 + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_quo_ground(3*x**2 + 2, QQ(2))</span>
+<span class="sd">    3/2*x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&#39;polynomial division&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">K</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">cf</span> <span class="o">//</span> <span class="n">c</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_quo_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_quo_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_quo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quotient by a constant in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_quo_ground(2*x**2*y + 3*x, ZZ(2))</span>
+<span class="sd">    x**2*y + x</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_quo_ground(2*x**2*y + 3*x, QQ(2))</span>
+<span class="sd">    x**2*y + 3/2*x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_quo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_quo_ground</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_exquo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exact quotient by a constant in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, QQ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_exquo_ground(x**2 + 2, QQ(2))</span>
+<span class="sd">    1/2*x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&#39;polynomial division&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">K</span><span class="o">.</span><span class="n">exquo</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_exquo_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_exquo_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_exquo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exact quotient by a constant in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, QQ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_exquo_ground(x**2*y + 2*x, QQ(2))</span>
+<span class="sd">    1/2*x**2*y + x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_exquo_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_exquo_ground</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dup_lshift"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dup_lshift">[docs]</a><span class="k">def</span> <span class="nf">dup_lshift</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Efficiently multiply ``f`` by ``x**n`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_lshift(x**2 + 1, 2)</span>
+<span class="sd">    x**4 + x**2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="n">n</span>
+
+</div>
+<div class="viewcode-block" id="dup_rshift"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dup_rshift">[docs]</a><span class="k">def</span> <span class="nf">dup_rshift</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Efficiently divide ``f`` by ``x**n`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_rshift(x**4 + x**2, 2)</span>
+<span class="sd">    x**2 + 1</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_rshift(x**4 + x**2 + 2, 2)</span>
+<span class="sd">    x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">[:</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_abs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make all coefficients positive in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_abs(x**2 - 1)</span>
+<span class="sd">    x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span> <span class="n">K</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_abs"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_abs">[docs]</a><span class="k">def</span> <span class="nf">dmp_abs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make all coefficients positive in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_abs(x**2*y - x)</span>
+<span class="sd">    x**2*y + x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_abs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_abs</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_neg</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Negate a polynomial in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_neg(x**2 - 1)</span>
+<span class="sd">    -x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span> <span class="o">-</span><span class="n">coeff</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_neg"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_neg">[docs]</a><span class="k">def</span> <span class="nf">dmp_neg</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Negate a polynomial in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_neg(x**2*y - x)</span>
+<span class="sd">    -x**2*y + x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_neg</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_neg</span><span class="p">(</span><span class="n">cf</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add dense polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_add(x**2 - 1, x - 2)</span>
+<span class="sd">    x**2 + x - 3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">==</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span> <span class="o">-</span> <span class="n">dg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&gt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">h</span> <span class="o">+</span> <span class="p">[</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_add"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_add">[docs]</a><span class="k">def</span> <span class="nf">dmp_add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add dense polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_add(x**2 + y, x**2*y + x)</span>
+<span class="sd">    x**2*y + x**2 + x + y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">==</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">],</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span> <span class="o">-</span> <span class="n">dg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&gt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">h</span> <span class="o">+</span> <span class="p">[</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract dense polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_sub(x**2 - 1, x - 2)</span>
+<span class="sd">    x**2 - x + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_neg</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">==</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span> <span class="o">-</span> <span class="n">dg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&gt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">dup_neg</span><span class="p">(</span><span class="n">g</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">K</span><span class="p">),</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">h</span> <span class="o">+</span> <span class="p">[</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_sub"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_sub">[docs]</a><span class="k">def</span> <span class="nf">dmp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract dense polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_sub(x**2 + y, x**2*y + x)</span>
+<span class="sd">    -x**2*y + x**2 - x + y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_neg</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">==</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">],</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span> <span class="o">-</span> <span class="n">dg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">df</span> <span class="o">&gt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">dmp_neg</span><span class="p">(</span><span class="n">g</span><span class="p">[:</span><span class="n">k</span><span class="p">],</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">g</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">h</span> <span class="o">+</span> <span class="p">[</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_add_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns ``f + g*h`` where ``f, g, h`` are in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_add_mul(x**2 - 1, x - 2, x + 2)</span>
+<span class="sd">    2*x**2 - 5</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dup_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">K</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_add_mul"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_add_mul">[docs]</a><span class="k">def</span> <span class="nf">dmp_add_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns ``f + g*h`` where ``f, g, h`` are in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_add_mul(x**2 + y, x, x + 2)</span>
+<span class="sd">    2*x**2 + 2*x + y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_sub_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns ``f - g*h`` where ``f, g, h`` are in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_sub_mul(x**2 - 1, x - 2, x + 2)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dup_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">K</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_sub_mul"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_sub_mul">[docs]</a><span class="k">def</span> <span class="nf">dmp_sub_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns ``f - g*h`` where ``f, g, h`` are in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_sub_mul(x**2 + y, x, x + 2)</span>
+<span class="sd">    -2*x + y</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply dense polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_mul(x - 2, x + 2)</span>
+<span class="sd">    x**2 - 4</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">f</span> <span class="ow">and</span> <span class="n">g</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">df</span> <span class="o">+</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">dg</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">coeff</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">g</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">]</span>
+
+        <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_mul"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_mul">[docs]</a><span class="k">def</span> <span class="nf">dmp_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply dense polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_mul(x*y + 1, x)</span>
+<span class="sd">    x**2*y + x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="n">h</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">df</span> <span class="o">+</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">dg</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">g</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">],</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Square dense polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_sqr(x**2 + 1)</span>
+<span class="sd">    x**4 + 2*x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+
+        <span class="n">jmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">df</span><span class="p">)</span>
+        <span class="n">jmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">jmax</span> <span class="o">-</span> <span class="n">jmin</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">jmax</span> <span class="o">=</span> <span class="n">jmin</span> <span class="o">+</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">f</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">]</span>
+
+        <span class="n">c</span> <span class="o">+=</span> <span class="n">c</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">jmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">c</span> <span class="o">+=</span> <span class="n">elem</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_sqr"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_sqr">[docs]</a><span class="k">def</span> <span class="nf">dmp_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Square dense polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_sqr(x**2 + x*y + y**2)</span>
+<span class="sd">    x**4 + 2*x**3*y + 3*x**2*y**2 + 2*x*y**3 + y**4</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">h</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">df</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="n">jmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">df</span><span class="p">)</span>
+        <span class="n">jmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">jmax</span> <span class="o">-</span> <span class="n">jmin</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">jmax</span> <span class="o">=</span> <span class="n">jmin</span> <span class="o">+</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">jmin</span><span class="p">,</span> <span class="n">jmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">],</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_mul_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">dmp_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">jmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_add</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_pow</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raise ``f`` to the ``n``-th power in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pow(x - 2, 3)</span>
+<span class="sd">    x**3 - 6*x**2 + 12*x - 8</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;can&#39;t raise polynomial to a negative power&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">f</span> <span class="ow">or</span> <span class="n">f</span> <span class="o">==</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">]</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span>
+
+        <span class="k">if</span> <span class="n">m</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">dup_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dup_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">g</span>
+
+
+<div class="viewcode-block" id="dmp_pow"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_pow">[docs]</a><span class="k">def</span> <span class="nf">dmp_pow</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raise ``f`` to the ``n``-th power in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pow(x*y + 1, 3)</span>
+<span class="sd">    x**3*y**3 + 3*x**2*y**2 + 3*x*y + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_pow</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_one</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;can&#39;t raise polynomial to a negative power&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dmp_one_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">dmp_one</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span>
+
+        <span class="k">if</span> <span class="n">m</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_sqr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">g</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-division in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pdiv(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    (2*x + 4, 20)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">df</span> <span class="o">-</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">dup_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">lc_g</span><span class="o">**</span><span class="n">N</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">dup_prem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-remainder in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_prem(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    20</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">df</span> <span class="o">-</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">dup_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dup_mul_ground</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">lc_g</span><span class="o">**</span><span class="n">N</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dup_pquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial exact pseudo-quotient in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pquo(x**2 - 1, 2*x - 2)</span>
+<span class="sd">    2*x + 2</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pquo(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    2*x + 4</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">dup_pexquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-quotient in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pexquo(x**2 - 1, 2*x - 2)</span>
+<span class="sd">    2*x + 2</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_pexquo(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dup_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExactQuotientFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_pdiv"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_pdiv">[docs]</a><span class="k">def</span> <span class="nf">dmp_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-division in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pdiv(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    (2*x + 2*y - 2, -4*y + 4)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">df</span> <span class="o">-</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dmp_add_term</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_pow</span><span class="p">(</span><span class="n">lc_g</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+</div>
+<div class="viewcode-block" id="dmp_prem"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_prem">[docs]</a><span class="k">def</span> <span class="nf">dmp_prem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-remainder in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_prem(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    -4*y + 4</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_prem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+
+    <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">df</span> <span class="o">-</span> <span class="n">dg</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">R</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">lc_r</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">dmp_pow</span><span class="p">(</span><span class="n">lc_g</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_pquo"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_pquo">[docs]</a><span class="k">def</span> <span class="nf">dmp_pquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial exact pseudo-quotient in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; f = x**2 + x*y</span>
+<span class="sd">    &gt;&gt;&gt; g = 2*x + 2*y</span>
+<span class="sd">    &gt;&gt;&gt; h = 2*x + 2</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pquo(f, g)</span>
+<span class="sd">    2*x</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pquo(f, h)</span>
+<span class="sd">    2*x + 2*y - 2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_pexquo"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_pexquo">[docs]</a><span class="k">def</span> <span class="nf">dmp_pexquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial pseudo-quotient in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; f = x**2 + x*y</span>
+<span class="sd">    &gt;&gt;&gt; g = 2*x + 2*y</span>
+<span class="sd">    &gt;&gt;&gt; h = 2*x + 2</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pexquo(f, g)</span>
+<span class="sd">    2*x</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_pexquo(f, h)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_pdiv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExactQuotientFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_rr_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Univariate division with remainder over a ring.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_rr_div(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    (0, x**2 + 1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lc_r</span> <span class="o">%</span> <span class="n">lc_g</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">exquo</span><span class="p">(</span><span class="n">lc_r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">)</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">dup_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+
+<div class="viewcode-block" id="dmp_rr_div"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_rr_div">[docs]</a><span class="k">def</span> <span class="nf">dmp_rr_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multivariate division with remainder over a ring.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_rr_div(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    (0, x**2 + x*y)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_rr_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">lc_g</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">dmp_rr_div</span><span class="p">(</span><span class="n">lc_r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="k">break</span>
+
+        <span class="n">j</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dmp_add_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_ff_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial division with remainder over a field.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, QQ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_ff_div(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    (1/2*x + 1, 5)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">lc_g</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">exquo</span><span class="p">(</span><span class="n">lc_r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">)</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dup_add_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">dup_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dup_sub</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+
+<div class="viewcode-block" id="dmp_ff_div"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_ff_div">[docs]</a><span class="k">def</span> <span class="nf">dmp_ff_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial division with remainder over a field.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, QQ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_ff_div(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    (1/2*x + 1/2*y - 1/2, -y + 1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_ff_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">dg</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s">&quot;polynomial division&quot;</span><span class="p">)</span>
+
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span>
+
+    <span class="k">if</span> <span class="n">df</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+    <span class="n">lc_g</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">lc_r</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">dmp_ff_div</span><span class="p">(</span><span class="n">lc_r</span><span class="p">,</span> <span class="n">lc_g</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="k">break</span>
+
+        <span class="n">j</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">-</span> <span class="n">dg</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">dmp_add_term</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">dmp_mul_term</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_sub</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="n">_dr</span><span class="p">,</span> <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span><span class="p">,</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dr</span> <span class="o">&lt;</span> <span class="n">dg</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dr</span> <span class="o">&lt;</span> <span class="n">_dr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial division with remainder in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_div(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    (0, x**2 + 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_div(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    (1/2*x + 1, 5)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_ff_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_rr_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dup_rem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns polynomial remainder in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_rem(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    x**2 + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_rem(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    5</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">dup_quo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns exact polynomial quotient in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_quo(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dup_quo(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    1/2*x + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">dup_exquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns polynomial quotient in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_exquo(x**2 - 1, x - 1)</span>
+<span class="sd">    x + 1</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_exquo(x**2 + 1, 2*x - 4)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dup_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExactQuotientFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_div"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_div">[docs]</a><span class="k">def</span> <span class="nf">dmp_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Polynomial division with remainder in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_div(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    (0, x**2 + x*y)</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_div(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    (1/2*x + 1/2*y - 1/2, -y + 1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_ff_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_rr_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_rem"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_rem">[docs]</a><span class="k">def</span> <span class="nf">dmp_rem</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns polynomial remainder in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_rem(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    x**2 + x*y</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_rem(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    -y + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_quo"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_quo">[docs]</a><span class="k">def</span> <span class="nf">dmp_quo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns exact polynomial quotient in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ, QQ</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_quo(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, QQ)</span>
+<span class="sd">    &gt;&gt;&gt; R.dmp_quo(x**2 + x*y, 2*x + 2)</span>
+<span class="sd">    1/2*x + 1/2*y - 1/2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_exquo"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_exquo">[docs]</a><span class="k">def</span> <span class="nf">dmp_exquo</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns polynomial quotient in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; f = x**2 + x*y</span>
+<span class="sd">    &gt;&gt;&gt; g = x + y</span>
+<span class="sd">    &gt;&gt;&gt; h = 2*x + 2</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_exquo(f, g)</span>
+<span class="sd">    x</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_exquo(f, h)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dmp_div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExactQuotientFailed</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_max_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns maximum norm of a polynomial in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_max_norm(-x**2 + 2*x - 3)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">dup_abs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="dmp_max_norm"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_max_norm">[docs]</a><span class="k">def</span> <span class="nf">dmp_max_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns maximum norm of a polynomial in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_max_norm(2*x*y - x - 3)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_max_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">max</span><span class="p">([</span> <span class="n">dmp_max_norm</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">])</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_l1_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns l1 norm of a polynomial in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_l1_norm(2*x**3 - 3*x**2 + 1)</span>
+<span class="sd">    6</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dup_abs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="dmp_l1_norm"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_l1_norm">[docs]</a><span class="k">def</span> <span class="nf">dmp_l1_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns l1 norm of a polynomial in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_l1_norm(2*x*y - x - 3)</span>
+<span class="sd">    6</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_l1_norm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span> <span class="n">dmp_l1_norm</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">])</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_expand</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply together several polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dup_expand([x**2 - 1, x, 2])</span>
+<span class="sd">    2*x**3 - 2*x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">polys</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">]</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dup_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span>
+
+
+<div class="viewcode-block" id="dmp_expand"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densearith.dmp_expand">[docs]</a><span class="k">def</span> <span class="nf">dmp_expand</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply together several polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, ZZ</span>
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; R.dmp_expand([x**2 + y**2, x + 1])</span>
+<span class="sd">    x**3 + x**2 + x*y**2 + y**2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">polys</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_one</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_mul</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

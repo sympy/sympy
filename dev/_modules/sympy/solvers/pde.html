@@ -1,0 +1,954 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.solvers.pde &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.solvers.pde</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains pdsolve() and different helper functions that it</span>
+<span class="sd">uses. It is heavily inspired by the ode module and hence the basic</span>
+<span class="sd">infrastructure remains the same.</span>
+
+<span class="sd">**Functions in this module**</span>
+
+<span class="sd">    These are the user functions in this module:</span>
+
+<span class="sd">    - pdsolve()     - Solves PDE&#39;s</span>
+<span class="sd">    - classify_pde() - Classifies PDEs into possible hints for dsolve().</span>
+<span class="sd">    - pde_separate() - Separate variables in partial differential equation either by</span>
+<span class="sd">                       additive or multiplicative separation approach.</span>
+
+<span class="sd">    These are the helper functions in this module:</span>
+
+<span class="sd">    - pde_separate_add() - Helper function for searching additive separable solutions.</span>
+<span class="sd">    - pde_separate_mul() - Helper function for searching multiplicative</span>
+<span class="sd">                           separable solutions.</span>
+
+<span class="sd">**Currently implemented solver methods**</span>
+
+<span class="sd">The following methods are implemented for solving partial differential</span>
+<span class="sd">equations.  See the docstrings of the various pde_hint() functions for</span>
+<span class="sd">more information on each (run help(pde)):</span>
+
+<span class="sd">  - 1st order linear homogeneous partial differential equations</span>
+<span class="sd">    with constant coefficients.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">simplify</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">oo</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="p">(</span><span class="nb">reduce</span><span class="p">,</span> <span class="n">combinations_with_replacement</span><span class="p">,</span>
+    <span class="n">is_sequence</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">,</span>
+    <span class="n">expand</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">AppliedUndef</span><span class="p">,</span> <span class="n">Subs</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Equality</span><span class="p">,</span> <span class="n">Eq</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Wild</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">has_dups</span>
+
+<span class="kn">from</span> <span class="nn">sympy.solvers.deutils</span> <span class="kn">import</span> <span class="n">_preprocess</span><span class="p">,</span> <span class="n">ode_order</span><span class="p">,</span> <span class="n">_desolve</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+
+<span class="n">allhints</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s">&quot;1st_linear_constant_coeff_homogeneous&quot;</span><span class="p">,</span>
+    <span class="s">&quot;1st_linear_constant_coeff&quot;</span><span class="p">,</span>
+    <span class="s">&quot;1st_linear_constant_coeff_Integral&quot;</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="pdsolve"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pdsolve">[docs]</a><span class="k">def</span> <span class="nf">pdsolve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">solvefun</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solves any (supported) kind of partial differential equation.</span>
+
+<span class="sd">    **Usage**</span>
+
+<span class="sd">        pdsolve(eq, f(x,y), hint) -&gt; Solve partial differential equation</span>
+<span class="sd">        eq for function f(x,y), using method hint.</span>
+
+<span class="sd">    **Details**</span>
+
+<span class="sd">        ``eq`` can be any supported partial differential equation (see</span>
+<span class="sd">            the pde docstring for supported methods).  This can either</span>
+<span class="sd">            be an Equality, or an expression, which is assumed to be</span>
+<span class="sd">            equal to 0.</span>
+
+<span class="sd">        ``f(x,y)`` is a function of two variables whose derivatives in that</span>
+<span class="sd">            variable make up the partial differential equation. In many</span>
+<span class="sd">            cases it is not necessary to provide this; it will be autodetected</span>
+<span class="sd">            (and an error raised if it couldn&#39;t be detected).</span>
+
+<span class="sd">        ``hint`` is the solving method that you want pdsolve to use.  Use</span>
+<span class="sd">            classify_pde(eq, f(x,y)) to get all of the possible hints for</span>
+<span class="sd">            a PDE.  The default hint, &#39;default&#39;, will use whatever hint</span>
+<span class="sd">            is returned first by classify_pde().  See Hints below for</span>
+<span class="sd">            more options that you can use for hint.</span>
+
+<span class="sd">        ``solvefun`` is the convention used for arbitrary functions returned</span>
+<span class="sd">            by the PDE solver. If not set by the user, it is set by default</span>
+<span class="sd">            to be F.</span>
+
+<span class="sd">    **Hints**</span>
+
+<span class="sd">        Aside from the various solving methods, there are also some</span>
+<span class="sd">        meta-hints that you can pass to pdsolve():</span>
+
+<span class="sd">        &quot;default&quot;:</span>
+<span class="sd">                This uses whatever hint is returned first by</span>
+<span class="sd">                classify_pde(). This is the default argument to</span>
+<span class="sd">                pdsolve().</span>
+
+<span class="sd">        &quot;all&quot;:</span>
+<span class="sd">                To make pdsolve apply all relevant classification hints,</span>
+<span class="sd">                use pdsolve(PDE, func, hint=&quot;all&quot;).  This will return a</span>
+<span class="sd">                dictionary of hint:solution terms.  If a hint causes</span>
+<span class="sd">                pdsolve to raise the NotImplementedError, value of that</span>
+<span class="sd">                hint&#39;s key will be the exception object raised.  The</span>
+<span class="sd">                dictionary will also include some special keys:</span>
+
+<span class="sd">                - order: The order of the PDE.  See also ode_order() in</span>
+<span class="sd">                  deutils.py</span>
+<span class="sd">                - default: The solution that would be returned by</span>
+<span class="sd">                  default.  This is the one produced by the hint that</span>
+<span class="sd">                  appears first in the tuple returned by classify_pde().</span>
+
+<span class="sd">        &quot;all_Integral&quot;:</span>
+<span class="sd">                This is the same as &quot;all&quot;, except if a hint also has a</span>
+<span class="sd">                corresponding &quot;_Integral&quot; hint, it only returns the</span>
+<span class="sd">                &quot;_Integral&quot; hint.  This is useful if &quot;all&quot; causes</span>
+<span class="sd">                pdsolve() to hang because of a difficult or impossible</span>
+<span class="sd">                integral.  This meta-hint will also be much faster than</span>
+<span class="sd">                &quot;all&quot;, because integrate() is an expensive routine.</span>
+
+<span class="sd">        See also the classify_pde() docstring for more info on hints,</span>
+<span class="sd">        and the pde docstring for a list of all supported hints.</span>
+
+<span class="sd">    **Tips**</span>
+<span class="sd">        - You can declare the derivative of an unknown function this way:</span>
+<span class="sd">            &gt;&gt;&gt; from sympy import Function, Derivative</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x, y # x and y are the independent variables</span>
+<span class="sd">            &gt;&gt;&gt; f = Function(&quot;f&quot;)(x, y) # f is a function of x and y</span>
+<span class="sd">            &gt;&gt;&gt; # fx will be the partial derivative of f with respect to x</span>
+<span class="sd">            &gt;&gt;&gt; fx = Derivative(f, x)</span>
+<span class="sd">            &gt;&gt;&gt; # fy will be the partial derivative of f with respect to y</span>
+<span class="sd">            &gt;&gt;&gt; fy = Derivative(f, y)</span>
+
+<span class="sd">        - See test_pde.py for many tests, which serves also as a set of</span>
+<span class="sd">          examples for how to use pdsolve().</span>
+<span class="sd">        - pdsolve always returns an Equality class (except for the case</span>
+<span class="sd">          when the hint is &quot;all&quot; or &quot;all_Integral&quot;). Note that it is not possible</span>
+<span class="sd">          to get an explicit solution for f(x, y) as in the case of ODE&#39;s</span>
+<span class="sd">        - Do help(pde.pde_hintname) to get help more information on a</span>
+<span class="sd">          specific hint</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.pde import pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, diff, Eq</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; u = f(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; ux = u.diff(x)</span>
+<span class="sd">    &gt;&gt;&gt; uy = u.diff(y)</span>
+<span class="sd">    &gt;&gt;&gt; eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))</span>
+<span class="sd">    &gt;&gt;&gt; pdsolve(eq)</span>
+<span class="sd">    f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">given_hint</span> <span class="o">=</span> <span class="n">hint</span>  <span class="c"># hint given by the user.</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">solvefun</span><span class="p">:</span>
+        <span class="n">solvefun</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;F&#39;</span><span class="p">)</span>
+
+    <span class="c"># See the docstring of _desolve for more details.</span>
+    <span class="n">hints</span> <span class="o">=</span> <span class="n">_desolve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">,</span>
+        <span class="n">hint</span><span class="o">=</span><span class="n">hint</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&#39;pde&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">hints</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;eq&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">all_</span> <span class="o">=</span> <span class="n">hints</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">all_</span><span class="p">:</span>
+        <span class="c"># TODO : &#39;best&#39; hint should be implemented when adequate</span>
+        <span class="c"># number of hints are added.</span>
+        <span class="n">pdedict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">failed_hints</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">gethints</span> <span class="o">=</span> <span class="n">classify_pde</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">pdedict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;order&#39;</span><span class="p">:</span> <span class="n">gethints</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">],</span>
+            <span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="n">gethints</span><span class="p">[</span><span class="s">&#39;default&#39;</span><span class="p">]})</span>
+        <span class="k">for</span> <span class="n">hint</span> <span class="ow">in</span> <span class="n">hints</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">_helper_simplify</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">hint</span><span class="p">,</span> <span class="n">hints</span><span class="p">[</span><span class="n">hint</span><span class="p">][</span><span class="s">&#39;func&#39;</span><span class="p">],</span>
+                    <span class="n">hints</span><span class="p">[</span><span class="n">hint</span><span class="p">][</span><span class="s">&#39;order&#39;</span><span class="p">],</span> <span class="n">hints</span><span class="p">[</span><span class="n">hint</span><span class="p">][</span><span class="n">hint</span><span class="p">],</span> <span class="n">solvefun</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">detail</span><span class="p">:</span>
+                <span class="n">failed_hints</span><span class="p">[</span><span class="n">hint</span><span class="p">]</span> <span class="o">=</span> <span class="n">detail</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pdedict</span><span class="p">[</span><span class="n">hint</span><span class="p">]</span> <span class="o">=</span> <span class="n">rv</span>
+        <span class="n">pdedict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">failed_hints</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pdedict</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_helper_simplify</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;hint&#39;</span><span class="p">],</span>
+            <span class="n">hints</span><span class="p">[</span><span class="s">&#39;func&#39;</span><span class="p">],</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">],</span> <span class="n">hints</span><span class="p">[</span><span class="n">hints</span><span class="p">[</span><span class="s">&#39;hint&#39;</span><span class="p">]],</span> <span class="n">solvefun</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">_helper_simplify</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">hint</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">solvefun</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function of pdsolve that calls the respective</span>
+<span class="sd">    pde functions to solve for the partial differential</span>
+<span class="sd">    equations. This minimises the computation in</span>
+<span class="sd">    calling _desolve multiple times.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">hint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;_Integral&quot;</span><span class="p">):</span>
+        <span class="n">solvefunc</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span>
+            <span class="s">&quot;pde_&quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s">&quot;_Integral&quot;</span><span class="p">)]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">solvefunc</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()[</span><span class="s">&quot;pde_&quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_handle_Integral</span><span class="p">(</span><span class="n">solvefunc</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span>
+        <span class="n">match</span><span class="p">,</span> <span class="n">solvefun</span><span class="p">),</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">hint</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_handle_Integral</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">hint</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Converts a solution with integrals in it into an actual solution.</span>
+
+<span class="sd">    Simplifies the integral mainly using doit()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">hint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;_Integral&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">elif</span> <span class="n">hint</span> <span class="o">==</span> <span class="s">&quot;1st_linear_constant_coeff&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">simplify</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+
+<div class="viewcode-block" id="classify_pde"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.classify_pde">[docs]</a><span class="k">def</span> <span class="nf">classify_pde</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a tuple of possible pdsolve() classifications for a PDE.</span>
+
+<span class="sd">    The tuple is ordered so that first item is the classification that</span>
+<span class="sd">    pdsolve() uses to solve the PDE by default.  In general,</span>
+<span class="sd">    classifications at the near the beginning of the list will produce</span>
+<span class="sd">    better solutions faster than those near the end, thought there are</span>
+<span class="sd">    always exceptions.  To make pdsolve use a different classification,</span>
+<span class="sd">    use pdsolve(PDE, func, hint=&lt;classification&gt;).  See also the pdsolve()</span>
+<span class="sd">    docstring for different meta-hints you can use.</span>
+
+<span class="sd">    If ``dict`` is true, classify_pde() will return a dictionary of</span>
+<span class="sd">    hint:match expression terms. This is intended for internal use by</span>
+<span class="sd">    pdsolve().  Note that because dictionaries are ordered arbitrarily,</span>
+<span class="sd">    this will most likely not be in the same order as the tuple.</span>
+
+<span class="sd">    You can get help on different hints by doing help(pde.pde_hintname),</span>
+<span class="sd">    where hintname is the name of the hint without &quot;_Integral&quot;.</span>
+
+<span class="sd">    See sympy.pde.allhints or the sympy.pde docstring for a list of all</span>
+<span class="sd">    supported hints that can be returned from classify_pde.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.pde import classify_pde</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, diff, Eq</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; u = f(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; ux = u.diff(x)</span>
+<span class="sd">    &gt;&gt;&gt; uy = u.diff(y)</span>
+<span class="sd">    &gt;&gt;&gt; eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))</span>
+<span class="sd">    &gt;&gt;&gt; classify_pde(eq)</span>
+<span class="sd">    (&#39;1st_linear_constant_coeff_homogeneous&#39;,)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">prep</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;prep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Right now only partial &quot;</span>
+        <span class="s">&quot;differential equations of two variables are supported&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">prep</span> <span class="ow">or</span> <span class="n">func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">prep</span><span class="p">,</span> <span class="n">func_</span> <span class="o">=</span> <span class="n">_preprocess</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">func_</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">classify_pde</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">lhs</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">func</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">fy</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c"># TODO : For now pde.py uses support offered by the ode_order function</span>
+    <span class="c"># to find the order with respect to a multi-variable function. An</span>
+    <span class="c"># improvement could be to classify the order of the PDE on the basis of</span>
+    <span class="c"># individual variables.</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ode_order</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span>
+
+    <span class="c"># hint:matchdict or hint:(tuple of matchdicts)</span>
+    <span class="c"># Also will contain &quot;default&quot;:&lt;default hint&gt; and &quot;order&quot;:order items.</span>
+    <span class="n">matching_hints</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;order&#39;</span><span class="p">:</span> <span class="n">order</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">order</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">return</span> <span class="n">matching_hints</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)])</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;e&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">])</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="c"># Try removing the smallest power of f(x,y)</span>
+    <span class="c"># from the highest partial derivatives of f(x,y)</span>
+    <span class="n">reduced_eq</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">eq</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">combinations_with_replacement</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">order</span><span class="p">))</span>
+        <span class="n">dummyvar</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">var</span><span class="p">:</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="o">*</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">match</span><span class="p">[</span><span class="n">a</span><span class="p">]:</span>
+                    <span class="n">power</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                    <span class="n">dummyvar</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="n">dummyvar</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dummyvar</span><span class="p">:</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="o">*</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">coeff</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">match</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">and</span> <span class="n">match</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">power</span><span class="p">:</span>
+                    <span class="n">power</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">power</span><span class="p">:</span>
+            <span class="n">den</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="n">power</span>
+            <span class="n">reduced_eq</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">arg</span><span class="o">/</span><span class="n">den</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">reduced_eq</span><span class="p">:</span>
+            <span class="n">reduced_eq</span> <span class="o">=</span> <span class="n">eq</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">reduced_eq</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">fx</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">fy</span> <span class="o">+</span> <span class="n">d</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="n">e</span><span class="p">]:</span>
+                <span class="c">## Linear first-order homogeneous partial-differential</span>
+                <span class="c">## equation with constant coefficients</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="n">c</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">:</span> <span class="n">d</span><span class="p">})</span>
+                <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;1st_linear_constant_coeff_homogeneous&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c">## Linear first-order general partial-differential</span>
+                    <span class="c">## equation with constant coefficients</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">:</span> <span class="n">c</span><span class="p">,</span> <span class="s">&#39;d&#39;</span><span class="p">:</span> <span class="n">d</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">:</span> <span class="n">e</span><span class="p">})</span>
+                    <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;1st_linear_constant_coeff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+                    <span class="n">matching_hints</span><span class="p">[</span>
+                        <span class="s">&quot;1st_linear_constant_coeff_Integral&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+
+    <span class="c"># Order keys based on allhints.</span>
+    <span class="n">retlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">allhints</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">matching_hints</span><span class="p">:</span>
+            <span class="n">retlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c"># Dictionaries are ordered arbitrarily, so make note of which</span>
+        <span class="c"># hint would come first for pdsolve().  Use an ordered dict in Py 3.</span>
+        <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;ordered_hints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">retlist</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">allhints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">matching_hints</span><span class="p">:</span>
+                <span class="n">matching_hints</span><span class="p">[</span><span class="s">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">matching_hints</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">retlist</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="checkpdesol"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.checkpdesol">[docs]</a><span class="k">def</span> <span class="nf">checkpdesol</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">sol</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">solve_for_func</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if the given solution satisfies the partial differential</span>
+<span class="sd">    equation.</span>
+
+<span class="sd">    pde is the partial differential equation which can be given in the</span>
+<span class="sd">    form of an equation or an expression. sol is the solution for which</span>
+<span class="sd">    the pde is to be checked. This can also be given in an equation or</span>
+<span class="sd">    an expression form. If the function is not provided, the helper</span>
+<span class="sd">    function _preprocess from deutils is used to identify the function.</span>
+
+<span class="sd">    If a sequence of solutions is passed, the same sort of container will be</span>
+<span class="sd">    used to return the result for each solution.</span>
+
+<span class="sd">    The following methods are currently being implemented to check if the</span>
+<span class="sd">    solution satisfies the PDE:</span>
+
+<span class="sd">        1. Directly substitute the solution in the PDE and check. If the</span>
+<span class="sd">           solution hasn&#39;t been solved for f, then it will solve for f</span>
+<span class="sd">           provided solve_for_func hasn&#39;t been set to False.</span>
+
+<span class="sd">    If the solution satisfies the PDE, then a tuple (True, 0) is returned.</span>
+<span class="sd">    Otherwise a tuple (False, expr) where expr is the value obtained</span>
+<span class="sd">    after substituting the solution in the PDE. However if a known solution</span>
+<span class="sd">    returns False, it may be due to the inability of doit() to simplify it to zero.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, symbols, diff</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.pde import checkpdesol, pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; x, y = symbols(&#39;x y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eq = 2*f(x,y) + 3*f(x,y).diff(x) + 4*f(x,y).diff(y)</span>
+<span class="sd">    &gt;&gt;&gt; sol = pdsolve(eq)</span>
+<span class="sd">    &gt;&gt;&gt; assert checkpdesol(eq, sol)[0]</span>
+<span class="sd">    &gt;&gt;&gt; eq = x*f(x,y) + f(x,y).diff(x)</span>
+<span class="sd">    &gt;&gt;&gt; checkpdesol(eq, sol)</span>
+<span class="sd">    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), (_xi_1,), (4*x - 3*y,)))*exp(-6*x/25 - 8*y/25))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Converting the pde into an equation</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="n">pde</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c"># If no function is given, try finding the function present.</span>
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">func</span> <span class="o">=</span> <span class="n">_preprocess</span><span class="p">(</span><span class="n">pde</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">funcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">AppliedUndef</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">sol</span> <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">sol</span><span class="p">])]</span>
+            <span class="n">funcs</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="n">funcs</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&#39;must pass func arg to checkpdesol for this case.&#39;</span><span class="p">)</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="c"># If the given solution is in the form of a list or a set</span>
+    <span class="c"># then return a list or set of tuples.</span>
+    <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">sol</span><span class="p">)(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">checkpdesol</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span>
+            <span class="n">solve_for_func</span><span class="o">=</span><span class="n">solve_for_func</span><span class="p">),</span> <span class="n">sol</span><span class="p">))</span>
+
+    <span class="c"># Convert solution into an equation</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">sol</span><span class="p">)</span>
+
+    <span class="c"># Try solving for the function</span>
+    <span class="k">if</span> <span class="n">solve_for_func</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">lhs</span> <span class="o">==</span> <span class="n">func</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sol</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">func</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> \
+            <span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="n">func</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sol</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">func</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">solved</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">solved</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">solved</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">checkpdesol</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">solved</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">solve_for_func</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">checkpdesol</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="p">[</span><span class="n">Eq</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">solved</span><span class="p">],</span>
+                <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">solve_for_func</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c"># The first method includes direct substitution of the solution in</span>
+    <span class="c"># the PDE and simplifying.</span>
+    <span class="n">pde</span> <span class="o">=</span> <span class="n">pde</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">pde</span><span class="o">.</span><span class="n">rhs</span>
+    <span class="k">if</span> <span class="n">sol</span><span class="o">.</span><span class="n">lhs</span> <span class="o">==</span> <span class="n">func</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pde</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">sol</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="n">func</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">pde</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ss</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="n">ss</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span><span class="p">,</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="pde_1st_linear_constant_coeff_homogeneous"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pde_1st_linear_constant_coeff_homogeneous">[docs]</a><span class="k">def</span> <span class="nf">pde_1st_linear_constant_coeff_homogeneous</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">solvefun</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Solves a first order linear homogeneous</span>
+<span class="sd">    partial differential equation with constant coefficients.</span>
+
+<span class="sd">    The general form of this partial differential equation is</span>
+<span class="sd">    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0</span>
+<span class="sd">    where a, b and c are constants.</span>
+
+<span class="sd">    The general solution of the differential equation, can be found</span>
+<span class="sd">    by the method of characteristics. It is given by</span>
+<span class="sd">    f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers import pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, pprint</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; u = f(x,y)</span>
+<span class="sd">    &gt;&gt;&gt; ux = u.diff(x)</span>
+<span class="sd">    &gt;&gt;&gt; uy = u.diff(y)</span>
+<span class="sd">    &gt;&gt;&gt; genform = a*ux + b*uy + c*u</span>
+<span class="sd">    &gt;&gt;&gt; pprint(genform)</span>
+<span class="sd">      d               d</span>
+<span class="sd">    a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)</span>
+<span class="sd">      dx              dy</span>
+
+<span class="sd">    &gt;&gt;&gt; pprint(pdsolve(genform))</span>
+<span class="sd">                             -c*(a*x + b*y)</span>
+<span class="sd">                             ---------------</span>
+<span class="sd">                                  2    2</span>
+<span class="sd">                                 a  + b</span>
+<span class="sd">    f(x, y) = F(-a*y + b*x)*e</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.pde import (</span>
+<span class="sd">    ... pde_1st_linear_constant_coeff_homogeneous)</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, diff, pprint</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x,y</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))</span>
+<span class="sd">    f(x, y) == F(x - y)*exp(-x/2 - y/2)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)))</span>
+<span class="sd">                          x   y</span>
+<span class="sd">                        - - - -</span>
+<span class="sd">                          2   2</span>
+<span class="sd">    f(x, y) = F(x - y)*e</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    - Viktor Grigoryan, &quot;Partial Differential Equations&quot;</span>
+<span class="sd">      Math 124A - Fall 2010, pp.7</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO : For now homogeneous first order linear PDE&#39;s having</span>
+    <span class="c"># two variables are implemented. Once there is support for</span>
+    <span class="c"># solving systems of ODE&#39;s, this can be extended to n variables.</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">func</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">]]</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;d&#39;</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">Eq</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">y</span><span class="p">))</span><span class="o">*</span><span class="n">solvefun</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">y</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="pde_1st_linear_constant_coeff"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pde_1st_linear_constant_coeff">[docs]</a><span class="k">def</span> <span class="nf">pde_1st_linear_constant_coeff</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">solvefun</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Solves a first order linear partial differential equation</span>
+<span class="sd">    with constant coefficients.</span>
+
+<span class="sd">    The general form of this partial differential equation is</span>
+<span class="sd">    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)</span>
+<span class="sd">    where a, b and c are constants and G can be an arbitrary</span>
+<span class="sd">    function in x and y.</span>
+
+<span class="sd">    The general solution of the PDE is</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers import pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, pprint</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G = Function(&#39;G&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; u = f(x,y)</span>
+<span class="sd">    &gt;&gt;&gt; ux = u.diff(x)</span>
+<span class="sd">    &gt;&gt;&gt; uy = u.diff(y)</span>
+<span class="sd">    &gt;&gt;&gt; genform = a*u + b*ux + c*uy - G(x,y)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(genform)</span>
+<span class="sd">                  d               d</span>
+<span class="sd">    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)</span>
+<span class="sd">                  dx              dy</span>
+<span class="sd">    &gt;&gt;&gt; pprint(pdsolve(genform, hint=&#39;1st_linear_constant_coeff_Integral&#39;))</span>
+<span class="sd">              //          b*x + c*y                                             \</span>
+<span class="sd">              ||              /                                                 |</span>
+<span class="sd">              ||             |                                                  |</span>
+<span class="sd">              ||             |                                       a*xi       |</span>
+<span class="sd">              ||             |                                     -------      |</span>
+<span class="sd">              ||             |                                      2    2      |</span>
+<span class="sd">              ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |</span>
+<span class="sd">              ||             |     G|------------, -------------|*e        d(xi)|</span>
+<span class="sd">              ||             |      |   2    2         2    2   |               |</span>
+<span class="sd">              ||             |      \  b  + c         b  + c    /               |</span>
+<span class="sd">              ||             |                                                  |</span>
+<span class="sd">              ||            /                                                   |</span>
+<span class="sd">              ||                                                                |</span>
+<span class="sd">    f(x, y) = ||F(eta) + -------------------------------------------------------|*</span>
+<span class="sd">              ||                                  2    2                        |</span>
+<span class="sd">              \\                                 b  + c                         /</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">            \|</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            ||</span>
+<span class="sd">      -a*xi ||</span>
+<span class="sd">     -------||</span>
+<span class="sd">      2    2||</span>
+<span class="sd">     b  + c ||</span>
+<span class="sd">    e       ||</span>
+<span class="sd">            ||</span>
+<span class="sd">            /|eta=-b*y + c*x, xi=b*x + c*y</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.pde import pdsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, diff, pprint, exp</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x,y</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)</span>
+<span class="sd">    &gt;&gt;&gt; pdsolve(eq)</span>
+<span class="sd">    f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    - Viktor Grigoryan, &quot;Partial Differential Equations&quot;</span>
+<span class="sd">      Math 124A - Fall 2010, pp.7</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># TODO : For now homogeneous first order linear PDE&#39;s having</span>
+    <span class="c"># two variables are implemented. Once there is support for</span>
+    <span class="c"># solving systems of ODE&#39;s, this can be extended to n variables.</span>
+
+    <span class="n">xi</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&quot;xi eta&quot;</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">func</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;b&#39;</span><span class="p">]]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;c&#39;</span><span class="p">]]</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;d&#39;</span><span class="p">]]</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="o">-</span><span class="n">match</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s">&#39;e&#39;</span><span class="p">]]</span>
+    <span class="n">expterm</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">xi</span><span class="p">)</span>
+    <span class="n">functerm</span> <span class="o">=</span> <span class="n">solvefun</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span>
+    <span class="n">solvedict</span> <span class="o">=</span> <span class="n">solve</span><span class="p">((</span><span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="n">xi</span><span class="p">,</span> <span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="n">eta</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="c"># Integral should remain as it is in terms of xi,</span>
+    <span class="c"># doit() should be done in _handle_Integral.</span>
+    <span class="n">genterm</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">S</span><span class="p">(</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span>
+        <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">expterm</span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">solvedict</span><span class="p">),</span> <span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">y</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Eq</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> <span class="n">Subs</span><span class="p">(</span><span class="n">expterm</span><span class="o">*</span><span class="p">(</span><span class="n">functerm</span> <span class="o">+</span> <span class="n">genterm</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="n">xi</span><span class="p">),</span> <span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">y</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="pde_separate"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pde_separate">[docs]</a><span class="k">def</span> <span class="nf">pde_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s">&#39;mul&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Separate variables in partial differential equation either by additive</span>
+<span class="sd">    or multiplicative separation approach. It tries to rewrite an equation so</span>
+<span class="sd">    that one of the specified variables occurs on a different side of the</span>
+<span class="sd">    equation than the others.</span>
+
+<span class="sd">    :param eq: Partial differential equation</span>
+
+<span class="sd">    :param fun: Original function F(x, y, z)</span>
+
+<span class="sd">    :param sep: List of separated functions [X(x), u(y, z)]</span>
+
+<span class="sd">    :param strategy: Separation strategy. You can choose between additive</span>
+<span class="sd">        separation (&#39;add&#39;) and multiplicative separation (&#39;mul&#39;) which is</span>
+<span class="sd">        default.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import E, Eq, Function, pde_separate, Derivative as D</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, t</span>
+<span class="sd">    &gt;&gt;&gt; u, X, T = map(Function, &#39;uXT&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))</span>
+<span class="sd">    &gt;&gt;&gt; pde_separate(eq, u(x, t), [X(x), T(t)], strategy=&#39;add&#39;)</span>
+<span class="sd">    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Eq(D(u(x, t), x, 2), D(u(x, t), t, 2))</span>
+<span class="sd">    &gt;&gt;&gt; pde_separate(eq, u(x, t), [X(x), T(t)], strategy=&#39;mul&#39;)</span>
+<span class="sd">    [Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    pde_separate_add, pde_separate_mul</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">do_add</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s">&#39;add&#39;</span><span class="p">:</span>
+        <span class="n">do_add</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s">&#39;mul&#39;</span><span class="p">:</span>
+        <span class="n">do_add</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Unknown strategy: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">strategy</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pde_separate</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span><span class="p">),</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c"># Handle arguments</span>
+    <span class="n">orig_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">fun</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">subs_args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sep</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">args</span><span class="p">)):</span>
+            <span class="n">subs_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">do_add</span><span class="p">:</span>
+        <span class="n">functions</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">sep</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">functions</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">sep</span><span class="p">)</span>
+
+    <span class="c"># Check whether variables match</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subs_args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Variable counts do not match&quot;</span><span class="p">)</span>
+    <span class="c"># Check for duplicate arguments like  [X(x), u(x, y)]</span>
+    <span class="k">if</span> <span class="n">has_dups</span><span class="p">(</span><span class="n">subs_args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Duplicate substitution arguments detected&quot;</span><span class="p">)</span>
+    <span class="c"># Check whether the variables match</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">orig_args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">subs_args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Arguments do not match&quot;</span><span class="p">)</span>
+
+    <span class="c"># Substitute original function with separated...</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">functions</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+    <span class="c"># Divide by terms when doing multiplicative separation</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">do_add</span><span class="p">:</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">eq</span> <span class="o">+=</span> <span class="n">i</span><span class="o">/</span><span class="n">functions</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">eq</span>
+
+    <span class="n">svar</span> <span class="o">=</span> <span class="n">subs_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dvar</span> <span class="o">=</span> <span class="n">subs_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">_separate</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">svar</span><span class="p">,</span> <span class="n">dvar</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="pde_separate_add"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pde_separate_add">[docs]</a><span class="k">def</span> <span class="nf">pde_separate_add</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for searching additive separable solutions.</span>
+
+<span class="sd">    Consider an equation of two independent variables x, y and a dependent</span>
+<span class="sd">    variable w, we look for the product of two functions depending on different</span>
+<span class="sd">    arguments:</span>
+
+<span class="sd">    `w(x, y, z) = X(x) + y(y, z)`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import E, Eq, Function, pde_separate_add, Derivative as D</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, t</span>
+<span class="sd">    &gt;&gt;&gt; u, X, T = map(Function, &#39;uXT&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))</span>
+<span class="sd">    &gt;&gt;&gt; pde_separate_add(eq, u(x, t), [X(x), T(t)])</span>
+<span class="sd">    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pde_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s">&#39;add&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="pde_separate_mul"><a class="viewcode-back" href="../../../modules/solvers/pde.html#sympy.solvers.pde.pde_separate_mul">[docs]</a><span class="k">def</span> <span class="nf">pde_separate_mul</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for searching multiplicative separable solutions.</span>
+
+<span class="sd">    Consider an equation of two independent variables x, y and a dependent</span>
+<span class="sd">    variable w, we look for the product of two functions depending on different</span>
+<span class="sd">    arguments:</span>
+
+<span class="sd">    `w(x, y, z) = X(x)*u(y, z)`</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, Eq, pde_separate_mul, Derivative as D</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; u, X, Y = map(Function, &#39;uXY&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))</span>
+<span class="sd">    &gt;&gt;&gt; pde_separate_mul(eq, u(x, y), [X(x), Y(y)])</span>
+<span class="sd">    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pde_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s">&#39;mul&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">dep</span><span class="p">,</span> <span class="n">others</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Separate expression into two parts based on dependencies of variables.&quot;&quot;&quot;</span>
+
+    <span class="c"># FIRST PASS</span>
+    <span class="c"># Extract derivatives depending our separable variable...</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_Derivative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">):</span>
+                    <span class="n">terms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                    <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">term</span><span class="o">.</span><span class="n">is_Derivative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">):</span>
+            <span class="n">terms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+    <span class="c"># Find the factor that we need to divide by</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="n">ext</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+        <span class="c"># Failed?</span>
+        <span class="k">if</span> <span class="n">sep</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">div</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+    <span class="c"># FIXME: Find lcm() of all the divisors and divide with it, instead of</span>
+    <span class="c"># current hack :(</span>
+    <span class="c"># http://code.google.com/p/sympy/issues/detail?id=1498</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">div</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">eqn</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">div</span><span class="p">:</span>
+                <span class="n">eqn</span> <span class="o">+=</span> <span class="n">term</span> <span class="o">/</span> <span class="n">i</span>
+            <span class="n">final</span> <span class="o">+=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">eqn</span><span class="p">)</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="n">final</span>
+
+    <span class="c"># SECOND PASS - separate the derivatives</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">lhs</span> <span class="o">=</span> <span class="n">rhs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="c"># Check, whether we have already term with independent variable...</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">):</span>
+            <span class="n">lhs</span> <span class="o">+=</span> <span class="n">term</span>
+            <span class="k">continue</span>
+        <span class="c"># ...otherwise, try to separate</span>
+        <span class="n">temp</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+        <span class="c"># Failed?</span>
+        <span class="k">if</span> <span class="n">sep</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="c"># Extract the divisors</span>
+        <span class="n">div</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="n">rhs</span> <span class="o">-=</span> <span class="n">term</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="c"># Do the division</span>
+    <span class="n">fulldiv</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">div</span><span class="p">)</span>
+    <span class="n">lhs</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">lhs</span><span class="o">/</span><span class="n">fulldiv</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">rhs</span><span class="o">/</span><span class="n">fulldiv</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="c"># ...and check whether we were successful :)</span>
+    <span class="k">if</span> <span class="n">lhs</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="o">*</span><span class="n">others</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rhs</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">dep</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

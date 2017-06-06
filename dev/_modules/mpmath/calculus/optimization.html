@@ -1,0 +1,1206 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mpmath.calculus.optimization &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="mpmath" href="../../mpmath.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../mpmath.html" accesskey="U">mpmath</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for mpmath.calculus.optimization</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">..libmp.backend</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="k">class</span> <span class="nc">OptimizationMethods</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="c">##############</span>
+<span class="c"># 1D-SOLVERS #</span>
+<span class="c">##############</span>
+
+<div class="viewcode-block" id="Newton"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Newton">[docs]</a><span class="k">class</span> <span class="nc">Newton</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Needs starting points x0 close to the root.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges fast</span>
+<span class="sd">    * sometimes more robust than secant with bad second starting point</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * converges slowly for multiple roots</span>
+<span class="sd">    * needs first derivative</span>
+<span class="sd">    * 2 function evaluations per iteration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1 starting point, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;df&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Secant"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Secant">[docs]</a><span class="k">class</span> <span class="nc">Secant</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Needs starting points x0 and x1 close to the root.</span>
+<span class="sd">    x1 defaults to x0 + 0.25.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges fast</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * converges slowly for multiple roots</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">30</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">+</span> <span class="mf">0.25</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1 or 2 starting points, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">f1</span> <span class="o">-</span> <span class="n">f0</span><span class="p">)</span> <span class="o">/</span> <span class="n">l</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">f1</span><span class="o">/</span><span class="n">s</span>
+            <span class="n">f0</span> <span class="o">=</span> <span class="n">f1</span>
+            <span class="k">yield</span> <span class="n">x1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="MNewton"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.MNewton">[docs]</a><span class="k">class</span> <span class="nc">MNewton</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Needs starting point x0 close to the root.</span>
+<span class="sd">    Uses modified Newton&#39;s method that converges fast regardless of the</span>
+<span class="sd">    multiplicity of the root.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges fast for multiple roots</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * needs first and second derivative of f</span>
+<span class="sd">    * 3 function evaluations per iteration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1 starting point, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;df&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;d2f&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">d2f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d2f</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d2f</span> <span class="o">=</span> <span class="n">d2f</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">d2f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2f</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">prevx</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">dfx</span> <span class="o">=</span> <span class="n">df</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">d2fx</span> <span class="o">=</span> <span class="n">d2f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="c"># x = x - F(x)/F&#39;(x) with F(x) = f(x)/f&#39;(x)</span>
+            <span class="n">x</span> <span class="o">-=</span> <span class="n">fx</span> <span class="o">/</span> <span class="p">(</span><span class="n">dfx</span> <span class="o">-</span> <span class="n">fx</span> <span class="o">*</span> <span class="n">d2fx</span> <span class="o">/</span> <span class="n">dfx</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">prevx</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">x</span><span class="p">,</span> <span class="n">error</span>
+</div>
+<div class="viewcode-block" id="Halley"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Halley">[docs]</a><span class="k">class</span> <span class="nc">Halley</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Needs a starting point x0 close to the root.</span>
+<span class="sd">    Uses Halley&#39;s method with cubic convergence rate.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges even faster the Newton&#39;s method</span>
+<span class="sd">    * useful when computing with *many* digits</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * needs first and second derivative of f</span>
+<span class="sd">    * 3 function evaluations per iteration</span>
+<span class="sd">    * converges slowly for multiple roots</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1 starting point, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;df&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;d2f&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">d2f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d2f</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d2f</span> <span class="o">=</span> <span class="n">d2f</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">d2f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2f</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">prevx</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">dfx</span> <span class="o">=</span> <span class="n">df</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">d2fx</span> <span class="o">=</span> <span class="n">d2f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">-=</span>  <span class="mi">2</span><span class="o">*</span><span class="n">fx</span><span class="o">*</span><span class="n">dfx</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">dfx</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">fx</span><span class="o">*</span><span class="n">d2fx</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">prevx</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">x</span><span class="p">,</span> <span class="n">error</span>
+</div>
+<div class="viewcode-block" id="Muller"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Muller">[docs]</a><span class="k">class</span> <span class="nc">Muller</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Needs starting points x0, x1 and x2 close to the root.</span>
+<span class="sd">    x1 defaults to x0 + 0.25; x2 to x1 + 0.25.</span>
+<span class="sd">    Uses Muller&#39;s method that converges towards complex roots.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges fast (somewhat faster than secant)</span>
+<span class="sd">    * can find complex roots</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * converges slowly for multiple roots</span>
+<span class="sd">    * may have complex values for real starting points and real roots</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Muller&#39;s_method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">30</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">+</span> <span class="mf">0.25</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">+</span> <span class="mf">0.25</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">+</span> <span class="mf">0.25</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1, 2 or 3 starting points, got </span><span class="si">%i</span><span class="s">&#39;</span>
+                             <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span>
+        <span class="n">fx0</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="n">fx1</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">fx2</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="c"># TODO: maybe refactoring with function for divided differences</span>
+            <span class="c"># calculate divided differences</span>
+            <span class="n">fx2x1</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx1</span> <span class="o">-</span> <span class="n">fx2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span>
+            <span class="n">fx2x0</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx0</span> <span class="o">-</span> <span class="n">fx2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x0</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span>
+            <span class="n">fx1x0</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx0</span> <span class="o">-</span> <span class="n">fx1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">fx2x1</span> <span class="o">+</span> <span class="n">fx2x0</span> <span class="o">-</span> <span class="n">fx1x0</span>
+            <span class="n">fx2x1x0</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx1x0</span> <span class="o">-</span> <span class="n">fx2x1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x0</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">fx2x1x0</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;canceled with&#39;</span><span class="p">)</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;x0 =&#39;</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="s">&#39;, x1 =&#39;</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="s">&#39;and x2 =&#39;</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
+            <span class="n">fx0</span> <span class="o">=</span> <span class="n">fx1</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">x2</span>
+            <span class="n">fx1</span> <span class="o">=</span> <span class="n">fx2</span>
+            <span class="c"># denominator should be as large as possible =&gt; choose sign</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">fx2</span><span class="o">*</span><span class="n">fx2x1x0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">w</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">w</span> <span class="o">+</span> <span class="n">r</span><span class="p">):</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="o">-</span><span class="n">r</span>
+            <span class="n">x2</span> <span class="o">-=</span> <span class="mi">2</span><span class="o">*</span><span class="n">fx2</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">fx2</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">x2</span><span class="p">,</span> <span class="n">error</span>
+
+<span class="c"># TODO: consider raising a ValueError when there&#39;s no sign change in a and b</span></div>
+<div class="viewcode-block" id="Bisection"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Bisection">[docs]</a><span class="k">class</span> <span class="nc">Bisection</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Uses bisection method to find a root of f in [a, b].</span>
+<span class="sd">    Might fail for multiple roots (needs sign change).</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * robust and reliable</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * converges slowly</span>
+<span class="sd">    * needs sign change</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">100</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected interval of 2 points, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+        <span class="n">fb</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">ldexp</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">fm</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fm</span> <span class="o">*</span> <span class="n">fb</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">m</span>
+                <span class="n">fb</span> <span class="o">=</span> <span class="n">fm</span>
+            <span class="n">l</span> <span class="o">/=</span> <span class="mi">2</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">_getm</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a function to calculate m for Illinois-like methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;illinois&#39;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">getm</span><span class="p">(</span><span class="n">fz</span><span class="p">,</span> <span class="n">fb</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.5</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;pegasus&#39;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">getm</span><span class="p">(</span><span class="n">fz</span><span class="p">,</span> <span class="n">fb</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fb</span><span class="o">/</span><span class="p">(</span><span class="n">fb</span> <span class="o">+</span> <span class="n">fz</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;anderson&#39;</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">getm</span><span class="p">(</span><span class="n">fz</span><span class="p">,</span> <span class="n">fb</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">fz</span><span class="o">/</span><span class="n">fb</span>
+            <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">m</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.5</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;method &#39;</span><span class="si">%s</span><span class="s">&#39; not recognized&quot;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">getm</span>
+
+<div class="viewcode-block" id="Illinois"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Illinois">[docs]</a><span class="k">class</span> <span class="nc">Illinois</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Uses Illinois method or similar to find a root of f in [a, b].</span>
+<span class="sd">    Might fail for multiple roots (needs sign change).</span>
+<span class="sd">    Combines bisect with secant (improved regula falsi).</span>
+
+<span class="sd">    The only difference between the methods is the scaling factor m, which is</span>
+<span class="sd">    used to ensure convergence (you can choose one using the &#39;method&#39; keyword):</span>
+
+<span class="sd">    Illinois method (&#39;illinois&#39;):</span>
+<span class="sd">        m = 0.5</span>
+
+<span class="sd">    Pegasus method (&#39;pegasus&#39;):</span>
+<span class="sd">        m = fb/(fb + fz)</span>
+
+<span class="sd">    Anderson-Bjoerk method (&#39;anderson&#39;):</span>
+<span class="sd">        m = 1 - fz/fb if positive else 0.5</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * converges very fast</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * has problems with multiple roots</span>
+<span class="sd">    * needs sign change</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">30</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected interval of 2 points, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;tol&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;method&#39;</span><span class="p">,</span> <span class="s">&#39;illinois&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getm</span> <span class="o">=</span> <span class="n">_getm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;using </span><span class="si">%s</span><span class="s"> method&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">fa</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">fb</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">fb</span> <span class="o">-</span> <span class="n">fa</span><span class="p">)</span> <span class="o">/</span> <span class="n">l</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">fa</span><span class="o">/</span><span class="n">s</span>
+            <span class="n">fz</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fz</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                <span class="c"># TODO: better condition (when f is very flat)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;canceled with z =&#39;</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">z</span><span class="p">,</span> <span class="n">l</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fz</span> <span class="o">*</span> <span class="n">fb</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># root in [z, b]</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">b</span>
+                <span class="n">fa</span> <span class="o">=</span> <span class="n">fb</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">z</span>
+                <span class="n">fb</span> <span class="o">=</span> <span class="n">fz</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c"># root in [a, z]</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getm</span><span class="p">(</span><span class="n">fz</span><span class="p">,</span> <span class="n">fb</span><span class="p">)</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">z</span>
+                <span class="n">fb</span> <span class="o">=</span> <span class="n">fz</span>
+                <span class="n">fa</span> <span class="o">=</span> <span class="n">m</span><span class="o">*</span><span class="n">fa</span> <span class="c"># scale down to ensure convergence</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="ow">and</span> <span class="n">m</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;illinois&#39;</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;m:&#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Pegasus"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Pegasus">[docs]</a><span class="k">def</span> <span class="nf">Pegasus</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Uses Pegasus method to find a root of f in [a, b].</span>
+<span class="sd">    Wrapper for illinois to use method=&#39;pegasus&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;pegasus&#39;</span>
+    <span class="k">return</span> <span class="n">Illinois</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Anderson"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Anderson">[docs]</a><span class="k">def</span> <span class="nf">Anderson</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Uses Anderson-Bjoerk method to find a root of f in [a, b].</span>
+<span class="sd">    Wrapper for illinois to use method=&#39;pegasus&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;anderson&#39;</span>
+    <span class="k">return</span> <span class="n">Illinois</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="c"># TODO: check whether it&#39;s possible to combine it with Illinois stuff</span></div>
+<div class="viewcode-block" id="Ridder"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.Ridder">[docs]</a><span class="k">class</span> <span class="nc">Ridder</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Ridders&#39; method to find a root of f in [a, b].</span>
+<span class="sd">    Is told to perform as well as Brent&#39;s method while being simpler.</span>
+
+<span class="sd">    Pro:</span>
+
+<span class="sd">    * very fast</span>
+<span class="sd">    * simpler than Brent&#39;s method</span>
+
+<span class="sd">    Contra:</span>
+
+<span class="sd">    * two function evaluations per step</span>
+<span class="sd">    * has problems with multiple roots</span>
+<span class="sd">    * needs sign change</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Ridders&#39;_method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">30</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected interval of 2 points, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;tol&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span>
+        <span class="n">fx1</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span>
+        <span class="n">fx2</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">x3</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span><span class="p">)</span>
+            <span class="n">fx3</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x3</span><span class="p">)</span>
+            <span class="n">x4</span> <span class="o">=</span> <span class="n">x3</span> <span class="o">+</span> <span class="p">(</span><span class="n">x3</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ctx</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">fx1</span> <span class="o">-</span> <span class="n">fx2</span><span class="p">)</span> <span class="o">*</span> <span class="n">fx3</span> <span class="o">/</span> <span class="n">ctx</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fx3</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">fx1</span><span class="o">*</span><span class="n">fx2</span><span class="p">)</span>
+            <span class="n">fx4</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x4</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fx4</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                <span class="c"># TODO: better condition (when f is very flat)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;canceled with f(x4) =&#39;</span><span class="p">,</span> <span class="n">fx4</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">x4</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fx4</span> <span class="o">*</span> <span class="n">fx2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="c"># root in [x4, x2]</span>
+                <span class="n">x1</span> <span class="o">=</span> <span class="n">x4</span>
+                <span class="n">fx1</span> <span class="o">=</span> <span class="n">fx4</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c"># root in [x1, x4]</span>
+                <span class="n">x2</span> <span class="o">=</span> <span class="n">x4</span>
+                <span class="n">fx2</span> <span class="o">=</span> <span class="n">fx4</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">error</span>
+</div>
+<div class="viewcode-block" id="ANewton"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.ANewton">[docs]</a><span class="k">class</span> <span class="nc">ANewton</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    EXPERIMENTAL 1d-solver generating pairs of approximative root and error.</span>
+
+<span class="sd">    Uses Newton&#39;s method modified to use Steffensens method when convergence is</span>
+<span class="sd">    slow. (I.e. for multiple roots.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;expected 1 starting point, got </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;df&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
+        <span class="k">def</span> <span class="nf">phi</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">prevx</span> <span class="o">=</span> <span class="n">x0</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">phi</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="s">&#39;ZeroDivisionError: canceled with x =&#39;</span><span class="p">,</span> <span class="n">x0</span>
+                <span class="k">break</span>
+            <span class="n">preverror</span> <span class="o">=</span> <span class="n">error</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">prevx</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+            <span class="c"># TODO: decide not to use convergence acceleration</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">error</span> <span class="o">-</span> <span class="n">preverror</span><span class="p">)</span> <span class="o">/</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;converging slowly&#39;</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c"># accelerate convergence</span>
+                <span class="n">phi</span> <span class="o">=</span> <span class="n">steffensen</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&#39;accelerating convergence&#39;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">x0</span><span class="p">,</span> <span class="n">error</span>
+
+<span class="c"># TODO: add Brent</span>
+
+<span class="c">############################</span>
+<span class="c"># MULTIDIMENSIONAL SOLVERS #</span>
+<span class="c">############################</span>
+</div>
+<span class="k">def</span> <span class="nf">jacobian</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Jacobian matrix of a function at the point x0.</span>
+
+<span class="sd">    This is the first derivative of a vectorial function:</span>
+
+<span class="sd">        f : R^m -&gt; R^n with m &gt;= n</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">xj</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">xj</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">h</span>
+        <span class="n">Jj</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">xj</span><span class="p">))</span> <span class="o">-</span> <span class="n">fx</span><span class="p">)</span> <span class="o">/</span> <span class="n">h</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">J</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Jj</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">J</span>
+
+<span class="c"># TODO: test with user-specified jacobian matrix, support force_type</span>
+<div class="viewcode-block" id="MDNewton"><a class="viewcode-back" href="../../../modules/mpmath/calculus/optimization.html#mpmath.calculus.optimization.MDNewton">[docs]</a><span class="k">class</span> <span class="nc">MDNewton</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the root of a vector function numerically using Newton&#39;s method.</span>
+
+<span class="sd">    f is a vector function representing a nonlinear equation system.</span>
+
+<span class="sd">    x0 is the starting point close to the root.</span>
+
+<span class="sd">    J is a function returning the Jacobian matrix for a point.</span>
+
+<span class="sd">    Supports overdetermined systems.</span>
+
+<span class="sd">    Use the &#39;norm&#39; keyword to specify which norm to use. Defaults to max-norm.</span>
+<span class="sd">    The function to calculate the Jacobian matrix can be given using the</span>
+<span class="sd">    keyword &#39;J&#39;. Otherwise it will be calculated numerically.</span>
+
+<span class="sd">    Please note that this method converges only locally. Especially for high-</span>
+<span class="sd">    dimensional systems it is not trivial to find a good starting point being</span>
+<span class="sd">    close enough to the root.</span>
+
+<span class="sd">    It is recommended to use a faster, low-precision solver from SciPy [1] or</span>
+<span class="sd">    OpenOpt [2] to get an initial guess. Afterwards you can use this method for</span>
+<span class="sd">    root-polishing to any precision.</span>
+
+<span class="sd">    [1] http://scipy.org</span>
+
+<span class="sd">    [2] http://openopt.org</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxsteps</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">x0</span><span class="o">.</span><span class="n">cols</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;need a vector&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span>
+        <span class="k">if</span> <span class="s">&#39;J&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;J&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">J</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">J</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;norm&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">J</span>
+        <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">x0</span><span class="p">))</span>
+        <span class="n">fxnorm</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+        <span class="n">cancel</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">cancel</span><span class="p">:</span>
+            <span class="c"># get direction of descent</span>
+            <span class="n">fxn</span> <span class="o">=</span> <span class="o">-</span><span class="n">fx</span>
+            <span class="n">Jx</span> <span class="o">=</span> <span class="n">J</span><span class="p">(</span><span class="o">*</span><span class="n">x0</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span><span class="n">Jx</span><span class="p">,</span> <span class="n">fxn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;Jx:&#39;</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">Jx</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;s:&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="c"># damping step size TODO: better strategy (hard task)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">one</span>
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">s</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x1</span> <span class="o">==</span> <span class="n">x0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="s">&quot;canceled, won&#39;t get more excact&quot;</span><span class="p">)</span>
+                    <span class="n">cancel</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="k">break</span>
+                <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">x1</span><span class="p">))</span>
+                <span class="n">newnorm</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">newnorm</span> <span class="o">&lt;</span> <span class="n">fxnorm</span><span class="p">:</span>
+                    <span class="c"># new x accepted</span>
+                    <span class="n">fxnorm</span> <span class="o">=</span> <span class="n">newnorm</span>
+                    <span class="n">x0</span> <span class="o">=</span> <span class="n">x1</span>
+                    <span class="k">break</span>
+                <span class="n">l</span> <span class="o">/=</span> <span class="mi">2</span>
+                <span class="n">x1</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">l</span><span class="o">*</span><span class="n">s</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">fxnorm</span><span class="p">)</span>
+
+<span class="c">#############</span>
+<span class="c"># UTILITIES #</span>
+<span class="c">#############</span>
+</div>
+<span class="n">str2solver</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;newton&#39;</span><span class="p">:</span><span class="n">Newton</span><span class="p">,</span> <span class="s">&#39;secant&#39;</span><span class="p">:</span><span class="n">Secant</span><span class="p">,</span><span class="s">&#39;mnewton&#39;</span><span class="p">:</span><span class="n">MNewton</span><span class="p">,</span>
+              <span class="s">&#39;halley&#39;</span><span class="p">:</span><span class="n">Halley</span><span class="p">,</span> <span class="s">&#39;muller&#39;</span><span class="p">:</span><span class="n">Muller</span><span class="p">,</span> <span class="s">&#39;bisect&#39;</span><span class="p">:</span><span class="n">Bisection</span><span class="p">,</span>
+              <span class="s">&#39;illinois&#39;</span><span class="p">:</span><span class="n">Illinois</span><span class="p">,</span> <span class="s">&#39;pegasus&#39;</span><span class="p">:</span><span class="n">Pegasus</span><span class="p">,</span> <span class="s">&#39;anderson&#39;</span><span class="p">:</span><span class="n">Anderson</span><span class="p">,</span>
+              <span class="s">&#39;ridder&#39;</span><span class="p">:</span><span class="n">Ridder</span><span class="p">,</span> <span class="s">&#39;anewton&#39;</span><span class="p">:</span><span class="n">ANewton</span><span class="p">,</span> <span class="s">&#39;mdnewton&#39;</span><span class="p">:</span><span class="n">MDNewton</span><span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">findroot</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="n">Secant</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Find a solution to `f(x) = 0`, using *x0* as starting point or</span>
+<span class="sd">    interval for *x*.</span>
+
+<span class="sd">    Multidimensional overdetermined systems are supported.</span>
+<span class="sd">    You can specify them using a function or a list of functions.</span>
+
+<span class="sd">    If the found root does not satisfy `|f(x)^2 &lt; \mathrm{tol}|`,</span>
+<span class="sd">    an exception is raised (this can be disabled with *verify=False*).</span>
+
+<span class="sd">    **Arguments**</span>
+
+<span class="sd">    *f*</span>
+<span class="sd">        one dimensional function</span>
+<span class="sd">    *x0*</span>
+<span class="sd">        starting point, several starting points or interval (depends on solver)</span>
+<span class="sd">    *tol*</span>
+<span class="sd">        the returned solution has an error smaller than this</span>
+<span class="sd">    *verbose*</span>
+<span class="sd">        print additional information for each iteration if true</span>
+<span class="sd">    *verify*</span>
+<span class="sd">        verify the solution and raise a ValueError if `|f(x) &gt; \mathrm{tol}|`</span>
+<span class="sd">    *solver*</span>
+<span class="sd">        a generator for *f* and *x0* returning approximative solution and error</span>
+<span class="sd">    *maxsteps*</span>
+<span class="sd">        after how many steps the solver will cancel</span>
+<span class="sd">    *df*</span>
+<span class="sd">        first derivative of *f* (used by some solvers)</span>
+<span class="sd">    *d2f*</span>
+<span class="sd">        second derivative of *f* (used by some solvers)</span>
+<span class="sd">    *multidimensional*</span>
+<span class="sd">        force multidimensional solving</span>
+<span class="sd">    *J*</span>
+<span class="sd">        Jacobian matrix of *f* (used by multidimensional solvers)</span>
+<span class="sd">    *norm*</span>
+<span class="sd">        used vector norm (used by multidimensional solvers)</span>
+
+<span class="sd">    solver has to be callable with ``(f, x0, **kwargs)`` and return an generator</span>
+<span class="sd">    yielding pairs of approximative solution and estimated error (which is</span>
+<span class="sd">    expected to be positive).</span>
+<span class="sd">    You can use the following string aliases:</span>
+<span class="sd">    &#39;secant&#39;, &#39;mnewton&#39;, &#39;halley&#39;, &#39;muller&#39;, &#39;illinois&#39;, &#39;pegasus&#39;, &#39;anderson&#39;,</span>
+<span class="sd">    &#39;ridder&#39;, &#39;anewton&#39;, &#39;bisect&#39;</span>
+
+<span class="sd">    See mpmath.optimization for their documentation.</span>
+
+<span class="sd">    **Examples**</span>
+
+<span class="sd">    The function :func:`~mpmath.findroot` locates a root of a given function using the</span>
+<span class="sd">    secant method by default. A simple example use of the secant method is to</span>
+<span class="sd">    compute `\pi` as the root of `\sin x` closest to `x_0 = 3`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from mpmath import *</span>
+<span class="sd">        &gt;&gt;&gt; mp.dps = 30; mp.pretty = True</span>
+<span class="sd">        &gt;&gt;&gt; findroot(sin, 3)</span>
+<span class="sd">        3.14159265358979323846264338328</span>
+
+<span class="sd">    The secant method can be used to find complex roots of analytic functions,</span>
+<span class="sd">    although it must in that case generally be given a nonreal starting value</span>
+<span class="sd">    (or else it will never leave the real line)::</span>
+
+<span class="sd">        &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: x**3 + 2*x + 1, j)</span>
+<span class="sd">        (0.226698825758202 + 1.46771150871022j)</span>
+
+<span class="sd">    A nice application is to compute nontrivial roots of the Riemann zeta</span>
+<span class="sd">    function with many digits (good initial values are needed for convergence)::</span>
+
+<span class="sd">        &gt;&gt;&gt; mp.dps = 30</span>
+<span class="sd">        &gt;&gt;&gt; findroot(zeta, 0.5+14j)</span>
+<span class="sd">        (0.5 + 14.1347251417346937904572519836j)</span>
+
+<span class="sd">    The secant method can also be used as an optimization algorithm, by passing</span>
+<span class="sd">    it a derivative of a function. The following example locates the positive</span>
+<span class="sd">    minimum of the gamma function::</span>
+
+<span class="sd">        &gt;&gt;&gt; mp.dps = 20</span>
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: diff(gamma, x), 1)</span>
+<span class="sd">        1.4616321449683623413</span>
+
+<span class="sd">    Finally, a useful application is to compute inverse functions, such as the</span>
+<span class="sd">    Lambert W function which is the inverse of `w e^w`, given the first</span>
+<span class="sd">    term of the solution&#39;s asymptotic expansion as the initial value. In basic</span>
+<span class="sd">    cases, this gives identical results to mpmath&#39;s built-in ``lambertw``</span>
+<span class="sd">    function::</span>
+
+<span class="sd">        &gt;&gt;&gt; def lambert(x):</span>
+<span class="sd">        ...     return findroot(lambda w: w*exp(w) - x, log(1+x))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">        &gt;&gt;&gt; lambert(1); lambertw(1)</span>
+<span class="sd">        0.567143290409784</span>
+<span class="sd">        0.567143290409784</span>
+<span class="sd">        &gt;&gt;&gt; lambert(1000); lambert(1000)</span>
+<span class="sd">        5.2496028524016</span>
+<span class="sd">        5.2496028524016</span>
+
+<span class="sd">    Multidimensional functions are also supported::</span>
+
+<span class="sd">        &gt;&gt;&gt; f = [lambda x1, x2: x1**2 + x2,</span>
+<span class="sd">        ...      lambda x1, x2: 5*x1**2 - 3*x1 + 2*x2 - 3]</span>
+<span class="sd">        &gt;&gt;&gt; findroot(f, (0, 0))</span>
+<span class="sd">        [-0.618033988749895]</span>
+<span class="sd">        [-0.381966011250105]</span>
+<span class="sd">        &gt;&gt;&gt; findroot(f, (10, 10))</span>
+<span class="sd">        [ 1.61803398874989]</span>
+<span class="sd">        [-2.61803398874989]</span>
+
+<span class="sd">    You can verify this by solving the system manually.</span>
+
+<span class="sd">    Please note that the following (more general) syntax also works::</span>
+
+<span class="sd">        &gt;&gt;&gt; def f(x1, x2):</span>
+<span class="sd">        ...     return x1**2 + x2, 5*x1**2 - 3*x1 + 2*x2 - 3</span>
+<span class="sd">        ...</span>
+<span class="sd">        &gt;&gt;&gt; findroot(f, (0, 0))</span>
+<span class="sd">        [-0.618033988749895]</span>
+<span class="sd">        [-0.381966011250105]</span>
+
+
+<span class="sd">    **Multiple roots**</span>
+
+<span class="sd">    For multiple roots all methods of the Newtonian family (including secant)</span>
+<span class="sd">    converge slowly. Consider this example::</span>
+
+<span class="sd">        &gt;&gt;&gt; f = lambda x: (x - 1)**99</span>
+<span class="sd">        &gt;&gt;&gt; findroot(f, 0.9, verify=False)</span>
+<span class="sd">        0.918073542444929</span>
+
+<span class="sd">    Even for a very close starting point the secant method converges very</span>
+<span class="sd">    slowly. Use ``verbose=True`` to illustrate this.</span>
+
+<span class="sd">    It is possible to modify Newton&#39;s method to make it converge regardless of</span>
+<span class="sd">    the root&#39;s multiplicity::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(f, -10, solver=&#39;mnewton&#39;)</span>
+<span class="sd">        1.0</span>
+
+<span class="sd">    This variant uses the first and second derivative of the function, which is</span>
+<span class="sd">    not very efficient.</span>
+
+<span class="sd">    Alternatively you can use an experimental Newtonian solver that keeps track</span>
+<span class="sd">    of the speed of convergence and accelerates it using Steffensen&#39;s method if</span>
+<span class="sd">    necessary::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(f, -10, solver=&#39;anewton&#39;, verbose=True)</span>
+<span class="sd">        x:     -9.88888888888888888889</span>
+<span class="sd">        error: 0.111111111111111111111</span>
+<span class="sd">        converging slowly</span>
+<span class="sd">        x:     -9.77890011223344556678</span>
+<span class="sd">        error: 0.10998877665544332211</span>
+<span class="sd">        converging slowly</span>
+<span class="sd">        x:     -9.67002233332199662166</span>
+<span class="sd">        error: 0.108877778911448945119</span>
+<span class="sd">        converging slowly</span>
+<span class="sd">        accelerating convergence</span>
+<span class="sd">        x:     -9.5622443299551077669</span>
+<span class="sd">        error: 0.107778003366888854764</span>
+<span class="sd">        converging slowly</span>
+<span class="sd">        x:     0.99999999999999999214</span>
+<span class="sd">        error: 10.562244329955107759</span>
+<span class="sd">        x:     1.0</span>
+<span class="sd">        error: 7.8598304758094664213e-18</span>
+<span class="sd">        1.0</span>
+
+
+<span class="sd">    **Complex roots**</span>
+
+<span class="sd">    For complex roots it&#39;s recommended to use Muller&#39;s method as it converges</span>
+<span class="sd">    even for real starting points very fast::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: x**4 + x + 1, (0, 1, 2), solver=&#39;muller&#39;)</span>
+<span class="sd">        (0.727136084491197 + 0.934099289460529j)</span>
+
+
+<span class="sd">    **Intersection methods**</span>
+
+<span class="sd">    When you need to find a root in a known interval, it&#39;s highly recommended to</span>
+<span class="sd">    use an intersection-based solver like ``&#39;anderson&#39;`` or ``&#39;ridder&#39;``.</span>
+<span class="sd">    Usually they converge faster and more reliable. They have however problems</span>
+<span class="sd">    with multiple roots and usually need a sign change to find a root::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: x**3, (-1, 1), solver=&#39;anderson&#39;)</span>
+<span class="sd">        0.0</span>
+
+<span class="sd">    Be careful with symmetric functions::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: x**2, (-1, 1), solver=&#39;anderson&#39;) #doctest:+ELLIPSIS</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        ZeroDivisionError</span>
+
+<span class="sd">    It fails even for better starting points, because there is no sign change::</span>
+
+<span class="sd">        &gt;&gt;&gt; findroot(lambda x: x**2, (-1, .5), solver=&#39;anderson&#39;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">          ...</span>
+<span class="sd">        ValueError: Could not find root within given tolerance. (1 &gt; 2.1684e-19)</span>
+<span class="sd">        Try another starting point or tweak arguments.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prec</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">+=</span> <span class="mi">20</span>
+
+        <span class="c"># initialize arguments</span>
+        <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s">&#39;d1f&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;df&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;d1f&#39;</span><span class="p">]</span>
+
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;tol&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">x0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x0</span> <span class="o">=</span> <span class="p">[</span><span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x0</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">solver</span> <span class="o">=</span> <span class="n">str2solver</span><span class="p">[</span><span class="n">solver</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;could not recognize solver&#39;</span><span class="p">)</span>
+
+        <span class="c"># accept list of functions</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">tmp</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">f2</span><span class="p">]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">tmp</span>
+
+        <span class="c"># detect multidimensional functions</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">x0</span><span class="p">)</span>
+            <span class="n">multidimensional</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">multidimensional</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="s">&#39;multidimensional&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">multidimensional</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;multidimensional&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">multidimensional</span><span class="p">:</span>
+            <span class="c"># only one multidimensional solver available at the moment</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="n">MDNewton</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="s">&#39;norm&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;inf&#39;</span><span class="p">)</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;norm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">norm</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;norm&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="nb">abs</span>
+
+        <span class="c"># happily return starting point if it&#39;s a root</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">multidimensional</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># use solver</span>
+        <span class="n">iterations</span> <span class="o">=</span> <span class="n">solver</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;maxsteps&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">maxsteps</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;maxsteps&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">maxsteps</span> <span class="o">=</span> <span class="n">iterations</span><span class="o">.</span><span class="n">maxsteps</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">iterations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;x:    &#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;error:&#39;</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">tol</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">maxsteps</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">matrix</span><span class="p">)):</span>
+            <span class="n">xl</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xl</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">if</span> <span class="n">verify</span> <span class="ow">and</span> <span class="n">norm</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">xl</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span> <span class="c"># TODO: better condition?</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Could not find root within given tolerance. &#39;</span>
+                             <span class="s">&#39;(</span><span class="si">%g</span><span class="s"> &gt; </span><span class="si">%g</span><span class="s">)</span><span class="se">\n</span><span class="s">&#39;</span>
+                             <span class="s">&#39;Try another starting point or tweak arguments.&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">xl</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">tol</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">prec</span>
+
+
+<span class="k">def</span> <span class="nf">multiplicity</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxsteps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the multiplicity of a given root of f.</span>
+
+<span class="sd">    Internally, numerical derivatives are used. This might be inefficient for</span>
+<span class="sd">    higher order derviatives. Due to this, ``multiplicity`` cancels after</span>
+<span class="sd">    evaluating 10 derivatives by default. You can be specify the n-th derivative</span>
+<span class="sd">    using the dnf keyword.</span>
+
+<span class="sd">    &gt;&gt;&gt; from mpmath import *</span>
+<span class="sd">    &gt;&gt;&gt; multiplicity(lambda x: sin(x) - 1, pi/2)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">eps</span> <span class="o">**</span> <span class="mf">0.8</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;d0f&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">maxsteps</span><span class="p">):</span>
+        <span class="n">dfstr</span> <span class="o">=</span> <span class="s">&#39;d&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;f&#39;</span>
+        <span class="k">if</span> <span class="n">dfstr</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">dfstr</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">abs</span><span class="p">(</span><span class="n">df</span><span class="p">(</span><span class="n">root</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">i</span>
+
+<span class="k">def</span> <span class="nf">steffensen</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    linear convergent function -&gt; quadratic convergent function</span>
+
+<span class="sd">    Steffensen&#39;s method for quadratic convergence of a linear converging</span>
+<span class="sd">    sequence.</span>
+<span class="sd">    Don not use it for higher rates of convergence.</span>
+<span class="sd">    It may even work for divergent sequences.</span>
+
+<span class="sd">    Definition:</span>
+<span class="sd">    F(x) = (x*f(f(x)) - f(x)**2) / (f(f(x)) - 2*f(x) + x)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    You can use Steffensen&#39;s method to accelerate a fixpoint iteration of linear</span>
+<span class="sd">    (or less) convergence.</span>
+
+<span class="sd">    x* is a fixpoint of the iteration x_{k+1} = phi(x_k) if x* = phi(x*). For</span>
+<span class="sd">    phi(x) = x**2 there are two fixpoints: 0 and 1.</span>
+
+<span class="sd">    Let&#39;s try Steffensen&#39;s method:</span>
+
+<span class="sd">    &gt;&gt;&gt; f = lambda x: x**2</span>
+<span class="sd">    &gt;&gt;&gt; from mpmath.optimization import steffensen</span>
+<span class="sd">    &gt;&gt;&gt; F = steffensen(f)</span>
+<span class="sd">    &gt;&gt;&gt; for x in [0.5, 0.9, 2.0]:</span>
+<span class="sd">    ...     fx = Fx = x</span>
+<span class="sd">    ...     for i in xrange(10):</span>
+<span class="sd">    ...         try:</span>
+<span class="sd">    ...             fx = f(fx)</span>
+<span class="sd">    ...         except OverflowError:</span>
+<span class="sd">    ...             pass</span>
+<span class="sd">    ...         try:</span>
+<span class="sd">    ...             Fx = F(Fx)</span>
+<span class="sd">    ...         except ZeroDivisionError:</span>
+<span class="sd">    ...             pass</span>
+<span class="sd">    ...         print &#39;%20g  %20g&#39; % (fx, Fx)</span>
+<span class="sd">                    0.25                  -0.5</span>
+<span class="sd">                  0.0625                   0.1</span>
+<span class="sd">              0.00390625            -0.0011236</span>
+<span class="sd">            1.52588e-005          1.41691e-009</span>
+<span class="sd">            2.32831e-010         -2.84465e-027</span>
+<span class="sd">            5.42101e-020          2.30189e-080</span>
+<span class="sd">            2.93874e-039          -1.2197e-239</span>
+<span class="sd">            8.63617e-078                     0</span>
+<span class="sd">            7.45834e-155                     0</span>
+<span class="sd">            5.56268e-309                     0</span>
+<span class="sd">                    0.81               1.02676</span>
+<span class="sd">                  0.6561               1.00134</span>
+<span class="sd">                0.430467                     1</span>
+<span class="sd">                0.185302                     1</span>
+<span class="sd">               0.0343368                     1</span>
+<span class="sd">              0.00117902                     1</span>
+<span class="sd">            1.39008e-006                     1</span>
+<span class="sd">            1.93233e-012                     1</span>
+<span class="sd">            3.73392e-024                     1</span>
+<span class="sd">            1.39421e-047                     1</span>
+<span class="sd">                       4                   1.6</span>
+<span class="sd">                      16                1.2962</span>
+<span class="sd">                     256               1.10194</span>
+<span class="sd">                   65536               1.01659</span>
+<span class="sd">            4.29497e+009               1.00053</span>
+<span class="sd">            1.84467e+019                     1</span>
+<span class="sd">            3.40282e+038                     1</span>
+<span class="sd">            1.15792e+077                     1</span>
+<span class="sd">            1.34078e+154                     1</span>
+<span class="sd">            1.34078e+154                     1</span>
+
+<span class="sd">    Unmodified, the iteration converges only towards 0. Modified it converges</span>
+<span class="sd">    not only much faster, it converges even to the repelling fixpoint 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">F</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">ffx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">fx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">ffx</span> <span class="o">-</span> <span class="n">fx</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">ffx</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">fx</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">F</span>
+
+<span class="n">OptimizationMethods</span><span class="o">.</span><span class="n">jacobian</span> <span class="o">=</span> <span class="n">jacobian</span>
+<span class="n">OptimizationMethods</span><span class="o">.</span><span class="n">findroot</span> <span class="o">=</span> <span class="n">findroot</span>
+<span class="n">OptimizationMethods</span><span class="o">.</span><span class="n">multiplicity</span> <span class="o">=</span> <span class="n">multiplicity</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../mpmath.html" >mpmath</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

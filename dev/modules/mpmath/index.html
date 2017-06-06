@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to mpmath’s documentation! &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Setting up mpmath" href="setup.html" />
+    <link rel="prev" title="Matrix Expressions" href="../matrices/expressions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="setup.html" title="Setting up mpmath"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../matrices/expressions.html" title="Matrix Expressions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-mpmath-s-documentation">
+<h1>Welcome to mpmath&#8217;s documentation!<a class="headerlink" href="#welcome-to-mpmath-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Mpmath is a Python library for arbitrary-precision floating-point arithmetic.
+For general information about mpmath, see the project website <a class="reference external" href="http://code.google.com/p/mpmath/">http://code.google.com/p/mpmath/</a></p>
+<p>These documentation pages include general information as well as docstring listing with extensive use of examples that can be run in the interactive Python interpreter. For quick access to the docstrings of individual functions, use the <a class="reference internal" href="../../genindex.html"><em>Index</em></a>, or type <tt class="docutils literal"><span class="pre">help(mpmath.function_name)</span></tt> in the Python interactive prompt.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setting up mpmath</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#download-and-installation">Download and installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#using-gmpy-optional">Using gmpy (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#compiling-the-documentation">Compiling the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#mpmath-under-sympy">Mpmath under SymPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#mpmath-under-sage">Mpmath under Sage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basic usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#number-types">Number types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#setting-the-precision">Setting the precision</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#providing-correct-input">Providing correct input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#printing">Printing</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="basic-features">
+<h2>Basic features<a class="headerlink" href="#basic-features" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contexts.html">Contexts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html#common-interface">Common interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html#arbitrary-precision-floating-point-mp">Arbitrary-precision floating-point (<tt class="docutils literal"><span class="pre">mp</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html#arbitrary-precision-interval-arithmetic-iv">Arbitrary-precision interval arithmetic (<tt class="docutils literal"><span class="pre">iv</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html#fast-low-precision-arithmetic-fp">Fast low-precision arithmetic (<tt class="docutils literal"><span class="pre">fp</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="general.html">Utility functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="general.html#conversion-and-printing">Conversion and printing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#arithmetic-operations">Arithmetic operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#complex-components">Complex components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#integer-and-fractional-parts">Integer and fractional parts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#tolerances-and-approximate-comparisons">Tolerances and approximate comparisons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#properties-of-numbers">Properties of numbers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#number-generation">Number generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#precision-management">Precision management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="general.html#performance-and-debugging">Performance and debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#function-curve-plots">Function curve plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#complex-function-plots">Complex function plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#d-surface-plots">3D surface plots</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="advanced-mathematics">
+<h2>Advanced mathematics<a class="headerlink" href="#advanced-mathematics" title="Permalink to this headline">¶</a></h2>
+<p>On top of its support for arbitrary-precision arithmetic, mpmath
+provides extensive support for transcendental functions, evaluation of sums, integrals, limits, roots, and so on.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="functions/index.html">Mathematical functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functions/constants.html">Mathematical constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/powers.html">Powers and logarithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/trigonometric.html">Trigonometric functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/hyperbolic.html">Hyperbolic functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/gamma.html">Factorials and gamma functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/expintegrals.html">Exponential integrals and error functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/bessel.html">Bessel functions and related functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/orthogonal.html">Orthogonal polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/hypergeometric.html">Hypergeometric functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/elliptic.html">Elliptic functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/zeta.html">Zeta functions, L-series and polylogarithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/numtheory.html">Number-theoretical, combinatorial and integer functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions/qfunctions.html">q-functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calculus/index.html">Numerical calculus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calculus/polynomials.html">Polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/optimization.html">Root-finding and optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/sums_limits.html">Sums, products, limits and extrapolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/differentiation.html">Differentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/integration.html">Numerical integration (quadrature)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/odes.html">Ordinary differential equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculus/approximation.html">Function approximation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matrices.html">Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#creating-matrices">Creating matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrix-operations">Matrix operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#linear-algebra">Linear algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#interval-and-double-precision-matrices">Interval and double-precision matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrix-functions">Matrix functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="identification.html">Number identification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="identification.html#constant-recognition">Constant recognition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="identification.html#algebraic-identification">Algebraic identification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="identification.html#integer-relations-pslq">Integer relations (PSLQ)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="end-matter">
+<h2>End matter<a class="headerlink" href="#end-matter" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="technical.html">Precision and representation issues</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#precision-error-and-tolerance">Precision, error and tolerance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#representation-of-numbers">Representation of numbers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#decimal-issues">Decimal issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#correctness-guarantees">Correctness guarantees</a></li>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#double-precision-emulation">Double precision emulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="technical.html#further-reading">Further reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to mpmath&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-features">Basic features</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-mathematics">Advanced mathematics</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#end-matter">End matter</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../matrices/expressions.html"
+                        title="previous chapter">Matrix Expressions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="setup.html"
+                        title="next chapter">Setting up mpmath</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="setup.html" title="Setting up mpmath"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../matrices/expressions.html" title="Matrix Expressions"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

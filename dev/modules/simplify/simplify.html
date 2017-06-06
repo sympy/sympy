@@ -1,0 +1,1618 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Simplify &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Details on the Hypergeometric Function Expansion Module" href="hyperexpand.html" />
+    <link rel="prev" title="Sets" href="../sets.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hyperexpand.html" title="Details on the Hypergeometric Function Expansion Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../sets.html" title="Sets"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="simplify">
+<h1>Simplify<a class="headerlink" href="#simplify" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>simplify<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.simplify">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">simplify</tt><big>(</big><em>expr</em>, <em>ratio=1.7</em>, <em>measure=&lt;function count_ops at 0x2dd3aa0&gt;</em>, <em>fu=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies the given expression.</p>
+<p>Simplification is not a well defined term and the exact strategies
+this function tries can change in the future versions of SymPy. If
+your algorithm relies on &#8220;simplification&#8221; (whatever it is), try to
+determine what you need exactly  -  is it powsimp()?, radsimp()?,
+together()?, logcombine()?, or something else? And use this particular
+function directly, because those are well defined and thus your algorithm
+will be robust.</p>
+<p>Nonetheless, especially for interactive use, or when you don&#8217;t know
+anything about the structure of the expression, simplify() tries to apply
+intelligent heuristics to make the input expression &#8220;simpler&#8221;.  For
+example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">(x**2 + x)/(x*sin(y)**2 + x*cos(y)**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">x + 1</span>
+</pre></div>
+</div>
+<p>Note that we could have obtained the same result by using specific
+simplification functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">trigsimp</span><span class="p">,</span> <span class="n">cancel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trigsimp</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">(x**2 + x)/x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cancel</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">x + 1</span>
+</pre></div>
+</div>
+<p>In some cases, applying <a class="reference internal" href="#sympy.simplify.simplify.simplify" title="sympy.simplify.simplify.simplify"><tt class="xref py py-func docutils literal"><span class="pre">simplify()</span></tt></a> may actually result in some more
+complicated expression. The default <tt class="docutils literal"><span class="pre">ratio=1.7</span></tt> prevents more extreme
+cases: if (result length)/(input length) &gt; ratio, then input is returned
+unmodified.  The <tt class="docutils literal"><span class="pre">measure</span></tt> parameter lets you specify the function used
+to determine how complex an expression is.  The function should take a
+single argument as an expression and return a number such that if
+expression <tt class="docutils literal"><span class="pre">a</span></tt> is more complex than expression <tt class="docutils literal"><span class="pre">b</span></tt>, then
+<tt class="docutils literal"><span class="pre">measure(a)</span> <span class="pre">&gt;</span> <span class="pre">measure(b)</span></tt>.  The default measure function is
+<tt class="xref py py-func docutils literal"><span class="pre">count_ops()</span></tt>, which returns the total number of operations in the
+expression.</p>
+<p>For example, if <tt class="docutils literal"><span class="pre">ratio=1</span></tt>, <tt class="docutils literal"><span class="pre">simplify</span></tt> output can&#8217;t be longer
+than input.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">count_ops</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Since <tt class="docutils literal"><span class="pre">simplify(root)</span></tt> would result in a slightly longer expression,
+root is returned unchanged instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">root</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If <tt class="docutils literal"><span class="pre">ratio=oo</span></tt>, simplify will be applied anyway:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">count_ops</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="n">oo</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Note that the shortest expression is not necessary the simplest, so
+setting <tt class="docutils literal"><span class="pre">ratio</span></tt> to 1 may not be a good idea.
+Heuristically, the default value <tt class="docutils literal"><span class="pre">ratio=1.7</span></tt> seems like a reasonable
+choice.</p>
+<p>You can easily define your own measure function based on what you feel
+should represent the &#8220;size&#8221; or &#8220;complexity&#8221; of the input expression.  Note
+that some choices, such as <tt class="docutils literal"><span class="pre">lambda</span> <span class="pre">expr:</span> <span class="pre">len(str(expr))</span></tt> may appear to be
+good metrics, but have other problems (in this case, the measure function
+may slow down simplify too much for very large expressions).  If you don&#8217;t
+know what a good metric would be, the default, <tt class="docutils literal"><span class="pre">count_ops</span></tt>, is a good
+one.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">log(a*b**(-log(a) + 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">count_ops</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">count_ops</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+<p>So you can see that <tt class="docutils literal"><span class="pre">h</span></tt> is simpler than <tt class="docutils literal"><span class="pre">g</span></tt> using the count_ops metric.
+However, we may not like how <tt class="docutils literal"><span class="pre">simplify</span></tt> (in this case, using
+<tt class="docutils literal"><span class="pre">logcombine</span></tt>) has created the <tt class="docutils literal"><span class="pre">b**(log(1/a)</span> <span class="pre">+</span> <span class="pre">1)</span></tt> term.  A simple way
+to reduce this would be to give more weight to powers as operations in
+<tt class="docutils literal"><span class="pre">count_ops</span></tt>.  We can do this by using the <tt class="docutils literal"><span class="pre">visual=True</span></tt> option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">count_ops</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">2*ADD + DIV + 4*LOG + MUL</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">count_ops</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">2*LOG + MUL + POW + SUB</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_measure</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">POW</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;POW&#39;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c"># Discourage powers by giving POW a weight of 10</span>
+<span class="gp">... </span>    <span class="n">count</span> <span class="o">=</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">POW</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c"># Every other operation gets a weight of 1 (the default)</span>
+<span class="gp">... </span>    <span class="n">count</span> <span class="o">=</span> <span class="n">count</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">Symbol</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_measure</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_measure</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+<span class="go">14</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">15.</span><span class="o">/</span><span class="mi">8</span> <span class="o">&gt;</span> <span class="mf">1.7</span> <span class="c"># 1.7 is the default ratio</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">measure</span><span class="o">=</span><span class="n">my_measure</span><span class="p">)</span>
+<span class="go">-log(a)*log(b) + log(a) + log(b)</span>
+</pre></div>
+</div>
+<p>Note that because <tt class="docutils literal"><span class="pre">simplify()</span></tt> internally tries many different
+simplification strategies and then compares them using the measure
+function, we get a completely different result that is still different
+from the input expression by doing this.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="collect">
+<h2>collect<a class="headerlink" href="#collect" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.collect">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">collect</tt><big>(</big><em>expr</em>, <em>syms</em>, <em>func=None</em>, <em>evaluate=True</em>, <em>exact=False</em>, <em>distribute_order_term=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect additive terms of an expression.</p>
+<p>This function collects additive terms of an expression with respect
+to a list of expression up to powers with rational exponents. By the
+term symbol here are meant arbitrary expressions, which can contain
+powers, products, sums etc. In other words symbol is a pattern which
+will be searched for in the expression&#8217;s terms.</p>
+<p>The input expression is not expanded by <a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-func docutils literal"><span class="pre">collect()</span></tt></a>, so user is
+expected to provide an expression is an appropriate form. This makes
+<a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-func docutils literal"><span class="pre">collect()</span></tt></a> more predictable as there is no magic happening behind the
+scenes. However, it is important to note, that powers of products are
+converted to products of powers using the <tt class="xref py py-func docutils literal"><span class="pre">expand_power_base()</span></tt>
+function.</p>
+<p>There are two possible types of output. First, if <tt class="docutils literal"><span class="pre">evaluate</span></tt> flag is
+set, this function will return an expression with collected terms or
+else it will return a dictionary with expressions up to rational powers
+as keys and collected coefficients as values.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.simplify.simplify.collect_const" title="sympy.simplify.simplify.collect_const"><tt class="xref py py-obj docutils literal"><span class="pre">collect_const</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.collect_sqrt" title="sympy.simplify.simplify.collect_sqrt"><tt class="xref py py-obj docutils literal"><span class="pre">collect_sqrt</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.rcollect" title="sympy.simplify.simplify.rcollect"><tt class="xref py py-obj docutils literal"><span class="pre">rcollect</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">collect</span><span class="p">,</span> <span class="n">expand</span><span class="p">,</span> <span class="n">factor</span><span class="p">,</span> <span class="n">Wild</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</pre></div>
+</div>
+<p>This function can collect symbolic coefficients in polynomials or
+rational expressions. It will manage to find all integer or rational
+powers of collection variable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">c + x**2*(a + b) + x*(a - b)</span>
+</pre></div>
+</div>
+<p>The same result can be achieved in dictionary form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">a + b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+<span class="go">a - b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">]</span>
+<span class="go">c</span>
+</pre></div>
+</div>
+<p>You can also work with multivariate polynomials. However, remember that
+this function is greedy so it will care only about a single symbol at time,
+in specification order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+<span class="go">x**2*(y + 1) + x*y + y*(a + 1)</span>
+</pre></div>
+</div>
+<p>Also more complicated expressions can be used as patterns:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(a + b)*sin(2*x)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">x*(a + b)*log(x)</span>
+</pre></div>
+</div>
+<p>You can use wildcards in the pattern:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;w1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="o">**</span><span class="n">y</span><span class="p">)</span>
+<span class="go">x**y*(a - b)</span>
+</pre></div>
+</div>
+<p>It is also possible to work with symbolic powers, although it has more
+complicated behavior, because in this case power&#8217;s base and symbolic part
+of the exponent are treated as a single symbol:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">a*x**c + b*x**c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">c</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span>
+<span class="go">x**c*(a + b)</span>
+</pre></div>
+</div>
+<p>However if you incorporate rationals to the exponents, then you will get
+well known behavior:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">c</span><span class="p">),</span> <span class="n">x</span><span class="o">**</span><span class="n">c</span><span class="p">)</span>
+<span class="go">x**(2*c)*(a + b)</span>
+</pre></div>
+</div>
+<p>Note also that all previously stated facts about <a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-func docutils literal"><span class="pre">collect()</span></tt></a> function
+apply to the exponential function, so you can get:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(a + b)*exp(2*x)</span>
+</pre></div>
+</div>
+<p>If you are interested only in collecting specific powers of some symbols
+then set <tt class="docutils literal"><span class="pre">exact</span></tt> flag in arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">7</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">7</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">a*x**7 + b*x**7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">7</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">7</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">7</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**7*(a + b)</span>
+</pre></div>
+</div>
+<p>You can also apply this function to differential equations, where
+derivatives of arbitrary order can be collected. Note that if you
+collect with respect to a function or a derivative of a function, all
+derivatives of that function will also be collected. Use
+<tt class="docutils literal"><span class="pre">exact=True</span></tt> to prevent this from happening:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Derivative</span> <span class="k">as</span> <span class="n">D</span><span class="p">,</span> <span class="n">collect</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(a + b)*Derivative(f(x), x)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">(a + b)*Derivative(f(x), x, x)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">),</span> <span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">f</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">(a + b)*f(x) + (a + b)*Derivative(f(x), x)</span>
+</pre></div>
+</div>
+<p>Or you can even match both derivative order and exponent at the same time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">D</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(a + b)*Derivative(f(x), x, x)**2</span>
+</pre></div>
+</div>
+<p>Finally, you can apply a function to each of the collected coefficients.
+For example you can factorize symbolic coefficients of polynomial:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">expand</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">factor</span><span class="p">)</span>
+<span class="go">x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Arguments are expected to be in expanded form, so you might have
+to call <tt class="xref py py-func docutils literal"><span class="pre">expand()</span></tt> prior to calling this function.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.simplify.simplify.rcollect">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">rcollect</tt><big>(</big><em>expr</em>, <em>*vars</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#rcollect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.rcollect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively collect sums in an expression.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-obj docutils literal"><span class="pre">collect</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.collect_const" title="sympy.simplify.simplify.collect_const"><tt class="xref py py-obj docutils literal"><span class="pre">collect_const</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.collect_sqrt" title="sympy.simplify.simplify.collect_sqrt"><tt class="xref py py-obj docutils literal"><span class="pre">collect_sqrt</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">rcollect</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rcollect</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">(x + y*(x**2 + x + 1))/(x + y)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="separate">
+<h2>separate<a class="headerlink" href="#separate" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.separate">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">separate</tt><big>(</big><em>expr</em>, <em>deep=False</em>, <em>force=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#separate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.separate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deprecated wrapper for <tt class="docutils literal"><span class="pre">expand_power_base()</span></tt>.  Use that function instead.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="separatevars">
+<h2>separatevars<a class="headerlink" href="#separatevars" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.separatevars">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">separatevars</tt><big>(</big><em>expr</em>, <em>symbols=</em><span class="optional">[</span><span class="optional">]</span>, <em>dict=False</em>, <em>force=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#separatevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.separatevars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separates variables in an expression, if possible.  By
+default, it separates with respect to all symbols in an
+expression and collects constant coefficients that are
+independent of symbols.</p>
+<p>If dict=True then the separated terms will be returned
+in a dictionary keyed to their corresponding symbols.
+By default, all symbols in the expression will appear as
+keys; if symbols are provided, then all those symbols will
+be used as keys, and any terms in the expression containing
+other symbols or non-symbols will be returned keyed to the
+string &#8216;coeff&#8217;. (Passing None for symbols will return the
+expression in a dictionary keyed to &#8216;coeff&#8217;.)</p>
+<p>If force=True, then bases of powers will be separated regardless
+of assumptions on the symbols involved.</p>
+<p class="rubric">Notes</p>
+<p>The order of the factors is determined by Mul, so that the
+separated expressions may not necessarily be grouped together.</p>
+<p>Although factoring is necessary to separate variables in some
+expressions, it is not necessary in all cases, so one should not
+count on the returned factors being factored.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">alpha</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">separatevars</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">((</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="n">y</span><span class="p">)</span>
+<span class="go">(x*y)**y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">((</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**y*y**y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">2*x**2*z*(sin(y) + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{&#39;coeff&#39;: 2*z, x: x**2, y: sin(y) + 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">alpha</span><span class="p">],</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">{&#39;coeff&#39;: 2*z, alpha: 1, x: x**2, y: sin(y) + 1}</span>
+</pre></div>
+</div>
+<p>If the expression is not really separable, or is only partially
+separable, separatevars will do the best it can to separate it
+by using factoring.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">-x*(3*x - y - 1)</span>
+</pre></div>
+</div>
+<p>If the expression is not separable then expr is returned unchanged
+or (if dict=True) then None is returned.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">==</span> <span class="n">eq</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">separatevars</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">symbols</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nthroot">
+<h2>nthroot<a class="headerlink" href="#nthroot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.nthroot">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">nthroot</tt><big>(</big><em>expr</em>, <em>n</em>, <em>max_len=4</em>, <em>prec=15</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#nthroot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.nthroot" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute a real nth-root of a sum of surds</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : sum of surds</p>
+<p><strong>n</strong> : integer</p>
+<p class="last"><strong>max_len</strong> : maximum number of surds passed as constants to <tt class="docutils literal"><span class="pre">nsimplify</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">nthroot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nthroot</span><span class="p">(</span><span class="mi">90</span> <span class="o">+</span> <span class="mi">34</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">sqrt(7) + 3</span>
+</pre></div>
+</div>
+<p class="rubric">Algorithm</p>
+<p>First <tt class="docutils literal"><span class="pre">nsimplify</span></tt> is used to get a candidate root; if it is not a
+root the minimal polynomial is computed; the answer is one of its
+roots.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="rad-rationalize">
+<h2>rad_rationalize<a class="headerlink" href="#rad-rationalize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.rad_rationalize">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">rad_rationalize</tt><big>(</big><em>num</em>, <em>den</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#rad_rationalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.rad_rationalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rationalize num/den by removing square roots in the denominator;
+num and den are sum of terms whose squares are rationals</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">rad_rationalize</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rad_rationalize</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(-sqrt(3) + sqrt(6)/3, -7/9)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="radsimp">
+<h2>radsimp<a class="headerlink" href="#radsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.radsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">radsimp</tt><big>(</big><em>expr</em>, <em>symbolic=True</em>, <em>max_terms=4</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#radsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.radsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rationalize the denominator by removing square roots.</p>
+<p>Note: the expression returned from radsimp must be used with caution
+since if the denominator contains symbols, it will be possible to make
+substitutions that violate the assumptions of the simplification process:
+that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If
+there are no symbols, this assumptions is made valid by collecting terms
+of sqrt(c) so the match variable <tt class="docutils literal"><span class="pre">a</span></tt> does not contain <tt class="docutils literal"><span class="pre">sqrt(c)</span></tt>.) If
+you do not want the simplification to occur for symbolic denominators, set
+<tt class="docutils literal"><span class="pre">symbolic</span></tt> to False.</p>
+<p>If there are more than <tt class="docutils literal"><span class="pre">max_terms</span></tt> radical terms then the expression is
+returned unchanged.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">radsimp</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">denom</span><span class="p">,</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factor_terms</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">signsimp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">collect_sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">(1 - I)/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">(-sqrt(2) + 2)/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Symbol</span><span class="p">,</span> <span class="s">&#39;xy&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="p">((</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">sqrt(2)*(x + y)</span>
+</pre></div>
+</div>
+<p>No simplification beyond removal of the gcd is done. One might
+want to polish the result a little, however, by collecting
+square root terms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r5</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ans</span> <span class="o">=</span> <span class="n">radsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">r5</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r5</span><span class="p">));</span> <span class="n">pprint</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+<span class="go">    ___       ___       ___       ___</span>
+<span class="go">  \/ 5 *a + \/ 5 *b - \/ 2 *x - \/ 2 *y</span>
+<span class="go">------------------------------------------</span>
+<span class="go">   2               2      2              2</span>
+<span class="go">5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">factor_terms</span><span class="p">(</span><span class="n">signsimp</span><span class="p">(</span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">/</span><span class="n">d</span><span class="p">,</span> <span class="n">radical</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">        ___             ___</span>
+<span class="go">      \/ 5 *(a + b) - \/ 2 *(x + y)</span>
+<span class="go">------------------------------------------</span>
+<span class="go">   2               2      2              2</span>
+<span class="go">5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y</span>
+</pre></div>
+</div>
+<p>If radicals in the denominator cannot be removed or there is no denominator,
+the original expression will be returned.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">sqrt(2)*x + sqrt(2)</span>
+</pre></div>
+</div>
+<p>Results with symbols will not always be valid for all substitutions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="go">1/(2*b*sqrt(c))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="go">nan</span>
+</pre></div>
+</div>
+<p>If symbolic=False, symbolic denominators will not be transformed (but
+numeric denominators will still be processed):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">radsimp</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">symbolic</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">1/(a + b*sqrt(c))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ratsimp">
+<h2>ratsimp<a class="headerlink" href="#ratsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.ratsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">ratsimp</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#ratsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.ratsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put an expression over a common denominator, cancel and reduce.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ratsimp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ratsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">y</span><span class="p">)</span>
+<span class="go">(x + y)/(x*y)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fraction">
+<h2>fraction<a class="headerlink" href="#fraction" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.fraction">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">fraction</tt><big>(</big><em>expr</em>, <em>exact=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a pair with expression&#8217;s numerator and denominator.
+If the given expression is not a fraction then this function
+will return the tuple (expr, 1).</p>
+<p>This function will not make any attempt to simplify nested
+fractions or to do any term rewriting at all.</p>
+<p>If only one of the numerator/denominator pair is needed then
+use numer(expr) or denom(expr) functions respectively.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">y</span><span class="p">)</span>
+<span class="go">(x, y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">(x, 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(1, y**2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(x*y, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">(1, 2)</span>
+</pre></div>
+</div>
+<p>This function will also work fine with assumptions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="n">k</span><span class="p">)</span>
+<span class="go">(x, y**(-k))</span>
+</pre></div>
+</div>
+<p>If we know nothing about sign of some exponent and &#8216;exact&#8217;
+flag is unset, then structure this exponent&#8217;s structure will
+be analyzed and pretty fraction will be returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">y</span><span class="p">))</span>
+<span class="go">(2, x**y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(1, exp(x))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fraction</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(exp(-x), 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="trigsimp">
+<h2>trigsimp<a class="headerlink" href="#trigsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.trigsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">trigsimp</tt><big>(</big><em>expr</em>, <em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#trigsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.trigsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>reduces expression by using known trig identities</p>
+<p class="rubric">Notes</p>
+<p>method:
+- Determine the method to use. Valid choices are &#8216;matching&#8217; (default),
+&#8216;groebner&#8217;, &#8216;combined&#8217;, and &#8216;fu&#8217;. If &#8216;matching&#8217;, simplify the
+expression recursively by targeting common patterns. If &#8216;groebner&#8217;, apply
+an experimental groebner basis algorithm. In this case further options
+are forwarded to <tt class="docutils literal"><span class="pre">trigsimp_groebner</span></tt>, please refer to its docstring.
+If &#8216;combined&#8217;, first run the groebner basis algorithm with small
+default parameters, then run the &#8216;matching&#8217; algorithm. &#8216;fu&#8217; runs the
+collection of trigonometric transformations described by Fu, et al.
+(see the <span class="math">\(fu\)</span> docstring).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">trigsimp</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trigsimp</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>Simplification occurs wherever trigonometric functions are located.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">trigsimp</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="go">log(2)</span>
+</pre></div>
+</div>
+<p>Using <span class="math">\(method=&quot;groebner&quot;\)</span> (or <span class="math">\(&quot;combined&quot;\)</span>) might lead to greater
+simplification.</p>
+<p>The old trigsimp routine can be accessed as with method &#8216;old&#8217;.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">coth</span><span class="p">,</span> <span class="n">tanh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">7</span> <span class="o">-</span> <span class="mi">2</span><span class="o">/</span><span class="n">coth</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trigsimp</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;old&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">t</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trigsimp</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">tanh(x)**7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="besselsimp">
+<h2>besselsimp<a class="headerlink" href="#besselsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.besselsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">besselsimp</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#besselsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.besselsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify bessel-type functions.</p>
+<p>This routine tries to simplify bessel-type functions. Currently it only
+works on the Bessel J and I functions, however. It works by looking at all
+such functions in turn, and eliminating factors of &#8220;I&#8221; and &#8220;-1&#8221; (actually
+their polar equivalents) in front of the argument. Then, functions of
+half-integer order are rewritten using trigonometric functions and
+functions of integer order (&gt; 1) are rewritten using functions
+of low order.  Finally, if the expression was changed, compute
+factorization of the result with factor().</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">besselj</span><span class="p">,</span> <span class="n">besseli</span><span class="p">,</span> <span class="n">besselsimp</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">z</span><span class="p">,</span> <span class="n">nu</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselsimp</span><span class="p">(</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="o">*</span><span class="n">polar_lift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">exp(I*pi*nu)*besselj(nu, z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselsimp</span><span class="p">(</span><span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="o">*</span><span class="n">polar_lift</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="p">)))</span>
+<span class="go">exp(-I*pi*nu/2)*besselj(nu, z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselsimp</span><span class="p">(</span><span class="n">besseli</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselsimp</span><span class="p">(</span><span class="n">z</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="p">(</span><span class="n">besseli</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">besseli</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">3*z*besseli(0, z)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="powsimp">
+<h2>powsimp<a class="headerlink" href="#powsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.powsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">powsimp</tt><big>(</big><em>expr</em>, <em>deep=False</em>, <em>combine='all'</em>, <em>force=False</em>, <em>measure=&lt;function count_ops at 0x2dd3aa0&gt;</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#powsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.powsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>reduces expression by combining powers with similar bases and exponents.</p>
+<p class="rubric">Notes</p>
+<p>If deep is True then powsimp() will also simplify arguments of
+functions. By default deep is set to False.</p>
+<p>If force is True then bases will be combined without checking for
+assumptions, e.g. sqrt(x)*sqrt(y) -&gt; sqrt(x*y) which is not true
+if x and y are both negative.</p>
+<p>You can make powsimp() only combine bases or only combine exponents by
+changing combine=&#8217;base&#8217; or combine=&#8217;exp&#8217;.  By default, combine=&#8217;all&#8217;,
+which does both.  combine=&#8217;base&#8217; will only combine:</p>
+<div class="highlight-python"><pre> a   a          a                          2x      x
+x * y  =&gt;  (x*y)   as well as things like 2   =&gt;  4</pre>
+</div>
+<p>and combine=&#8217;exp&#8217; will only combine</p>
+<div class="highlight-python"><pre> a   b      (a + b)
+x * x  =&gt;  x</pre>
+</div>
+<p>combine=&#8217;exp&#8217; will strictly only combine exponents in the way that used
+to be automatic.  Also use deep=True if you need the old behavior.</p>
+<p>When combine=&#8217;all&#8217;, &#8216;exp&#8217; is evaluated first.  Consider the first
+example below for when there could be an ambiguity relating to this.
+This is done so things like the second example can be completely
+combined.  If you want &#8216;base&#8217; combined first, do something like
+powsimp(powsimp(expr, combine=&#8217;base&#8217;), combine=&#8217;exp&#8217;).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">powsimp</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">z</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">)</span>
+<span class="go">x**(y + z)*y**z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">z</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">)</span>
+<span class="go">x**(y + z)*y**z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">z</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;base&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**y*(x*y)**z</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(n*x)**(y + z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">)</span>
+<span class="go">n**(y + z)*x**(y + z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;base&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(n*x)**y*(n*x)**z</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+<span class="go">log(exp(x)*exp(y))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powsimp</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x + y</span>
+</pre></div>
+</div>
+<p>Radicals with Mul bases will be combined if combine=&#8217;exp&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Mul</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Two radicals are automatically joined through Mul:
+&gt;&gt;&gt; a=sqrt(x*sqrt(y))
+&gt;&gt;&gt; a*a**3 == a**4
+True</p>
+<p>But if an integer power of that radical has been
+autoexpanded then Mul does not join the resulting factors:
+&gt;&gt;&gt; a**4 # auto expands to a Mul, no longer a Pow
+x**2*y
+&gt;&gt;&gt; _*a # so Mul doesn&#8217;t combine them
+x**2*y*sqrt(x*sqrt(y))
+&gt;&gt;&gt; powsimp(_) # but powsimp will
+(x*sqrt(y))**(5/2)
+&gt;&gt;&gt; powsimp(x*y*a) # but won&#8217;t when doing so would violate assumptions
+x*y*sqrt(x*sqrt(y))</p>
+</dd></dl>
+
+</div>
+<div class="section" id="combsimp">
+<h2>combsimp<a class="headerlink" href="#combsimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.combsimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">combsimp</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#combsimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.combsimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify combinatorial expressions.</p>
+<p>This function takes as input an expression containing factorials,
+binomials, Pochhammer symbol and other &#8220;combinatorial&#8221; functions,
+and tries to minimize the number of those functions and reduce
+the size of their arguments. The result is be given in terms of
+binomials and factorials.</p>
+<p>The algorithm works by rewriting all combinatorial functions as
+expressions involving rising factorials (Pochhammer symbols) and
+applies recurrence relations and other transformations applicable
+to rising factorials, to reduce their arguments, possibly letting
+the resulting rising factorial to cancel. Rising factorials with
+the second argument being an integer are expanded into polynomial
+forms and finally all other rising factorial are rewritten in terms
+more familiar functions. If the initial expression contained any
+combinatorial functions, the result is expressed using binomial
+coefficients and gamma functions. If the initial expression consisted
+of gamma functions alone, the result is expressed in terms of gamma
+functions.</p>
+<p>If the result is expressed using gamma functions, the following three
+additional steps are performed:</p>
+<ol class="arabic simple">
+<li>Reduce the number of gammas by applying the reflection theorem
+gamma(x)*gamma(1-x) == pi/sin(pi*x).</li>
+<li>Reduce the number of gammas by applying the multiplication theorem
+gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x).</li>
+<li>Reduce the number of prefactors by absorbing them into gammas, where
+possible.</li>
+</ol>
+<p>All transformation rules can be found (or was derived from) here:</p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/">http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/</a></li>
+<li><a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/">http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/</a></li>
+</ol>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">combsimp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">binomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">combsimp</span><span class="p">(</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">n*(n - 2)*(n - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combsimp</span><span class="p">(</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="go">(n + 1)/(k + 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="hypersimp">
+<h2>hypersimp<a class="headerlink" href="#hypersimp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.hypersimp">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">hypersimp</tt><big>(</big><em>f</em>, <em>k</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#hypersimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.hypersimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given combinatorial term f(k) simplify its consecutive term ratio
+i.e. f(k+1)/f(k).  The input term can be composed of functions and
+integer sequences which have equivalent representation in terms
+of gamma special function.</p>
+<p>The algorithm performs three basic steps:</p>
+<ol class="arabic simple">
+<li>Rewrite all functions in terms of gamma, if possible.</li>
+<li>Rewrite all occurrences of gamma in terms of products
+of gamma and rising factorial with integer,  absolute
+constant exponent.</li>
+<li>Perform simplification of nested fractions, powers
+and if the resulting expression is a quotient of
+polynomials, reduce their total degree.</li>
+</ol>
+<p>If f(k) is hypergeometric then as result we arrive with a
+quotient of polynomials of minimal degree. Otherwise None
+is returned.</p>
+<p>For more information on the implemented algorithm refer to:</p>
+<ol class="arabic simple">
+<li>W. Koepf, Algorithms for m-fold Hypergeometric Summation,
+Journal of Symbolic Computation (1995) 20, 399-417</li>
+</ol>
+</dd></dl>
+
+</div>
+<div class="section" id="hypersimilar">
+<h2>hypersimilar<a class="headerlink" href="#hypersimilar" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.hypersimilar">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">hypersimilar</tt><big>(</big><em>f</em>, <em>g</em>, <em>k</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#hypersimilar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.hypersimilar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if &#8216;f&#8217; and &#8216;g&#8217; are hyper-similar.</p>
+<p>Similarity in hypergeometric sense means that a quotient of
+f(k) and g(k) is a rational function in k.  This procedure
+is useful in solving recurrence relations.</p>
+<p>For more information see hypersimp().</p>
+</dd></dl>
+
+</div>
+<div class="section" id="nsimplify">
+<h2>nsimplify<a class="headerlink" href="#nsimplify" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.nsimplify">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">nsimplify</tt><big>(</big><em>expr</em>, <em>constants=</em><span class="optional">[</span><span class="optional">]</span>, <em>tolerance=None</em>, <em>full=False</em>, <em>rational=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#nsimplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.nsimplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a simple representation for a number or, if there are free symbols or
+if rational=True, then replace Floats with their Rational equivalents. If
+no change is made and rational is not False then Floats will at least be
+converted to Rationals.</p>
+<p>For numerical expressions, a simple formula that numerically matches the
+given numerical expression is sought (and the input should be possible
+to evalf to a precision of at least 30 digits).</p>
+<p>Optionally, a list of (rationally independent) constants to
+include in the formula may be given.</p>
+<p>A lower tolerance may be set to find less exact matches. If no tolerance
+is given then the least precise value will set the tolerance (e.g. Floats
+default to 15 digits of precision, so would be tolerance=10**-15).</p>
+<p>With full=True, a more extensive search is performed
+(this is useful to find simpler numbers when the tolerance
+is set low).</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../core.html#sympy.core.function.nfloat" title="sympy.core.function.nfloat"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.function.nfloat</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">nsimplify</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">GoldenRatio</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)),</span> <span class="p">[</span><span class="n">GoldenRatio</span><span class="p">])</span>
+<span class="go">-2 + 2*GoldenRatio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">1/2 - I*sqrt(sqrt(5)/10 + 1/4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">I</span><span class="o">**</span><span class="n">I</span><span class="p">,</span> <span class="p">[</span><span class="n">pi</span><span class="p">])</span>
+<span class="go">exp(-pi/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="go">22/7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="collect-sqrt">
+<h2>collect_sqrt<a class="headerlink" href="#collect-sqrt" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.collect_sqrt">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">collect_sqrt</tt><big>(</big><em>expr</em>, <em>evaluate=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#collect_sqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.collect_sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return expr with terms having common square roots collected together.
+If <tt class="docutils literal"><span class="pre">evaluate</span></tt> is False a count indicating the number of sqrt-containing
+terms will be returned and, if non-zero, the terms of the Add will be
+returned, else the expression itself will be returned as a single term.
+If <tt class="docutils literal"><span class="pre">evaluate</span></tt> is True, the expression with any collected terms will be
+returned.</p>
+<p>Note: since I = sqrt(-1), it is collected, too.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-obj docutils literal"><span class="pre">collect</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.collect_const" title="sympy.simplify.simplify.collect_const"><tt class="xref py py-obj docutils literal"><span class="pre">collect_const</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.rcollect" title="sympy.simplify.simplify.rcollect"><tt class="xref py py-obj docutils literal"><span class="pre">rcollect</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">collect_sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span><span class="p">,</span> <span class="n">r3</span><span class="p">,</span> <span class="n">r5</span> <span class="o">=</span> <span class="p">[</span><span class="n">sqrt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r2</span><span class="p">)</span>
+<span class="go">sqrt(2)*(a + b)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">r3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r3</span><span class="p">)</span>
+<span class="go">sqrt(2)*(a + b) + sqrt(3)*(a + b)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">r3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r5</span><span class="p">)</span>
+<span class="go">sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)</span>
+</pre></div>
+</div>
+<p>If evaluate is False then the arguments will be sorted and
+returned as a list and a count of the number of sqrt-containing
+terms will be returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r2</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">r3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">r5</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">((sqrt(3)*a, sqrt(5)*b, sqrt(2)*(a + b)), 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">((b, sqrt(2)*a), 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_sqrt</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">((a + b,), 0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="collect-const">
+<h2>collect_const<a class="headerlink" href="#collect-const" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.collect_const">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">collect_const</tt><big>(</big><em>expr</em>, <em>*vars</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#collect_const"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.collect_const" title="Permalink to this definition">¶</a></dt>
+<dd><p>A non-greedy collection of terms with similar number coefficients in
+an Add expr. If <tt class="docutils literal"><span class="pre">vars</span></tt> is given then only those constants will be
+targeted. Although any Number can also be targeted, if this is not
+desired set <tt class="docutils literal"><span class="pre">Numbers=False</span></tt> and no Float or Rational will be collected.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.simplify.simplify.collect" title="sympy.simplify.simplify.collect"><tt class="xref py py-obj docutils literal"><span class="pre">collect</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.collect_sqrt" title="sympy.simplify.simplify.collect_sqrt"><tt class="xref py py-obj docutils literal"><span class="pre">collect_sqrt</span></tt></a>, <a class="reference internal" href="#sympy.simplify.simplify.rcollect" title="sympy.simplify.simplify.rcollect"><tt class="xref py py-obj docutils literal"><span class="pre">rcollect</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">collect_const</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">sqrt(3)*(sqrt(2) + 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+<span class="go">(sqrt(3) + sqrt(7))*(s + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+<span class="go">(sqrt(2) + 3)*(sqrt(3) + sqrt(7))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="n">s</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)</span>
+</pre></div>
+</div>
+<p>The collection is sign-sensitive, giving higher precedence to the
+unsigned values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">x - (y + z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="o">-</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">-(y + z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">2*(x - y - z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collect_const</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">2*x - 2*(y + z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="posify">
+<h2>posify<a class="headerlink" href="#posify" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.posify">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">posify</tt><big>(</big><em>eq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#posify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.posify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return eq (with generic symbols made positive) and a restore
+dictionary.</p>
+<p>Any symbol that has positive=None will be replaced with a positive dummy
+symbol having the same name. This replacement will allow more symbolic
+processing of expressions, especially those involving powers and
+logarithms.</p>
+<p>A dictionary that can be sent to subs to restore eq to its original
+symbols is also returned.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">posify</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">posify</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">(_x + n + p, {_x: x})</span>
+</pre></div>
+</div>
+<p>&gt;&gt; log(1/x).expand() # should be log(1/x) but it comes back as -log(x)
+log(1/x)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">posify</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span> <span class="c"># take [0] and ignore replacements</span>
+<span class="go">-log(_x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span><span class="p">,</span> <span class="n">rep</span> <span class="o">=</span> <span class="n">posify</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">rep</span><span class="p">)</span>
+<span class="go">-log(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">posify</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">])</span>
+<span class="go">([_x, _x + 1], {_x: x})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="powdenest">
+<h2>powdenest<a class="headerlink" href="#powdenest" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.powdenest">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">powdenest</tt><big>(</big><em>eq</em>, <em>force=False</em>, <em>polar=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#powdenest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.powdenest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect exponents on powers as assumptions allow.</p>
+<dl class="docutils">
+<dt>Given <tt class="docutils literal"><span class="pre">(bb**be)**e</span></tt>, this can be simplified as follows:</dt>
+<dd><ul class="first last simple">
+<li>if <tt class="docutils literal"><span class="pre">bb</span></tt> is positive, or</li>
+<li><tt class="docutils literal"><span class="pre">e</span></tt> is an integer, or</li>
+<li><tt class="docutils literal"><span class="pre">|be|</span> <span class="pre">&lt;</span> <span class="pre">1</span></tt> then this simplifies to <tt class="docutils literal"><span class="pre">bb**(be*e)</span></tt></li>
+</ul>
+</dd>
+</dl>
+<p>Given a product of powers raised to a power, <tt class="docutils literal"><span class="pre">(bb1**be1</span> <span class="pre">*</span>
+<span class="pre">bb2**be2...)**e</span></tt>, simplification can be done as follows:</p>
+<ul class="simple">
+<li>if e is positive, the gcd of all bei can be joined with e;</li>
+<li>all non-negative bb can be separated from those that are negative
+and their gcd can be joined with e; autosimplification already
+handles this separation.</li>
+<li>integer factors from powers that have integers in the denominator
+of the exponent can be removed from any term and the gcd of such
+integers can be joined with e</li>
+</ul>
+<p>Setting <tt class="docutils literal"><span class="pre">force</span></tt> to True will make symbols that are not explicitly
+negative behave as though they are positive, resulting in more
+denesting.</p>
+<p>Setting <tt class="docutils literal"><span class="pre">polar</span></tt> to True will do simplifications on the riemann surface of
+the logarithm, also resulting in more denestings.</p>
+<p>When there are sums of logs in exp() then a product of powers may be
+obtained e.g. <tt class="docutils literal"><span class="pre">exp(3*(log(a)</span> <span class="pre">+</span> <span class="pre">2*log(b)))</span></tt> - &gt; <tt class="docutils literal"><span class="pre">a**3*b**6</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">powdenest</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">/</span><span class="mi">3</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(x**(2*a/3))**(3*x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">2**(3*x)</span>
+</pre></div>
+</div>
+<p>Assumptions may prevent expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">sqrt(x**2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">p</span>
+</pre></div>
+</div>
+<p>No other expansion is done.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">))</span> <span class="c"># -X-&gt; (x**x)**i*(x**x)**j</span>
+<span class="go">x**(x*(i + j))</span>
+</pre></div>
+</div>
+<p>But exp() will be denested by moving all non-log terms outside of
+the function; this may result in the collapsing of the exp to a power
+with a different base:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+<span class="go">x**(3*y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">))))</span>
+<span class="go">(a*b)**y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">))))</span>
+<span class="go">a**3*b**3</span>
+</pre></div>
+</div>
+<p>If assumptions allow, symbols can also be moved to the outermost exponent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(((</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">))</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+<span class="go">((x**(2*i))**(3*y))**x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(((</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">))</span><span class="o">**</span><span class="n">x</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**(6*i*x*y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(((</span><span class="n">p</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">))</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+<span class="go">p**(6*a*x*y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(((</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">/</span><span class="mi">3</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="o">/</span><span class="n">i</span><span class="p">))</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+<span class="go">((x**(2*a/3))**(3*y/i))**x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">i</span><span class="p">))</span><span class="o">**</span><span class="n">z</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(x*y**2)**(2*i*z)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**(i*y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">((</span><span class="n">n</span><span class="o">**</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="n">x</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(n**i)**x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="logcombine">
+<h2>logcombine<a class="headerlink" href="#logcombine" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.simplify.simplify.logcombine">
+<tt class="descclassname">sympy.simplify.simplify.</tt><tt class="descname">logcombine</tt><big>(</big><em>expr</em>, <em>force=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/simplify.html#logcombine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.simplify.logcombine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes logarithms and combines them using the following rules:</p>
+<ul class="simple">
+<li>log(x) + log(y) == log(x*y) if both are not negative</li>
+<li>a*log(x) == log(x**a) if x is positive and a is real</li>
+</ul>
+<p>If <tt class="docutils literal"><span class="pre">force</span></tt> is True then the assumptions above will be assumed to hold if
+there is no assumption already in place on a quantity. For example, if
+<tt class="docutils literal"><span class="pre">a</span></tt> is imaginary or the argument negative, force will not perform a
+combination but if <tt class="docutils literal"><span class="pre">a</span></tt> is a symbol with no assumptions the change will
+take place.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.simplify.simplify.posify" title="sympy.simplify.simplify.posify"><tt class="xref py py-obj docutils literal"><span class="pre">posify</span></tt></a></dt>
+<dd>replace all symbols with symbols having positive assumptions</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">logcombine</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logcombine</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+<span class="go">a*log(x) + log(y) - log(z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logcombine</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">log(x**a*y/z)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y,z&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logcombine</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+<span class="go">log(x**a*y/z)</span>
+</pre></div>
+</div>
+<p>The transformation is limited to factors and/or terms that
+contain logs, so the result depends on the initial state of
+expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logcombine</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">==</span> <span class="n">eq</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logcombine</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">expand</span><span class="p">(),</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">log(x**2) + I*log(x**3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.simplify.sqrtdenest">
+<span id="square-root-denest"></span><h2>Square Root Denest<a class="headerlink" href="#module-sympy.simplify.sqrtdenest" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sqrtdenest">
+<h3>sqrtdenest<a class="headerlink" href="#sqrtdenest" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.simplify.sqrtdenest.sqrtdenest">
+<tt class="descclassname">sympy.simplify.sqrtdenest.</tt><tt class="descname">sqrtdenest</tt><big>(</big><em>expr</em>, <em>max_iter=3</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/sqrtdenest.html#sqrtdenest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.sqrtdenest.sqrtdenest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Denests sqrts in an expression that contain other square roots
+if possible, otherwise returns the expr unchanged. This is based on the
+algorithms of [1].</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.solvers.solvers.unrad</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<p>[1] <a class="reference external" href="http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf">http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf</a></p>
+<p>[2] D. J. Jeffrey and A. D. Rich, &#8216;Symplifying Square Roots of Square Roots
+by Denesting&#8217; (available at <a class="reference external" href="http://www.cybertester.com/data/denest.pdf">http://www.cybertester.com/data/denest.pdf</a>)</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.sqrtdenest</span> <span class="kn">import</span> <span class="n">sqrtdenest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrtdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">6</span><span class="p">)))</span>
+<span class="go">sqrt(2) + sqrt(3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.simplify.cse_main">
+<span id="common-subexpresion-elimination"></span><h2>Common Subexpresion Elimination<a class="headerlink" href="#module-sympy.simplify.cse_main" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cse">
+<h3>cse<a class="headerlink" href="#cse" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.simplify.cse_main.cse">
+<tt class="descclassname">sympy.simplify.cse_main.</tt><tt class="descname">cse</tt><big>(</big><em>exprs</em>, <em>symbols=None</em>, <em>optimizations=None</em>, <em>postprocess=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/cse_main.html#cse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.cse_main.cse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform common subexpression elimination on an expression.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>exprs</strong> : list of sympy expressions, or a single sympy expression</p>
+<blockquote>
+<div><p>The expressions to reduce.</p>
+</div></blockquote>
+<p><strong>symbols</strong> : infinite iterator yielding unique Symbols</p>
+<blockquote>
+<div><p>The symbols used to label the common subexpressions which are pulled
+out. The <tt class="docutils literal"><span class="pre">numbered_symbols</span></tt> generator is useful. The default is a
+stream of symbols of the form &#8220;x0&#8221;, &#8220;x1&#8221;, etc. This must be an infinite
+iterator.</p>
+</div></blockquote>
+<p><strong>optimizations</strong> : list of (callable, callable) pairs, optional</p>
+<blockquote>
+<div><p>The (preprocessor, postprocessor) pairs. If not provided,
+<tt class="docutils literal"><span class="pre">sympy.simplify.cse.cse_optimizations</span></tt> is used.</p>
+</div></blockquote>
+<p><strong>postprocess</strong> : a function which accepts the two return values of cse and</p>
+<blockquote>
+<div><p>returns the desired form of output from cse, e.g. if you want the
+replacements reversed the function might be the following lambda:
+lambda r, e: return reversed(r), e</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>replacements</strong> : list of (Symbol, expression) pairs</p>
+<blockquote>
+<div><p>All of the common subexpressions that were replaced. Subexpressions
+earlier in this list might show up in subexpressions later in this list.</p>
+</div></blockquote>
+<p><strong>reduced_exprs</strong> : list of sympy expressions</p>
+<blockquote class="last">
+<div><p>The reduced expressions with all of the replacements above.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.simplify.hyperexpand">
+<span id="hypergeometric-function-expansion"></span><h2>Hypergeometric Function Expansion<a class="headerlink" href="#module-sympy.simplify.hyperexpand" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hyperexpand">
+<h3>hyperexpand<a class="headerlink" href="#hyperexpand" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.simplify.hyperexpand.hyperexpand">
+<tt class="descclassname">sympy.simplify.hyperexpand.</tt><tt class="descname">hyperexpand</tt><big>(</big><em>f</em>, <em>allow_hyper=False</em>, <em>rewrite='default'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/hyperexpand.html#hyperexpand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.hyperexpand.hyperexpand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand hypergeometric functions. If allow_hyper is True, allow partial
+simplification (that is a result different from input,
+but still containing hypergeometric functions).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.hyperexpand</span> <span class="kn">import</span> <span class="n">hyperexpand</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">hyper</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hyperexpand</span><span class="p">(</span><span class="n">hyper</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">exp(z)</span>
+</pre></div>
+</div>
+<p>Non-hyperegeometric parts of the expression and hypergeometric expressions
+that are not recognised are left unchanged:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">hyperexpand</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hyper</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[],</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">hyper((1, 1, 1), (), z) + 1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.simplify.traversaltools">
+<span id="traversal-tools"></span><h2>Traversal Tools<a class="headerlink" href="#module-sympy.simplify.traversaltools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="use">
+<h3>use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.simplify.traversaltools.use">
+<tt class="descclassname">sympy.simplify.traversaltools.</tt><tt class="descname">use</tt><big>(</big><em>expr</em>, <em>func</em>, <em>level=0</em>, <em>args=()</em>, <em>kwargs={}</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/traversaltools.html#use"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.traversaltools.use" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <tt class="docutils literal"><span class="pre">func</span></tt> to transform <tt class="docutils literal"><span class="pre">expr</span></tt> at the given level.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">use</span><span class="p">,</span> <span class="n">expand</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">use</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">expand</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">x*(x**2 + 2*x*y + y**2) + 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">x**3 + 2*x**2*y + x*y**2 + 1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.simplify.epathtools">
+<span id="epath-tools"></span><h2>EPath Tools<a class="headerlink" href="#module-sympy.simplify.epathtools" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="epath-class">
+<h3>EPath class<a class="headerlink" href="#epath-class" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sympy.simplify.epathtools.EPath">
+<em class="property">class </em><tt class="descclassname">sympy.simplify.epathtools.</tt><tt class="descname">EPath</tt><a class="reference internal" href="../../_modules/sympy/simplify/epathtools.html#EPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.epathtools.EPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manipulate expressions using paths.</p>
+<p>EPath grammar in EBNF notation:</p>
+<div class="highlight-python"><pre>literal   ::= /[A-Za-z_][A-Za-z_0-9]*/
+number    ::= /-?\d+/
+type      ::= literal
+attribute ::= literal "?"
+all       ::= "*"
+slice     ::= "[" number? (":" number? (":" number?)?)? "]"
+range     ::= all | slice
+query     ::= (type | attribute) ("|" (type | attribute))*
+selector  ::= range | query range?
+path      ::= "/" selector ("/" selector)*</pre>
+</div>
+<p>See the docstring of the epath() function.</p>
+<dl class="method">
+<dt id="sympy.simplify.epathtools.EPath.apply">
+<tt class="descname">apply</tt><big>(</big><em>expr</em>, <em>func</em>, <em>args=None</em>, <em>kwargs=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/epathtools.html#EPath.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.epathtools.EPath.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify parts of an expression selected by a path.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.epathtools</span> <span class="kn">import</span> <span class="n">EPath</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">E</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">EPath</span><span class="p">(</span><span class="s">&quot;/*/[0]/Symbol&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="p">[((</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">z</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="n">expr</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[((x**2, 1), 2), ((3, y**2), z)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">EPath</span><span class="p">(</span><span class="s">&quot;/*/*/Symbol&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">E</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">t + sin(2*x + 1) + cos(2*x + 2*y + E)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.simplify.epathtools.EPath.select">
+<tt class="descname">select</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/epathtools.html#EPath.select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.epathtools.EPath.select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve parts of an expression selected by a path.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.epathtools</span> <span class="kn">import</span> <span class="n">EPath</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">E</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">EPath</span><span class="p">(</span><span class="s">&quot;/*/[0]/Symbol&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="p">[((</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">z</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">[x, y]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">EPath</span><span class="p">(</span><span class="s">&quot;/*/*/Symbol&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">E</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">[x, x, y]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="epath">
+<h3>epath<a class="headerlink" href="#epath" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.simplify.epathtools.epath">
+<tt class="descclassname">sympy.simplify.epathtools.</tt><tt class="descname">epath</tt><big>(</big><em>path</em>, <em>expr=None</em>, <em>func=None</em>, <em>args=None</em>, <em>kwargs=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/simplify/epathtools.html#epath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.simplify.epathtools.epath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manipulate parts of an expression selected by a path.</p>
+<p>This function allows to manipulate large nested expressions in single
+line of code, utilizing techniques to those applied in XML processing
+standards (e.g. XPath).</p>
+<p>If <tt class="docutils literal"><span class="pre">func</span></tt> is <tt class="docutils literal"><span class="pre">None</span></tt>, <a class="reference internal" href="#sympy.simplify.epathtools.epath" title="sympy.simplify.epathtools.epath"><tt class="xref py py-func docutils literal"><span class="pre">epath()</span></tt></a> retrieves elements selected by
+the <tt class="docutils literal"><span class="pre">path</span></tt>. Otherwise it applies <tt class="docutils literal"><span class="pre">func</span></tt> to each matching element.</p>
+<p>Note that it is more efficient to create an EPath object and use the select
+and apply methods of that object, since this will compile the path string
+only once.  This function should only be used as a convenient shortcut for
+interactive use.</p>
+<p>This is the supported syntax:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>select all: <tt class="docutils literal"><span class="pre">/*</span></tt></dt>
+<dd><p class="first last">Equivalent of <tt class="docutils literal"><span class="pre">for</span> <span class="pre">arg</span> <span class="pre">in</span> <span class="pre">args:</span></tt>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>select slice: <tt class="docutils literal"><span class="pre">/[0]</span></tt> or <tt class="docutils literal"><span class="pre">/[1:5]</span></tt> or <tt class="docutils literal"><span class="pre">/[1:5:2]</span></tt></dt>
+<dd><p class="first last">Supports standard Python&#8217;s slice syntax.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>select by type: <tt class="docutils literal"><span class="pre">/list</span></tt> or <tt class="docutils literal"><span class="pre">/list|tuple</span></tt></dt>
+<dd><p class="first last">Emulates <tt class="xref py py-func docutils literal"><span class="pre">isinstance()</span></tt>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>select by attribute: <tt class="docutils literal"><span class="pre">/__iter__?</span></tt></dt>
+<dd><p class="first last">Emulates <tt class="xref py py-func docutils literal"><span class="pre">hasattr()</span></tt>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>path</strong> : str | EPath</p>
+<blockquote>
+<div><p>A path as a string or a compiled EPath.</p>
+</div></blockquote>
+<p><strong>expr</strong> : Basic | iterable</p>
+<blockquote>
+<div><p>An expression or a container of expressions.</p>
+</div></blockquote>
+<p><strong>func</strong> : callable (optional)</p>
+<blockquote>
+<div><p>A callable that will be applied to matching parts.</p>
+</div></blockquote>
+<p><strong>args</strong> : tuple (optional)</p>
+<blockquote>
+<div><p>Additional positional arguments to <tt class="docutils literal"><span class="pre">func</span></tt>.</p>
+</div></blockquote>
+<p><strong>kwargs</strong> : dict (optional)</p>
+<blockquote class="last">
+<div><p>Additional keyword arguments to <tt class="docutils literal"><span class="pre">func</span></tt>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.simplify.epathtools</span> <span class="kn">import</span> <span class="n">epath</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">E</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/*/[0]/Symbol&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="p">[((</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">z</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">epath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+<span class="go">[x, y]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">epath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="n">expr</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[((x**2, 1), 2), ((3, y**2), z)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="s">&quot;/*/*/Symbol&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">E</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">epath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+<span class="go">[x, x, y]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">epath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">t + sin(2*x + 1) + cos(2*x + 2*y + E)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Simplify</a><ul>
+<li><a class="reference internal" href="#id1">simplify</a></li>
+<li><a class="reference internal" href="#collect">collect</a></li>
+<li><a class="reference internal" href="#separate">separate</a></li>
+<li><a class="reference internal" href="#separatevars">separatevars</a></li>
+<li><a class="reference internal" href="#nthroot">nthroot</a></li>
+<li><a class="reference internal" href="#rad-rationalize">rad_rationalize</a></li>
+<li><a class="reference internal" href="#radsimp">radsimp</a></li>
+<li><a class="reference internal" href="#ratsimp">ratsimp</a></li>
+<li><a class="reference internal" href="#fraction">fraction</a></li>
+<li><a class="reference internal" href="#trigsimp">trigsimp</a></li>
+<li><a class="reference internal" href="#besselsimp">besselsimp</a></li>
+<li><a class="reference internal" href="#powsimp">powsimp</a></li>
+<li><a class="reference internal" href="#combsimp">combsimp</a></li>
+<li><a class="reference internal" href="#hypersimp">hypersimp</a></li>
+<li><a class="reference internal" href="#hypersimilar">hypersimilar</a></li>
+<li><a class="reference internal" href="#nsimplify">nsimplify</a></li>
+<li><a class="reference internal" href="#collect-sqrt">collect_sqrt</a></li>
+<li><a class="reference internal" href="#collect-const">collect_const</a></li>
+<li><a class="reference internal" href="#posify">posify</a></li>
+<li><a class="reference internal" href="#powdenest">powdenest</a></li>
+<li><a class="reference internal" href="#logcombine">logcombine</a></li>
+<li><a class="reference internal" href="#module-sympy.simplify.sqrtdenest">Square Root Denest</a><ul>
+<li><a class="reference internal" href="#sqrtdenest">sqrtdenest</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.simplify.cse_main">Common Subexpresion Elimination</a><ul>
+<li><a class="reference internal" href="#cse">cse</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.simplify.hyperexpand">Hypergeometric Function Expansion</a><ul>
+<li><a class="reference internal" href="#hyperexpand">hyperexpand</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.simplify.traversaltools">Traversal Tools</a><ul>
+<li><a class="reference internal" href="#use">use</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.simplify.epathtools">EPath Tools</a><ul>
+<li><a class="reference internal" href="#epath-class">EPath class</a></li>
+<li><a class="reference internal" href="#epath">epath</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../sets.html"
+                        title="previous chapter">Sets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hyperexpand.html"
+                        title="next chapter">Details on the Hypergeometric Function Expansion Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/simplify/simplify.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hyperexpand.html" title="Details on the Hypergeometric Function Expansion Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../sets.html" title="Sets"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

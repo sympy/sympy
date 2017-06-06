@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.stats.crv &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.stats" href="../stats.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" accesskey="U">sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.stats.crv</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Continuous Random Variables Module</span>
+
+<span class="sd">See Also</span>
+<span class="sd">========</span>
+<span class="sd">sympy.stats.crv_types</span>
+<span class="sd">sympy.stats.rv</span>
+<span class="sd">sympy.stats.frv</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.stats.rv</span> <span class="kn">import</span> <span class="p">(</span><span class="n">RandomDomain</span><span class="p">,</span> <span class="n">SingleDomain</span><span class="p">,</span> <span class="n">ConditionalDomain</span><span class="p">,</span>
+        <span class="n">ProductDomain</span><span class="p">,</span> <span class="n">PSpace</span><span class="p">,</span> <span class="n">SinglePSpace</span><span class="p">,</span> <span class="n">random_symbols</span><span class="p">,</span> <span class="n">ProductPSpace</span><span class="p">,</span>
+        <span class="n">NamedArgsMixin</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.special.delta_functions</span> <span class="kn">import</span> <span class="n">DiracDelta</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span>
+        <span class="n">Integral</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">,</span> <span class="n">solve</span><span class="p">,</span> <span class="n">cacheit</span><span class="p">,</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span>
+        <span class="n">Basic</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers.inequalities</span> <span class="kn">import</span> <span class="n">reduce_rational_inequalities</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">PolynomialError</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+
+<div class="viewcode-block" id="ContinuousDomain"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.crv.ContinuousDomain">[docs]</a><span class="k">class</span> <span class="nc">ContinuousDomain</span><span class="p">(</span><span class="n">RandomDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A domain with continuous support</span>
+
+<span class="sd">    Represented using symbols and Intervals.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_Continuous</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Not Implemented for generic Domains&quot;</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">SingleContinuousDomain</span><span class="p">(</span><span class="n">ContinuousDomain</span><span class="p">,</span> <span class="n">SingleDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A univariate domain with continuous support</span>
+
+<span class="sd">    Represented using a single symbol and interval.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">assert</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">==</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="c"># assumes only intervals</span>
+        <span class="k">return</span> <span class="n">Integral</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">as_relational</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ProductContinuousDomain</span><span class="p">(</span><span class="n">ProductDomain</span><span class="p">,</span> <span class="n">ContinuousDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of independent domains with continuous support</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span>
+        <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="p">:</span>
+            <span class="n">domain_vars</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">domain_vars</span><span class="p">:</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">domain_vars</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">as_boolean</span><span class="p">()</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="p">])</span>
+
+
+<span class="k">class</span> <span class="nc">ConditionalContinuousDomain</span><span class="p">(</span><span class="n">ContinuousDomain</span><span class="p">,</span> <span class="n">ConditionalDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A domain with continuous support that has been further restricted by a</span>
+<span class="sd">    condition such as x &gt; 3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">variables</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="c"># Extract the full integral</span>
+        <span class="n">fullintgrl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fulldomain</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+        <span class="c"># separate into integrand and limits</span>
+        <span class="n">integrand</span><span class="p">,</span> <span class="n">limits</span> <span class="o">=</span> <span class="n">fullintgrl</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">fullintgrl</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+
+        <span class="n">conditions</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">]</span>
+        <span class="k">while</span> <span class="n">conditions</span><span class="p">:</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">conditions</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">cond</span><span class="o">.</span><span class="n">is_Boolean</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">And</span><span class="p">):</span>
+                    <span class="n">conditions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">Or</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Or not implemented here&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">cond</span><span class="o">.</span><span class="n">is_Relational</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">cond</span><span class="o">.</span><span class="n">is_Equality</span><span class="p">:</span>
+                    <span class="c"># Add the appropriate Delta to the integrand</span>
+                    <span class="n">integrand</span> <span class="o">*=</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">cond</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">symbols</span> <span class="o">=</span> <span class="n">cond</span><span class="o">.</span><span class="n">free_symbols</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c"># Can&#39;t handle x &gt; y</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                            <span class="s">&quot;Multivariate Inequalities not yet implemented&quot;</span><span class="p">)</span>
+                    <span class="c"># Can handle x &gt; 0</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="c"># Find the limit with x, such as (x, -oo, oo)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">limit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">limits</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">symbol</span><span class="p">:</span>
+                            <span class="c"># Make condition into an Interval like [0, oo]</span>
+                            <span class="n">cintvl</span> <span class="o">=</span> <span class="n">reduce_rational_inequalities_wrap</span><span class="p">(</span>
+                                <span class="n">cond</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
+                            <span class="c"># Make limit into an Interval like [-oo, oo]</span>
+                            <span class="n">lintvl</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="n">limit</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">limit</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                            <span class="c"># Intersect them to get [0, oo]</span>
+                            <span class="n">intvl</span> <span class="o">=</span> <span class="n">cintvl</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">lintvl</span><span class="p">)</span>
+                            <span class="c"># Put back into limits list</span>
+                            <span class="n">limits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">intvl</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">intvl</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;Condition </span><span class="si">%s</span><span class="s"> is not a relational or Boolean&quot;</span> <span class="o">%</span> <span class="n">cond</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Integral</span><span class="p">(</span><span class="n">integrand</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fulldomain</span><span class="o">.</span><span class="n">as_boolean</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fulldomain</span><span class="o">.</span><span class="n">set</span> <span class="o">&amp;</span> <span class="n">reduce_rational_inequalities_wrap</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&quot;Set of Conditional Domain not Implemented&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ContinuousDistribution</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SingleContinuousDistribution</span><span class="p">(</span><span class="n">ContinuousDistribution</span><span class="p">,</span> <span class="n">NamedArgsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Continuous distribution of a single variable</span>
+
+<span class="sd">    Serves as superclass for Normal/Exponential/UniformDistribution etc....</span>
+
+<span class="sd">    Represented by parameters for each of the specific classes.  E.g</span>
+<span class="sd">    NormalDistribution is represented by a mean and standard deviation.</span>
+
+<span class="sd">    Provides methods for pdf, cdf, and sampling</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        sympy.stats.crv_types.*</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A random realization from the distribution &quot;&quot;&quot;</span>
+        <span class="n">icdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_cdf_expression</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">icdf</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">_inverse_cdf_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Inverse of the CDF</span>
+
+<span class="sd">        Used by sample</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+        <span class="c"># Invert CDF</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">inverse_cdf</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="n">inverse_cdf</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inverse_cdf</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inverse_cdf</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Could not invert CDF&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">inverse_cdf</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute the CDF from the PDF</span>
+
+<span class="sd">        Returns a Lambda</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+        <span class="n">left_bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">start</span>
+
+        <span class="c"># CDF is integral of PDF from left bound to z</span>
+        <span class="n">pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">left_bound</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># CDF Ensure that CDF left of left_bound is zero</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">cdf</span><span class="p">,</span> <span class="n">z</span> <span class="o">&gt;=</span> <span class="n">left_bound</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cdf</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Cumulative density function &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_cdf</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">expectation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Expectation of expression over distribution &quot;&quot;&quot;</span>
+        <span class="n">integral</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">expr</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">integral</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="k">if</span> <span class="n">evaluate</span> <span class="k">else</span> <span class="n">integral</span>
+
+<span class="k">class</span> <span class="nc">ContinuousDistributionHandmade</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;pdf&#39;</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="n">Interval</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ContinuousPSpace"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.crv.ContinuousPSpace">[docs]</a><span class="k">class</span> <span class="nc">ContinuousPSpace</span><span class="p">(</span><span class="n">PSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Continuous Probability Space</span>
+
+<span class="sd">    Represents the likelihood of an event space defined over a continuum.</span>
+
+<span class="sd">    Represented with a ContinuousDomain and a PDF (Lambda-Like)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_Continuous</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">rvs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rvs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rvs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">rvs</span><span class="p">)</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">rv</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">))</span>
+
+        <span class="n">domain_symbols</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">rv</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="o">*</span> <span class="n">expr</span><span class="p">,</span>
+                <span class="n">domain_symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compute_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># Common case Density(X) where X in self.values</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="c"># Marginalize all other random symbols out of the density</span>
+            <span class="n">randomsymbols</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">expr</span><span class="p">]))</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">rs</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">rs</span> <span class="ow">in</span> <span class="n">randomsymbols</span><span class="p">)</span>
+            <span class="n">pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">pdf</span><span class="p">)</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">expr</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">is_Interval</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;CDF not well defined on multivariate expressions&quot;</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_density</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+        <span class="n">left_bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">start</span>
+
+        <span class="c"># CDF is integral of PDF from left bound to z</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">d</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">left_bound</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c"># CDF Ensure that CDF left of left_bound is zero</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">cdf</span><span class="p">,</span> <span class="n">z</span> <span class="o">&gt;=</span> <span class="n">left_bound</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">cdf</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="c"># Univariate case can be handled by where</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="p">[</span><span class="n">rv</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">domain</span><span class="o">.</span><span class="n">symbol</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c"># Integrate out all other random variables</span>
+            <span class="n">pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_density</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c"># Integrate out the last variable over the special domain</span>
+            <span class="k">return</span> <span class="n">Integral</span><span class="p">(</span><span class="n">pdf</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">set</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c"># Other cases can be turned into univariate case</span>
+        <span class="c"># by computing a density handled by density computation</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.stats.rv</span> <span class="kn">import</span> <span class="n">density</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">condition</span><span class="o">.</span><span class="n">rhs</span>
+            <span class="n">dens</span> <span class="o">=</span> <span class="n">density</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dens</span><span class="p">,</span> <span class="n">ContinuousDistribution</span><span class="p">):</span>
+                <span class="n">dens</span> <span class="o">=</span> <span class="n">ContinuousDistributionHandmade</span><span class="p">(</span><span class="n">dens</span><span class="p">)</span>
+            <span class="c"># Turn problem into univariate case</span>
+            <span class="n">space</span> <span class="o">=</span> <span class="n">SingleContinuousPSpace</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">dens</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">random_symbols</span><span class="p">(</span><span class="n">condition</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rvs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">rvs</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&quot;Multiple continuous random variables not supported&quot;</span><span class="p">)</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">rvs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">reduce_rational_inequalities_wrap</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">rv</span><span class="p">)</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SingleContinuousDomain</span><span class="p">(</span><span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">conditional_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">rv</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+
+        <span class="n">domain</span> <span class="o">=</span> <span class="n">ConditionalContinuousDomain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">pdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="o">/</span> <span class="n">domain</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span> <span class="n">pdf</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ContinuousPSpace</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">SingleContinuousPSpace</span><span class="p">(</span><span class="n">ContinuousPSpace</span><span class="p">,</span> <span class="n">SinglePSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A continuous probability space over a single univariate variable</span>
+
+<span class="sd">    These consist of a Symbol and a SingleContinuousDistribution</span>
+
+<span class="sd">    This class is normally accessed through the various random variable</span>
+<span class="sd">    functions, Normal, Exponential, Uniform, etc....</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">set</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SingleContinuousDomain</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal sample method</span>
+
+<span class="sd">        Returns dictionary mapping RandomSymbol to realization value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">sample</span><span class="p">()}</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">rvs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">rvs</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">rv</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">))</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">symbol</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Integral</span><span class="p">(</span><span class="n">expr</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">compute_cdf</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ContinuousPSpace</span><span class="o">.</span><span class="n">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compute_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">density</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">expr</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Can not solve </span><span class="si">%s</span><span class="s"> for </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+        <span class="n">fx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">fy</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">fx</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">fy</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ProductContinuousPSpace</span><span class="p">(</span><span class="n">ProductPSpace</span><span class="p">,</span> <span class="n">ContinuousPSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of independent continuous probability spaces</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">pdf</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">rv</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">_reduce_inequalities</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">reduce_rational_inequalities</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolynomialError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Reduction of condition failed </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">reduce_rational_inequalities_wrap</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">is_Relational</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_reduce_inequalities</span><span class="p">([[</span><span class="n">condition</span><span class="p">]],</span> <span class="n">var</span><span class="p">,</span> <span class="n">relational</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">Or</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_reduce_inequalities</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">args</span><span class="p">)],</span>
+                <span class="n">var</span><span class="p">,</span> <span class="n">relational</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">And</span><span class="p">:</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">_reduce_inequalities</span><span class="p">([[</span><span class="n">arg</span><span class="p">]],</span> <span class="n">var</span><span class="p">,</span> <span class="n">relational</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">condition</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">I</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" >sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

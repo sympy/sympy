@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.fglmtools &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.fglmtools</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implementation of matrix FGLM Groebner basis conversion algorithm. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.monomials</span> <span class="kn">import</span> <span class="n">monomial_mul</span><span class="p">,</span> <span class="n">monomial_div</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<div class="viewcode-block" id="matrix_fglm"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.fglmtools.matrix_fglm">[docs]</a><span class="k">def</span> <span class="nf">matrix_fglm</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">O_to</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the reduced Groebner basis ``F`` of a zero-dimensional</span>
+<span class="sd">    ideal w.r.t. ``O_from`` to a reduced Groebner basis</span>
+<span class="sd">    w.r.t. ``O_to``.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient</span>
+<span class="sd">    Computation of Zero-dimensional Groebner Bases by Change of</span>
+<span class="sd">    Ordering</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+    <span class="n">ngens</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">ngens</span>
+
+    <span class="n">ring_to</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">O_to</span><span class="p">)</span>
+
+    <span class="n">old_basis</span> <span class="o">=</span> <span class="n">_basis</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">_representing_matrices</span><span class="p">(</span><span class="n">old_basis</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+
+    <span class="c"># V contains the normalforms (wrt O_from) of S</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="p">[</span><span class="n">ring</span><span class="o">.</span><span class="n">zero_monom</span><span class="p">]</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="p">[[</span><span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">old_basis</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ngens</span><span class="p">)]</span>  <span class="c"># (i, j) corresponds to x_i * S[j]</span>
+    <span class="n">L</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k_l</span><span class="p">:</span> <span class="n">O_to</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">k_l</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">k_l</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="n">P</span> <span class="o">=</span> <span class="n">_identity_matrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">old_basis</span><span class="p">),</span> <span class="n">domain</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">_matrix_mul</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">V</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">_lambda</span> <span class="o">=</span> <span class="n">_matrix_mul</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">_lambda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">domain</span><span class="o">.</span><span class="n">zero</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_basis</span><span class="p">))):</span>
+            <span class="c"># there is a linear combination of v by V</span>
+            <span class="n">lt</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">term_new</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">)</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">([</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">_lambda</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">]))</span>
+
+            <span class="n">g</span> <span class="o">=</span> <span class="p">(</span><span class="n">lt</span> <span class="o">-</span> <span class="n">rest</span><span class="p">)</span><span class="o">.</span><span class="n">set_ring</span><span class="p">(</span><span class="n">ring_to</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">g</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># v is linearly independant from V</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">_update</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">V</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="n">L</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ngens</span><span class="p">)])</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+            <span class="n">L</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k_l</span><span class="p">:</span> <span class="n">O_to</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">k_l</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">k_l</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="ow">in</span> <span class="n">L</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">monomial_div</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">k</span><span class="p">),</span> <span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">L</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span> <span class="p">]</span>
+            <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">O_to</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_incr_k</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">m</span><span class="p">[:</span><span class="n">k</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">m</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]))</span>
+
+
+<span class="k">def</span> <span class="nf">_identity_matrix</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="p">[[</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="n">n</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span>
+
+    <span class="k">return</span> <span class="n">M</span>
+
+
+<span class="k">def</span> <span class="nf">_matrix_mul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">M</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Update ``P`` such that for the updated `P&#39;` `P&#39; v = e_{s}`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">_lambda</span><span class="p">))</span> <span class="k">if</span> <span class="n">_lambda</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_lambda</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="o">!=</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">_lambda</span><span class="p">[</span><span class="n">r</span><span class="p">])</span> <span class="o">/</span> <span class="n">_lambda</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">r</span><span class="p">]))]</span>
+
+    <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="n">_lambda</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]))]</span>
+    <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">P</span>
+
+
+<span class="k">def</span> <span class="nf">_representing_matrices</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the matrices corresponding to the linear maps `m \mapsto</span>
+<span class="sd">    x_i m` for all variables `x_i`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">ngens</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">representing_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="p">[[</span><span class="n">domain</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">))]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">basis</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">term_new</span><span class="p">(</span><span class="n">monomial_mul</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">)</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">terms</span><span class="p">():</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">monom</span><span class="p">)</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+        <span class="k">return</span> <span class="n">M</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">representing_matrix</span><span class="p">(</span><span class="n">var</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">_basis</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes a list of monomials which are not divisible by the leading</span>
+<span class="sd">    monomials wrt to ``O`` of ``G``. These monomials are a basis of</span>
+<span class="sd">    `K[X_1, \ldots, X_n]/(G)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+
+    <span class="n">leading_monomials</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">LM</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span><span class="n">ring</span><span class="o">.</span><span class="n">zero_monom</span><span class="p">]</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">candidates</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">candidates</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="n">new_candidates</span> <span class="o">=</span> <span class="p">[</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">ngens</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">monomial_div</span><span class="p">(</span><span class="n">_incr_k</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">lmg</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">lmg</span> <span class="ow">in</span> <span class="n">leading_monomials</span><span class="p">)]</span>
+        <span class="n">candidates</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_candidates</span><span class="p">)</span>
+        <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">basis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">basis</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

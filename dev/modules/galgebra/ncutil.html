@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Noncommutative utilities for Geometric Algebra &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Geometric Algebra Module" href="index.html" />
+    <link rel="next" title="String manipulation for Geometric Algebra" href="stringarrays.html" />
+    <link rel="prev" title="Printing for Geometric Algebra" href="printing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stringarrays.html" title="String manipulation for Geometric Algebra"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing for Geometric Algebra"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.galgebra.ncutil">
+<span id="noncommutative-utilities-for-geometric-algebra"></span><h1>Noncommutative utilities for Geometric Algebra<a class="headerlink" href="#module-sympy.galgebra.ncutil" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="function-reference">
+<h2>Function Reference<a class="headerlink" href="#function-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.bilinear_function">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">bilinear_function</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#bilinear_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.bilinear_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<dl class="docutils">
+<dt>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n + expr_11*a_1*a_1</dt>
+<dd><ul class="first last simple">
+<li>... + expr_ij*a_i*a_j + ... + expr_nn*a_n*a_n</li>
+</ul>
+</dd>
+</dl>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<dl class="docutils">
+<dt>bilinear_function(expr) = bilinear_product(expr_0) + bilinear_product(expr_1*a_1) + ... + bilinear_product(expr_n*a_n)</dt>
+<dd><ul class="first last simple">
+<li>bilinear + product(expr_11*a_1*a_1) + ... + bilinear_product(expr_nn*a_n*a_n)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.bilinear_product">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">bilinear_product</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#bilinear_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.bilinear_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_ij*a_i*a_j or expr_0 or expr_i*a_i</p>
+<p>where all the a_i are noncommuting symbols in basis and the expr&#8217;s</p>
+<p>are commuting expressions then</p>
+<p>bilinear_product(expr) = expr_ij*fct(a_i, a_j)</p>
+<p>bilinear_product(expr_0) = expr_0</p>
+<p>bilinear_product(expr_i*a_i) = expr_i*a_i</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.coef_function">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">coef_function</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#coef_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.coef_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>f(expr) = fct(expr_0) + fct(expr_1)*a_1 + ... + fct(expr_n)*a_n</p>
+<p>is returned</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.linear_derivation">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">linear_derivation</tt><big>(</big><em>expr</em>, <em>fct</em>, <em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#linear_derivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.linear_derivation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<dl class="docutils">
+<dt>linear_drivation(expr) = diff(expr_0, x) + diff(expr_1, x)*a_1 + ...</dt>
+<dd><ul class="first last simple">
+<li>diff(expr_n, x)*a_n + expr_1*fct(a_1, x) + ...</li>
+<li>expr_n*fct(a_n, x)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.linear_expand">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">linear_expand</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#linear_expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.linear_expand" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>(expr_0, ..., expr_n) and (1, a_1, ..., a_n) are returned.  Note that
+expr_j*a_j does not have to be of that form, but rather can be any
+Mul with a_j as a factor (it doen not have to be a postmultiplier).
+expr_0 is the scalar part of the expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.linear_function">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">linear_function</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#linear_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.linear_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>f(expr) = expr_0 + expr_1*f(a_1) + ... + expr_n*f(a_n)</p>
+<p>is returned</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.linear_projection">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">linear_projection</tt><big>(</big><em>expr</em>, <em>plist=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#linear_projection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.linear_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>proj(expr) returns the sum of those terms where a_j is in plist</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.multilinear_derivation">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">multilinear_derivation</tt><big>(</big><em>F</em>, <em>fct</em>, <em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#multilinear_derivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.multilinear_derivation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form (summation convention):</p>
+<p>expr = expr_0 + expr_i1i2...ir*a_i1*...*a_ir</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>dexpr = diff(expr_0, x) + d(expr_i1i2...ir*a_i1*...*a_ir)</p>
+<p>is returned where d() is the product derivation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.multilinear_function">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">multilinear_function</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#multilinear_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.multilinear_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form summation convention):</p>
+<p>expr = expr_0 + Sum{0 &lt; r &lt;= n}{expr_i1i2...ir*a_i1*a_i2*...*a_ir}</p>
+<p>where all the a_j are noncommuting symbols in basis then and the
+dimension of the basis in n then</p>
+<dl class="docutils">
+<dt>bilinear_function(expr) = multilinear_product(expr_0)</dt>
+<dd><ul class="first last simple">
+<li>Sum{0&lt;r&lt;=n}multilinear_product(expr_i1i2...ir*a_i1*a_i2*...*a_ir)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.multilinear_product">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">multilinear_product</tt><big>(</big><em>expr</em>, <em>fct</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#multilinear_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.multilinear_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_i1i2...irj*a_i1*a_i2*...*a_ir or expr_0</p>
+<p>where all the a_i are noncommuting symbols in basis and the expr&#8217;s</p>
+<p>are commuting expressions then</p>
+<p>multilinear_product(expr) = expr_i1i2...ir*fct(a_i1, a_i2, ..., a_ir)</p>
+<p>bilinear_product(expr_0) = expr_0</p>
+<p>where fct() is defined for r &lt;= n the total number of bases</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.non_scalar_projection">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">non_scalar_projection</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#non_scalar_projection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.non_scalar_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0*S.One + expr_1*a_1 + ... + expr_n*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<p>proj(expr) returns the sum of those terms where a_j is in plist</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.ncutil.product_derivation">
+<tt class="descclassname">sympy.galgebra.ncutil.</tt><tt class="descname">product_derivation</tt><big>(</big><em>F</em>, <em>fct</em>, <em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/ncutil.html#product_derivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.ncutil.product_derivation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a sympy &#8216;Expr&#8217; is of the form:</p>
+<p>expr = expr_0*a_1*...*a_n</p>
+<p>where all the a_j are noncommuting symbols in basis then</p>
+<dl class="docutils">
+<dt>product_derivation(expr) = diff(expr_0, x)*a_1*...*a_n</dt>
+<dd><ul class="first last simple">
+<li>expr_0*(fct(a_1, x)*a_2*...*a_n + ...</li>
+<li>a_1*...*a_(i-1)*fct(a_i, x)*a_(i + 1)*...*a_n + ...</li>
+<li>a_1*...*a_(n-1)*fct(a_n, x))</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Noncommutative utilities for Geometric Algebra</a><ul>
+<li><a class="reference internal" href="#function-reference">Function Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="printing.html"
+                        title="previous chapter">Printing for Geometric Algebra</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="stringarrays.html"
+                        title="next chapter">String manipulation for Geometric Algebra</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/galgebra/ncutil.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stringarrays.html" title="String manipulation for Geometric Algebra"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing for Geometric Algebra"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

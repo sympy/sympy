@@ -1,0 +1,180 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Matrices &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Matrices (linear algebra)" href="matrices.html" />
+    <link rel="prev" title="Logic Module" href="../logic.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices (linear algebra)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../logic.html" title="Logic Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.matrices">
+<span id="matrices"></span><span id="matrices-docs"></span><h1>Matrices<a class="headerlink" href="#module-sympy.matrices" title="Permalink to this headline">¶</a></h1>
+<p>A module that handles matrices.</p>
+<p>Includes functions for fast creating matrices like zero, one/eye, random
+matrix, etc.</p>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="matrices.html">Matrices (linear algebra)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#creating-matrices">Creating Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#basic-manipulation">Basic Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#operations-on-entries">Operations on entries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#linear-algebra">Linear algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrixbase-class-reference">MatrixBase Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrix-exceptions-reference">Matrix Exceptions Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrix-functions-reference">Matrix Functions Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#numpy-utility-functions-reference">Numpy Utility Functions Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dense.html">Dense Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dense.html#matrix-class-reference">Matrix Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dense.html#immutablematrix-class-reference">ImmutableMatrix Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sparse.html">Sparse Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sparse.html#sparsematrix-class-reference">SparseMatrix Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse.html#immutablesparsematrix-class-reference">ImmutableSparseMatrix Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="immutablematrices.html">Immutable Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="immutablematrices.html#module-sympy.matrices.immutable">ImmutableMatrix Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">Matrix Expressions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#matrix-expressions-core-reference">Matrix Expressions Core Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#block-matrices">Block Matrices</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../logic.html"
+                        title="previous chapter">Logic Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="next chapter">Matrices (linear algebra)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/matrices/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices (linear algebra)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../logic.html" title="Logic Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

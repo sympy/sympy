@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>A bicycle &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Examples for Physics/Mechanics" href="examples.html" />
+    <link rel="next" title="Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module" href="advanced.html" />
+    <link rel="prev" title="A rolling disc using Lagrange’s Method" href="rollingdisc_example_lagrange.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example_lagrange.html" title="A rolling disc using Lagrange’s Method"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples for Physics/Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="a-bicycle">
+<h1>A bicycle<a class="headerlink" href="#a-bicycle" title="Permalink to this headline">¶</a></h1>
+<p>The bicycle is an interesting system in that it has multiple rigid bodies,
+non-holonomic constraints, and a holonomic constraint. The linearized equations
+of motion are presented in <a class="reference internal" href="reference.html#meijaard2007">[Meijaard2007]</a>. This example will go through
+construction of the equations of motion in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Calculation of Linearized Bicycle </span><span class="se">\&quot;</span><span class="s">A</span><span class="se">\&quot;</span><span class="s"> Matrix, &#39;</span>
+<span class="gp">... </span>      <span class="s">&#39;with States: Roll, Steer, Roll Rate, Steer Rate&#39;</span><span class="p">)</span>
+<span class="go">Calculation of Linearized Bicycle &quot;A&quot; Matrix, with States: Roll, Steer, Roll Rate, Steer Rate</span>
+</pre></div>
+</div>
+<p>Note that this code has been crudely ported from Autolev, which is the reason
+for some of the unusual naming conventions. It was purposefully as similar as
+possible in order to aid initial porting &amp; debugging. We set Vector.simp to
+False (in case it has been set True elsewhere), since it slows down the
+computations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Vector</span><span class="o">.</span><span class="n">simp</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Declaration of Coordinates &amp; Speeds:
+A simple definition for qdots, qd = u,is used in this code.  Speeds are: yaw
+frame ang. rate, roll frame ang. rate, rear wheel frame ang.  rate (spinning
+motion), frame ang. rate (pitching motion), steering frame ang. rate, and front
+wheel ang. rate (spinning motion).  Wheel positions are ignorable coordinates,
+so they are not introduced.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">,</span> <span class="n">q5</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 q4 q5&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span><span class="p">,</span> <span class="n">q4d</span><span class="p">,</span> <span class="n">q5d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q4 q5&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">u4</span><span class="p">,</span> <span class="n">u5</span><span class="p">,</span> <span class="n">u6</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3 u4 u5 u6&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1d</span><span class="p">,</span> <span class="n">u2d</span><span class="p">,</span> <span class="n">u3d</span><span class="p">,</span> <span class="n">u4d</span><span class="p">,</span> <span class="n">u5d</span><span class="p">,</span> <span class="n">u6d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3 u4 u5 u6&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Declaration of System&#8217;s Parameters:
+The below symbols should be fairly self-explanatory.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">WFrad</span><span class="p">,</span> <span class="n">WRrad</span><span class="p">,</span> <span class="n">htangle</span><span class="p">,</span> <span class="n">forkoffset</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;WFrad WRrad htangle forkoffset&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forklength</span><span class="p">,</span> <span class="n">framelength</span><span class="p">,</span> <span class="n">forkcg1</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;forklength framelength forkcg1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forkcg3</span><span class="p">,</span> <span class="n">framecg1</span><span class="p">,</span> <span class="n">framecg3</span><span class="p">,</span> <span class="n">Iwr11</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;forkcg3 framecg1 framecg3 Iwr11&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Iwr22</span><span class="p">,</span> <span class="n">Iwf11</span><span class="p">,</span> <span class="n">Iwf22</span><span class="p">,</span> <span class="n">Iframe11</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;Iwr22 Iwf11 Iwf22 Iframe11&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Iframe22</span><span class="p">,</span> <span class="n">Iframe33</span><span class="p">,</span> <span class="n">Iframe31</span><span class="p">,</span> <span class="n">Ifork11</span> <span class="o">=</span> \
+<span class="gp">... </span>    <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;Iframe22 Iframe33 Iframe31 Ifork11&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ifork22</span><span class="p">,</span> <span class="n">Ifork33</span><span class="p">,</span> <span class="n">Ifork31</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;Ifork22 Ifork33 Ifork31 g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mframe</span><span class="p">,</span> <span class="n">mfork</span><span class="p">,</span> <span class="n">mwf</span><span class="p">,</span> <span class="n">mwr</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;mframe mfork mwf mwr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Set up reference frames for the system:
+N - inertial
+Y - yaw
+R - roll
+WR - rear wheel, rotation angle is ignorable coordinate so not oriented
+Frame - bicycle frame
+TempFrame - statically rotated frame for easier reference inertia definition
+Fork - bicycle fork
+TempFork - statically rotated frame for easier reference inertia definition
+WF - front wheel, again posses a ignorable coordinate</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q2</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Frame</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;Frame&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q4</span> <span class="o">+</span> <span class="n">htangle</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WR</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;WR&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TempFrame</span> <span class="o">=</span> <span class="n">Frame</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;TempFrame&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">htangle</span><span class="p">,</span> <span class="n">Frame</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fork</span> <span class="o">=</span> <span class="n">Frame</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;Fork&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q5</span><span class="p">,</span> <span class="n">Frame</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TempFork</span> <span class="o">=</span> <span class="n">Fork</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;TempFork&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">htangle</span><span class="p">,</span> <span class="n">Fork</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;WF&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Kinematics of the Bicycle:
+First block of code is forming the positions of the relevant points rear wheel
+contact -&gt; rear wheel&#8217;s center of mass -&gt; frame&#8217;s center of mass + frame/fork connection
+-&gt; fork&#8217;s center of mass + front wheel&#8217;s center of mass -&gt; front wheel contact point.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">WR_cont</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;WR_cont&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WR_mc</span> <span class="o">=</span> <span class="n">WR_cont</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;WR_mc&#39;</span><span class="p">,</span> <span class="n">WRrad</span> <span class="o">*</span> <span class="n">R</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Steer</span> <span class="o">=</span> <span class="n">WR_mc</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Steer&#39;</span><span class="p">,</span> <span class="n">framelength</span> <span class="o">*</span> <span class="n">Frame</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Frame_mc</span> <span class="o">=</span> <span class="n">WR_mc</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Frame_mc&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">framecg1</span> <span class="o">*</span> <span class="n">Frame</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">framecg3</span> <span class="o">*</span> <span class="n">Frame</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fork_mc</span> <span class="o">=</span> <span class="n">Steer</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Fork_mc&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">forkcg1</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">forkcg3</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF_mc</span> <span class="o">=</span> <span class="n">Steer</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;WF_mc&#39;</span><span class="p">,</span> <span class="n">forklength</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">forkoffset</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF_cont</span> <span class="o">=</span> <span class="n">WF_mc</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;WF_cont&#39;</span><span class="p">,</span> <span class="n">WFrad</span><span class="o">*</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">Fork</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">Fork</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> \
+<span class="gp">... </span>                                            <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">normalize</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Set the angular velocity of each frame:
+Angular accelerations end up being calculated automatically by differentiating
+the angular velocities when first needed. ::
+u1 is yaw rate
+u2 is roll rate
+u3 is rear wheel rate
+u4 is frame pitch rate
+u5 is fork steer rate
+u6 is front wheel rate</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">u2</span> <span class="o">*</span> <span class="n">R</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WR</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">Frame</span><span class="p">,</span> <span class="n">u3</span> <span class="o">*</span> <span class="n">Frame</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Frame</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">u4</span> <span class="o">*</span> <span class="n">Frame</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fork</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">Frame</span><span class="p">,</span> <span class="n">u5</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">Fork</span><span class="p">,</span> <span class="n">u6</span> <span class="o">*</span> <span class="n">Fork</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Form the velocities of the points, using the 2-point theorem.  Accelerations
+again are calculated automatically when first needed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">WR_cont</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WR_mc</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">WR_cont</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">WR</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Steer</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">WR_mc</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Frame</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Frame_mc</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">WR_mc</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Frame</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framecg3*(u1*sin(q2) + u4)*Frame.x + (-framecg1*(u1*cos(htangle + q4)*cos(q2) + u2*sin(htangle + q4)) - framecg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4)))*Frame.y + framecg1*(u1*sin(q2) + u4)*Frame.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fork_mc</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">Steer</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Fork</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkcg3*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (-forkcg1*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkcg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + forkcg1*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF_mc</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">Steer</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Fork</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF_cont</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">WF_mc</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">WF</span><span class="p">)</span>
+<span class="go">WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y</span>
+</pre></div>
+</div>
+<p>Sets the inertias of each body. Uses the inertia frame to construct the inertia
+dyadics. Wheel inertias are only defined by principal moments of inertia, and
+are in fact constant in the frame and fork reference frames; it is for this
+reason that the orientations of the wheels does not need to be defined. The
+frame and fork inertias are defined in the &#8216;Temp&#8217; frames which are fixed to the
+appropriate body frames; this is to allow easier input of the reference values
+of the benchmark paper. Note that due to slightly different orientations, the
+products of inertia need to have their signs flipped; this is done later when
+entering the numerical value.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Frame_I</span> <span class="o">=</span> <span class="p">(</span><span class="n">inertia</span><span class="p">(</span><span class="n">TempFrame</span><span class="p">,</span> <span class="n">Iframe11</span><span class="p">,</span> <span class="n">Iframe22</span><span class="p">,</span> <span class="n">Iframe33</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>                                                  <span class="n">Iframe31</span><span class="p">),</span> <span class="n">Frame_mc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fork_I</span> <span class="o">=</span> <span class="p">(</span><span class="n">inertia</span><span class="p">(</span><span class="n">TempFork</span><span class="p">,</span> <span class="n">Ifork11</span><span class="p">,</span> <span class="n">Ifork22</span><span class="p">,</span> <span class="n">Ifork33</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Ifork31</span><span class="p">),</span> <span class="n">Fork_mc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WR_I</span> <span class="o">=</span> <span class="p">(</span><span class="n">inertia</span><span class="p">(</span><span class="n">Frame</span><span class="p">,</span> <span class="n">Iwr11</span><span class="p">,</span> <span class="n">Iwr22</span><span class="p">,</span> <span class="n">Iwr11</span><span class="p">),</span> <span class="n">WR_mc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WF_I</span> <span class="o">=</span> <span class="p">(</span><span class="n">inertia</span><span class="p">(</span><span class="n">Fork</span><span class="p">,</span> <span class="n">Iwf11</span><span class="p">,</span> <span class="n">Iwf22</span><span class="p">,</span> <span class="n">Iwf11</span><span class="p">),</span> <span class="n">WF_mc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Declaration of the RigidBody containers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">BodyFrame</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;BodyFrame&#39;</span><span class="p">,</span> <span class="n">Frame_mc</span><span class="p">,</span> <span class="n">Frame</span><span class="p">,</span> <span class="n">mframe</span><span class="p">,</span> <span class="n">Frame_I</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BodyFork</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;BodyFork&#39;</span><span class="p">,</span> <span class="n">Fork_mc</span><span class="p">,</span> <span class="n">Fork</span><span class="p">,</span> <span class="n">mfork</span><span class="p">,</span> <span class="n">Fork_I</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BodyWR</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;BodyWR&#39;</span><span class="p">,</span> <span class="n">WR_mc</span><span class="p">,</span> <span class="n">WR</span><span class="p">,</span> <span class="n">mwr</span><span class="p">,</span> <span class="n">WR_I</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BodyWF</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;BodyWF&#39;</span><span class="p">,</span> <span class="n">WF_mc</span><span class="p">,</span> <span class="n">WF</span><span class="p">,</span> <span class="n">mwf</span><span class="p">,</span> <span class="n">WF_I</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Before Forming the List of Nonholonomic Constraints.&#39;</span><span class="p">)</span>
+<span class="go">Before Forming the List of Nonholonomic Constraints.</span>
+</pre></div>
+</div>
+<p>The kinematic differential equations; they are defined quite simply. Each entry
+in this list is equal to zero.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">kd</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1d</span> <span class="o">-</span> <span class="n">u1</span><span class="p">,</span> <span class="n">q2d</span> <span class="o">-</span> <span class="n">u2</span><span class="p">,</span> <span class="n">q4d</span> <span class="o">-</span> <span class="n">u4</span><span class="p">,</span> <span class="n">q5d</span> <span class="o">-</span> <span class="n">u5</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The nonholonomic constraints are the velocity of the front wheel contact point
+dotted into the X, Y, and Z directions; the yaw frame is used as it is &#8220;closer&#8221;
+to the front wheel (1 less DCM connecting them). These constraints force the
+velocity of the front wheel contact point to be 0 in the inertial frame; the X
+and Y direction constraints enforce a &#8220;no-slip&#8221; condition, and the Z direction
+constraint forces the front wheel contact point to not move away from the
+ground frame, essentially replicating the holonomic constraint which does not
+allow the frame pitch to change in an invalid fashion.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conlist_speed</span> <span class="o">=</span> <span class="p">[</span><span class="n">WF_cont</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Y</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">WF_cont</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Y</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="n">WF_cont</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The holonomic constraint is that the position from the rear wheel contact point
+to the front wheel contact point when dotted into the normal-to-ground plane
+direction must be zero; effectively that the front and rear wheel contact
+points are always touching the ground plane. This is actually not part of the
+dynamic equations, but instead is necessary for the linearization process.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conlist_coord</span> <span class="o">=</span> <span class="p">[</span><span class="n">WF_cont</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">WR_cont</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The force list; each body has the appropriate gravitational force applied at
+its center of mass.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FL</span> <span class="o">=</span> <span class="p">[(</span><span class="n">Frame_mc</span><span class="p">,</span> <span class="o">-</span><span class="n">mframe</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">Fork_mc</span><span class="p">,</span> <span class="o">-</span><span class="n">mfork</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">),</span>
+<span class="gp">... </span>      <span class="p">(</span><span class="n">WF_mc</span><span class="p">,</span> <span class="o">-</span><span class="n">mwf</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">WR_mc</span><span class="p">,</span> <span class="o">-</span><span class="n">mwr</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BL</span> <span class="o">=</span> <span class="p">[</span><span class="n">BodyFrame</span><span class="p">,</span> <span class="n">BodyFork</span><span class="p">,</span> <span class="n">BodyWR</span><span class="p">,</span> <span class="n">BodyWF</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The N frame is the inertial frame, coordinates are supplied in the order of
+independent, dependent coordinates. The kinematic differential equations are
+also entered here. Here the independent speeds are specified, followed by the
+dependent speeds, along with the non-holonomic constraints. The dependent
+coordinate is also provided, with the holonomic constraint. Again, this is only
+comes into play in the linearization process, but is necessary for the
+linearization to correctly work.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">q_ind</span><span class="o">=</span><span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span>
+<span class="gp">... </span>          <span class="n">q_dependent</span><span class="o">=</span><span class="p">[</span><span class="n">q4</span><span class="p">],</span> <span class="n">configuration_constraints</span><span class="o">=</span><span class="n">conlist_coord</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">u_ind</span><span class="o">=</span><span class="p">[</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">u5</span><span class="p">],</span>
+<span class="gp">... </span>          <span class="n">u_dependent</span><span class="o">=</span><span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u4</span><span class="p">,</span> <span class="n">u6</span><span class="p">],</span> <span class="n">velocity_constraints</span><span class="o">=</span><span class="n">conlist_speed</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">kd_eqs</span><span class="o">=</span><span class="n">kd</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Before Forming Generalized Active and Inertia Forces, Fr and Fr*&#39;</span><span class="p">)</span>
+<span class="go">Before Forming Generalized Active and Inertia Forces, Fr and Fr*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">frstar</span><span class="p">)</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kanes_equations</span><span class="p">(</span><span class="n">FL</span><span class="p">,</span> <span class="n">BL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Base Equations of Motion Computed&#39;</span><span class="p">)</span>
+<span class="go">Base Equations of Motion Computed</span>
+</pre></div>
+</div>
+<p>This is the start of entering in the numerical values from the benchmark paper
+to validate the eigenvalues of the linearized equations from this model to the
+reference eigenvalues. Look at the aforementioned paper for more information.
+Some of these are intermediate values, used to transform values from the paper
+into the coordinate systems used in this model.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">PaperRadRear</span>  <span class="o">=</span>  <span class="mf">0.3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperRadFront</span> <span class="o">=</span>  <span class="mf">0.35</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">HTA</span>           <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TrailPaper</span>    <span class="o">=</span>  <span class="mf">0.08</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rake</span>          <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">TrailPaper</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">PaperRadFront</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperWb</span>       <span class="o">=</span>  <span class="mf">1.02</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperFrameCgX</span> <span class="o">=</span>  <span class="mf">0.3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperFrameCgZ</span> <span class="o">=</span>  <span class="mf">0.9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperForkCgX</span>  <span class="o">=</span>  <span class="mf">0.9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperForkCgZ</span>  <span class="o">=</span>  <span class="mf">0.7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FrameLength</span>   <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">PaperWb</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">rake</span> <span class="o">-</span> \
+<span class="gp">... </span>                        <span class="p">(</span><span class="n">PaperRadFront</span> <span class="o">-</span> <span class="n">PaperRadRear</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FrameCGNorm</span>   <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">((</span><span class="n">PaperFrameCgZ</span> <span class="o">-</span> <span class="n">PaperRadRear</span> <span class="o">-</span> \
+<span class="gp">... </span>                         <span class="p">(</span><span class="n">PaperFrameCgX</span><span class="o">/</span><span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">))</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">))</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FrameCGPar</span>    <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">((</span><span class="n">PaperFrameCgX</span> <span class="o">/</span> <span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">)</span> <span class="o">+</span> \
+<span class="gp">... </span>                         <span class="p">(</span><span class="n">PaperFrameCgZ</span> <span class="o">-</span> <span class="n">PaperRadRear</span> <span class="o">-</span> \
+<span class="gp">... </span>                          <span class="n">PaperFrameCgX</span> <span class="o">/</span> <span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">))</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tempa</span>         <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">((</span><span class="n">PaperForkCgZ</span> <span class="o">-</span> <span class="n">PaperRadFront</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tempb</span>         <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">((</span><span class="n">PaperWb</span><span class="o">-</span><span class="n">PaperForkCgX</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tempc</span>         <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tempa</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">tempb</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PaperForkL</span>    <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">((</span><span class="n">PaperWb</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">HTA</span><span class="p">)</span> <span class="o">-</span> \
+<span class="gp">... </span>                         <span class="p">(</span><span class="n">PaperRadFront</span> <span class="o">-</span> <span class="n">PaperRadRear</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">HTA</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ForkCGNorm</span>    <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">rake</span> <span class="o">+</span> <span class="p">(</span><span class="n">tempc</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> \
+<span class="gp">... </span>                         <span class="n">HTA</span> <span class="o">-</span> <span class="n">acos</span><span class="p">(</span><span class="n">tempa</span><span class="o">/</span><span class="n">tempc</span><span class="p">))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ForkCGPar</span>     <span class="o">=</span>  <span class="n">evalf</span><span class="o">.</span><span class="n">N</span><span class="p">(</span><span class="n">tempc</span> <span class="o">*</span> <span class="n">cos</span><span class="p">((</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">HTA</span><span class="p">)</span> <span class="o">-</span> \
+<span class="gp">... </span>                         <span class="n">acos</span><span class="p">(</span><span class="n">tempa</span><span class="o">/</span><span class="n">tempc</span><span class="p">))</span> <span class="o">-</span> <span class="n">PaperForkL</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is the final assembly of the numerical values. The symbol &#8216;v&#8217; is the
+forward speed of the bicycle (a concept which only makes sense in the upright,
+static equilibrium case?). These are in a dictionary which will later be
+substituted in. Again the sign on the <em>product</em> of inertia values is flipped
+here, due to different orientations of coordinate systems.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">val_dict</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>      <span class="n">WFrad</span><span class="p">:</span> <span class="n">PaperRadFront</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">WRrad</span><span class="p">:</span> <span class="n">PaperRadRear</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">htangle</span><span class="p">:</span> <span class="n">HTA</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">forkoffset</span><span class="p">:</span> <span class="n">rake</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">forklength</span><span class="p">:</span> <span class="n">PaperForkL</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">framelength</span><span class="p">:</span> <span class="n">FrameLength</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">forkcg1</span><span class="p">:</span> <span class="n">ForkCGPar</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">forkcg3</span><span class="p">:</span> <span class="n">ForkCGNorm</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">framecg1</span><span class="p">:</span> <span class="n">FrameCGNorm</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">framecg3</span><span class="p">:</span> <span class="n">FrameCGPar</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iwr11</span><span class="p">:</span> <span class="mf">0.0603</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iwr22</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iwf11</span><span class="p">:</span> <span class="mf">0.1405</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iwf22</span><span class="p">:</span> <span class="mf">0.28</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Ifork11</span><span class="p">:</span> <span class="mf">0.05892</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Ifork22</span><span class="p">:</span> <span class="mf">0.06</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Ifork33</span><span class="p">:</span> <span class="mf">0.00708</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Ifork31</span><span class="p">:</span> <span class="mf">0.00756</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iframe11</span><span class="p">:</span> <span class="mf">9.2</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iframe22</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iframe33</span><span class="p">:</span> <span class="mf">2.8</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">Iframe31</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.4</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">mfork</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">mframe</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">mwf</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">mwr</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">g</span><span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">q1</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">q2</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">q4</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">q5</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u1</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u2</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u3</span><span class="p">:</span> <span class="n">v</span><span class="o">/</span><span class="n">PaperRadRear</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u4</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u5</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>      <span class="n">u6</span><span class="p">:</span> <span class="n">v</span><span class="o">/</span><span class="n">PaperRadFront</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kdd</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kindiffdict</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Before Linearization of the </span><span class="se">\&quot;</span><span class="s">Forcing</span><span class="se">\&quot;</span><span class="s"> Term&#39;</span><span class="p">)</span>
+<span class="go">Before Linearization of the &quot;Forcing&quot; Term</span>
+</pre></div>
+</div>
+<p>Linearizes the forcing vector; the equations are set up as MM udot = forcing,
+where MM is the mass matrix, udot is the vector representing the time
+derivatives of the generalized speeds, and forcing is a vector which contains
+both external forcing terms and internal forcing terms, such as centripetal or
+Coriolis forces.  This actually returns a matrix with as many rows as <em>total</em>
+coordinates and speeds, but only as many columns as independent coordinates and
+speeds. (Note that below this is commented out, as it takes a few minutes to
+run, which is not good when performing the doctests)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># forcing_lin = KM.linearize()[0].subs(sub_dict)</span>
+</pre></div>
+</div>
+<p>As mentioned above, the size of the linearized forcing terms is expanded to
+include both q&#8217;s and u&#8217;s, so the mass matrix must have this done as well.  This
+will likely be changed to be part of the linearized process, for future
+reference.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MM_full</span> <span class="o">=</span> <span class="p">(</span><span class="n">KM</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span>
+<span class="gp">... </span>          <span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">KM</span><span class="o">.</span><span class="n">mass_matrix</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s">&#39;Before Substitution of Numerical Values&#39;</span><span class="p">)</span>
+<span class="go">Before Substitution of Numerical Values</span>
+</pre></div>
+</div>
+<p>I think this is pretty self explanatory. It takes a really long time though.
+I&#8217;ve experimented with using evalf with substitution, this failed due to
+maximum recursion depth being exceeded; I also tried lambdifying this, and it
+is also not successful. (again commented out due to speed)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># MM_full = MM_full.subs(val_dict)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># forcing_lin = forcing_lin.subs(val_dict)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;Before .evalf() call&#39;)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># MM_full = MM_full.evalf()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># forcing_lin = forcing_lin.evalf()</span>
+</pre></div>
+</div>
+<p>Finally, we construct an &#8220;A&#8221; matrix for the form xdot = A x (x being the state
+vector, although in this case, the sizes are a little off). The following line
+extracts only the minimum entries required for eigenvalue analysis, which
+correspond to rows and columns for lean, steer, lean rate, and steer rate.
+(this is all commented out due to being dependent on the above code, which is
+also commented out):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Amat = MM_full.inv() * forcing_lin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># A = Amat.extract([1,2,4,6],[1,2,3,5])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;v = 1&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A.subs(v, 1).eigenvals())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;v = 2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A.subs(v, 2).eigenvals())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;v = 3&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A.subs(v, 3).eigenvals())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;v = 4&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A.subs(v, 4).eigenvals())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(&#39;v = 5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print(A.subs(v, 5).eigenvals())</span>
+</pre></div>
+</div>
+<p>Upon running the above code yourself, enabling the commented out lines, compare
+the computed eigenvalues to those is the referenced paper. This concludes the
+bicycle example.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rollingdisc_example_lagrange.html"
+                        title="previous chapter">A rolling disc using Lagrange&#8217;s Method</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="advanced.html"
+                        title="next chapter">Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/bicycle_example.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example_lagrange.html" title="A rolling disc using Lagrange’s Method"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li>
+          <li><a href="examples.html" >Examples for Physics/Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

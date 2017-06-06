@@ -1,0 +1,751 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Trigonometric functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Hyperbolic functions" href="hyperbolic.html" />
+    <link rel="prev" title="Powers and logarithms" href="powers.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hyperbolic.html" title="Hyperbolic functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="powers.html" title="Powers and logarithms"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="trigonometric-functions">
+<h1>Trigonometric functions<a class="headerlink" href="#trigonometric-functions" title="Permalink to this headline">¶</a></h1>
+<p>Except where otherwise noted, the trigonometric functions
+take a radian angle as input and the inverse trigonometric
+functions return radian angles.</p>
+<p>The ordinary trigonometric functions are single-valued
+functions defined everywhere in the complex plane
+(except at the poles of tan, sec, csc, and cot).
+They are defined generally via the exponential function,
+e.g.</p>
+<div class="math">
+\[\cos(x) = \frac{e^{ix} + e^{-ix}}{2}.\]</div>
+<p>The inverse trigonometric functions are multivalued,
+thus requiring branch cuts, and are generally real-valued
+only on a part of the real line. Definitions and branch cuts
+are given in the documentation of each function.
+The branch cut conventions used by mpmath are essentially
+the same as those found in most standard mathematical software,
+such as Mathematica and Python&#8217;s own <tt class="docutils literal"><span class="pre">cmath</span></tt> libary (as of Python 2.6;
+earlier Python versions implement some functions
+erroneously).</p>
+<div class="section" id="degree-radian-conversion">
+<h2>Degree-radian conversion<a class="headerlink" href="#degree-radian-conversion" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="degrees">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">degrees()</span></tt><a class="headerlink" href="#degrees" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.degrees">
+<tt class="descclassname">mpmath.</tt><tt class="descname">degrees</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.degrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the radian angle <span class="math">\(x\)</span> to a degree angle:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">degrees</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">60.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="radians">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">radians()</span></tt><a class="headerlink" href="#radians" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.radians">
+<tt class="descclassname">mpmath.</tt><tt class="descname">radians</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.radians" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the degree angle <span class="math">\(x\)</span> to radians:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">radians</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="go">1.0471975511966</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="id1">
+<h2>Trigonometric functions<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cos">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">cos()</span></tt><a class="headerlink" href="#cos" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.cos">
+<tt class="descclassname">mpmath.</tt><tt class="descname">cos</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.cos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cosine of <span class="math">\(x\)</span>, <span class="math">\(\cos(x)\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">100000001</span><span class="p">)</span>
+<span class="go">-0.9802850113244713353133243</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-4.189625690968807230132555 - 9.109227893755336597979197j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">cos</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[1.0, 0.0, -0.5, 0.0, 0.0416667, 0.0, -0.00138889]</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.cos()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">cos</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[0.540302305868139717400936602301, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">cos</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[-0.41614683654714238699756823214, 1.0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sin">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sin()</span></tt><a class="headerlink" href="#sin" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sin">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sin</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.sin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the sine of <span class="math">\(x\)</span>, <span class="math">\(\sin(x)\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.8660254037844386467637232</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">100000001</span><span class="p">)</span>
+<span class="go">0.1975887055794968911438743</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(9.1544991469114295734673 - 4.168906959966564350754813j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[0.0, 1.0, 0.0, -0.166667, 0.0, 0.00833333, 0.0]</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.sin()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sin</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[0.0, 0.841470984807896506652502331201]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sin</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[0.0, 1.0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="tan">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">tan()</span></tt><a class="headerlink" href="#tan" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.tan">
+<tt class="descclassname">mpmath.</tt><tt class="descname">tan</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.tan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the tangent of <span class="math">\(x\)</span>, <span class="math">\(\tan(x) = \frac{\sin(x)}{\cos(x)}\)</span>.
+The tangent function is singular at <span class="math">\(x = (n+1/2)\pi\)</span>, but
+<tt class="docutils literal"><span class="pre">tan(x)</span></tt> always returns a finite result since <span class="math">\((n+1/2)\pi\)</span>
+cannot be represented exactly using floating-point arithmetic.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1.732050807568877293527446</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="mi">100000001</span><span class="p">)</span>
+<span class="go">-0.2015625081449864533091058</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.003764025641504248292751221 + 1.003238627353609801446359j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">tan</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[0.0, 1.0, 0.0, 0.333333, 0.0, 0.133333, 0.0]</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.tan()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">tan</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[0.0, 1.55740772465490223050697482944]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">tan</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>  <span class="c"># Interval includes a singularity</span>
+<span class="go">[-inf, +inf]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sec">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sec()</span></tt><a class="headerlink" href="#sec" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sec">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sec</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.sec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the secant of <span class="math">\(x\)</span>, <span class="math">\(\mathrm{sec}(x) = \frac{1}{\cos(x)}\)</span>.
+The secant function is singular at <span class="math">\(x = (n+1/2)\pi\)</span>, but
+<tt class="docutils literal"><span class="pre">sec(x)</span></tt> always returns a finite result since <span class="math">\((n+1/2)\pi\)</span>
+cannot be represented exactly using floating-point arithmetic.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sec</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sec</span><span class="p">(</span><span class="mi">10000001</span><span class="p">)</span>
+<span class="go">-1.184723164360392819100265</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sec</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.04167496441114427004834991 + 0.0906111371962375965296612j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sec</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">sec</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[1.0, 0.0, 0.5, 0.0, 0.208333, 0.0, 0.0847222]</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.sec()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sec</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[1.0, 1.85081571768092561791175326276]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sec</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>  <span class="c"># Interval includes a singularity</span>
+<span class="go">[-inf, +inf]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="csc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">csc()</span></tt><a class="headerlink" href="#csc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.csc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">csc</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.csc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cosecant of <span class="math">\(x\)</span>, <span class="math">\(\mathrm{csc}(x) = \frac{1}{\sin(x)}\)</span>.
+This cosecant function is singular at <span class="math">\(x = n \pi\)</span>, but with the
+exception of the point <span class="math">\(x = 0\)</span>, <tt class="docutils literal"><span class="pre">csc(x)</span></tt> returns a finite result
+since <span class="math">\(n \pi\)</span> cannot be represented exactly using floating-point
+arithmetic.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">csc</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1.154700538379251529018298</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">csc</span><span class="p">(</span><span class="mi">10000001</span><span class="p">)</span>
+<span class="go">-1.864910497503629858938891</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">csc</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.09047320975320743980579048 + 0.04120098628857412646300981j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">csc</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.csc()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">csc</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>  <span class="c"># Interval includes a singularity</span>
+<span class="go">[1.18839510577812121626159943988, +inf]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">csc</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[1.0, +inf]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="cot">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">cot()</span></tt><a class="headerlink" href="#cot" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.cot">
+<tt class="descclassname">mpmath.</tt><tt class="descname">cot</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.cot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cotangent of <span class="math">\(x\)</span>,
+<span class="math">\(\mathrm{cot}(x) = \frac{1}{\tan(x)} = \frac{\cos(x)}{\sin(x)}\)</span>.
+This cotangent function is singular at <span class="math">\(x = n \pi\)</span>, but with the
+exception of the point <span class="math">\(x = 0\)</span>, <tt class="docutils literal"><span class="pre">cot(x)</span></tt> returns a finite result
+since <span class="math">\(n \pi\)</span> cannot be represented exactly using floating-point
+arithmetic.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cot</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.5773502691896257645091488</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cot</span><span class="p">(</span><span class="mi">10000001</span><span class="p">)</span>
+<span class="go">1.574131876209625656003562</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cot</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.003739710376336956660117409 - 0.9967577965693583104609688j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cot</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">nan</span>
+</pre></div>
+</div>
+<p>Intervals are supported via <tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.cot()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">cot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>  <span class="c"># Interval includes a singularity</span>
+<span class="go">[0.642092615934330703006419974862, +inf]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">cot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[-inf, +inf]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="trigonometric-functions-with-modified-argument">
+<h2>Trigonometric functions with modified argument<a class="headerlink" href="#trigonometric-functions-with-modified-argument" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cospi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">cospi()</span></tt><a class="headerlink" href="#cospi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.cospi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">cospi</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.cospi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes <span class="math">\(\cos(\pi x)\)</span>, more accurately than the expression
+<tt class="docutils literal"><span class="pre">cos(pi*x)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cospi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">))</span>
+<span class="go">(1.0, 0.999999999997493)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cospi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="o">+</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="o">+</span><span class="mf">0.5</span><span class="p">))</span>
+<span class="go">(0.0, 1.59960492420134e-6)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sinpi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sinpi()</span></tt><a class="headerlink" href="#sinpi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sinpi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sinpi</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.sinpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes <span class="math">\(\sin(\pi x)\)</span>, more accurately than the expression
+<tt class="docutils literal"><span class="pre">sin(pi*x)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinpi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">))</span>
+<span class="go">(0.0, -2.23936276195592e-6)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinpi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="o">+</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="o">+</span><span class="mf">0.5</span><span class="p">))</span>
+<span class="go">(1.0, 0.999999999998721)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="inverse-trigonometric-functions">
+<h2>Inverse trigonometric functions<a class="headerlink" href="#inverse-trigonometric-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acos">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">acos()</span></tt><a class="headerlink" href="#acos" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.acos">
+<tt class="descclassname">mpmath.</tt><tt class="descname">acos</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.acos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse cosine or arccosine of <span class="math">\(x\)</span>, <span class="math">\(\cos^{-1}(x)\)</span>.
+Since <span class="math">\(-1 \le \cos(x) \le 1\)</span> for real <span class="math">\(x\)</span>, the inverse
+cosine is real-valued only for <span class="math">\(-1 \le x \le 1\)</span>. On this interval,
+<a class="reference internal" href="#mpmath.acos" title="mpmath.acos"><tt class="xref py py-func docutils literal"><span class="pre">acos()</span></tt></a> is defined to be a monotonically decreasing
+function assuming values between <span class="math">\(+\pi\)</span> and <span class="math">\(0\)</span>.</p>
+<p>Basic values are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">acos</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[1.5708, -1.0, 0.0, -0.166667, 0.0, -0.075, 0.0]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.acos" title="mpmath.acos"><tt class="xref py py-func docutils literal"><span class="pre">acos()</span></tt></a> is defined so as to be a proper inverse function of
+<span class="math">\(\cos(\theta)\)</span> for <span class="math">\(0 \le \theta &lt; \pi\)</span>.
+We have <span class="math">\(\cos(\cos^{-1}(x)) = x\)</span> for all <span class="math">\(x\)</span>, but
+<span class="math">\(\cos^{-1}(\cos(x)) = x\)</span> only for <span class="math">\(0 \le \Re[x] &lt; \pi\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mi">10</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">acos</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">acos</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+<span class="gp">...</span>
+<span class="go">1.0 1.0</span>
+<span class="go">(10.0 + 0.0j) 2.566370614359172953850574</span>
+<span class="go">-1.0 1.0</span>
+<span class="go">(2.0 + 3.0j) (2.0 + 3.0j)</span>
+<span class="go">(10.0 + 3.0j) (2.566370614359172953850574 - 3.0j)</span>
+</pre></div>
+</div>
+<p>The inverse cosine has two branch points: <span class="math">\(x = \pm 1\)</span>. <a class="reference internal" href="#mpmath.acos" title="mpmath.acos"><tt class="xref py py-func docutils literal"><span class="pre">acos()</span></tt></a>
+places the branch cuts along the line segments <span class="math">\((-\infty, -1)\)</span> and
+<span class="math">\((+1, +\infty)\)</span>. In general,</p>
+<div class="math">
+\[\cos^{-1}(x) = \frac{\pi}{2} + i \log\left(ix + \sqrt{1-x^2} \right)\]</div>
+<p>where the principal-branch log and square root are implied.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="asin">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">asin()</span></tt><a class="headerlink" href="#asin" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.asin">
+<tt class="descclassname">mpmath.</tt><tt class="descname">asin</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.asin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse sine or arcsine of <span class="math">\(x\)</span>, <span class="math">\(\sin^{-1}(x)\)</span>.
+Since <span class="math">\(-1 \le \sin(x) \le 1\)</span> for real <span class="math">\(x\)</span>, the inverse
+sine is real-valued only for <span class="math">\(-1 \le x \le 1\)</span>.
+On this interval, it is defined to be a monotonically increasing
+function assuming values between <span class="math">\(-\pi/2\)</span> and <span class="math">\(\pi/2\)</span>.</p>
+<p>Basic values are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">asin</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">asin</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">asin</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">asin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[0.0, 1.0, 0.0, 0.166667, 0.0, 0.075, 0.0]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.asin" title="mpmath.asin"><tt class="xref py py-func docutils literal"><span class="pre">asin()</span></tt></a> is defined so as to be a proper inverse function of
+<span class="math">\(\sin(\theta)\)</span> for <span class="math">\(-\pi/2 &lt; \theta &lt; \pi/2\)</span>.
+We have <span class="math">\(\sin(\sin^{-1}(x)) = x\)</span> for all <span class="math">\(x\)</span>, but
+<span class="math">\(\sin^{-1}(\sin(x)) = x\)</span> only for <span class="math">\(-\pi/2 &lt; \Re[x] &lt; \pi/2\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">asin</span><span class="p">(</span><span class="n">x</span><span class="p">))),</span> <span class="n">asin</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+<span class="gp">...</span>
+<span class="go">1.0 1.0</span>
+<span class="go">10.0 -0.5752220392306202846120698</span>
+<span class="go">-1.0 -1.0</span>
+<span class="go">(1.0 + 3.0j) (1.0 + 3.0j)</span>
+<span class="go">(-2.0 + 3.0j) (-1.141592653589793238462643 - 3.0j)</span>
+</pre></div>
+</div>
+<p>The inverse sine has two branch points: <span class="math">\(x = \pm 1\)</span>. <a class="reference internal" href="#mpmath.asin" title="mpmath.asin"><tt class="xref py py-func docutils literal"><span class="pre">asin()</span></tt></a>
+places the branch cuts along the line segments <span class="math">\((-\infty, -1)\)</span> and
+<span class="math">\((+1, +\infty)\)</span>. In general,</p>
+<div class="math">
+\[\sin^{-1}(x) = -i \log\left(ix + \sqrt{1-x^2} \right)\]</div>
+<p>where the principal-branch log and square root are implied.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="atan">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">atan()</span></tt><a class="headerlink" href="#atan" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.atan">
+<tt class="descclassname">mpmath.</tt><tt class="descname">atan</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.atan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse tangent or arctangent of <span class="math">\(x\)</span>, <span class="math">\(\tan^{-1}(x)\)</span>.
+This is a real-valued function for all real <span class="math">\(x\)</span>, with range
+<span class="math">\((-\pi/2, \pi/2)\)</span>.</p>
+<p>Basic values are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-0.7853981633974483096156609</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.7853981633974483096156609</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">atan</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="go">[0.0, 1.0, 0.0, -0.333333, 0.0, 0.2, 0.0]</span>
+</pre></div>
+</div>
+<p>The inverse tangent is often used to compute angles. However,
+the atan2 function is often better for this as it preserves sign
+(see <a class="reference internal" href="#mpmath.atan2" title="mpmath.atan2"><tt class="xref py py-func docutils literal"><span class="pre">atan2()</span></tt></a>).</p>
+<p><a class="reference internal" href="#mpmath.atan" title="mpmath.atan"><tt class="xref py py-func docutils literal"><span class="pre">atan()</span></tt></a> is defined so as to be a proper inverse function of
+<span class="math">\(\tan(\theta)\)</span> for <span class="math">\(-\pi/2 &lt; \theta &lt; \pi/2\)</span>.
+We have <span class="math">\(\tan(\tan^{-1}(x)) = x\)</span> for all <span class="math">\(x\)</span>, but
+<span class="math">\(\tan^{-1}(\tan(x)) = x\)</span> only for <span class="math">\(-\pi/2 &lt; \Re[x] &lt; \pi/2\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">atan</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">atan</span><span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+<span class="gp">...</span>
+<span class="go">1.0 1.0</span>
+<span class="go">10.0 0.5752220392306202846120698</span>
+<span class="go">-1.0 -1.0</span>
+<span class="go">(1.0 + 3.0j) (1.000000000000000000000001 + 3.0j)</span>
+<span class="go">(-2.0 + 3.0j) (1.141592653589793238462644 + 3.0j)</span>
+</pre></div>
+</div>
+<p>The inverse tangent has two branch points: <span class="math">\(x = \pm i\)</span>. <a class="reference internal" href="#mpmath.atan" title="mpmath.atan"><tt class="xref py py-func docutils literal"><span class="pre">atan()</span></tt></a>
+places the branch cuts along the line segments <span class="math">\((-i \infty, -i)\)</span> and
+<span class="math">\((+i, +i \infty)\)</span>. In general,</p>
+<div class="math">
+\[\tan^{-1}(x) = \frac{i}{2}\left(\log(1-ix)-\log(1+ix)\right)\]</div>
+<p>where the principal-branch log is implied.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="atan2">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">atan2()</span></tt><a class="headerlink" href="#atan2" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.atan2">
+<tt class="descclassname">mpmath.</tt><tt class="descname">atan2</tt><big>(</big><em>y</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.atan2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the two-argument arctangent, <span class="math">\(\mathrm{atan2}(y, x)\)</span>,
+giving the signed angle between the positive <span class="math">\(x\)</span>-axis and the
+point <span class="math">\((x, y)\)</span> in the 2D plane. This function is defined for
+real <span class="math">\(x\)</span> and <span class="math">\(y\)</span> only.</p>
+<p>The two-argument arctangent essentially computes
+<span class="math">\(\mathrm{atan}(y/x)\)</span>, but accounts for the signs of both
+<span class="math">\(x\)</span> and <span class="math">\(y\)</span> to give the angle for the correct quadrant. The
+following examples illustrate the difference:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">atan</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">(0.785398163397448, 0.785398163397448)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">atan</span><span class="p">(</span><span class="mi">1</span><span class="o">/-</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">(2.35619449019234, -0.785398163397448)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">atan</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">(-0.785398163397448, -0.785398163397448)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">atan</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/-</span><span class="mf">1.</span><span class="p">)</span>
+<span class="go">(-2.35619449019234, 0.785398163397448)</span>
+</pre></div>
+</div>
+<p>The angle convention is the same as that used for the complex
+argument; see <a class="reference internal" href="../general.html#mpmath.arg" title="mpmath.arg"><tt class="xref py py-func docutils literal"><span class="pre">arg()</span></tt></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="asec">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">asec()</span></tt><a class="headerlink" href="#asec" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.asec">
+<tt class="descclassname">mpmath.</tt><tt class="descname">asec</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.asec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse secant of <span class="math">\(x\)</span>,
+<span class="math">\(\mathrm{sec}^{-1}(x) = \cos^{-1}(1/x)\)</span>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="acsc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">acsc()</span></tt><a class="headerlink" href="#acsc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.acsc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">acsc</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.acsc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse cosecant of <span class="math">\(x\)</span>,
+<span class="math">\(\mathrm{csc}^{-1}(x) = \sin^{-1}(1/x)\)</span>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="acot">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">acot()</span></tt><a class="headerlink" href="#acot" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.acot">
+<tt class="descclassname">mpmath.</tt><tt class="descname">acot</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.acot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse cotangent of <span class="math">\(x\)</span>,
+<span class="math">\(\mathrm{cot}^{-1}(x) = \tan^{-1}(1/x)\)</span>.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="sinc-function">
+<h2>Sinc function<a class="headerlink" href="#sinc-function" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sinc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sinc()</span></tt><a class="headerlink" href="#sinc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sinc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sinc</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.sinc" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">sinc(x)</span></tt> computes the unnormalized sinc function, defined as</p>
+<div class="math">
+\[\begin{split}\mathrm{sinc}(x) = \begin{cases}
+    \sin(x)/x, &amp; \mbox{if } x \ne 0 \\
+    1,         &amp; \mbox{if } x = 0.
+\end{cases}\end{split}\]</div>
+<p>See <a class="reference internal" href="#mpmath.sincpi" title="mpmath.sincpi"><tt class="xref py py-func docutils literal"><span class="pre">sincpi()</span></tt></a> for the normalized sinc function.</p>
+<p>Simple values and limits include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinc</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinc</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.841470984807897</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinc</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>The integral of the sinc function is the sine integral Si:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sinc</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.946083070367183</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.946083070367183</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sincpi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sincpi()</span></tt><a class="headerlink" href="#sincpi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sincpi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sincpi</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.sincpi" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">sincpi(x)</span></tt> computes the normalized sinc function, defined as</p>
+<div class="math">
+\[\begin{split}\mathrm{sinc}_{\pi}(x) = \begin{cases}
+    \sin(\pi x)/(\pi x), &amp; \mbox{if } x \ne 0 \\
+    1,                   &amp; \mbox{if } x = 0.
+\end{cases}\end{split}\]</div>
+<p>Equivalently, we have
+<span class="math">\(\mathrm{sinc}_{\pi}(x) = \mathrm{sinc}(\pi x)\)</span>.</p>
+<p>The normalization entails that the function integrates
+to unity over the entire real line:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">sincpi</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>Like, <a class="reference internal" href="#mpmath.sinpi" title="mpmath.sinpi"><tt class="xref py py-func docutils literal"><span class="pre">sinpi()</span></tt></a>, <a class="reference internal" href="#mpmath.sincpi" title="mpmath.sincpi"><tt class="xref py py-func docutils literal"><span class="pre">sincpi()</span></tt></a> is evaluated accurately
+at its roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sincpi</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Trigonometric functions</a><ul>
+<li><a class="reference internal" href="#degree-radian-conversion">Degree-radian conversion</a><ul>
+<li><a class="reference internal" href="#degrees"><tt class="docutils literal"><span class="pre">degrees()</span></tt></a></li>
+<li><a class="reference internal" href="#radians"><tt class="docutils literal"><span class="pre">radians()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id1">Trigonometric functions</a><ul>
+<li><a class="reference internal" href="#cos"><tt class="docutils literal"><span class="pre">cos()</span></tt></a></li>
+<li><a class="reference internal" href="#sin"><tt class="docutils literal"><span class="pre">sin()</span></tt></a></li>
+<li><a class="reference internal" href="#tan"><tt class="docutils literal"><span class="pre">tan()</span></tt></a></li>
+<li><a class="reference internal" href="#sec"><tt class="docutils literal"><span class="pre">sec()</span></tt></a></li>
+<li><a class="reference internal" href="#csc"><tt class="docutils literal"><span class="pre">csc()</span></tt></a></li>
+<li><a class="reference internal" href="#cot"><tt class="docutils literal"><span class="pre">cot()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trigonometric-functions-with-modified-argument">Trigonometric functions with modified argument</a><ul>
+<li><a class="reference internal" href="#cospi"><tt class="docutils literal"><span class="pre">cospi()</span></tt></a></li>
+<li><a class="reference internal" href="#sinpi"><tt class="docutils literal"><span class="pre">sinpi()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inverse-trigonometric-functions">Inverse trigonometric functions</a><ul>
+<li><a class="reference internal" href="#acos"><tt class="docutils literal"><span class="pre">acos()</span></tt></a></li>
+<li><a class="reference internal" href="#asin"><tt class="docutils literal"><span class="pre">asin()</span></tt></a></li>
+<li><a class="reference internal" href="#atan"><tt class="docutils literal"><span class="pre">atan()</span></tt></a></li>
+<li><a class="reference internal" href="#atan2"><tt class="docutils literal"><span class="pre">atan2()</span></tt></a></li>
+<li><a class="reference internal" href="#asec"><tt class="docutils literal"><span class="pre">asec()</span></tt></a></li>
+<li><a class="reference internal" href="#acsc"><tt class="docutils literal"><span class="pre">acsc()</span></tt></a></li>
+<li><a class="reference internal" href="#acot"><tt class="docutils literal"><span class="pre">acot()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sinc-function">Sinc function</a><ul>
+<li><a class="reference internal" href="#sinc"><tt class="docutils literal"><span class="pre">sinc()</span></tt></a></li>
+<li><a class="reference internal" href="#sincpi"><tt class="docutils literal"><span class="pre">sincpi()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="powers.html"
+                        title="previous chapter">Powers and logarithms</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hyperbolic.html"
+                        title="next chapter">Hyperbolic functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/trigonometric.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hyperbolic.html" title="Hyperbolic functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="powers.html" title="Powers and logarithms"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

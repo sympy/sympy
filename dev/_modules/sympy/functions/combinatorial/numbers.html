@@ -1,0 +1,1460 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.combinatorial.numbers &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.combinatorial.numbers</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements some special functions that commonly appear in</span>
+<span class="sd">combinatorial contexts (e.g. in power series); in particular,</span>
+<span class="sd">sequences of rational numbers such as Bernoulli and Fibonacci numbers.</span>
+
+<span class="sd">Factorials, binomial coefficients and related functions are located in</span>
+<span class="sd">the separate &#39;factorials&#39; module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">expand_mul</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">as_int</span><span class="p">,</span> <span class="n">SYMPY_INTS</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.core.cache</span> <span class="kn">import</span> <span class="n">cacheit</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.factorials</span> <span class="kn">import</span> <span class="n">factorial</span>
+
+<span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">bernfrac</span>
+<span class="kn">from</span> <span class="nn">sympy.mpmath.libmp</span> <span class="kn">import</span> <span class="n">ifib</span> <span class="k">as</span> <span class="n">_ifib</span>
+
+
+<span class="k">def</span> <span class="nf">_product</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">k</span>
+    <span class="k">return</span> <span class="n">p</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities.memoization</span> <span class="kn">import</span> <span class="n">recurrence_memo</span>
+
+
+<span class="c"># Dummy symbol used for computing polynomial sequences</span>
+<span class="n">_sym</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">_symbols</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                           Fibonacci numbers                                #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+
+<div class="viewcode-block" id="fibonacci"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.fibonacci">[docs]</a><span class="k">class</span> <span class="nc">fibonacci</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fibonacci numbers / Fibonacci polynomials</span>
+
+<span class="sd">    The Fibonacci numbers are the integer sequence defined by the</span>
+<span class="sd">    initial terms F_0 = 0, F_1 = 1 and the two-term recurrence</span>
+<span class="sd">    relation F_n = F_{n-1} + F_{n-2}.</span>
+
+<span class="sd">    The Fibonacci polynomials are defined by F_1(x) = 1,</span>
+<span class="sd">    F_2(x) = x, and F_n(x) = x*F_{n-1}(x) + F_{n-2}(x) for n &gt; 2.</span>
+<span class="sd">    For all positive integers n, F_n(1) = F_n.</span>
+
+<span class="sd">    * fibonacci(n) gives the nth Fibonacci number, F_n</span>
+<span class="sd">    * fibonacci(n, x) gives the nth Fibonacci polynomial in x, F_n(x)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import fibonacci, Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; [fibonacci(x) for x in range(11)]</span>
+<span class="sd">    [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]</span>
+<span class="sd">    &gt;&gt;&gt; fibonacci(5, Symbol(&#39;t&#39;))</span>
+<span class="sd">    t**4 + 3*t**2 + 1</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Fibonacci_number</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, bernoulli, catalan, euler, harmonic, lucas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_ifib</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@recurrence_memo</span><span class="p">([</span><span class="bp">None</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">_sym</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">_fibpoly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prev</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">prev</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">_sym</span><span class="o">*</span><span class="n">prev</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">fibonacci</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_fib</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Fibonacci polynomials are defined &quot;</span>
+                       <span class="s">&quot;only for positive integer indices.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_fibpoly</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">_sym</span><span class="p">,</span> <span class="n">sym</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="lucas"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.lucas">[docs]</a><span class="k">class</span> <span class="nc">lucas</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lucas numbers</span>
+
+<span class="sd">    Lucas numbers satisfy a recurrence relation similar to that of</span>
+<span class="sd">    the Fibonacci sequence, in which each term is the sum of the</span>
+<span class="sd">    preceding two. They are generated by choosing the initial</span>
+<span class="sd">    values L_0 = 2 and L_1 = 1.</span>
+
+<span class="sd">    * lucas(n) gives the nth Lucas number</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import lucas</span>
+
+<span class="sd">    &gt;&gt;&gt; [lucas(x) for x in range(11)]</span>
+<span class="sd">    [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Lucas_number</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LucasNumber.html</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, bernoulli, catalan, euler, fibonacci, harmonic</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                           Bernoulli numbers                                #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+</div>
+<div class="viewcode-block" id="bernoulli"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.bernoulli">[docs]</a><span class="k">class</span> <span class="nc">bernoulli</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Bernoulli numbers / Bernoulli polynomials</span>
+
+<span class="sd">    The Bernoulli numbers are a sequence of rational numbers</span>
+<span class="sd">    defined by B_0 = 1 and the recursive relation (n &gt; 0)::</span>
+
+<span class="sd">                n</span>
+<span class="sd">               ___</span>
+<span class="sd">              \      / n + 1 \</span>
+<span class="sd">          0 =  )     |       | * B .</span>
+<span class="sd">              /___   \   k   /    k</span>
+<span class="sd">              k = 0</span>
+
+<span class="sd">    They are also commonly defined by their exponential generating</span>
+<span class="sd">    function, which is x/(exp(x) - 1). For odd indices &gt; 1, the</span>
+<span class="sd">    Bernoulli numbers are zero.</span>
+
+<span class="sd">    The Bernoulli polynomials satisfy the analogous formula::</span>
+
+<span class="sd">                    n</span>
+<span class="sd">                   ___</span>
+<span class="sd">                  \      / n \         n-k</span>
+<span class="sd">          B (x) =  )     |   | * B  * x   .</span>
+<span class="sd">           n      /___   \ k /    k</span>
+<span class="sd">                  k = 0</span>
+
+<span class="sd">    Bernoulli numbers and Bernoulli polynomials are related as</span>
+<span class="sd">    B_n(0) = B_n.</span>
+
+<span class="sd">    We compute Bernoulli numbers using Ramanujan&#39;s formula::</span>
+
+<span class="sd">                                   / n + 3 \</span>
+<span class="sd">          B   =  (A(n) - S(n))  /  |       |</span>
+<span class="sd">           n                       \   n   /</span>
+
+<span class="sd">    where A(n) = (n+3)/3 when n = 0 or 2 (mod 6), A(n) = -(n+3)/6</span>
+<span class="sd">    when n = 4 (mod 6), and::</span>
+
+<span class="sd">                 [n/6]</span>
+<span class="sd">                  ___</span>
+<span class="sd">                 \      /  n + 3  \</span>
+<span class="sd">          S(n) =  )     |         | * B</span>
+<span class="sd">                 /___   \ n - 6*k /    n-6*k</span>
+<span class="sd">                 k = 1</span>
+
+<span class="sd">    This formula is similar to the sum given in the definition, but</span>
+<span class="sd">    cuts 2/3 of the terms. For Bernoulli polynomials, we use the</span>
+<span class="sd">    formula in the definition.</span>
+
+<span class="sd">    * bernoulli(n) gives the nth Bernoulli number, B_n</span>
+<span class="sd">    * bernoulli(n, x) gives the nth Bernoulli polynomial in x, B_n(x)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import bernoulli</span>
+
+<span class="sd">    &gt;&gt;&gt; [bernoulli(n) for n in range(11)]</span>
+<span class="sd">    [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]</span>
+<span class="sd">    &gt;&gt;&gt; bernoulli(1000001)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Bernoulli_number</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Bernoulli_polynomial</span>
+<span class="sd">    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html</span>
+<span class="sd">    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, catalan, euler, fibonacci, harmonic, lucas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Calculates B_n for positive even n</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_bernoulli</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">6</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">bernoulli</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">6</span><span class="o">*</span><span class="n">j</span><span class="p">)</span>
+            <span class="c"># Avoid computing each binomial coefficient from scratch</span>
+            <span class="n">a</span> <span class="o">*=</span> <span class="n">_product</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">-</span> <span class="mi">6</span><span class="o">*</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">6</span><span class="o">*</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">//=</span> <span class="n">_product</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="n">j</span> <span class="o">+</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="o">*</span><span class="n">j</span> <span class="o">+</span> <span class="mi">9</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">6</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="o">-</span><span class="n">Rational</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="o">-</span> <span class="n">s</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="n">s</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="c"># We implement a specialized memoization scheme to handle each</span>
+    <span class="c"># case modulo 6 separately</span>
+    <span class="n">_cache</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="mi">4</span><span class="p">:</span> <span class="n">Rational</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)}</span>
+    <span class="n">_highest</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+                <span class="k">elif</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">sym</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span>
+                <span class="c"># Bernoulli numbers</span>
+                <span class="k">elif</span> <span class="n">sym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                    <span class="c"># Use mpmath for enormous Bernoulli numbers</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">:</span>
+                        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">bernfrac</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+                    <span class="n">case</span> <span class="o">=</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">6</span>
+                    <span class="n">highest_cached</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_highest</span><span class="p">[</span><span class="n">case</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="n">highest_cached</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                    <span class="c"># To avoid excessive recursion when, say, bernoulli(1000) is</span>
+                    <span class="c"># requested, calculate and cache the entire sequence ... B_988,</span>
+                    <span class="c"># B_994, B_1000 in increasing order</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">highest_cached</span> <span class="o">+</span> <span class="mi">6</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+                        <span class="n">b</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_calc_bernoulli</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="n">cls</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+                        <span class="n">cls</span><span class="o">.</span><span class="n">_highest</span><span class="p">[</span><span class="n">case</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="k">return</span> <span class="n">b</span>
+                <span class="c"># Bernoulli polynomials</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">cls</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">sym</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span>
+                    <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Bernoulli numbers are defined only&quot;</span>
+                                 <span class="s">&quot; for nonnegative integer indices.&quot;</span><span class="p">)</span>
+
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                             Bell numbers                                   #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+</div>
+<div class="viewcode-block" id="bell"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.bell">[docs]</a><span class="k">class</span> <span class="nc">bell</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Bell numbers / Bell polynomials</span>
+
+<span class="sd">    The Bell numbers satisfy `B_0 = 1` and</span>
+
+<span class="sd">    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k.</span>
+
+<span class="sd">    They are also given by:</span>
+
+<span class="sd">    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}.</span>
+
+<span class="sd">    The Bell polynomials are given by `B_0(x) = 1` and</span>
+
+<span class="sd">    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x).</span>
+
+<span class="sd">    The second kind of Bell polynomials (are sometimes called &quot;partial&quot; Bell</span>
+<span class="sd">    polynomials or incomplete Bell polynomials) are defined as</span>
+
+<span class="sd">    .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =</span>
+<span class="sd">            \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}</span>
+<span class="sd">                \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}</span>
+<span class="sd">                \left(\frac{x_1}{1!} \right)^{j_1}</span>
+<span class="sd">                \left(\frac{x_2}{2!} \right)^{j_2} \dotsb</span>
+<span class="sd">                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.</span>
+
+<span class="sd">    * bell(n) gives the `n^{th}` Bell number, `B_n`.</span>
+<span class="sd">    * bell(n, x) gives the `n^{th}` Bell polynomial, `B_n(x)`.</span>
+<span class="sd">    * bell(n, k, (x1, x2, ...)) gives Bell polynomials of the second kind,</span>
+<span class="sd">      `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    Not to be confused with Bernoulli numbers and Bernoulli polynomials,</span>
+<span class="sd">    which use the same notation.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import bell, Symbol, symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; [bell(n) for n in range(11)]</span>
+<span class="sd">    [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]</span>
+<span class="sd">    &gt;&gt;&gt; bell(30)</span>
+<span class="sd">    846749014511809332450147</span>
+<span class="sd">    &gt;&gt;&gt; bell(4, Symbol(&#39;t&#39;))</span>
+<span class="sd">    t**4 + 6*t**3 + 7*t**2 + t</span>
+<span class="sd">    &gt;&gt;&gt; bell(6, 2, symbols(&#39;x:6&#39;)[1:])</span>
+<span class="sd">    6*x1*x5 + 15*x2*x4 + 10*x3**2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Bell_number</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/BellNumber.html</span>
+<span class="sd">    .. [3] http://mathworld.wolfram.com/BellPolynomial.html</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bernoulli, catalan, euler, fibonacci, harmonic, lucas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@recurrence_memo</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">_bell</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prev</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">//</span> <span class="n">k</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">prev</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@recurrence_memo</span><span class="p">([</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">_sym</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">_bell_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prev</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">prev</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">_sym</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_bell_incomplete_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        The second kind of Bell polynomials (incomplete Bell polynomials).</span>
+
+<span class="sd">        Calculated by recurrence formula:</span>
+
+<span class="sd">        .. math:: B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1}) =</span>
+<span class="sd">                \sum_{m=1}^{n-k+1}</span>
+<span class="sd">                \x_m \binom{n-1}{m-1} B_{n-m,k-1}(x_1, x_2, \dotsc, x_{n-m-k})</span>
+
+<span class="sd">        where</span>
+<span class="sd">            B_{0,0} = 1;</span>
+<span class="sd">            B_{n,0} = 0; for n&gt;=1</span>
+<span class="sd">            B_{0,k} = 0; for k&gt;=1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">bell</span><span class="o">.</span><span class="n">_bell_incomplete_poly</span><span class="p">(</span>
+                <span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span> <span class="o">*</span> <span class="n">symbols</span><span class="p">[</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">m</span>
+        <span class="k">return</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k_sym</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k_sym</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_bell</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_bell_poly</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">_sym</span><span class="p">,</span> <span class="n">k_sym</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_bell_incomplete_poly</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">k_sym</span><span class="p">),</span> <span class="n">symbols</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">r</span>
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                           Harmonic numbers                                 #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+
+</div>
+<div class="viewcode-block" id="harmonic"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.harmonic">[docs]</a><span class="k">class</span> <span class="nc">harmonic</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Harmonic numbers</span>
+
+<span class="sd">    The nth harmonic number is given by `\operatorname{H}_{n} =</span>
+<span class="sd">    1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}`.</span>
+
+<span class="sd">    More generally:</span>
+
+<span class="sd">    .. math:: \operatorname{H}_{n,m} = \sum_{k=1}^{n} \frac{1}{k^m}</span>
+
+<span class="sd">    As `n \rightarrow \infty`, `\operatorname{H}_{n,m} \rightarrow \zeta(m)`,</span>
+<span class="sd">    the Riemann zeta function.</span>
+
+<span class="sd">    * ``harmonic(n)`` gives the nth harmonic number, `\operatorname{H}_n`</span>
+
+<span class="sd">    * ``harmonic(n, m)`` gives the nth generalized harmonic number</span>
+<span class="sd">      of order `m`, `\operatorname{H}_{n,m}`, where</span>
+<span class="sd">      ``harmonic(n) == harmonic(n, 1)``</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import harmonic, oo</span>
+
+<span class="sd">    &gt;&gt;&gt; [harmonic(n) for n in range(6)]</span>
+<span class="sd">    [0, 1, 3/2, 11/6, 25/12, 137/60]</span>
+<span class="sd">    &gt;&gt;&gt; [harmonic(n, 2) for n in range(6)]</span>
+<span class="sd">    [0, 1, 5/4, 49/36, 205/144, 5269/3600]</span>
+<span class="sd">    &gt;&gt;&gt; harmonic(oo, 2)</span>
+<span class="sd">    pi**2/6</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, Sum</span>
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&quot;n&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; harmonic(n).rewrite(Sum)</span>
+<span class="sd">    Sum(1/_k, (_k, 1, n))</span>
+
+<span class="sd">    We can rewrite harmonic numbers in terms of polygamma functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import digamma, polygamma</span>
+<span class="sd">    &gt;&gt;&gt; m = Symbol(&quot;m&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; harmonic(n).rewrite(digamma)</span>
+<span class="sd">    polygamma(0, n + 1) + EulerGamma</span>
+
+<span class="sd">    &gt;&gt;&gt; harmonic(n).rewrite(polygamma)</span>
+<span class="sd">    polygamma(0, n + 1) + EulerGamma</span>
+
+<span class="sd">    &gt;&gt;&gt; harmonic(n,3).rewrite(polygamma)</span>
+<span class="sd">    polygamma(2, n + 1)/2 - polygamma(2, 1)/2</span>
+
+<span class="sd">    &gt;&gt;&gt; harmonic(n,m).rewrite(polygamma)</span>
+<span class="sd">    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)</span>
+
+<span class="sd">    Integer offsets in the argument can be pulled out:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import expand_func</span>
+
+<span class="sd">    &gt;&gt;&gt; expand_func(harmonic(n+4))</span>
+<span class="sd">    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; expand_func(harmonic(n-4))</span>
+<span class="sd">    harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n</span>
+
+<span class="sd">    Some limits can be computed as well:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import limit, oo</span>
+
+<span class="sd">    &gt;&gt;&gt; limit(harmonic(n), n, oo)</span>
+<span class="sd">    oo</span>
+
+<span class="sd">    &gt;&gt;&gt; limit(harmonic(n, 2), n, oo)</span>
+<span class="sd">    pi**2/6</span>
+
+<span class="sd">    &gt;&gt;&gt; limit(harmonic(n, 3), n, oo)</span>
+<span class="sd">    -polygamma(2, 1)/2</span>
+
+<span class="sd">    &gt;&gt;&gt; limit(harmonic(m, n), m, oo)</span>
+<span class="sd">    zeta(n)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Harmonic_number</span>
+<span class="sd">    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, bernoulli, catalan, euler, fibonacci, lucas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Generate one memoized Harmonic number-generating function for each</span>
+    <span class="c"># order and store it in a dictionary</span>
+    <span class="n">_functions</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">zeta</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">is_nonnegative</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_functions</span><span class="p">:</span>
+                <span class="nd">@recurrence_memo</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prev</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">prev</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="o">/</span> <span class="n">n</span><span class="o">**</span><span class="n">m</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_functions</span><span class="p">[</span><span class="n">m</span><span class="p">](</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polygamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">polygamma</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">m</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">polygamma</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">polygamma</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_digamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">polygamma</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_trigamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">polygamma</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="n">off</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">nnew</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">off</span>
+                <span class="k">if</span> <span class="n">off</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">off</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">/</span><span class="p">(</span><span class="n">nnew</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">off</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">harmonic</span><span class="p">(</span><span class="n">nnew</span><span class="p">)]</span>
+                    <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">off</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">off</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">/</span><span class="p">(</span><span class="n">nnew</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">off</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">harmonic</span><span class="p">(</span><span class="n">nnew</span><span class="p">)]</span>
+                    <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_tractable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">polygamma</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&quot;tractable&quot;</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                           Euler numbers                                    #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+
+</div>
+<div class="viewcode-block" id="euler"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.euler">[docs]</a><span class="k">class</span> <span class="nc">euler</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Euler numbers</span>
+
+<span class="sd">    The euler numbers are given by::</span>
+
+<span class="sd">                  2*n+1   k</span>
+<span class="sd">                   ___   ___            j          2*n+1</span>
+<span class="sd">                  \     \     / k \ (-1)  * (k-2*j)</span>
+<span class="sd">          E   = I  )     )    |   | --------------------</span>
+<span class="sd">           2n     /___  /___  \ j /      k    k</span>
+<span class="sd">                  k = 1 j = 0           2  * I  * k</span>
+
+<span class="sd">          E     = 0</span>
+<span class="sd">           2n+1</span>
+
+<span class="sd">    * euler(n) gives the n-th Euler number, E_n</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, euler</span>
+<span class="sd">    &gt;&gt;&gt; [euler(n) for n in range(10)]</span>
+<span class="sd">    [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]</span>
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&quot;n&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; euler(n+2*n)</span>
+<span class="sd">    euler(3*n)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Euler_numbers</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/EulerNumber.html</span>
+<span class="sd">    .. [3] http://en.wikipedia.org/wiki/Alternating_permutation</span>
+<span class="sd">    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, bernoulli, catalan, fibonacci, harmonic, lucas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">evaluate</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">mp</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">_to_mpmath</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eulernum</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;j&quot;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">Em</span> <span class="o">=</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span> <span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">j</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span>
+                  <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">)),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+
+            <span class="k">return</span> <span class="n">Em</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">mp</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Expr</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">_to_mpmath</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+            <span class="n">oprec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">prec</span>
+            <span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">prec</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eulernum</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">oprec</span>
+            <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">_from_mpmath</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+
+<span class="c">#----------------------------------------------------------------------------#</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#                           Catalan numbers                                  #</span>
+<span class="c">#                                                                            #</span>
+<span class="c">#----------------------------------------------------------------------------#</span>
+
+</div>
+<div class="viewcode-block" id="catalan"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.catalan">[docs]</a><span class="k">class</span> <span class="nc">catalan</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Catalan numbers</span>
+
+<span class="sd">    The n-th catalan number is given by::</span>
+
+<span class="sd">                 1   / 2*n \</span>
+<span class="sd">          C  = ----- |     |</span>
+<span class="sd">           n   n + 1 \  n  /</span>
+
+<span class="sd">    * catalan(n) gives the n-th Catalan number, C_n</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import (Symbol, binomial, gamma, hyper, polygamma,</span>
+<span class="sd">    ...             catalan, diff, combsimp, Rational, I)</span>
+
+<span class="sd">    &gt;&gt;&gt; [ catalan(i) for i in range(1,10) ]</span>
+<span class="sd">    [1, 2, 5, 14, 42, 132, 429, 1430, 4862]</span>
+
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&quot;n&quot;, integer=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(n)</span>
+<span class="sd">    catalan(n)</span>
+
+<span class="sd">    Catalan numbers can be transformed into several other, identical</span>
+<span class="sd">    expressions involving other mathematical functions</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(n).rewrite(binomial)</span>
+<span class="sd">    binomial(2*n, n)/(n + 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(n).rewrite(gamma)</span>
+<span class="sd">    4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(n).rewrite(hyper)</span>
+<span class="sd">    hyper((-n + 1, -n), (2,), 1)</span>
+
+<span class="sd">    For some non-integer values of n we can get closed form</span>
+<span class="sd">    expressions by rewriting in terms of gamma functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(Rational(1,2)).rewrite(gamma)</span>
+<span class="sd">    8/(3*pi)</span>
+
+<span class="sd">    We can differentiate the Catalan numbers C(n) interpreted as a</span>
+<span class="sd">    continuous real funtion in n:</span>
+
+<span class="sd">    &gt;&gt;&gt; diff(catalan(n), n)</span>
+<span class="sd">    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)</span>
+
+<span class="sd">    As a more advanced example consider the following ratio</span>
+<span class="sd">    between consecutive numbers:</span>
+
+<span class="sd">    &gt;&gt;&gt; combsimp((catalan(n + 1)/catalan(n)).rewrite(binomial))</span>
+<span class="sd">    2*(2*n + 1)/(n + 2)</span>
+
+<span class="sd">    The Catalan numbers can be generalized to complex numbers:</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(I).rewrite(gamma)</span>
+<span class="sd">    4**I*gamma(1/2 + I)/(sqrt(pi)*gamma(2 + I))</span>
+
+<span class="sd">    and evaluated with arbitrary precision:</span>
+
+<span class="sd">    &gt;&gt;&gt; catalan(I).evalf(20)</span>
+<span class="sd">    0.39764993382373624267 - 0.020884341620842555705*I</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Catalan_number</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/CatalanNumber.html</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/</span>
+<span class="sd">    .. [4] http://geometer.org/mathcircles/catalan.pdf</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bell, bernoulli, euler, fibonacci, harmonic, lucas</span>
+<span class="sd">    sympy.functions.combinatorial.factorials.binomial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">4</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">C</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_binomial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="c"># The gamma function allows to generalize Catalan numbers to complex n</span>
+        <span class="k">return</span> <span class="mi">4</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_hyper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">hyper</span><span class="p">([</span><span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">n</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+
+<span class="c">#######################################################################</span>
+<span class="c">###</span>
+<span class="c">### Functions for enumerating partitions, permutations and combinations</span>
+<span class="c">###</span>
+<span class="c">#######################################################################</span>
+
+</div>
+<span class="k">class</span> <span class="nc">_MultisetHistogram</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="n">_N</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">_ITEMS</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+<span class="n">_M</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">_ITEMS</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multiset_histogram</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return tuple used in permutation and combination counting. Input</span>
+<span class="sd">    is a dictionary giving items with counts as values or a sequence of</span>
+<span class="sd">    items (which need not be sorted).</span>
+
+<span class="sd">    The data is stored in a class deriving from tuple so it is easily</span>
+<span class="sd">    recognized and so it can be converted easily to a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>  <span class="c"># item: count</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">n</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">tot</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">n</span> <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_MultisetHistogram</span><span class="p">([</span><span class="n">n</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">n</span> <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">items</span><span class="p">,</span> <span class="n">tot</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">n</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="k">return</span> <span class="n">_MultisetHistogram</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))))</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">_multiset_histogram</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">nP</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of permutations of ``n`` items taken ``k`` at a time.</span>
+
+<span class="sd">    Possible values for ``n``::</span>
+<span class="sd">        integer - set of length ``n``</span>
+<span class="sd">        sequence - converted to a multiset internally</span>
+<span class="sd">        multiset - {element: multiplicity}</span>
+
+<span class="sd">    If ``k`` is None then the total of all permutations of length 0</span>
+<span class="sd">    through the number of items represented by ``n`` will be returned.</span>
+
+<span class="sd">    If ``replacement`` is True then a given item can appear more than once</span>
+<span class="sd">    in the ``k`` items. (For example, for &#39;ab&#39; permutations of 2 would</span>
+<span class="sd">    include &#39;aa&#39;, &#39;ab&#39;, &#39;ba&#39; and &#39;bb&#39;.) The multiplicity of elements in</span>
+<span class="sd">    ``n`` is ignored when ``replacement`` is True but the total number</span>
+<span class="sd">    of elements is considered since no element can appear more times than</span>
+<span class="sd">    the number of elements in ``n``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.combinatorial.numbers import nP</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.iterables import multiset_permutations, multiset</span>
+<span class="sd">    &gt;&gt;&gt; nP(3, 2)</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; nP(&#39;abc&#39;, 2) == nP(multiset(&#39;abc&#39;), 2) == 6</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; nP(&#39;aab&#39;, 2)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; nP([1, 2, 2], 2)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; [nP(3, i) for i in range(4)]</span>
+<span class="sd">    [1, 3, 6, 6]</span>
+<span class="sd">    &gt;&gt;&gt; nP(3) == sum(_)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    When ``replacement`` is True, each item can have multiplicity</span>
+<span class="sd">    equal to the length represented by ``n``:</span>
+
+<span class="sd">    &gt;&gt;&gt; nP(&#39;aabc&#39;, replacement=True)</span>
+<span class="sd">    121</span>
+<span class="sd">    &gt;&gt;&gt; [len(list(multiset_permutations(&#39;aaaabbbbcccc&#39;, i))) for i in range(5)]</span>
+<span class="sd">    [1, 3, 9, 27, 81]</span>
+<span class="sd">    &gt;&gt;&gt; sum(_)</span>
+<span class="sd">    121</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Permutation</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.utilities.iterables.multiset_permutations</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="n">_nP</span><span class="p">(</span><span class="n">_multiset_histogram</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">replacement</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="n">_nP</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">replacement</span><span class="p">))</span>
+
+
+<span class="nd">@cacheit</span>
+<span class="k">def</span> <span class="nf">_nP</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.factorials</span> <span class="kn">import</span> <span class="n">factorial</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">prod</span>
+
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">SYMPY_INTS</span><span class="p">):</span>  <span class="c"># n different items</span>
+        <span class="c"># assert n &gt;= 0</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_nP</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">replacement</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span><span class="o">**</span><span class="n">k</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># assert k &gt;= 0</span>
+            <span class="k">return</span> <span class="n">_product</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">_MultisetHistogram</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_nP</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">replacement</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]</span><span class="o">**</span><span class="n">k</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="n">prod</span><span class="p">([</span><span class="n">factorial</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">n</span><span class="p">[</span><span class="n">_M</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># assert k &gt;= 0</span>
+            <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">_M</span><span class="p">])):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="n">tot</span> <span class="o">+=</span> <span class="n">_nP</span><span class="p">(</span><span class="n">_MultisetHistogram</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="n">tot</span> <span class="o">+=</span> <span class="n">_nP</span><span class="p">(</span><span class="n">_MultisetHistogram</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">n</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">tot</span>
+
+
+<span class="nd">@cacheit</span>
+<span class="k">def</span> <span class="nf">_AOP_product</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;for n = (m1, m2, .., mk) return the coefficients of the polynomial,</span>
+<span class="sd">    prod(sum(x**i for i in range(nj + 1)) for nj in n); i.e. the coefficients</span>
+<span class="sd">    of the product of AOPs (all-one polynomials) or order given in n.  The</span>
+<span class="sd">    resulting coefficient corresponding to x**r is the number of r-length</span>
+<span class="sd">    combinations of sum(n) elements with multiplicities given in n.</span>
+<span class="sd">    The coefficients are given as a default dictionary (so if a query is made</span>
+<span class="sd">    for a key that is not present, 0 will be returned).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.combinatorial.numbers import _AOP_product</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; n = (2, 2, 3)  # e.g. aabbccc</span>
+<span class="sd">    &gt;&gt;&gt; prod = ((x**2 + x + 1)*(x**2 + x + 1)*(x**3 + x**2 + x + 1)).expand()</span>
+<span class="sd">    &gt;&gt;&gt; c = _AOP_product(n); dict(c)</span>
+<span class="sd">    {0: 1, 1: 3, 2: 6, 3: 8, 4: 8, 5: 6, 6: 3, 7: 1}</span>
+<span class="sd">    &gt;&gt;&gt; [c[i] for i in range(8)] == [prod.coeff(x, i) for i in range(8)]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The generating poly used here is the same as that listed in</span>
+<span class="sd">    http://tinyurl.com/cep849r, but in a refactored form.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="nb">ord</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">need</span> <span class="o">=</span> <span class="p">(</span><span class="nb">ord</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">rv</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">need</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">rv</span><span class="p">)))</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="p">[:</span><span class="n">need</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">ni</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">ni</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">was</span> <span class="o">=</span> <span class="n">rv</span><span class="p">[:]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rv</span><span class="p">))):</span>
+            <span class="n">rv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rv</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">need</span><span class="p">):</span>
+            <span class="n">rv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">rv</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">was</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">N</span><span class="p">]</span>
+    <span class="n">rev</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">rv</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">ord</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span> <span class="o">+</span> <span class="n">rev</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rv</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">rev</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rv</span><span class="p">)):</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+
+<span class="k">def</span> <span class="nf">nC</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of combinations of ``n`` items taken ``k`` at a time.</span>
+
+<span class="sd">    Possible values for ``n``::</span>
+<span class="sd">        integer - set of length ``n``</span>
+<span class="sd">        sequence - converted to a multiset internally</span>
+<span class="sd">        multiset - {element: multiplicity}</span>
+
+<span class="sd">    If ``k`` is None then the total of all combinations of length 0</span>
+<span class="sd">    through the number of items represented in ``n`` will be returned.</span>
+
+<span class="sd">    If ``replacement`` is True then a given item can appear more than once</span>
+<span class="sd">    in the ``k`` items. (For example, for &#39;ab&#39; sets of 2 would include &#39;aa&#39;,</span>
+<span class="sd">    &#39;ab&#39;, and &#39;bb&#39;.) The multiplicity of elements in ``n`` is ignored when</span>
+<span class="sd">    ``replacement`` is True but the total number of elements is considered</span>
+<span class="sd">    since no element can appear more times than the number of elements in</span>
+<span class="sd">    ``n``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.combinatorial.numbers import nC</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.iterables import multiset_combinations</span>
+<span class="sd">    &gt;&gt;&gt; nC(3, 2)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; nC(&#39;abc&#39;, 2)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; nC(&#39;aab&#39;, 2)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    When ``replacement`` is True, each item can have multiplicity</span>
+<span class="sd">    equal to the length represented by ``n``:</span>
+
+<span class="sd">    &gt;&gt;&gt; nC(&#39;aabc&#39;, replacement=True)</span>
+<span class="sd">    35</span>
+<span class="sd">    &gt;&gt;&gt; [len(list(multiset_combinations(&#39;aaaabbbbcccc&#39;, i))) for i in range(5)]</span>
+<span class="sd">    [1, 3, 6, 10, 15]</span>
+<span class="sd">    &gt;&gt;&gt; sum(_)</span>
+<span class="sd">    35</span>
+
+<span class="sd">    If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``</span>
+<span class="sd">    then the total of all combinations of length 0 hrough ``k`` is the</span>
+<span class="sd">    product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity</span>
+<span class="sd">    of each item is 1 (i.e., k unique items) then there are 2**k</span>
+<span class="sd">    combinations. For example, if there are 4 unique items, the total number</span>
+<span class="sd">    of combinations is 16:</span>
+
+<span class="sd">    &gt;&gt;&gt; sum(nC(4, i) for i in range(5))</span>
+<span class="sd">    16</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Combination</span>
+<span class="sd">    .. [2] http://tinyurl.com/cep849r</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.utilities.iterables.multiset_combinations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.factorials</span> <span class="kn">import</span> <span class="n">binomial</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">prod</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">SYMPY_INTS</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">replacement</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">n</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nC</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">replacement</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">_MultisetHistogram</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">replacement</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">prod</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">n</span><span class="p">[</span><span class="n">_M</span><span class="p">])</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nC</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">replacement</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nC</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">],</span> <span class="n">k</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span>
+        <span class="c"># assert k &gt;= 0</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">_AOP_product</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">_M</span><span class="p">]))[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nC</span><span class="p">(</span><span class="n">_multiset_histogram</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span>
+
+
+<span class="nd">@cacheit</span>
+<span class="k">def</span> <span class="nf">_stirling1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c"># some special values</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">k</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="n">n1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="c"># general recurrence</span>
+    <span class="k">return</span> <span class="n">n1</span><span class="o">*</span><span class="n">_stirling1</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">_stirling1</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="nd">@cacheit</span>
+<span class="k">def</span> <span class="nf">_stirling2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c"># some special values</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">n1</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c"># general recurrence</span>
+    <span class="k">return</span> <span class="n">k</span><span class="o">*</span><span class="n">_stirling2</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">_stirling2</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="stirling"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.numbers.stirling">[docs]</a><span class="k">def</span> <span class="nf">stirling</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return Stirling number S(n, k) of the first or second (default) kind.</span>
+
+<span class="sd">    The sum of all Stirling numbers of the second kind for k = 1</span>
+<span class="sd">    through n is bell(n). The recurrence relationship for these numbers</span>
+<span class="sd">    is::</span>
+
+<span class="sd">    {0}       {n}   {0}      {n + 1}     {n}   {  n  }</span>
+<span class="sd">    { } = 1;  { } = { } = 0; {     } = j*{ } + {     }</span>
+<span class="sd">    {0}       {0}   {k}      {  k  }     {k}   {k - 1}</span>
+
+<span class="sd">    where ``j`` is::</span>
+<span class="sd">        ``n`` for Stirling numbers of the first kind</span>
+<span class="sd">        ``-n`` for signed Stirling numbers of the first kind</span>
+<span class="sd">        ``k`` for Stirling numbers of the second kind</span>
+
+<span class="sd">    The first kind of Stirling number counts the number of permutations of</span>
+<span class="sd">    ``n`` distinct items that have ``k`` cycles; the second kind counts the</span>
+<span class="sd">    ways in which ``n`` distinct items can be partitioned into ``k`` parts.</span>
+<span class="sd">    If ``d`` is given, the &quot;reduced Stirling number of the second kind&quot; is</span>
+<span class="sd">    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n &gt;= k &gt;= d``.</span>
+<span class="sd">    (This counts the ways to partition ``n`` consecutive integers into</span>
+<span class="sd">    ``k`` groups with no pairwise difference less than ``d``. See example</span>
+<span class="sd">    below.)</span>
+
+<span class="sd">    To obtain the signed Stirling numbers of the first kind, use keyword</span>
+<span class="sd">    ``signed=True``. Using this keyword automatically sets ``kind`` to 1.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.combinatorial.numbers import stirling, bell</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.iterables import multiset_partitions, permutations</span>
+
+<span class="sd">    First kind (unsigned by default):</span>
+
+<span class="sd">    &gt;&gt;&gt; [stirling(6, i, kind=1) for i in range(7)]</span>
+<span class="sd">    [0, 120, 274, 225, 85, 15, 1]</span>
+<span class="sd">    &gt;&gt;&gt; perms = list(permutations(range(4)))</span>
+<span class="sd">    &gt;&gt;&gt; [sum(Permutation(p).cycles == i for p in perms) for i in range(5)]</span>
+<span class="sd">    [0, 6, 11, 6, 1]</span>
+<span class="sd">    &gt;&gt;&gt; [stirling(4, i, kind=1) for i in range(5)]</span>
+<span class="sd">    [0, 6, 11, 6, 1]</span>
+
+<span class="sd">    First kind (signed):</span>
+
+<span class="sd">    &gt;&gt;&gt; [stirling(4, i, signed=True) for i in range(5)]</span>
+<span class="sd">    [0, -6, 11, -6, 1]</span>
+
+<span class="sd">    Second kind:</span>
+
+<span class="sd">    &gt;&gt;&gt; [stirling(10, i) for i in range(12)]</span>
+<span class="sd">    [0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]</span>
+<span class="sd">    &gt;&gt;&gt; sum(_) == bell(10)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; len(list(multiset_partitions(range(4), 2))) == stirling(4, 2)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Reduced second kind:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import subsets, oo</span>
+<span class="sd">    &gt;&gt;&gt; def delta(p):</span>
+<span class="sd">    ...    if len(p) == 1:</span>
+<span class="sd">    ...        return oo</span>
+<span class="sd">    ...    return min(abs(i[0] - i[1]) for i in subsets(p, 2))</span>
+<span class="sd">    &gt;&gt;&gt; parts = multiset_partitions(range(5), 3)</span>
+<span class="sd">    &gt;&gt;&gt; d = 2</span>
+<span class="sd">    &gt;&gt;&gt; sum(1 for p in parts if all(delta(i) &gt;= d for i in p))</span>
+<span class="sd">    7</span>
+<span class="sd">    &gt;&gt;&gt; stirling(5, 3, 2)</span>
+<span class="sd">    7</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.utilities.iterables.multiset_partitions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># TODO: make this a class like bell()</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;n must be nonnegative&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">if</span> <span class="n">d</span><span class="p">:</span>
+        <span class="c"># assert k &gt;= d</span>
+        <span class="c"># kind is ignored -- only kind=2 is supported</span>
+        <span class="k">return</span> <span class="n">_stirling2</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">signed</span><span class="p">:</span>
+        <span class="c"># kind is ignored -- only kind=1 is supported</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">_stirling1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_stirling1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_stirling2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;kind must be 1 or 2, not </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+
+</div>
+<span class="nd">@cacheit</span>
+<span class="k">def</span> <span class="nf">_nT</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the partitions of ``n`` items into ``k`` parts. This</span>
+<span class="sd">    is used by ``nT`` for the case when ``n`` is an integer.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_nT</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">nT</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of ``k``-sized partitions of ``n`` items.</span>
+
+<span class="sd">    Possible values for ``n``::</span>
+<span class="sd">        integer - ``n`` identical items</span>
+<span class="sd">        sequence - converted to a multiset internally</span>
+<span class="sd">        multiset - {element: multiplicity}</span>
+
+<span class="sd">    Note: the convention for ``nT`` is different than that of ``nC`` and``nP`` in that</span>
+<span class="sd">    here an integer indicates ``n`` *identical* items instead of a set of</span>
+<span class="sd">    length ``n``; this is in keepng with the ``partitions`` function which</span>
+<span class="sd">    treats its integer-``n`` input like a list of ``n`` 1s. One can use</span>
+<span class="sd">    ``range(n)`` for ``n`` to indicate ``n`` distinct items.</span>
+
+<span class="sd">    If ``k`` is None then the total number of ways to partition the elements</span>
+<span class="sd">    represented in ``n`` will be returned.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.combinatorial.numbers import nT</span>
+
+<span class="sd">    Partitions of the given multiset:</span>
+
+<span class="sd">    &gt;&gt;&gt; [nT(&#39;aabbc&#39;, i) for i in range(1, 7)]</span>
+<span class="sd">    [1, 8, 11, 5, 1, 0]</span>
+<span class="sd">    &gt;&gt;&gt; nT(&#39;aabbc&#39;) == sum(_)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    (TODO The following can be activated with &gt;&gt;&gt; when</span>
+<span class="sd">    taocp_multiset_permutation is in place.)</span>
+<span class="sd">    &gt;&gt; [nT(&quot;mississippi&quot;, i) for i in range(1, 12)]</span>
+<span class="sd">    [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]</span>
+
+<span class="sd">    Partitions when all items are identical:</span>
+
+<span class="sd">    &gt;&gt;&gt; [nT(5, i) for i in range(1, 6)]</span>
+<span class="sd">    [1, 2, 2, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; nT(&#39;1&#39;*5) == sum(_)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    When all items are different:</span>
+
+<span class="sd">    &gt;&gt;&gt; [nT(range(5), i) for i in range(1, 6)]</span>
+<span class="sd">    [1, 15, 25, 10, 1]</span>
+<span class="sd">    &gt;&gt;&gt; nT(range(5)) == sum(_)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.utilities.iterables.partitions</span>
+<span class="sd">    sympy.utilities.iterables.multiset_partitions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_partitions</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">SYMPY_INTS</span><span class="p">):</span>
+        <span class="c"># assert n &gt;= 0</span>
+        <span class="c"># all the same</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_nT</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">_nT</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">_MultisetHistogram</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># if n contains hashable items there is some</span>
+            <span class="c"># quick handling that can be done</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">nT</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">u</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">_multiset_histogram</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">n</span><span class="p">[</span><span class="n">_N</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nC</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">-=</span> <span class="n">nC</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c"># for k == 1</span>
+        <span class="k">return</span> <span class="n">rv</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="n">n</span><span class="p">[</span><span class="n">_ITEMS</span><span class="p">]:</span>
+        <span class="c"># all distinct</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bell</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stirling</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nT</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">multiset_partitions</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="n">_M</span><span class="p">])</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)]):</span>
+        <span class="n">tot</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="n">k</span>
+    <span class="k">return</span> <span class="n">tot</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

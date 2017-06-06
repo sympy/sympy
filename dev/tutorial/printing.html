@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Printing &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Gotchas" href="gotchas.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="printing">
+<span id="tutorial-printing"></span><h1>Printing<a class="headerlink" href="#printing" title="Permalink to this headline">¶</a></h1>
+<p>As we have already seen, SymPy can pretty print its output using Unicode
+characters.  This is a short introduction to the most common printing options
+available in SymPy.</p>
+<div class="section" id="printers">
+<h2>Printers<a class="headerlink" href="#printers" title="Permalink to this headline">¶</a></h2>
+<p>There are several printers available in SymPy.  The most common ones are</p>
+<ul class="simple">
+<li>str</li>
+<li>repr</li>
+<li>ASCII pretty printer</li>
+<li>Unicode pretty printer</li>
+<li>LaTeX</li>
+<li>MathML</li>
+<li>Dot</li>
+</ul>
+<p>In addition to these, there are also &#8220;printers&#8221; that can output SymPy objects
+to code, such as C, Fortran, Javascript, Theano, and Python.  These are not
+discussed in this tutorial.</p>
+</div>
+<div class="section" id="setting-up-pretty-printing">
+<h2>Setting up Pretty Printing<a class="headerlink" href="#setting-up-pretty-printing" title="Permalink to this headline">¶</a></h2>
+<p>If all you want is the best pretty printing, use the <tt class="docutils literal"><span class="pre">init_printing</span></tt>
+function.  This will automatically enable the best printer available in your
+environment.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_printing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">()</span> 
+</pre></div>
+</div>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last">You an also change the printer used in SymPy Live.  Just change the &#8220;Output
+Format&#8221; in the settings.</p>
+</div>
+<p>If you plan to work in an interactive calculator-type session, the
+<tt class="docutils literal"><span class="pre">init_session</span></tt> function will automatically import everything in SymPy,
+create some common Symbols, setup plotting, and run <tt class="docutils literal"><span class="pre">init_printing</span></tt>.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_session</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_session</span><span class="p">()</span> 
+</pre></div>
+</div>
+<div class="highlight-python"><pre>Python console for SymPy 0.7.3 (Python 2.7.5-64-bit) (ground types: gmpy)
+
+These commands were executed:
+&gt;&gt;&gt; from __future__ import division
+&gt;&gt;&gt; from sympy import *
+&gt;&gt;&gt; x, y, z, t = symbols('x y z t')
+&gt;&gt;&gt; k, m, n = symbols('k m n', integer=True)
+&gt;&gt;&gt; f, g, h = symbols('f g h', cls=Function)
+
+Documentation can be found at http://www.sympy.org</pre>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In any case, this is what will happen:</p>
+<ul>
+<li><p class="first">In the IPython QTConsole, if <span class="math">\(\LaTeX\)</span> is installed, it will enable a printer
+that uses <span class="math">\(\LaTeX\)</span>.</p>
+<img alt="../_images/ipythonqtconsole.png" src="../_images/ipythonqtconsole.png" style="height: 500px;" />
+<p>If <span class="math">\(\LaTeX\)</span> is not installed, but Matplotlib is installed, it will use the
+Matplotlib rendering engine. If Matplotlib is not installed, it uses the
+Unicode pretty printer.</p>
+</li>
+<li><p class="first">In the IPython notebook, it will use MathJax to render <span class="math">\(\LaTeX\)</span>.</p>
+<img alt="../_images/ipythonnotebook.png" src="../_images/ipythonnotebook.png" style="height: 250px;" />
+</li>
+<li><p class="first">In an IPython console session, or a regular Python session, it will use the
+Unicode pretty printer if the terminal supports Unicode.</p>
+<img alt="../_images/consoleunicode.png" src="../_images/consoleunicode.png" style="width: 700px;" />
+</li>
+<li><p class="first">In a terminal that does not support Unicode, the ASCII pretty printer is
+used.</p>
+<img alt="../_images/consoleascii.png" src="../_images/consoleascii.png" style="width: 700px;" />
+</li>
+</ul>
+<p>To explicitly not use <span class="math">\(\LaTeX\)</span>, pass <tt class="docutils literal"><span class="pre">use_latex=False</span></tt> to <tt class="docutils literal"><span class="pre">init_printing</span></tt>
+or <tt class="docutils literal"><span class="pre">init_session</span></tt>.  To explicitly not use Unicode, pass
+<tt class="docutils literal"><span class="pre">use_unicode=False</span></tt>.</p>
+</div>
+<div class="section" id="printing-functions">
+<h2>Printing Functions<a class="headerlink" href="#printing-functions" title="Permalink to this headline">¶</a></h2>
+<p>In addition to automatic printing, you can explicitly use any one of the
+printers by calling the appropriate function.</p>
+<div class="section" id="str">
+<h3>str<a class="headerlink" href="#str" title="Permalink to this headline">¶</a></h3>
+<p>To get a string form of an expression, use <tt class="docutils literal"><span class="pre">str(expr)</span></tt>.  This is also the
+form that is produced by <tt class="docutils literal"><span class="pre">print</span> <span class="pre">expr</span></tt>.  String forms are designed to be easy
+to read, but in a form that is correct Python syntax so that it can be copied
+and pasted.  The <tt class="docutils literal"><span class="pre">str</span></tt> form of an expression will usually look exactly the
+same as the expression as you would enter it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">&#39;Integral(sqrt(1/x), x)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">Integral(sqrt(1/x), x)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="repr">
+<h3>repr<a class="headerlink" href="#repr" title="Permalink to this headline">¶</a></h3>
+<p>The repr form of an expression is designed to show the exact form of an
+expression.  It will be discussed more in the <a class="reference internal" href="manipulation.html#tutorial-manipulation"><em>Advanced Expression Manipulation</em></a>
+section.  To get it, use <tt class="docutils literal"><span class="pre">srepr</span></tt> <a class="footnote-reference" href="#srepr-fn" id="id1">[1]</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">&quot;Integral(Pow(Pow(Symbol(&#39;x&#39;), Integer(-1)), Rational(1, 2)), Tuple(Symbol(&#39;x&#39;)))&quot;</span>
+</pre></div>
+</div>
+<p>The repr form is mostly useful for understanding how an expression is built
+internally.</p>
+</div>
+<div class="section" id="ascii-pretty-printer">
+<h3>ASCII Pretty Printer<a class="headerlink" href="#ascii-pretty-printer" title="Permalink to this headline">¶</a></h3>
+<p>The ASCII pretty printer is accessed from <tt class="docutils literal"><span class="pre">pprint</span></tt>.  If the terminal does
+not support Unicode, the ASCII printer is used by default.  Otherwise, you
+must pass <tt class="docutils literal"><span class="pre">use_unicode=False</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">  /</span>
+<span class="go"> |</span>
+<span class="go"> |     ___</span>
+<span class="go"> |    / 1</span>
+<span class="go"> |   /  -  dx</span>
+<span class="go"> | \/   x</span>
+<span class="go"> |</span>
+<span class="go">/</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">pprint</span></tt> prints the output to the screen.  If you want the string form, use
+<tt class="docutils literal"><span class="pre">pretty</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pretty</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">&#39;  /          \n |           \n |     ___   \n |    / 1    \n |   /  -  dx\n | \\/   x    \n |           \n/            &#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">pretty</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">  /</span>
+<span class="go"> |</span>
+<span class="go"> |     ___</span>
+<span class="go"> |    / 1</span>
+<span class="go"> |   /  -  dx</span>
+<span class="go"> | \/   x</span>
+<span class="go"> |</span>
+<span class="go">/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unicode-pretty-printer">
+<h3>Unicode Pretty Printer<a class="headerlink" href="#unicode-pretty-printer" title="Permalink to this headline">¶</a></h3>
+<p>The Unicode pretty printer is also accessed from <tt class="docutils literal"><span class="pre">print</span></tt>.  It the terminal
+supports Unicode, it is used automatically.  It <tt class="docutils literal"><span class="pre">pprint</span></tt> is not able to
+detect that the terminal supports unicode, you can pass <tt class="docutils literal"><span class="pre">use_unicode=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">⌠</span>
+<span class="go">⎮     ___</span>
+<span class="go">⎮    ╱ 1</span>
+<span class="go">⎮   ╱  ─  dx</span>
+<span class="go">⎮ ╲╱   x</span>
+<span class="go">⌡</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="latex">
+<span id="id2"></span><h3><span class="math">\(\LaTeX\)</span><a class="headerlink" href="#latex" title="Permalink to this headline">¶</a></h3>
+<p>To get the <span class="math">\(\LaTeX\)</span> form of an expression, use <tt class="docutils literal"><span class="pre">latex</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">latex</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)))</span>
+<span class="go">\int \sqrt{\frac{1}{x}}\, dx</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">latex</span></tt> function has many options to change the formatting of different
+things.  See <a class="reference internal" href="../modules/printing.html#sympy.printing.latex.latex" title="sympy.printing.latex.latex"><tt class="xref py py-meth docutils literal"><span class="pre">its</span> <span class="pre">documentation</span></tt></a> for
+more details.</p>
+</div>
+<div class="section" id="mathml">
+<h3>MathML<a class="headerlink" href="#mathml" title="Permalink to this headline">¶</a></h3>
+<p>There is also a printer to MathML, called <tt class="docutils literal"><span class="pre">print_mathml</span></tt>.  It must be imported
+from <tt class="docutils literal"><span class="pre">sympy.printing.mathml</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.printing.mathml</span> <span class="kn">import</span> <span class="n">print_mathml</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">print_mathml</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">&lt;apply&gt;</span>
+<span class="go">    &lt;int/&gt;</span>
+<span class="go">    &lt;bvar&gt;</span>
+<span class="go">        &lt;ci&gt;x&lt;/ci&gt;</span>
+<span class="go">    &lt;/bvar&gt;</span>
+<span class="go">    &lt;apply&gt;</span>
+<span class="go">        &lt;root/&gt;</span>
+<span class="go">        &lt;apply&gt;</span>
+<span class="go">            &lt;power/&gt;</span>
+<span class="go">            &lt;ci&gt;x&lt;/ci&gt;</span>
+<span class="go">            &lt;cn&gt;-1&lt;/cn&gt;</span>
+<span class="go">        &lt;/apply&gt;</span>
+<span class="go">    &lt;/apply&gt;</span>
+<span class="go">&lt;/apply&gt;</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">print_mathml</span></tt> prints the output.  If you want the string, use the function
+<tt class="docutils literal"><span class="pre">mathml</span></tt>.</p>
+</div>
+<div class="section" id="dot">
+<h3>Dot<a class="headerlink" href="#dot" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">dotprint</span></tt> function in <tt class="docutils literal"><span class="pre">sympy.printing.dot</span></tt> prints output to dot
+format, which can be rendered with Graphviz.  See the
+<a class="reference internal" href="manipulation.html#tutorial-manipulation"><em>Advanced Expression Manipulation</em></a> section for some examples of the output of this
+printer.</p>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="srepr-fn" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>SymPy does not use the Python builtin <tt class="docutils literal"><span class="pre">repr</span></tt> function for
+repr printing, because in Python <tt class="docutils literal"><span class="pre">str(list)</span></tt> calls <tt class="docutils literal"><span class="pre">repr</span></tt> on the
+elements of the list, and some SymPy functions return lists (such as
+<tt class="docutils literal"><span class="pre">solve</span></tt>).  Since <tt class="docutils literal"><span class="pre">srepr</span></tt> is so verbose, it is unlikely that anyone
+would want it called by default on the output of <tt class="docutils literal"><span class="pre">solve</span></tt>.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Printing</a><ul>
+<li><a class="reference internal" href="#printers">Printers</a></li>
+<li><a class="reference internal" href="#setting-up-pretty-printing">Setting up Pretty Printing</a></li>
+<li><a class="reference internal" href="#printing-functions">Printing Functions</a><ul>
+<li><a class="reference internal" href="#str">str</a></li>
+<li><a class="reference internal" href="#repr">repr</a></li>
+<li><a class="reference internal" href="#ascii-pretty-printer">ASCII Pretty Printer</a></li>
+<li><a class="reference internal" href="#unicode-pretty-printer">Unicode Pretty Printer</a></li>
+<li><a class="reference internal" href="#latex"><span class="math">\(\LaTeX\)</span></a></li>
+<li><a class="reference internal" href="#mathml">MathML</a></li>
+<li><a class="reference internal" href="#dot">Dot</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gotchas.html"
+                        title="next chapter">Gotchas</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/printing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

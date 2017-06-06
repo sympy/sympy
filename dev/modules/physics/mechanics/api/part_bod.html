@@ -1,0 +1,979 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Masses, Inertias &amp; Particles, RigidBodys (Docstrings) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="../index.html" />
+    <link rel="next" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)" href="kane.html" />
+    <link rel="prev" title="Kinematics (Docstrings)" href="kinematics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Kinematics (Docstrings)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="masses-inertias-particles-rigidbodys-docstrings">
+<h1>Masses, Inertias &amp; Particles, RigidBodys (Docstrings)<a class="headerlink" href="#masses-inertias-particles-rigidbodys-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sympy.physics.mechanics.particle">
+<span id="particle"></span><h2>Particle<a class="headerlink" href="#module-sympy.physics.mechanics.particle" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.particle.Particle">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.particle.</tt><tt class="descname">Particle</tt><big>(</big><em>name</em>, <em>point</em>, <em>mass</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle" title="Permalink to this definition">¶</a></dt>
+<dd><p>A particle.</p>
+<p>Particles have a non-zero mass and lack spatial extension; they take up no
+space.</p>
+<p>Values need to be supplied on initialization, but can be changed later.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : str</p>
+<blockquote>
+<div><p>Name of particle</p>
+</div></blockquote>
+<p><strong>point</strong> : Point</p>
+<blockquote>
+<div><p>A physics/mechanics Point which represents the position, velocity, and
+acceleration of this Particle</p>
+</div></blockquote>
+<p><strong>mass</strong> : sympifyable</p>
+<blockquote class="last">
+<div><p>A SymPy expression representing the Particle&#8217;s mass</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">po</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;po&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;pa&#39;</span><span class="p">,</span> <span class="n">po</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Or you could change these later</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">m</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">po</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.angular_momentum">
+<tt class="descname">angular_momentum</tt><big>(</big><em>point</em>, <em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.angular_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.angular_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Angular momentum of the particle about the point.</p>
+<p>The angular momentum H, about some point O of a particle, P, is given
+by:</p>
+<p>H = r x m * v</p>
+<p>where r is the position vector from point O to the particle P, m is
+the mass of the particle, and v is the velocity of the particle in
+the inertial frame, N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>point</strong> : Point</p>
+<blockquote>
+<div><p>The point about which angular momentum of the particle is desired.</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which angular momentum is desired.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;m v r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">angular_momentum</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">m*r*v*N.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.get_mass">
+<tt class="descname">get_mass</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.get_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.get_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mass of the particle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.get_point">
+<tt class="descname">get_point</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.get_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Point of the particle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.kinetic_energy">
+<tt class="descname">kinetic_energy</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.kinetic_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.kinetic_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kinetic energy of the particle</p>
+<p>The kinetic energy, T, of a particle, P, is given by</p>
+<p>&#8216;T = 1/2 m v^2&#8217;</p>
+<p>where m is the mass of particle P, and v is the velocity of the
+particle in the supplied ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The Particle&#8217;s velocity is typically defined with respect to
+an inertial frame but any relevant frame in which the velocity is
+known can be supplied.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;m v r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">O</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">kinetic_energy</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">m*v**2/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.linear_momentum">
+<tt class="descname">linear_momentum</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.linear_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.linear_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear momentum of the particle.</p>
+<p>The linear momentum L, of a particle P, with respect to frame N is
+given by</p>
+<p>L = m * v</p>
+<p>where m is the mass of the particle, and v is the velocity of the
+particle in the frame N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which linear momentum is desired.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;m v&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">linear_momentum</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">m*v*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.particle.Particle.mass">
+<tt class="descname">mass</tt><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mass of the particle.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.particle.Particle.point">
+<tt class="descname">point</tt><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Point of the particle.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.particle.Particle.potential_energy">
+<tt class="descname">potential_energy</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.potential_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.potential_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The potential energy of the Particle.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;m g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">O</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">potential_energy</span>
+<span class="go">g*h*m</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.particle.Particle.set_potential_energy">
+<tt class="descname">set_potential_energy</tt><big>(</big><em>scalar</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/particle.html#Particle.set_potential_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.particle.Particle.set_potential_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to set the potential energy of the Particle.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>scalar</strong> : Sympifyable</p>
+<blockquote class="last">
+<div><p>The potential energy (a scalar) of the Particle.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;m g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">O</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.physics.mechanics.rigidbody">
+<span id="rigidbody"></span><h2>RigidBody<a class="headerlink" href="#module-sympy.physics.mechanics.rigidbody" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.rigidbody.</tt><tt class="descname">RigidBody</tt><big>(</big><em>name</em>, <em>masscenter</em>, <em>frame</em>, <em>mass</em>, <em>inertia</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>An idealized rigid body.</p>
+<p>This is essentially a container which holds the various components which
+describe a rigid body: a name, mass, center of mass, reference frame, and
+inertia.</p>
+<p>All of these need to be supplied on creation, but can be changed
+afterwards.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">RigidBody</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Or you could change them afterwards</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m2</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;m2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">m2</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="16%" />
+<col width="73%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>name</td>
+<td>string</td>
+<td>The body&#8217;s name.</td>
+</tr>
+<tr class="row-even"><td>masscenter</td>
+<td>Point</td>
+<td>The point which represents the center of mass of the rigid body.</td>
+</tr>
+<tr class="row-odd"><td>frame</td>
+<td>ReferenceFrame</td>
+<td>The ReferenceFrame which the rigid body is fixed in.</td>
+</tr>
+<tr class="row-even"><td>mass</td>
+<td>Sympifyable</td>
+<td>The body&#8217;s mass.</td>
+</tr>
+<tr class="row-odd"><td>inertia</td>
+<td>(Dyadic, Point)</td>
+<td>The body&#8217;s inertia about a point; stored in a tuple as shown above.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.angular_momentum">
+<tt class="descname">angular_momentum</tt><big>(</big><em>point</em>, <em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.angular_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.angular_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Angular momentum of the rigid body.</p>
+<p>The angular momentum H, about some point O, of a rigid body B, in a
+frame N is given by</p>
+<p>H = I* . omega + r* x (M * v)</p>
+<p>where I* is the central inertia dyadic of B, omega is the angular
+velocity of body B in the frame, N, r* is the position vector from
+point O to the mass center of B, and v is the velocity of point O in
+the frame, N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>point</strong> : Point</p>
+<blockquote>
+<div><p>The point about which angular momentum is desired.</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which angular momentum is desired.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;M v r omega&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">angular_momentum</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">omega*b.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.central_inertia">
+<tt class="descname">central_inertia</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.central_inertia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.central_inertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>The body&#8217;s central inertia dyadic.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.kinetic_energy">
+<tt class="descname">kinetic_energy</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.kinetic_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.kinetic_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kinetic energy of the rigid body</p>
+<p>The kinetic energy, T, of a rigid body, B, is given by</p>
+<p>&#8216;T = 1/2 (I omega^2 + m v^2)&#8217;</p>
+<p>where I and m are the central inertia dyadic and mass of rigid body B,
+respectively, omega is the body&#8217;s angular velocity and v is the
+velocity of the body&#8217;s mass center in the supplied ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The RigidBody&#8217;s angular velocity and the velocity of it&#8217;s mass
+center are typically defined with respect to an inertial frame but
+any relevant frame in which the velocities are known can be supplied.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;M v r omega&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">kinetic_energy</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">M*v**2/2 + omega**2/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.linear_momentum">
+<tt class="descname">linear_momentum</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.linear_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.linear_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear momentum of the rigid body.</p>
+<p>The linear momentum L, of a rigid body B, with respect to frame N is
+given by</p>
+<p>L = M * v*</p>
+<p>where M is the mass of the rigid body and v* is the velocity of
+the mass center of B in the frame, N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which linear momentum is desired.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;M v&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">linear_momentum</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">M*v*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.potential_energy">
+<tt class="descname">potential_energy</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.potential_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.potential_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The potential energy of the RigidBody.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;M g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">potential_energy</span>
+<span class="go">M*g*h</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.rigidbody.RigidBody.set_potential_energy">
+<tt class="descname">set_potential_energy</tt><big>(</big><em>scalar</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/rigidbody.html#RigidBody.set_potential_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.rigidbody.RigidBody.set_potential_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to set the potential energy of this RigidBody.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>scalar: Sympifyable</strong> :</p>
+<blockquote class="last">
+<div><p>The potential energy (a scalar) of the RigidBody.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;M g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inertia_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">Inertia_tuple</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="inertia">
+<h2>inertia<a class="headerlink" href="#inertia" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.inertia">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">inertia</tt><big>(</big><em>frame</em>, <em>ixx</em>, <em>iyy</em>, <em>izz</em>, <em>ixy=0</em>, <em>iyz=0</em>, <em>izx=0</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#inertia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.inertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple way to create inertia Dyadic object.</p>
+<p>If you don&#8217;t know what a Dyadic is, just treat this like the inertia
+tensor.  Then, do the easy thing and define it in a body-fixed frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame the inertia is defined in</p>
+</div></blockquote>
+<p><strong>ixx</strong> : Sympifyable</p>
+<blockquote>
+<div><p>the xx element in the inertia dyadic</p>
+</div></blockquote>
+<p><strong>iyy</strong> : Sympifyable</p>
+<blockquote>
+<div><p>the yy element in the inertia dyadic</p>
+</div></blockquote>
+<p><strong>izz</strong> : Sympifyable</p>
+<blockquote>
+<div><p>the zz element in the inertia dyadic</p>
+</div></blockquote>
+<p><strong>ixy</strong> : Sympifyable</p>
+<blockquote>
+<div><p>the xy element in the inertia dyadic</p>
+</div></blockquote>
+<p><strong>iyz</strong> : Sympifyable</p>
+<blockquote>
+<div><p>the yz element in the inertia dyadic</p>
+</div></blockquote>
+<p><strong>izx</strong> : Sympifyable</p>
+<blockquote class="last">
+<div><p>the zx element in the inertia dyadic</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">inertia</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="inertia-of-point-mass">
+<h2>inertia_of_point_mass<a class="headerlink" href="#inertia-of-point-mass" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.inertia_of_point_mass">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">inertia_of_point_mass</tt><big>(</big><em>mass</em>, <em>pos_vec</em>, <em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#inertia_of_point_mass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.inertia_of_point_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inertia dyadic of a point mass realtive to point O.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>mass</strong> : Sympifyable</p>
+<blockquote>
+<div><p>Mass of the point mass</p>
+</div></blockquote>
+<p><strong>pos_vec</strong> : Vector</p>
+<blockquote>
+<div><p>Position from point O to point mass</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>Reference frame to express the dyadic in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">inertia_of_point_mass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;r m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">px</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia_of_point_mass</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">px</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="linear-momentum">
+<h2>linear_momentum<a class="headerlink" href="#linear-momentum" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.linear_momentum">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">linear_momentum</tt><big>(</big><em>frame</em>, <em>*body</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#linear_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.linear_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear momentum of the system.</p>
+<p>This function returns the linear momentum of a system of Particle&#8217;s and/or
+RigidBody&#8217;s. The linear momentum of a system is equal to the vector sum of
+the linear momentum of its constituents. Consider a system, S, comprised of
+a rigid body, A, and a particle, P. The linear momentum of the system, L,
+is equal to the vector sum of the linear momentum of the particle, L1, and
+the linear momentum of the rigid body, L2, i.e-</p>
+<p>L = L1 + L2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame in which linear momentum is desired.</p>
+</div></blockquote>
+<p><strong>body1, body2, body3...</strong> : Particle and/or RigidBody</p>
+<blockquote class="last">
+<div><p>The body (or bodies) whose kinetic energy is required.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">linear_momentum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;Ac&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">25</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">Ac</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Ac</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_momentum</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">Pa</span><span class="p">)</span>
+<span class="go">10*N.x + 500*N.y</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="angular-momentum">
+<h2>angular_momentum<a class="headerlink" href="#angular-momentum" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.angular_momentum">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">angular_momentum</tt><big>(</big><em>point</em>, <em>frame</em>, <em>*body</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#angular_momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.angular_momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Angular momentum of a system</p>
+<p>This function returns the angular momentum of a system of Particle&#8217;s and/or
+RigidBody&#8217;s. The angular momentum of such a system is equal to the vector
+sum of the angular momentum of its constituents. Consider a system, S,
+comprised of a rigid body, A, and a particle, P. The angular momentum of
+the system, H, is equal to the vector sum of the linear momentum of the
+particle, H1, and the linear momentum of the rigid body, H2, i.e-</p>
+<p>H = H1 + H2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>point</strong> : Point</p>
+<blockquote>
+<div><p>The point about which angular momentum of the system is desired.</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame in which angular momentum is desired.</p>
+</div></blockquote>
+<p><strong>body1, body2, body3...</strong> : Particle and/or RigidBody</p>
+<blockquote class="last">
+<div><p>The body (or bodies) whose kinetic energy is required.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">angular_momentum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Ac&#39;</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">Ac</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Ac</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">angular_momentum</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">Pa</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="go">10*N.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="kinetic-energy">
+<h2>kinetic_energy<a class="headerlink" href="#kinetic-energy" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.kinetic_energy">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">kinetic_energy</tt><big>(</big><em>frame</em>, <em>*body</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#kinetic_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.kinetic_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kinetic energy of a multibody system.</p>
+<p>This function returns the kinetic energy of a system of Particle&#8217;s and/or
+RigidBody&#8217;s. The kinetic energy of such a system is equal to the sum of
+the kinetic energies of its constituents. Consider a system, S, comprising
+a rigid body, A, and a particle, P. The kinetic energy of the system, T,
+is equal to the vector sum of the kinetic energy of the particle, T1, and
+the kinetic energy of the rigid body, T2, i.e.</p>
+<p>T = T1 + T2</p>
+<p>Kinetic energy is a scalar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame in which the velocity or angular velocity of the body is
+defined.</p>
+</div></blockquote>
+<p><strong>body1, body2, body3...</strong> : Particle and/or RigidBody</p>
+<blockquote class="last">
+<div><p>The body (or bodies) whose kinetic energy is required.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">kinetic_energy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Ac&#39;</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">Ac</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Ac</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kinetic_energy</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">Pa</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="go">350</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="potential-energy">
+<h2>potential_energy<a class="headerlink" href="#potential-energy" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.potential_energy">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">potential_energy</tt><big>(</big><em>*body</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#potential_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.potential_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Potential energy of a multibody system.</p>
+<p>This function returns the potential energy of a system of Particle&#8217;s and/or
+RigidBody&#8217;s. The potential energy of such a system is equal to the sum of
+the potential energy of its constituents. Consider a system, S, comprising
+a rigid body, A, and a particle, P. The potential energy of the system, V,
+is equal to the vector sum of the potential energy of the particle, V1, and
+the potential energy of the rigid body, V2, i.e.</p>
+<p>V = V1 + V2</p>
+<p>Potential energy is a scalar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>body1, body2, body3...</strong> : Particle and/or RigidBody</p>
+<blockquote class="last">
+<div><p>The body (or bodies) whose potential energy is required.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">potential_energy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;M m g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Ac&#39;</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">Ac</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Ac</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">potential_energy</span><span class="p">(</span><span class="n">Pa</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="go">M*g*h + g*h*m</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="lagrangian">
+<h2>Lagrangian<a class="headerlink" href="#lagrangian" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.Lagrangian">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">Lagrangian</tt><big>(</big><em>frame</em>, <em>*body</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#Lagrangian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.Lagrangian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lagrangian of a multibody system.</p>
+<p>This function returns the Lagrangian of a system of Particle&#8217;s and/or
+RigidBody&#8217;s. The Lagrangian of such a system is equal to the difference
+between the kinetic energies and potential energies of its constituents. If
+T and V are the kinetic and potential energies of a system then it&#8217;s
+Lagrangian, L, is defined as</p>
+<p>L = T - V</p>
+<p>The Lagrangian is a scalar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame in which the velocity or angular velocity of the body is
+defined to determine the kinetic energy.</p>
+</div></blockquote>
+<p><strong>body1, body2, body3...</strong> : Particle and/or RigidBody</p>
+<blockquote class="last">
+<div><p>The body (or bodies) whose kinetic energy is required.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">RigidBody</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">Lagrangian</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;M m g h&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Ac&#39;</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ac</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">Ac</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Ac</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lagrangian</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">Pa</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="go">-M*g*h - g*h*m + 350</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Masses, Inertias &amp; Particles, RigidBodys (Docstrings)</a><ul>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.particle">Particle</a></li>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.rigidbody">RigidBody</a></li>
+<li><a class="reference internal" href="#inertia">inertia</a></li>
+<li><a class="reference internal" href="#inertia-of-point-mass">inertia_of_point_mass</a></li>
+<li><a class="reference internal" href="#linear-momentum">linear_momentum</a></li>
+<li><a class="reference internal" href="#angular-momentum">angular_momentum</a></li>
+<li><a class="reference internal" href="#kinetic-energy">kinetic_energy</a></li>
+<li><a class="reference internal" href="#potential-energy">potential_energy</a></li>
+<li><a class="reference internal" href="#lagrangian">Lagrangian</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kinematics.html"
+                        title="previous chapter">Kinematics (Docstrings)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kane.html"
+                        title="next chapter">Kane&#8217;s Method, Lagrange&#8217;s Method &amp; Associated Functions (Docstrings)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/modules/physics/mechanics/api/part_bod.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Kinematics (Docstrings)"
+             >previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

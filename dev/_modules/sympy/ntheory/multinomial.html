@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.ntheory.multinomial &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.ntheory.multinomial</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+
+<div class="viewcode-block" id="binomial_coefficients"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.multinomial.binomial_coefficients">[docs]</a><span class="k">def</span> <span class="nf">binomial_coefficients</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where</span>
+<span class="sd">    :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.</span>
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory import binomial_coefficients</span>
+<span class="sd">    &gt;&gt;&gt; binomial_coefficients(9)</span>
+<span class="sd">    {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84,</span>
+<span class="sd">     (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    binomial_coefficients_list, multinomial_coefficients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">//</span><span class="n">k</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+</div>
+<div class="viewcode-block" id="binomial_coefficients_list"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.multinomial.binomial_coefficients_list">[docs]</a><span class="k">def</span> <span class="nf">binomial_coefficients_list</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return a list of binomial coefficients as rows of the Pascal&#39;s</span>
+<span class="sd">    triangle.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory import binomial_coefficients_list</span>
+<span class="sd">    &gt;&gt;&gt; binomial_coefficients_list(9)</span>
+<span class="sd">    [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    binomial_coefficients, multinomial_coefficients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">//</span><span class="n">k</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+</div>
+<span class="k">def</span> <span class="nf">multinomial_coefficients0</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">_tuple</span><span class="o">=</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">_zip</span><span class="o">=</span><span class="nb">zip</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``</span>
+<span class="sd">    where ``C_kn`` are multinomial coefficients such that</span>
+<span class="sd">    ``n=k1+k2+..+km``.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import multinomial_coefficients</span>
+<span class="sd">    &gt;&gt;&gt; multinomial_coefficients(2, 5) # indirect doctest</span>
+<span class="sd">    {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}</span>
+
+<span class="sd">    The algorithm is based on the following result:</span>
+
+<span class="sd">       Consider a polynomial and its ``n``-th exponent::</span>
+
+<span class="sd">         P(x) = sum_{i=0}^m p_i x^i</span>
+<span class="sd">         P(x)^n = sum_{k=0}^{m n} a(n,k) x^k</span>
+
+<span class="sd">       The coefficients ``a(n,k)`` can be computed using the</span>
+<span class="sd">       J.C.P. Miller Pure Recurrence [see D.E.Knuth, Seminumerical</span>
+<span class="sd">       Algorithms, The art of Computer Programming v.2, Addison</span>
+<span class="sd">       Wesley, Reading, 1981;]::</span>
+
+<span class="sd">         a(n,k) = 1/(k p_0) sum_{i=1}^m p_i ((n+1)i-k) a(n,k-i),</span>
+
+<span class="sd">       where ``a(n,0) = p_0^n``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="p">{():</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">binomial_coefficients</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span>
+    <span class="n">s0</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">p0</span> <span class="o">=</span> <span class="p">[</span><span class="n">_tuple</span><span class="p">(</span><span class="n">aa</span> <span class="o">-</span> <span class="n">bb</span> <span class="k">for</span> <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span> <span class="ow">in</span> <span class="n">_zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">s0</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">{</span><span class="n">_tuple</span><span class="p">(</span><span class="n">aa</span><span class="o">*</span><span class="n">n</span> <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">s0</span><span class="p">):</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="n">nn</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">nn</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">t2</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="n">l</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="n">i</span><span class="p">]:</span>
+                <span class="n">tt</span> <span class="o">=</span> <span class="n">_tuple</span><span class="p">([</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="k">for</span> <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span> <span class="ow">in</span> <span class="n">_zip</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span> <span class="n">t</span><span class="p">)])</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">tt</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nn</span><span class="o">*</span><span class="n">c2</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">[</span><span class="n">tt</span><span class="p">]:</span>
+                    <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">tt</span><span class="p">]</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="o">//</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="n">l</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">r1</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<div class="viewcode-block" id="multinomial_coefficients"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.multinomial.multinomial_coefficients">[docs]</a><span class="k">def</span> <span class="nf">multinomial_coefficients</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``</span>
+<span class="sd">    where ``C_kn`` are multinomial coefficients such that</span>
+<span class="sd">    ``n=k1+k2+..+km``.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory import multinomial_coefficients</span>
+<span class="sd">    &gt;&gt;&gt; multinomial_coefficients(2, 5) # indirect doctest</span>
+<span class="sd">    {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}</span>
+
+<span class="sd">    The algorithm is based on the following result:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \binom{n}{k_1, \ldots, k_m} =</span>
+<span class="sd">        \frac{k_1 + 1}{n - k_1} \sum_{i=2}^m \binom{n}{k_1 + 1, \ldots, k_i - 1, \ldots}</span>
+
+<span class="sd">    Code contributed to Sage by Yann Laigle-Chapuy, copied with permission</span>
+<span class="sd">    of the author.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    binomial_coefficients_list, binomial_coefficients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="p">{():</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">binomial_coefficients</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">multinomial_coefficients_iterator</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="p">):</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># j will be the leftmost nonzero position</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">m</span>
+    <span class="c"># enumerate tuples in co-lex order</span>
+    <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c"># compute next tuple</span>
+        <span class="n">tj</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">j</span><span class="p">:</span>
+            <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tj</span>
+        <span class="k">if</span> <span class="n">tj</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">t</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+            <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c"># compute the value</span>
+        <span class="c"># NB: the initialization of v was done above</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+                <span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">v</span> <span class="o">+=</span> <span class="n">r</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+                <span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">r</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">tj</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+</div>
+<div class="viewcode-block" id="multinomial_coefficients_iterator"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.multinomial.multinomial_coefficients_iterator">[docs]</a><span class="k">def</span> <span class="nf">multinomial_coefficients_iterator</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">_tuple</span><span class="o">=</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;multinomial coefficient iterator</span>
+
+<span class="sd">    This routine has been optimized for `m` large with respect to `n` by taking</span>
+<span class="sd">    advantage of the fact that when the monomial tuples `t` are stripped of</span>
+<span class="sd">    zeros, their coefficient is the same as that of the monomial tuples from</span>
+<span class="sd">    ``multinomial_coefficients(n, n)``. Therefore, the latter coefficients are</span>
+<span class="sd">    precomputed to save memory and time.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory.multinomial import multinomial_coefficients</span>
+<span class="sd">    &gt;&gt;&gt; m53, m33 = multinomial_coefficients(5,3), multinomial_coefficients(3,3)</span>
+<span class="sd">    &gt;&gt;&gt; m53[(0,0,0,1,2)] == m53[(0,0,1,0,2)] == m53[(1,0,2,0,0)] == m33[(0,1,2)]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory.multinomial import multinomial_coefficients_iterator</span>
+<span class="sd">    &gt;&gt;&gt; it = multinomial_coefficients_iterator(20,3)</span>
+<span class="sd">    &gt;&gt;&gt; next(it)</span>
+<span class="sd">    ((3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="n">multinomial_coefficients</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mc</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">yield</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="n">multinomial_coefficients</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">mc1</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mc</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">mc1</span><span class="p">[</span><span class="n">_tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">k</span><span class="p">))]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="n">mc1</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">_tuple</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">_tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">t1</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">mc</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># j will be the leftmost nonzero position</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">m</span>
+        <span class="c"># enumerate tuples in co-lex order</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># compute next tuple</span>
+            <span class="n">tj</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tj</span>
+            <span class="k">if</span> <span class="n">tj</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">t</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">t</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">_tuple</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">_tuple</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">t1</span><span class="p">))</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">mc</span><span class="p">[</span><span class="n">b</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

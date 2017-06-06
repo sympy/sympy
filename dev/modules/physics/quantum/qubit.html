@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Qubit &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Shor’s Algorithm" href="shor.html" />
+    <link rel="prev" title="QFT" href="qft.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="shor.html" title="Shor’s Algorithm"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qft.html" title="QFT"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.qubit">
+<span id="qubit"></span><h1>Qubit<a class="headerlink" href="#module-sympy.physics.quantum.qubit" title="Permalink to this headline">¶</a></h1>
+<p>Qubits for quantum computing.</p>
+<p>Todo:
+* Finish implementing measurement logic. This should include POVM.
+* Update docstrings.
+* Update tests.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.qubit.Qubit">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">Qubit</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#Qubit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.Qubit" title="Permalink to this definition">¶</a></dt>
+<dd><p>A multi-qubit ket in the computational (z) basis.</p>
+<p>We use the normal convention that the least significant qubit is on the
+right, so <tt class="docutils literal"><span class="pre">|00001&gt;</span></tt> has a 1 in the least significant qubit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>values</strong> : list, str</p>
+<blockquote class="last">
+<div><p>The qubit values as a list of ints ([0,0,0,1,1,]) or a string (&#8216;011&#8217;).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a qubit in a couple of different ways and look at their attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Qubit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">|000&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;0101&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">|0101&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">nqubits</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">dimension</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">qubit_values</span>
+<span class="go">(0, 1, 0, 1)</span>
+</pre></div>
+</div>
+<p>We can flip the value of an individual qubit:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">|0111&gt;</span>
+</pre></div>
+</div>
+<p>We can take the dagger of a Qubit to get a bra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">&lt;0101|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">Dagger</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">&lt;class &#39;sympy.physics.quantum.qubit.QubitBra&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Inner products work as expected:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span> <span class="o">=</span> <span class="n">Dagger</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">q</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span>
+<span class="go">&lt;0101|0101&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.qubit.QubitBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">QubitBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#QubitBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.QubitBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>A multi-qubit bra in the computational (z) basis.</p>
+<p>We use the normal convention that the least significant qubit is on the
+right, so <tt class="docutils literal"><span class="pre">|00001&gt;</span></tt> has a 1 in the least significant qubit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>values</strong> : list, str</p>
+<blockquote class="last">
+<div><p>The qubit values as a list of ints ([0,0,0,1,1,]) or a string (&#8216;011&#8217;).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.qubit.Qubit" title="sympy.physics.quantum.qubit.Qubit"><tt class="xref py py-obj docutils literal"><span class="pre">Qubit</span></tt></a></dt>
+<dd>Examples using qubits</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.qubit.IntQubit">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">IntQubit</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#IntQubit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.IntQubit" title="Permalink to this definition">¶</a></dt>
+<dd><p>A qubit ket that store integers as binary numbers in qubit values.</p>
+<p>The differences between this class and <tt class="docutils literal"><span class="pre">Qubit</span></tt> are:</p>
+<ul class="simple">
+<li>The form of the constructor.</li>
+<li>The qubit values are printed as their corresponding integer, rather
+than the raw qubit values. The internal storage format of the qubit
+values in the same as <tt class="docutils literal"><span class="pre">Qubit</span></tt>.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>values</strong> : int, tuple</p>
+<blockquote class="last">
+<div><p>If a single argument, the integer we want to represent in the qubit
+values. This integer will be represented using the fewest possible
+number of qubits. If a pair of integers, the first integer gives the
+integer to represent in binary form and the second integer gives
+the number of qubits to use.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a qubit for the integer 5:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">IntQubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">IntQubit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">|5&gt;</span>
+</pre></div>
+</div>
+<p>We can also create an <tt class="docutils literal"><span class="pre">IntQubit</span></tt> by passing a <tt class="docutils literal"><span class="pre">Qubit</span></tt> instance.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">IntQubit</span><span class="p">(</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;101&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">|5&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">as_int</span><span class="p">()</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">nqubits</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="o">.</span><span class="n">qubit_values</span>
+<span class="go">(1, 0, 1)</span>
+</pre></div>
+</div>
+<p>We can go back to the regular qubit form.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Qubit</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">|101&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.qubit.IntQubitBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">IntQubitBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#IntQubitBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.IntQubitBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>A qubit bra that store integers as binary numbers in qubit values.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.qubit_to_matrix">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">qubit_to_matrix</tt><big>(</big><em>qubit</em>, <em>format='sympy'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#qubit_to_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.qubit_to_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coverts an Add/Mul of Qubit objects into it&#8217;s matrix representation</p>
+<p>This function is the inverse of <tt class="docutils literal"><span class="pre">matrix_to_qubit</span></tt> and is a shorthand
+for <tt class="docutils literal"><span class="pre">represent(qubit)</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.matrix_to_qubit">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">matrix_to_qubit</tt><big>(</big><em>matrix</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#matrix_to_qubit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.matrix_to_qubit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert from the matrix repr. to a sum of Qubit objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>matrix</strong> : Matrix, numpy.matrix, scipy.sparse</p>
+<blockquote class="last">
+<div><p>The matrix to build the Qubit representation of. This works with
+sympy matrices, numpy matrices and scipy.sparse sparse matrices.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Represent a state and then go back to its qubit form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">matrix_to_qubit</span><span class="p">,</span> <span class="n">Qubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">Z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">represent</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;01&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matrix_to_qubit</span><span class="p">(</span><span class="n">represent</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">|01&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.matrix_to_density">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">matrix_to_density</tt><big>(</big><em>mat</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#matrix_to_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.matrix_to_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Works by finding the eigenvectors and eigenvalues of the matrix.
+We know we can decompose rho by doing:
+sum(EigenVal*|Eigenvect&gt;&lt;Eigenvect|)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.measure_all">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">measure_all</tt><big>(</big><em>qubit</em>, <em>format='sympy'</em>, <em>normalize=True</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#measure_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.measure_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an ensemble measurement of all qubits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>qubit</strong> : Qubit, Add</p>
+<blockquote>
+<div><p>The qubit to measure. This can be any Qubit or a linear combination
+of them.</p>
+</div></blockquote>
+<p><strong>format</strong> : str</p>
+<blockquote>
+<div><p>The format of the intermediate matrices to use. Possible values are
+(&#8216;sympy&#8217;,&#8217;numpy&#8217;,&#8217;scipy.sparse&#8217;). Currently only &#8216;sympy&#8217; is
+implemented.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : list</p>
+<blockquote class="last">
+<div><p>A list that consists of primitive states and their probabilities.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span><span class="p">,</span> <span class="n">measure_all</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">H</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">H</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">H</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;00&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span>
+<span class="go">H(0)*H(1)*|00&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">measure_all</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">[(|00&gt;, 1/4), (|01&gt;, 1/4), (|10&gt;, 1/4), (|11&gt;, 1/4)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.measure_partial">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">measure_partial</tt><big>(</big><em>qubit</em>, <em>bits</em>, <em>format='sympy'</em>, <em>normalize=True</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#measure_partial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.measure_partial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a partial ensemble measure on the specifed qubits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>qubits</strong> : Qubit</p>
+<blockquote>
+<div><p>The qubit to measure.  This can be any Qubit or a linear combination
+of them.</p>
+</div></blockquote>
+<p><strong>bits</strong> : tuple</p>
+<blockquote>
+<div><p>The qubits to measure.</p>
+</div></blockquote>
+<p><strong>format</strong> : str</p>
+<blockquote>
+<div><p>The format of the intermediate matrices to use. Possible values are
+(&#8216;sympy&#8217;,&#8217;numpy&#8217;,&#8217;scipy.sparse&#8217;). Currently only &#8216;sympy&#8217; is
+implemented.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : list</p>
+<blockquote class="last">
+<div><p>A list that consists of primitive states and their probabilities.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span><span class="p">,</span> <span class="n">measure_partial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">H</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">H</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">H</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;00&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span>
+<span class="go">H(0)*H(1)*|00&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">measure_partial</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,))</span>
+<span class="go">[(sqrt(2)*|00&gt;/2 + sqrt(2)*|10&gt;/2, 1/2), (sqrt(2)*|01&gt;/2 + sqrt(2)*|11&gt;/2, 1/2)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.measure_partial_oneshot">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">measure_partial_oneshot</tt><big>(</big><em>qubit</em>, <em>bits</em>, <em>format='sympy'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#measure_partial_oneshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.measure_partial_oneshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a partial oneshot measurement on the specified qubits.</p>
+<p>A oneshot measurement is equivalent to performing a measurement on a
+quantum system. This type of measurement does not return the probabilities
+like an ensemble measurement does, but rather returns <em>one</em> of the
+possible resulting states. The exact state that is returned is determined
+by picking a state randomly according to the ensemble probabilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>qubits</strong> : Qubit</p>
+<blockquote>
+<div><p>The qubit to measure.  This can be any Qubit or a linear combination
+of them.</p>
+</div></blockquote>
+<p><strong>bits</strong> : tuple</p>
+<blockquote>
+<div><p>The qubits to measure.</p>
+</div></blockquote>
+<p><strong>format</strong> : str</p>
+<blockquote>
+<div><p>The format of the intermediate matrices to use. Possible values are
+(&#8216;sympy&#8217;,&#8217;numpy&#8217;,&#8217;scipy.sparse&#8217;). Currently only &#8216;sympy&#8217; is
+implemented.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : Qubit</p>
+<blockquote class="last">
+<div><p>The qubit that the system collapsed to upon measurement.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.qubit.measure_all_oneshot">
+<tt class="descclassname">sympy.physics.quantum.qubit.</tt><tt class="descname">measure_all_oneshot</tt><big>(</big><em>qubit</em>, <em>format='sympy'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/qubit.html#measure_all_oneshot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.qubit.measure_all_oneshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a oneshot ensemble measurement on all qubits.</p>
+<p>A oneshot measurement is equivalent to performing a measurement on a
+quantum system. This type of measurement does not return the probabilities
+like an ensemble measurement does, but rather returns <em>one</em> of the
+possible resulting states. The exact state that is returned is determined
+by picking a state randomly according to the ensemble probabilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>qubits</strong> : Qubit</p>
+<blockquote>
+<div><p>The qubit to measure.  This can be any Qubit or a linear combination
+of them.</p>
+</div></blockquote>
+<p><strong>format</strong> : str</p>
+<blockquote>
+<div><p>The format of the intermediate matrices to use. Possible values are
+(&#8216;sympy&#8217;,&#8217;numpy&#8217;,&#8217;scipy.sparse&#8217;). Currently only &#8216;sympy&#8217; is
+implemented.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : Qubit</p>
+<blockquote class="last">
+<div><p>The qubit that the system collapsed to upon measurement.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qft.html"
+                        title="previous chapter">QFT</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="shor.html"
+                        title="next chapter">Shor&#8217;s Algorithm</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/qubit.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="shor.html" title="Shor’s Algorithm"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qft.html" title="QFT"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

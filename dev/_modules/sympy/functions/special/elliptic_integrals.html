@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.elliptic_integrals &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.elliptic_integrals</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Elliptic integrals. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">I</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.hyperbolic</span> <span class="kn">import</span> <span class="n">atanh</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.trigonometric</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">tan</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.complexes</span> <span class="kn">import</span> <span class="n">sign</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.special.hyper</span> <span class="kn">import</span> <span class="n">hyper</span><span class="p">,</span> <span class="n">meijerg</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.special.gamma_functions</span> <span class="kn">import</span> <span class="n">gamma</span>
+
+<div class="viewcode-block" id="elliptic_k"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.elliptic_integrals.elliptic_k">[docs]</a><span class="k">class</span> <span class="nc">elliptic_k</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    The complete elliptic integral of the first kind, defined by</span>
+
+<span class="sd">    .. math:: K(z) = F\left(\tfrac{\pi}{2}\middle| z\right)</span>
+
+<span class="sd">    where `F\left(z\middle| m\right)` is the Legendre incomplete</span>
+<span class="sd">    elliptic integral of the first kind.</span>
+
+<span class="sd">    The function `K(z)` is a single-valued function on the complex</span>
+<span class="sd">    plane with branch cut along the interval `(1, \infty)`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import elliptic_k, I, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_k(0)</span>
+<span class="sd">    pi/2</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_k(1.0 + I)</span>
+<span class="sd">    1.50923695405127 + 0.625146415202697*I</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals</span>
+<span class="sd">    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticK</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    elliptic_f</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">8</span><span class="o">*</span><span class="n">pi</span><span class="o">**</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gamma</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">I</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span>
+                   <span class="n">I</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">elliptic_k</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_hyper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">hyper</span><span class="p">((</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">),</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,),</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_meijerg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">meijerg</span><span class="p">(((</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">),</span> <span class="p">[]),</span> <span class="p">((</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,),</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,)),</span> <span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+</div>
+<div class="viewcode-block" id="elliptic_f"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.elliptic_integrals.elliptic_f">[docs]</a><span class="k">class</span> <span class="nc">elliptic_f</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    The Legendre incomplete elliptic integral of the first</span>
+<span class="sd">    kind, defined by</span>
+
+<span class="sd">    .. math:: F\left(z\middle| m\right) =</span>
+<span class="sd">              \int_0^z \frac{dt}{\sqrt{1 - m \sin^2 t}}</span>
+
+<span class="sd">    This function reduces to a complete elliptic integral of</span>
+<span class="sd">    the first kind, `K(m)`, when `z = \pi/2`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import elliptic_f, I, O</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, m</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_f(z, m).series(z)</span>
+<span class="sd">    z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_f(3.0 + I/2, 1.0 + I)</span>
+<span class="sd">    2.909449841483 + 1.74720545502474*I</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals</span>
+<span class="sd">    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticF</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    elliptic_k</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="n">pi</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">z</span>
+        <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">k</span><span class="o">*</span><span class="n">elliptic_k</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">elliptic_f</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">fm</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">fm</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span> <span class="o">-</span> <span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">m</span><span class="p">)</span> <span class="o">-</span>
+                    <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">fm</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="elliptic_e"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.elliptic_integrals.elliptic_e">[docs]</a><span class="k">class</span> <span class="nc">elliptic_e</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Called with two arguments `z` and `m`, evaluates the</span>
+<span class="sd">    incomplete elliptic integral of the second kind, defined by</span>
+
+<span class="sd">    .. math:: E\left(z\middle| m\right) = \int_0^z \sqrt{1 - m \sin^2 t} dt</span>
+
+<span class="sd">    Called with a single argument `z`, evaluates the Legendre complete</span>
+<span class="sd">    elliptic integral of the second kind</span>
+
+<span class="sd">    .. math:: E(z) = E\left(\tfrac{\pi}{2}\middle| z\right)</span>
+
+<span class="sd">    The function `E(z)` is a single-valued function on the complex</span>
+<span class="sd">    plane with branch cut along the interval `(1, \infty)`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import elliptic_e, I, pi, O</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, m</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_e(z, m).series(z)</span>
+<span class="sd">    z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_e(1 + I, 2 - I/2).n()</span>
+<span class="sd">    1.55203744279187 + 0.290764986058437*I</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_e(0)</span>
+<span class="sd">    pi/2</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_e(2.0 - I)</span>
+<span class="sd">    0.991052601328069 + 0.81879421395609*I</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals</span>
+<span class="sd">    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticE2</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticE</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="n">pi</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">z</span>
+            <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">k</span><span class="o">*</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">elliptic_e</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">-</span> <span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="n">elliptic_k</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_hyper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">hyper</span><span class="p">((</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">),</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,),</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_meijerg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">meijerg</span><span class="p">(((</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="p">[]),</span> \
+                            <span class="p">((</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,),</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,)),</span> <span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span>
+
+</div>
+<div class="viewcode-block" id="elliptic_pi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.elliptic_integrals.elliptic_pi">[docs]</a><span class="k">class</span> <span class="nc">elliptic_pi</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Called with three arguments `n`, `z` and `m`, evaluates the</span>
+<span class="sd">    Legendre incomplete elliptic integral of the third kind, defined by</span>
+
+<span class="sd">    .. math:: \Pi\left(n; z\middle| m\right) = \int_0^z \frac{dt}</span>
+<span class="sd">              {\left(1 - n \sin^2 t\right) \sqrt{1 - m \sin^2 t}}</span>
+
+<span class="sd">    Called with two arguments `n` and `m`, evaluates the complete</span>
+<span class="sd">    elliptic integral of the third kind:</span>
+
+<span class="sd">    .. math:: \Pi\left(n\middle| m\right) =</span>
+<span class="sd">              \Pi\left(n; \tfrac{\pi}{2}\middle| m\right)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import elliptic_pi, I, pi, O, S</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n, m</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_pi(n, z, m).series(z)</span>
+<span class="sd">    z + z**3*(m/6 + n/3) + z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_pi(0.5 + I, 1.0 - I, 1.2)</span>
+<span class="sd">    2.50232379629182 - 0.760939574180767*I</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_pi(0, 0)</span>
+<span class="sd">    pi/2</span>
+<span class="sd">    &gt;&gt;&gt; elliptic_pi(1.0 - I/3, 2.0 + I)</span>
+<span class="sd">    3.29136443417283 + 0.32555634906645*I</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Elliptic_integrals</span>
+<span class="sd">    .. [2] http://functions.wolfram.com/EllipticIntegrals/EllipticPi3</span>
+<span class="sd">    .. [3] http://functions.wolfram.com/EllipticIntegrals/EllipticPi</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="n">pi</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span>
+                         <span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">k</span><span class="o">*</span><span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">atanh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">elliptic_pi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="n">tan</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">elliptic_k</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="o">/</span><span class="n">sign</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">elliptic_e</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> \
+               <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">m</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">fm</span><span class="p">,</span> <span class="n">fn</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">n</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">elliptic_f</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">n</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">n</span> <span class="o">-</span>
+                        <span class="n">n</span><span class="o">*</span><span class="n">fm</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">fn</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">fm</span><span class="o">*</span><span class="n">fn</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">-</span>
+                        <span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">fm</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">elliptic_k</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">n</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">elliptic_e</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">elliptic_pi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

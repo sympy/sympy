@@ -1,0 +1,969 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Orthogonal polynomials &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Hypergeometric functions" href="hypergeometric.html" />
+    <link rel="prev" title="Bessel functions and related functions" href="bessel.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hypergeometric.html" title="Hypergeometric functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bessel.html" title="Bessel functions and related functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="orthogonal-polynomials">
+<h1>Orthogonal polynomials<a class="headerlink" href="#orthogonal-polynomials" title="Permalink to this headline">¶</a></h1>
+<p>An orthogonal polynomial sequence is a sequence of polynomials <span class="math">\(P_0(x), P_1(x), \ldots\)</span> of degree <span class="math">\(0, 1, \ldots\)</span>, which are mutually orthogonal in the sense that</p>
+<div class="math">
+\[\begin{split}\int_S P_n(x) P_m(x) w(x) dx =
+\begin{cases}
+c_n \ne 0 &amp; \text{if $m = n$} \\
+0         &amp; \text{if $m \ne n$}
+\end{cases}\end{split}\]</div>
+<p>where <span class="math">\(S\)</span> is some domain (e.g. an interval <span class="math">\([a,b] \in \mathbb{R}\)</span>) and <span class="math">\(w(x)\)</span> is a fixed <em>weight function</em>. A sequence of orthogonal polynomials is determined completely by <span class="math">\(w\)</span>, <span class="math">\(S\)</span>, and a normalization convention (e.g. <span class="math">\(c_n = 1\)</span>). Applications of orthogonal polynomials include function approximation and solution of differential equations.</p>
+<p>Orthogonal polynomials are sometimes defined using the differential equations they satisfy (as functions of <span class="math">\(x\)</span>) or the recurrence relations they satisfy with respect to the order <span class="math">\(n\)</span>. Other ways of defining orthogonal polynomials include differentiation formulas and generating functions. The standard orthogonal polynomials can also be represented as hypergeometric series (see <a class="reference internal" href="hypergeometric.html"><em>Hypergeometric functions</em></a>), more specifically using the Gauss hypergeometric function <span class="math">\(\,_2F_1\)</span> in most cases. The following functions are generally implemented using hypergeometric functions since this is computationally efficient and easily generalizes.</p>
+<p>For more information, see the <a class="reference external" href="http://en.wikipedia.org/wiki/Orthogonal_polynomials">Wikipedia article on orthogonal polynomials</a>.</p>
+<div class="section" id="legendre-functions">
+<h2>Legendre functions<a class="headerlink" href="#legendre-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="legendre">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">legendre()</span></tt><a class="headerlink" href="#legendre" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.legendre">
+<tt class="descclassname">mpmath.</tt><tt class="descname">legendre</tt><big>(</big><em>n</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.legendre" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">legendre(n,</span> <span class="pre">x)</span></tt> evaluates the Legendre polynomial <span class="math">\(P_n(x)\)</span>.
+The Legendre polynomials are given by the formula</p>
+<div class="math">
+\[P_n(x) = \frac{1}{2^n n!} \frac{d^n}{dx^n} (x^2 -1)^n.\]</div>
+<p>Alternatively, they can be computed recursively using</p>
+<div class="math">
+\[P_0(x) = 1\]\[P_1(x) = x\]\[(n+1) P_{n+1}(x) = (2n+1) x P_n(x) - n P_{n-1}(x).\]</div>
+<p>A third definition is in terms of the hypergeometric function
+<span class="math">\(\,_2F_1\)</span>, whereby they can be generalized to arbitrary <span class="math">\(n\)</span>:</p>
+<div class="math">
+\[P_n(x) = \,_2F_1\left(-n, n+1, 1, \frac{1-x}{2}\right)\]</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Legendre polynomials P_n(x) on [-1,1] for n=0,1,2,3,4</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/legendre.png" src="../../../_images/legendre.png" />
+<p><strong>Basic evaluation</strong></p>
+<p>The Legendre polynomials assume fixed values at the points
+<span class="math">\(x = -1\)</span> and <span class="math">\(x = 1\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">([</span><span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)])</span>
+<span class="go">[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">([</span><span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)])</span>
+<span class="go">[1.0, -1.0, 1.0, -1.0, 1.0, -1.0]</span>
+</pre></div>
+</div>
+<p>The coefficients of Legendre polynomials can be recovered
+using degree-<span class="math">\(n\)</span> Taylor expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[0.0, 1.0]</span>
+<span class="go">[-0.5, 0.0, 1.5]</span>
+<span class="go">[0.0, -1.5, 0.0, 2.5]</span>
+<span class="go">[0.375, 0.0, -3.75, 0.0, 4.375]</span>
+</pre></div>
+</div>
+<p>The roots of Legendre polynomials are located symmetrically
+on the interval <span class="math">\([-1, 1]\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">polyroots</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="gp">...</span>
+<span class="go">[]</span>
+<span class="go">[0.0]</span>
+<span class="go">[-0.57735, 0.57735]</span>
+<span class="go">[-0.774597, 0.0, 0.774597]</span>
+<span class="go">[-0.861136, -0.339981, 0.339981, 0.861136]</span>
+</pre></div>
+</div>
+<p>An example of an evaluation for arbitrary <span class="math">\(n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">legendre</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.94952805264875 + 2.1071073099422j)</span>
+</pre></div>
+</div>
+<p><strong>Orthogonality</strong></p>
+<p>The Legendre polynomials are orthogonal on <span class="math">\([-1, 1]\)</span> with respect
+to the trivial weight <span class="math">\(w(x) = 1\)</span>. That is, <span class="math">\(P_m(x) P_n(x)\)</span>
+integrates to zero if <span class="math">\(m \ne n\)</span> and to <span class="math">\(2/(2n+1)\)</span> if <span class="math">\(m = n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">legendre</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">legendre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.222222222222222</span>
+</pre></div>
+</div>
+<p><strong>Differential equation</strong></p>
+<p>The Legendre polynomials satisfy the differential equation</p>
+<div class="math">
+\[((1-x^2) y')' + n(n+1) y' = 0.\]</div>
+<p>We can verify this numerically:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mf">3.6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.73</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">legendre</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">u</span><span class="p">),</span> <span class="n">t</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">A</span><span class="o">+</span><span class="n">B</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">9.0e-16</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="legenp">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">legenp()</span></tt><a class="headerlink" href="#legenp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.legenp">
+<tt class="descclassname">mpmath.</tt><tt class="descname">legenp</tt><big>(</big><em>n</em>, <em>m</em>, <em>z</em>, <em>type=2</em><big>)</big><a class="headerlink" href="#mpmath.legenp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the (associated) Legendre function of the first kind of
+degree <em>n</em> and order <em>m</em>, <span class="math">\(P_n^m(z)\)</span>. Taking <span class="math">\(m = 0\)</span> gives the ordinary
+Legendre function of the first kind, <span class="math">\(P_n(z)\)</span>. The parameters may be
+complex numbers.</p>
+<p>In terms of the Gauss hypergeometric function, the (associated) Legendre
+function is defined as</p>
+<div class="math">
+\[P_n^m(z) = \frac{1}{\Gamma(1-m)} \frac{(1+z)^{m/2}}{(1-z)^{m/2}}
+    \,_2F_1\left(-n, n+1, 1-m, \frac{1-z}{2}\right).\]</div>
+<p>With <em>type=3</em> instead of <em>type=2</em>, the alternative
+definition</p>
+<div class="math">
+\[\hat{P}_n^m(z) = \frac{1}{\Gamma(1-m)} \frac{(z+1)^{m/2}}{(z-1)^{m/2}}
+    \,_2F_1\left(-n, n+1, 1-m, \frac{1-z}{2}\right).\]</div>
+<p>is used. These functions correspond respectively to <tt class="docutils literal"><span class="pre">LegendreP[n,m,2,z]</span></tt>
+and <tt class="docutils literal"><span class="pre">LegendreP[n,m,3,z]</span></tt> in Mathematica.</p>
+<p>The general solution of the (associated) Legendre differential equation</p>
+<div class="math">
+\[(1-z^2) f''(z) - 2zf'(z) + \left(n(n+1)-\frac{m^2}{1-z^2}\right)f(z) = 0\]</div>
+<p>is given by <span class="math">\(C_1 P_n^m(z) + C_2 Q_n^m(z)\)</span> for arbitrary constants
+<span class="math">\(C_1\)</span>, <span class="math">\(C_2\)</span>, where <span class="math">\(Q_n^m(z)\)</span> is a Legendre function of the
+second kind as implemented by <a class="reference internal" href="#mpmath.legenq" title="mpmath.legenq"><tt class="xref py py-func docutils literal"><span class="pre">legenq()</span></tt></a>.</p>
+<p><strong>Examples</strong></p>
+<p>Evaluation for arbitrary parameters and arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span> <span class="n">legendre</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">149.5</span>
+<span class="go">149.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="go">(1.972260393822275434196053 - 1.972260393822275434196053j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenp</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-3.335677248386698208736542 - 5.663270217461022307645625j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">legenp</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">28.125</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">legenp</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">-28.125</span>
+</pre></div>
+</div>
+<p>Verifying the associated Legendre differential equation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C1</span><span class="p">,</span> <span class="n">C2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">C1</span><span class="o">*</span><span class="n">legenp</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">C2</span><span class="o">*</span><span class="n">legenq</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deq</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> \
+<span class="gp">... </span>    <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="n">chop</span><span class="p">(</span><span class="n">deq</span><span class="p">(</span><span class="n">mpmathify</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="legenq">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">legenq()</span></tt><a class="headerlink" href="#legenq" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.legenq">
+<tt class="descclassname">mpmath.</tt><tt class="descname">legenq</tt><big>(</big><em>n</em>, <em>m</em>, <em>z</em>, <em>type=2</em><big>)</big><a class="headerlink" href="#mpmath.legenq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the (associated) Legendre function of the second kind of
+degree <em>n</em> and order <em>m</em>, <span class="math">\(Q_n^m(z)\)</span>. Taking <span class="math">\(m = 0\)</span> gives the ordinary
+Legendre function of the second kind, <span class="math">\(Q_n(z)\)</span>. The parameters may
+complex numbers.</p>
+<p>The Legendre functions of the second kind give a second set of
+solutions to the (associated) Legendre differential equation.
+(See <a class="reference internal" href="#mpmath.legenp" title="mpmath.legenp"><tt class="xref py py-func docutils literal"><span class="pre">legenp()</span></tt></a>.)
+Unlike the Legendre functions of the first kind, they are not
+polynomials of <span class="math">\(z\)</span> for integer <span class="math">\(n\)</span>, <span class="math">\(m\)</span> but rational or logarithmic
+functions with poles at <span class="math">\(z = \pm 1\)</span>.</p>
+<p>There are various ways to define Legendre functions of
+the second kind, giving rise to different complex structure.
+A version can be selected using the <em>type</em> keyword argument.
+The <em>type=2</em> and <em>type=3</em> functions are given respectively by</p>
+<div class="math">
+\[Q_n^m(z) = \frac{\pi}{2 \sin(\pi m)}
+    \left( \cos(\pi m) P_n^m(z) -
+    \frac{\Gamma(1+m+n)}{\Gamma(1-m+n)} P_n^{-m}(z)\right)\]\[\hat{Q}_n^m(z) = \frac{\pi}{2 \sin(\pi m)} e^{\pi i m}
+    \left( \hat{P}_n^m(z) -
+    \frac{\Gamma(1+m+n)}{\Gamma(1-m+n)} \hat{P}_n^{-m}(z)\right)\]</div>
+<p>where <span class="math">\(P\)</span> and <span class="math">\(\hat{P}\)</span> are the <em>type=2</em> and <em>type=3</em> Legendre functions
+of the first kind. The formulas above should be understood as limits
+when <span class="math">\(m\)</span> is an integer.</p>
+<p>These functions correspond to <tt class="docutils literal"><span class="pre">LegendreQ[n,m,2,z]</span></tt> (or <tt class="docutils literal"><span class="pre">LegendreQ[n,m,z]</span></tt>)
+and <tt class="docutils literal"><span class="pre">LegendreQ[n,m,3,z]</span></tt> in Mathematica. The <em>type=3</em> function
+is essentially the same as the function defined in
+Abramowitz &amp; Stegun (eq. 8.1.3) but with <span class="math">\((z+1)^{m/2}(z-1)^{m/2}\)</span> instead
+of <span class="math">\((z^2-1)^{m/2}\)</span>, giving slightly different branches.</p>
+<p><strong>Examples</strong></p>
+<p>Evaluation for arbitrary parameters and arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">-0.8186632680417568557122028</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="go">(0.6655964618250228714288277 + 0.3937692045497259717762649j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="o">+</span><span class="mi">5</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-10001.95256487468541686564 - 6011.691337610097577791134j)</span>
+</pre></div>
+</div>
+<p>Different versions of the function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.7298060598018049369381857</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="go">(-7.902916572420817192300921 + 0.1998650072605976600724502j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(2.040524284763495081918338 - 0.7298060598018049369381857j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">legenq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">-0.1998650072605976600724502</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="chebyshev-polynomials">
+<h2>Chebyshev polynomials<a class="headerlink" href="#chebyshev-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="chebyt">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">chebyt()</span></tt><a class="headerlink" href="#chebyt" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.chebyt">
+<tt class="descclassname">mpmath.</tt><tt class="descname">chebyt</tt><big>(</big><em>n</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.chebyt" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">chebyt(n,</span> <span class="pre">x)</span></tt> evaluates the Chebyshev polynomial of the first
+kind <span class="math">\(T_n(x)\)</span>, defined by the identity</p>
+<div class="math">
+\[T_n(\cos x) = \cos(n x).\]</div>
+<p>The Chebyshev polynomials of the first kind are a special
+case of the Jacobi polynomials, and by extension of the
+hypergeometric function <span class="math">\(\,_2F_1\)</span>. They can thus also be
+evaluated for nonintegral <span class="math">\(n\)</span>.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Chebyshev polynomials T_n(x) on [-1,1] for n=0,1,2,3,4</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/chebyt.png" src="../../../_images/chebyt.png" />
+<p><strong>Basic evaluation</strong></p>
+<p>The coefficients of the <span class="math">\(n\)</span>-th polynomial can be recovered
+using using degree-<span class="math">\(n\)</span> Taylor expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[0.0, 1.0]</span>
+<span class="go">[-1.0, 0.0, 2.0]</span>
+<span class="go">[0.0, -3.0, 0.0, 4.0]</span>
+<span class="go">[1.0, 0.0, -8.0, 0.0, 8.0]</span>
+</pre></div>
+</div>
+<p><strong>Orthogonality</strong></p>
+<p>The Chebyshev polynomials of the first kind are orthogonal
+on the interval <span class="math">\([-1, 1]\)</span> with respect to the weight
+function <span class="math">\(w(x) = 1/\sqrt{1-x^2}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyt</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">chebyt</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1.57079632596448</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="chebyu">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">chebyu()</span></tt><a class="headerlink" href="#chebyu" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.chebyu">
+<tt class="descclassname">mpmath.</tt><tt class="descname">chebyu</tt><big>(</big><em>n</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.chebyu" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">chebyu(n,</span> <span class="pre">x)</span></tt> evaluates the Chebyshev polynomial of the second
+kind <span class="math">\(U_n(x)\)</span>, defined by the identity</p>
+<div class="math">
+\[U_n(\cos x) = \frac{\sin((n+1)x)}{\sin(x)}.\]</div>
+<p>The Chebyshev polynomials of the second kind are a special
+case of the Jacobi polynomials, and by extension of the
+hypergeometric function <span class="math">\(\,_2F_1\)</span>. They can thus also be
+evaluated for nonintegral <span class="math">\(n\)</span>.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Chebyshev polynomials U_n(x) on [-1,1] for n=0,1,2,3,4</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/chebyu.png" src="../../../_images/chebyu.png" />
+<p><strong>Basic evaluation</strong></p>
+<p>The coefficients of the <span class="math">\(n\)</span>-th polynomial can be recovered
+using using degree-<span class="math">\(n\)</span> Taylor expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[0.0, 2.0]</span>
+<span class="go">[-1.0, 0.0, 4.0]</span>
+<span class="go">[0.0, -4.0, 0.0, 8.0]</span>
+<span class="go">[1.0, 0.0, -12.0, 0.0, 16.0]</span>
+</pre></div>
+</div>
+<p><strong>Orthogonality</strong></p>
+<p>The Chebyshev polynomials of the second kind are orthogonal
+on the interval <span class="math">\([-1, 1]\)</span> with respect to the weight
+function <span class="math">\(w(x) = \sqrt{1-x^2}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">chebyu</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">chebyu</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1.5707963267949</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="jacobi-polynomials">
+<h2>Jacobi polynomials<a class="headerlink" href="#jacobi-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jacobi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">jacobi()</span></tt><a class="headerlink" href="#jacobi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.jacobi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">jacobi</tt><big>(</big><em>n</em>, <em>a</em>, <em>b</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.jacobi" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">jacobi(n,</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">x)</span></tt> evaluates the Jacobi polynomial
+<span class="math">\(P_n^{(a,b)}(x)\)</span>. The Jacobi polynomials are a special
+case of the hypergeometric function <span class="math">\(\,_2F_1\)</span> given by:</p>
+<div class="math">
+\[P_n^{(a,b)}(x) = {n+a \choose n}
+  \,_2F_1\left(-n,1+a+b+n,a+1,\frac{1-x}{2}\right).\]</div>
+<p>Note that this definition generalizes to nonintegral values
+of <span class="math">\(n\)</span>. When <span class="math">\(n\)</span> is an integer, the hypergeometric series
+terminates after a finite number of terms, giving
+a polynomial in <span class="math">\(x\)</span>.</p>
+<p><strong>Evaluation of Jacobi polynomials</strong></p>
+<p>A special evaluation is <span class="math">\(P_n^{(a,b)}(1) = {n+a \choose n}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jacobi</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">2.4609375</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">4</span><span class="o">+</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">2.4609375</span>
+</pre></div>
+</div>
+<p>A Jacobi polynomial of degree <span class="math">\(n\)</span> is equal to its
+Taylor polynomial of degree <span class="math">\(n\)</span>. The explicit
+coefficients of Jacobi polynomials can therefore
+be recovered easily using <a class="reference internal" href="../calculus/approximation.html#mpmath.taylor" title="mpmath.taylor"><tt class="xref py py-func docutils literal"><span class="pre">taylor()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[-0.5, 2.5]</span>
+<span class="go">[-0.75, -1.5, 5.25]</span>
+<span class="go">[0.5, -3.5, -3.5, 10.5]</span>
+<span class="go">[0.625, 2.5, -11.25, -7.5, 20.625]</span>
+</pre></div>
+</div>
+<p>For nonintegral <span class="math">\(n\)</span>, the Jacobi &#8220;polynomial&#8221; is no longer
+a polynomial:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jacobi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[0.309983, 1.84119, -1.26933, 1.26699, -1.34808]</span>
+</pre></div>
+</div>
+<p><strong>Orthogonality</strong></p>
+<p>The Jacobi polynomials are orthogonal on the interval
+<span class="math">\([-1, 1]\)</span> with respect to the weight function
+<span class="math">\(w(x) = (1-x)^a (1+x)^b\)</span>. That is,
+<span class="math">\(w(x) P_n^{(a,b)}(x) P_m^{(a,b)}(x)\)</span> integrates to
+zero if <span class="math">\(m \ne n\)</span> and to a nonzero number if <span class="math">\(m = n\)</span>.</p>
+<p>The orthogonality is easy to verify using numerical
+quadrature:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">jacobi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">b</span> <span class="o">*</span> <span class="n">P</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">P</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1.9047619047619</span>
+</pre></div>
+</div>
+<p><strong>Differential equation</strong></p>
+<p>The Jacobi polynomials are solutions of the differential
+equation</p>
+<div class="math">
+\[(1-x^2) y'' + (b-a-(a+b+2)x) y' + n (n+a+b+1) y = 0.\]</div>
+<p>We can verify that <a class="reference internal" href="#mpmath.jacobi" title="mpmath.jacobi"><tt class="xref py py-func docutils literal"><span class="pre">jacobi()</span></tt></a> approximately satisfies
+this equation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mf">2.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jacobi</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A0</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">A2</span> <span class="o">+</span> <span class="n">A1</span> <span class="o">+</span> <span class="n">A0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">4.0e-12</span>
+</pre></div>
+</div>
+<p>The difference of order <span class="math">\(10^{-12}\)</span> is as close to zero as
+it could be at 15-digit working precision, since the terms
+are large:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A0</span><span class="p">,</span> <span class="n">A1</span><span class="p">,</span> <span class="n">A2</span>
+<span class="go">(26560.2328981879, -21503.7641037294, -5056.46879445852)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="gegenbauer-polynomials">
+<h2>Gegenbauer polynomials<a class="headerlink" href="#gegenbauer-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gegenbauer">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">gegenbauer()</span></tt><a class="headerlink" href="#gegenbauer" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.gegenbauer">
+<tt class="descclassname">mpmath.</tt><tt class="descname">gegenbauer</tt><big>(</big><em>n</em>, <em>a</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.gegenbauer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Gegenbauer polynomial, or ultraspherical polynomial,</p>
+<div class="math">
+\[C_n^{(a)}(z) = {n+2a-1 \choose n} \,_2F_1\left(-n, n+2a;
+    a+\frac{1}{2}; \frac{1}{2}(1-z)\right).\]</div>
+<p>When <span class="math">\(n\)</span> is a nonnegative integer, this formula gives a polynomial
+in <span class="math">\(z\)</span> of degree <span class="math">\(n\)</span>, but all parameters are permitted to be
+complex numbers. With <span class="math">\(a = 1/2\)</span>, the Gegenbauer polynomial
+reduces to a Legendre polynomial.</p>
+<p><strong>Examples</strong></p>
+<p>Evaluation for arbitrary arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-2485.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="go">3.012757178975667428359374e+2322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="o">-</span><span class="mi">1000</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-5038991.358609026523401901 + 9414549.285447104177860806j)</span>
+</pre></div>
+</div>
+<p>Evaluation at negative integer orders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1.75</span><span class="p">)</span>
+<span class="go">-1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1.75</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.75</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gegenbauer</span><span class="p">(</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">8989.0</span>
+</pre></div>
+</div>
+<p>The Gegenbauer polynomials solve the differential equation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="mf">4.5</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="n">j</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="n">chop</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>The Gegenbauer polynomials have generating function
+<span class="math">\((1-2zt+t^2)^{-a}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">t</span><span class="o">+</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">[1.0, 5.0, 15.0, 35.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="go">[1.0, 5.0, 15.0, 35.0]</span>
+</pre></div>
+</div>
+<p>The Gegenbauer polynomials are orthogonal on <span class="math">\([-1, 1]\)</span> with respect
+to the weight <span class="math">\((1-z^2)^{a-\frac{1}{2}}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">gegenbauer</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">zeroprec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Cm</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">gegenbauer</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">zeroprec</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">Cn</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">Cm</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="hermite-polynomials">
+<h2>Hermite polynomials<a class="headerlink" href="#hermite-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hermite">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">hermite()</span></tt><a class="headerlink" href="#hermite" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.hermite">
+<tt class="descclassname">mpmath.</tt><tt class="descname">hermite</tt><big>(</big><em>n</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.hermite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Hermite polynomial <span class="math">\(H_n(z)\)</span>, which may be defined using
+the recurrence</p>
+<div class="math">
+\[H_0(z) = 1\]\[H_1(z) = 2z\]\[H_{n+1} = 2z H_n(z) - 2n H_{n-1}(z).\]</div>
+<p>The Hermite polynomials are orthogonal on <span class="math">\((-\infty, \infty)\)</span> with
+respect to the weight <span class="math">\(e^{-z^2}\)</span>. More generally, allowing arbitrary complex
+values of <span class="math">\(n\)</span>, the Hermite function <span class="math">\(H_n(z)\)</span> is defined as</p>
+<div class="math">
+\[H_n(z) = (2z)^n \,_2F_0\left(-\frac{n}{2}, \frac{1-n}{2},
+    -\frac{1}{z^2}\right)\]</div>
+<p>for <span class="math">\(\Re{z} &gt; 0\)</span>, or generally</p>
+<div class="math">
+\[H_n(z) = 2^n \sqrt{\pi} \left(
+    \frac{1}{\Gamma\left(\frac{1-n}{2}\right)}
+    \,_1F_1\left(-\frac{n}{2}, \frac{1}{2}, z^2\right) -
+    \frac{2z}{\Gamma\left(-\frac{n}{2}\right)}
+    \,_1F_1\left(\frac{1-n}{2}, \frac{3}{2}, z^2\right)
+\right).\]</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Hermite polynomials H_n(x) on the real line for n=0,1,2,3,4</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">],[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="o">-</span><span class="mi">25</span><span class="p">,</span><span class="mi">25</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/hermite.png" src="../../../_images/hermite.png" />
+<p><strong>Examples</strong></p>
+<p>Evaluation for arbitrary arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">20.0</span>
+<span class="go">398.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">4.950440066552087387515653e+19334</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="o">**</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">-7999999999999998800000000.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="o">**</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">1.675159751729877682920301e+4342944819032534</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hermite</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.07652130602993513389421901 - 0.1084662449961914580276007j)</span>
+</pre></div>
+</div>
+<p>Coefficients of the first few Hermite polynomials are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[0.0, 2.0]</span>
+<span class="go">[-2.0, 0.0, 4.0]</span>
+<span class="go">[0.0, -12.0, 0.0, 8.0]</span>
+<span class="go">[12.0, 0.0, -48.0, 0.0, 16.0]</span>
+<span class="go">[0.0, 120.0, 0.0, -160.0, 0.0, 32.0]</span>
+<span class="go">[-120.0, 0.0, 720.0, 0.0, -480.0, 0.0, 64.0]</span>
+</pre></div>
+</div>
+<p>Values at <span class="math">\(z = 0\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">hermite</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">0.02769459142039868792653387</span>
+<span class="go">0.08333333333333333333333333</span>
+<span class="go">0.2215567313631895034122709</span>
+<span class="go">0.5</span>
+<span class="go">0.8862269254527580136490837</span>
+<span class="go">1.0</span>
+<span class="go">0.0</span>
+<span class="go">-2.0</span>
+<span class="go">0.0</span>
+<span class="go">12.0</span>
+<span class="go">0.0</span>
+<span class="go">-120.0</span>
+<span class="go">0.0</span>
+<span class="go">1680.0</span>
+</pre></div>
+</div>
+<p>Hermite functions satisfy the differential equation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">*</span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Verifying orthogonality:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">hermite</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">hermite</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span><span class="n">inf</span><span class="p">]))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="laguerre-polynomials">
+<h2>Laguerre polynomials<a class="headerlink" href="#laguerre-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="laguerre">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">laguerre()</span></tt><a class="headerlink" href="#laguerre" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.laguerre">
+<tt class="descclassname">mpmath.</tt><tt class="descname">laguerre</tt><big>(</big><em>n</em>, <em>a</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.laguerre" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the generalized (associated) Laguerre polynomial, defined by</p>
+<div class="math">
+\[L_n^a(z) = \frac{\Gamma(n+b+1)}{\Gamma(b+1) \Gamma(n+1)}
+    \,_1F_1(-n, a+1, z).\]</div>
+<p>With <span class="math">\(a = 0\)</span> and <span class="math">\(n\)</span> a nonnegative integer, this reduces to an ordinary
+Laguerre polynomial, the sequence of which begins
+<span class="math">\(L_0(z) = 1, L_1(z) = 1-z, L_2(z) = z^2-2z+1, \ldots\)</span>.</p>
+<p>The Laguerre polynomials are orthogonal with respect to the weight
+<span class="math">\(z^a e^{-z}\)</span> on <span class="math">\([0, \infty)\)</span>.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Hermite polynomials L_n(x) on the real line for n=0,1,2,3,4</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f0</span><span class="p">,</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">],[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/laguerre.png" src="../../../_images/laguerre.png" />
+<p><strong>Examples</strong></p>
+<p>Evaluation for arbitrary arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">laguerre</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.03726399739583333333333333</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">laguerre</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(4.474921610704496808379097 - 11.02058050372068958069241j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">laguerre</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+<span class="go">49980001.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">laguerre</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+<span class="go">-9.327764910194842158583189e+4328</span>
+</pre></div>
+</div>
+<p>The first few Laguerre polynomials, normalized to have integer
+coefficients:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">fac</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">laguerre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[1.0, -1.0]</span>
+<span class="go">[2.0, -4.0, 1.0]</span>
+<span class="go">[6.0, -18.0, 9.0, -1.0]</span>
+<span class="go">[24.0, -96.0, 72.0, -16.0, 1.0]</span>
+<span class="go">[120.0, -600.0, 600.0, -200.0, 25.0, -1.0]</span>
+<span class="go">[720.0, -4320.0, 5400.0, -2400.0, 450.0, -36.0, 1.0]</span>
+</pre></div>
+</div>
+<p>Verifying orthogonality:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Lm</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Ln</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">laguerre</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">t</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">Lm</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">Ln</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">]))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="spherical-harmonics">
+<h2>Spherical harmonics<a class="headerlink" href="#spherical-harmonics" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="spherharm">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">spherharm()</span></tt><a class="headerlink" href="#spherharm" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.spherharm">
+<tt class="descclassname">mpmath.</tt><tt class="descname">spherharm</tt><big>(</big><em>l</em>, <em>m</em>, <em>theta</em>, <em>phi</em><big>)</big><a class="headerlink" href="#mpmath.spherharm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the spherical harmonic <span class="math">\(Y_l^m(\theta,\phi)\)</span>,</p>
+<div class="math">
+\[Y_l^m(\theta,\phi) = \sqrt{\frac{2l+1}{4\pi}\frac{(l-m)!}{(l+m)!}}
+    P_l^m(\cos \theta) e^{i m \phi}\]</div>
+<p>where <span class="math">\(P_l^m\)</span> is an associated Legendre function (see <a class="reference internal" href="#mpmath.legenp" title="mpmath.legenp"><tt class="xref py py-func docutils literal"><span class="pre">legenp()</span></tt></a>).</p>
+<p>Here <span class="math">\(\theta \in [0, \pi]\)</span> denotes the polar coordinate (ranging
+from the north pole to the south pole) and <span class="math">\(\phi \in [0, 2 \pi]\)</span> denotes the
+azimuthal coordinate on a sphere. Care should be used since many different
+conventions for spherical coordinate variables are used.</p>
+<p>Usually spherical harmonics are considered for <span class="math">\(l \in \mathbb{N}\)</span>,
+<span class="math">\(m \in \mathbb{Z}\)</span>, <span class="math">\(|m| \le l\)</span>. More generally, <span class="math">\(l,m,\theta,\phi\)</span>
+are permitted to be complex numbers.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="#mpmath.spherharm" title="mpmath.spherharm"><tt class="xref py py-func docutils literal"><span class="pre">spherharm()</span></tt></a> returns a complex number, even the value is
+purely real.</p>
+</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Real part of spherical harmonic Y_(4,0)(theta,phi)</span>
+<span class="k">def</span> <span class="nf">Y</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">m</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">):</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">re</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">spherharm</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">)))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+<span class="n">fp</span><span class="o">.</span><span class="n">splot</span><span class="p">(</span><span class="n">Y</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<span class="c"># fp.splot(Y(4,0), [0,fp.pi], [0,2*fp.pi], points=300)</span>
+<span class="c"># fp.splot(Y(4,1), [0,fp.pi], [0,2*fp.pi], points=300)</span>
+<span class="c"># fp.splot(Y(4,2), [0,fp.pi], [0,2*fp.pi], points=300)</span>
+<span class="c"># fp.splot(Y(4,3), [0,fp.pi], [0,2*fp.pi], points=300)</span>
+</pre></div>
+</div>
+<p><span class="math">\(Y_{4,0}\)</span>:</p>
+<img alt="../../../_images/spherharm40.png" src="../../../_images/spherharm40.png" />
+<p><span class="math">\(Y_{4,1}\)</span>:</p>
+<img alt="../../../_images/spherharm41.png" src="../../../_images/spherharm41.png" />
+<p><span class="math">\(Y_{4,2}\)</span>:</p>
+<img alt="../../../_images/spherharm42.png" src="../../../_images/spherharm42.png" />
+<p><span class="math">\(Y_{4,3}\)</span>:</p>
+<img alt="../../../_images/spherharm43.png" src="../../../_images/spherharm43.png" />
+<p><span class="math">\(Y_{4,4}\)</span>:</p>
+<img alt="../../../_images/spherharm44.png" src="../../../_images/spherharm44.png" />
+<p><strong>Examples</strong></p>
+<p>Some low-order spherical harmonics with reference values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">);</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">expj</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(0.2820947917738781434740397 + 0.0j)</span>
+<span class="go">(0.2820947917738781434740397 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">);</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span><span class="o">*</span><span class="n">expj</span><span class="p">(</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<span class="go">(0.1221506279757299803965962 - 0.2115710938304086076055298j)</span>
+<span class="go">(0.1221506279757299803965962 - 0.2115710938304086076055298j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">);</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span><span class="o">*</span><span class="n">expj</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(0.3454941494713354792652446 + 0.0j)</span>
+<span class="go">(0.3454941494713354792652446 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">theta</span><span class="p">,</span><span class="n">phi</span><span class="p">);</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span><span class="o">*</span><span class="n">expj</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<span class="go">(-0.1221506279757299803965962 - 0.2115710938304086076055298j)</span>
+<span class="go">(-0.1221506279757299803965962 - 0.2115710938304086076055298j)</span>
+</pre></div>
+</div>
+<p>With the normalization convention used, the spherical harmonics are orthonormal
+on the unit sphere:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sphere</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dS</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>   <span class="c"># differential element</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="n">fp</span><span class="o">.</span><span class="n">spherharm</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="n">fp</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">spherharm</span><span class="p">(</span><span class="n">l2</span><span class="p">,</span><span class="n">m2</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1</span> <span class="o">=</span> <span class="n">l2</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="n">m1</span> <span class="o">=</span> <span class="n">m2</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="n">Y1</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">Y2</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">dS</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">),</span> <span class="o">*</span><span class="n">sphere</span><span class="p">))</span>
+<span class="go">(1+0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m2</span> <span class="o">=</span> <span class="mi">1</span>    <span class="c"># m1 != m2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">chop</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">:</span> <span class="n">Y1</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">Y2</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">dS</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">p</span><span class="p">),</span> <span class="o">*</span><span class="n">sphere</span><span class="p">)))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Evaluation is accurate for large orders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">750</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">(3.776445785304252879026585e-102 - 5.82441278771834794493484e-102j)</span>
+</pre></div>
+</div>
+<p>Evaluation works with complex parameter values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">spherharm</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(64.44922331113759992154992 + 1981.693919841408089681743j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Orthogonal polynomials</a><ul>
+<li><a class="reference internal" href="#legendre-functions">Legendre functions</a><ul>
+<li><a class="reference internal" href="#legendre"><tt class="docutils literal"><span class="pre">legendre()</span></tt></a></li>
+<li><a class="reference internal" href="#legenp"><tt class="docutils literal"><span class="pre">legenp()</span></tt></a></li>
+<li><a class="reference internal" href="#legenq"><tt class="docutils literal"><span class="pre">legenq()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#chebyshev-polynomials">Chebyshev polynomials</a><ul>
+<li><a class="reference internal" href="#chebyt"><tt class="docutils literal"><span class="pre">chebyt()</span></tt></a></li>
+<li><a class="reference internal" href="#chebyu"><tt class="docutils literal"><span class="pre">chebyu()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#jacobi-polynomials">Jacobi polynomials</a><ul>
+<li><a class="reference internal" href="#jacobi"><tt class="docutils literal"><span class="pre">jacobi()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gegenbauer-polynomials">Gegenbauer polynomials</a><ul>
+<li><a class="reference internal" href="#gegenbauer"><tt class="docutils literal"><span class="pre">gegenbauer()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hermite-polynomials">Hermite polynomials</a><ul>
+<li><a class="reference internal" href="#hermite"><tt class="docutils literal"><span class="pre">hermite()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#laguerre-polynomials">Laguerre polynomials</a><ul>
+<li><a class="reference internal" href="#laguerre"><tt class="docutils literal"><span class="pre">laguerre()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spherical-harmonics">Spherical harmonics</a><ul>
+<li><a class="reference internal" href="#spherharm"><tt class="docutils literal"><span class="pre">spherharm()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="bessel.html"
+                        title="previous chapter">Bessel functions and related functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hypergeometric.html"
+                        title="next chapter">Hypergeometric functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/orthogonal.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hypergeometric.html" title="Hypergeometric functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bessel.html" title="Bessel functions and related functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

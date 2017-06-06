@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="index.html" />
+    <link rel="next" title="SymPy Tutorial" href="tutorial/index.html" />
+    <link rel="prev" title="Welcome to SymPy’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial/index.html" title="SymPy Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to SymPy’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The SymPy CAS can be installed on virtually any computer with Python 2.6 or
+above. SymPy does not require any special Python modules: let us know if you
+have any problems with SymPy on a standard Python install. The current
+recommended method of installation is directly from the source files.
+Alternatively, executables are available for Windows, and some Linux
+distributions have SymPy packages available.</p>
+<div class="section" id="source">
+<h2>Source<a class="headerlink" href="#source" title="Permalink to this headline">¶</a></h2>
+<p>SymPy currently recommends that users install directly from the source files.
+You will first have to download the source files via the archive. Download the
+latest release (tar.gz) from the <a class="reference external" href="https://code.google.com/p/sympy/downloads/list">downloads site</a> and open it with your
+operating system&#8217;s standard decompression utility.</p>
+<p>When downloading the archive, make sure to get the correct version (Python 2 or
+Python 3). If you&#8217;re not sure which one to use, you probably want the Python 2
+version. Note that you can install both if you want.</p>
+<p>After the download is complete, you should have a folder called &#8220;sympy&#8221;. From
+your favorite command line terminal, change directory into that folder and
+execute the following:</p>
+<div class="highlight-python"><pre>$ python setup.py install</pre>
+</div>
+<p>Alternatively, if you don&#8217;t want to install the package onto your computer, you
+may run SymPy with the &#8220;isympy&#8221; console (which automatically imports SymPy
+packages and defines common symbols) by executing within the &#8220;sympy&#8221; folder:</p>
+<div class="highlight-python"><pre>$ ./bin/isympy</pre>
+</div>
+<p>You may now run SymPy statements directly within the Python shell:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;k m n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;f g h&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Function</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="git">
+<h2>Git<a class="headerlink" href="#git" title="Permalink to this headline">¶</a></h2>
+<p>If you are a developer or like to get the latest updates as they come, be sure
+to install from git. To download the repository, execute the following from the
+command line:</p>
+<div class="highlight-python"><pre>$ git clone git://github.com/sympy/sympy.git</pre>
+</div>
+<p>Then, execute either the <span class="math">\(setup.py\)</span> or the <span class="math">\(bin/isympy\)</span> scripts as demonstrated
+above.</p>
+<p>To update to the latest version, go into your repository and execute:</p>
+<div class="highlight-python"><pre>$ git pull origin master</pre>
+</div>
+<p>If you want to install SymPy, but still want to use the git version, you can run
+from your repository:</p>
+<div class="highlight-python"><pre>$ setupegg.py develop</pre>
+</div>
+<p>This will cause the installed version to always point to the version in the git
+directory.</p>
+</div>
+<div class="section" id="anaconda">
+<h2>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h2>
+<p>Although SymPy does not have any hard dependencies, many nice features are
+only enabled when certain libraries are installed.  For example, without
+Matplotlib, only simple text-based plotting is enabled.  With the IPython
+notebook or qtconsole, you can get nicer <span class="math">\(\LaTeX\)</span> printing by running
+<tt class="docutils literal"><span class="pre">%loadext</span> <span class="pre">sympy.interactive.ipythonprinting</span></tt>.  An easy way to get all these
+libraries in addition to SymPy is to install <a class="reference external" href="http://continuum.io/downloads.html">Anaconda</a>, which is a free Python distribution
+from Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and
+many more useful packages for scientific computing.</p>
+</div>
+<div class="section" id="other-methods">
+<h2>Other Methods<a class="headerlink" href="#other-methods" title="Permalink to this headline">¶</a></h2>
+<p>An installation executable (.exe) is available for Windows users at the
+<a class="reference external" href="https://code.google.com/p/sympy/downloads/list">downloads site</a>. In addition, various Linux distributions have SymPy
+available as a package. Others are strongly encouraged to download from source
+(details above).</p>
+</div>
+<div class="section" id="run-sympy">
+<h2>Run SymPy<a class="headerlink" href="#run-sympy" title="Permalink to this headline">¶</a></h2>
+<p>After installation, it is best to verify that your freshly-installed SymPy
+works. To do this, start up Python and import the SymPy libraries:</p>
+<div class="highlight-python"><pre>$ python
+&gt;&gt;&gt; from sympy import *</pre>
+</div>
+<p>From here, execute some simple SymPy statements like the ones below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">log(x)</span>
+</pre></div>
+</div>
+<p>For a starter guide on using SymPy effectively, refer to the <a class="reference internal" href="tutorial/index.html#tutorial"><em>SymPy Tutorial</em></a>.</p>
+</div>
+<div class="section" id="questions">
+<h2>Questions<a class="headerlink" href="#questions" title="Permalink to this headline">¶</a></h2>
+<p>If you have a question about installation or SymPy in general, feel free to
+visit the IRC channel at irc.freenode.net, channel <a class="reference external" href="irc://irc.freenode.net/sympy">#sympy</a>. In addition,
+our <a class="reference external" href="http://groups.google.com/group/sympy">mailing list</a> is an excellent source of community support.</p>
+<p>If you think there&#8217;s a bug or you would like to request a feature, please open
+an <a class="reference external" href="http://code.google.com/p/sympy/issues/list">issue ticket</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#source">Source</a></li>
+<li><a class="reference internal" href="#git">Git</a></li>
+<li><a class="reference internal" href="#anaconda">Anaconda</a></li>
+<li><a class="reference internal" href="#other-methods">Other Methods</a></li>
+<li><a class="reference internal" href="#run-sympy">Run SymPy</a></li>
+<li><a class="reference internal" href="#questions">Questions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to SymPy&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial/index.html"
+                        title="next chapter">SymPy Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tutorial/index.html" title="SymPy Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to SymPy’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.grover &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.grover</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Grover&#39;s algorithm and helper functions.</span>
+
+<span class="sd">Todo:</span>
+
+<span class="sd">* W gate construction (or perhaps -W gate based on Mermin&#39;s book)</span>
+<span class="sd">* Generalize the algorithm for an unknown function that returns 1 on multiple</span>
+<span class="sd">  qubit states, not just one.</span>
+<span class="sd">* Implement _represent_ZGate in OracleGate</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">ComplexSpace</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">UnitaryOperator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">IntQubit</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;OracleGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;WGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;superposition_basis&#39;</span><span class="p">,</span>
+    <span class="s">&#39;grover_iteration&#39;</span><span class="p">,</span>
+    <span class="s">&#39;apply_grover&#39;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="superposition_basis"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.superposition_basis">[docs]</a><span class="k">def</span> <span class="nf">superposition_basis</span><span class="p">(</span><span class="n">nqubits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates an equal superposition of the computational basis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    nqubits : int</span>
+<span class="sd">        The number of qubits.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    state : Qubit</span>
+<span class="sd">        An equal superposition of the computational basis with nqubits.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Create an equal superposition of 2 qubits::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import superposition_basis</span>
+<span class="sd">        &gt;&gt;&gt; superposition_basis(2)</span>
+<span class="sd">        |0&gt;/2 + |1&gt;/2 + |2&gt;/2 + |3&gt;/2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">amp</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">nqubits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">amp</span><span class="o">*</span><span class="n">IntQubit</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nqubits</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">nqubits</span><span class="p">)])</span>
+
+</div>
+<div class="viewcode-block" id="OracleGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.OracleGate">[docs]</a><span class="k">class</span> <span class="nc">OracleGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A black box gate.</span>
+
+<span class="sd">    The gate marks the desired qubits of an unknown function by flipping</span>
+<span class="sd">    the sign of the qubits.  The unknown function returns true when it</span>
+<span class="sd">    finds its desired qubits and false otherwise.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    qubits : int</span>
+<span class="sd">        Number of qubits.</span>
+
+<span class="sd">    oracle : callable</span>
+<span class="sd">        A callable function that returns a boolean on a computational basis.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Apply an Oracle gate that flips the sign of ``|2&gt;`` on different qubits::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qubit import IntQubit</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import OracleGate</span>
+<span class="sd">        &gt;&gt;&gt; f = lambda qubits: qubits == IntQubit(2)</span>
+<span class="sd">        &gt;&gt;&gt; v = OracleGate(2, f)</span>
+<span class="sd">        &gt;&gt;&gt; qapply(v*IntQubit(2))</span>
+<span class="sd">        -|2&gt;</span>
+<span class="sd">        &gt;&gt;&gt; qapply(v*IntQubit(3))</span>
+<span class="sd">        |3&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Initialization/creation</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c"># TODO: args[1] is not a subclass of Basic</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;Insufficient/excessive arguments to Oracle.  Please &#39;</span> <span class="o">+</span>
+                <span class="s">&#39;supply the number of qubits and an unknown function.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">sub_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+        <span class="n">sub_args</span> <span class="o">=</span> <span class="n">UnitaryOperator</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">sub_args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Integer expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">sub_args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Callable expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sub_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This returns the smallest possible Hilbert space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OracleGate.search_function"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.OracleGate.search_function">[docs]</a>    <span class="k">def</span> <span class="nf">search_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The unknown function that helps find the sought after qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OracleGate.targets"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.OracleGate.targets">[docs]</a>    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of target qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Apply</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply_operator_Qubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply this operator to a Qubit subclass.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        qubits : Qubit</span>
+<span class="sd">            The qubit subclass to apply this operator to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        state : Expr</span>
+<span class="sd">            The resulting quantum state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;OracleGate operates on </span><span class="si">%r</span><span class="s"> qubits, got: </span><span class="si">%r</span><span class="s">&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">,</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c"># If function returns 1 on qubits</span>
+            <span class="c"># return the negative of the qubits (flip the sign)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_function</span><span class="p">(</span><span class="n">qubits</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">qubits</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">qubits</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Represent</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_represent_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&quot;Represent for the Oracle has not been implemented yet&quot;</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="WGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.WGate">[docs]</a><span class="k">class</span> <span class="nc">WGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;General n qubit W Gate in Grover&#39;s algorithm.</span>
+
+<span class="sd">    The gate performs the operation ``2|phi&gt;&lt;phi| - 1`` on some qubits.</span>
+<span class="sd">    ``|phi&gt; = (tensor product of n Hadamards)*(|0&gt; with n qubits)``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    nqubits : int</span>
+<span class="sd">        The number of qubits to operate on</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;W&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;W&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;Insufficient/excessive arguments to W gate.  Please &#39;</span> <span class="o">+</span>
+                <span class="s">&#39;supply the number of qubits to operate on.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">UnitaryOperator</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Integer expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">args</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))))</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Apply</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_Qubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        qubits: a set of qubits (Qubit)</span>
+<span class="sd">        Returns: quantum object (quantum expression - QExpr)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;WGate operates on </span><span class="si">%r</span><span class="s"> qubits, got: </span><span class="si">%r</span><span class="s">&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">,</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c"># See &#39;Quantum Computer Science&#39; by David Mermin p.92 -&gt; W|a&gt; result</span>
+        <span class="c"># Return (2/(sqrt(2^n)))|phi&gt; - |a&gt; where |a&gt; is the current basis</span>
+        <span class="c"># state and phi is the superposition of basis states (see function</span>
+        <span class="c"># create_computational_basis above)</span>
+        <span class="n">basis_states</span> <span class="o">=</span> <span class="n">superposition_basis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">)</span>
+        <span class="n">change_to_basis</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">nqubits</span><span class="p">))</span><span class="o">*</span><span class="n">basis_states</span>
+        <span class="k">return</span> <span class="n">change_to_basis</span> <span class="o">-</span> <span class="n">qubits</span>
+
+</div>
+<div class="viewcode-block" id="grover_iteration"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.grover_iteration">[docs]</a><span class="k">def</span> <span class="nf">grover_iteration</span><span class="p">(</span><span class="n">qstate</span><span class="p">,</span> <span class="n">oracle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies one application of the Oracle and W Gate, WV.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    qstate : Qubit</span>
+<span class="sd">        A superposition of qubits.</span>
+<span class="sd">    oracle : OracleGate</span>
+<span class="sd">        The black box operator that flips the sign of the desired basis qubits.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    Qubit : The qubits after applying the Oracle and W gate.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Perform one iteration of grover&#39;s algorithm to see a phase change::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qubit import IntQubit</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import OracleGate</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import superposition_basis</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import grover_iteration</span>
+<span class="sd">        &gt;&gt;&gt; numqubits = 2</span>
+<span class="sd">        &gt;&gt;&gt; basis_states = superposition_basis(numqubits)</span>
+<span class="sd">        &gt;&gt;&gt; f = lambda qubits: qubits == IntQubit(2)</span>
+<span class="sd">        &gt;&gt;&gt; v = OracleGate(numqubits, f)</span>
+<span class="sd">        &gt;&gt;&gt; qapply(grover_iteration(basis_states, v))</span>
+<span class="sd">        |2&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">wgate</span> <span class="o">=</span> <span class="n">WGate</span><span class="p">(</span><span class="n">oracle</span><span class="o">.</span><span class="n">nqubits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wgate</span><span class="o">*</span><span class="n">oracle</span><span class="o">*</span><span class="n">qstate</span>
+
+</div>
+<div class="viewcode-block" id="apply_grover"><a class="viewcode-back" href="../../../../modules/physics/quantum/grover.html#sympy.physics.quantum.grover.apply_grover">[docs]</a><span class="k">def</span> <span class="nf">apply_grover</span><span class="p">(</span><span class="n">oracle</span><span class="p">,</span> <span class="n">nqubits</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies grover&#39;s algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    oracle : callable</span>
+<span class="sd">        The unknown callable function that returns true when applied to the</span>
+<span class="sd">        desired qubits and false otherwise.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    state : Expr</span>
+<span class="sd">        The resulting state after Grover&#39;s algorithm has been iterated.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Apply grover&#39;s algorithm to an even superposition of 2 qubits::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.qubit import IntQubit</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.grover import apply_grover</span>
+<span class="sd">        &gt;&gt;&gt; f = lambda qubits: qubits == IntQubit(2)</span>
+<span class="sd">        &gt;&gt;&gt; qapply(apply_grover(f, 2))</span>
+<span class="sd">        |2&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nqubits</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+            <span class="s">&#39;Grover</span><span class="se">\&#39;</span><span class="s">s algorithm needs nqubits &gt; 0, received </span><span class="si">%r</span><span class="s"> qubits&#39;</span>
+            <span class="o">%</span> <span class="n">nqubits</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">iterations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">iterations</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">nqubits</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">))</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">OracleGate</span><span class="p">(</span><span class="n">nqubits</span><span class="p">,</span> <span class="n">oracle</span><span class="p">)</span>
+    <span class="n">iterated</span> <span class="o">=</span> <span class="n">superposition_basis</span><span class="p">(</span><span class="n">nqubits</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">iterated</span> <span class="o">=</span> <span class="n">grover_iteration</span><span class="p">(</span><span class="n">iterated</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">iterated</span> <span class="o">=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">iterated</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">iterated</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

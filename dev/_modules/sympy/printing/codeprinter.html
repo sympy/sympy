@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.codeprinter &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.codeprinter</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">C</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">_keep_coeff</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.str</span> <span class="kn">import</span> <span class="n">StrPrinter</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.precedence</span> <span class="kn">import</span> <span class="n">precedence</span>
+
+
+<div class="viewcode-block" id="AssignmentError"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.codeprinter.AssignmentError">[docs]</a><span class="k">class</span> <span class="nc">AssignmentError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raised if an assignment variable for a loop is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="CodePrinter"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.codeprinter.CodePrinter">[docs]</a><span class="k">class</span> <span class="nc">CodePrinter</span><span class="p">(</span><span class="n">StrPrinter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The base class for code-printing subclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_doprint_a_piece</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">assign_to</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c"># Here we print an expression that may contain Indexed objects, they</span>
+        <span class="c"># correspond to arrays in the generated code.  The low-level implementation</span>
+        <span class="c"># involves looping over array elements and possibly storing results in temporary</span>
+        <span class="c"># variables or accumulate it in the assign_to object.</span>
+
+        <span class="n">lhs_printed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">assign_to</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c"># Setup loops over non-dummy indices  --  all terms need these</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_expression_indices</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assign_to</span><span class="p">)</span>
+        <span class="n">openloop</span><span class="p">,</span> <span class="n">closeloop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_loop_opening_ending</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+
+        <span class="c"># Setup loops over dummy indices  --  each term needs separate treatment</span>
+        <span class="kn">from</span> <span class="nn">sympy.tensor</span> <span class="kn">import</span> <span class="n">get_contraction_structure</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+        <span class="c"># terms with no summations first</span>
+        <span class="k">if</span> <span class="bp">None</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="p">[</span><span class="bp">None</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># If all terms have summations we must initialize array to Zero</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c"># skip redundant assignments</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="o">!=</span> <span class="n">lhs_printed</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">openloop</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">assign_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_statement</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs_printed</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">closeloop</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dummies</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="c"># then terms with summations</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dummies</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_optimized</span><span class="p">(</span><span class="n">dummies</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+                <span class="n">openloop_d</span><span class="p">,</span> <span class="n">closeloop_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_loop_opening_ending</span><span class="p">(</span>
+                    <span class="n">indices</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">dummies</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">d</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">term</span><span class="p">]]</span>
+                            <span class="o">==</span> <span class="p">[[</span><span class="bp">None</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">term</span><span class="p">]]):</span>
+                        <span class="c"># If one factor in the term has it&#39;s own internal</span>
+                        <span class="c"># contractions, those must be computed first.</span>
+                        <span class="c"># (temporary variables?)</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                            <span class="s">&quot;FIXME: no support for contractions in factor yet&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+
+                        <span class="c"># We need the lhs expression as an accumulator for</span>
+                        <span class="c"># the loops, i.e</span>
+                        <span class="c">#</span>
+                        <span class="c"># for (int d=0; d &lt; dim; d++){</span>
+                        <span class="c">#    lhs[] = lhs[] + term[][d]</span>
+                        <span class="c"># }           ^.................. the accumulator</span>
+                        <span class="c">#</span>
+                        <span class="c"># We check if the expression already contains the</span>
+                        <span class="c"># lhs, and raise an exception if it does, as that</span>
+                        <span class="c"># syntax is currently undefined.  FIXME: What would be</span>
+                        <span class="c"># a good interpretation?</span>
+                        <span class="k">if</span> <span class="n">assign_to</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">AssignmentError</span><span class="p">(</span>
+                                <span class="s">&quot;need assignment variable for loops&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">assign_to</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;FIXME: lhs present in rhs,</span><span class="se">\</span>
+<span class="s">                                this is undefined in CCodePrinter&quot;</span><span class="p">)</span>
+
+                        <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">openloop</span><span class="p">)</span>
+                        <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">openloop_d</span><span class="p">)</span>
+                        <span class="n">text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs_printed</span><span class="p">,</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="p">,</span> <span class="n">assign_to</span> <span class="o">+</span> <span class="n">term</span><span class="p">))</span>
+                        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_statement</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+                        <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">closeloop_d</span><span class="p">)</span>
+                        <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">closeloop</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="k">def</span> <span class="nf">get_expression_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">assign_to</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.tensor</span> <span class="kn">import</span> <span class="n">get_indices</span><span class="p">,</span> <span class="n">get_contraction_structure</span>
+        <span class="n">rinds</span><span class="p">,</span> <span class="n">junk</span> <span class="o">=</span> <span class="n">get_indices</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="n">linds</span><span class="p">,</span> <span class="n">junk</span> <span class="o">=</span> <span class="n">get_indices</span><span class="p">(</span><span class="n">assign_to</span><span class="p">)</span>
+
+        <span class="c"># support broadcast of scalar</span>
+        <span class="k">if</span> <span class="n">linds</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rinds</span><span class="p">:</span>
+            <span class="n">rinds</span> <span class="o">=</span> <span class="n">linds</span>
+        <span class="k">if</span> <span class="n">rinds</span> <span class="o">!=</span> <span class="n">linds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;lhs indices must match non-dummy&quot;</span>
+                    <span class="s">&quot; rhs indices in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_optimized</span><span class="p">(</span><span class="n">rinds</span><span class="p">,</span> <span class="n">assign_to</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sort_optimized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="c"># determine optimized loop order by giving a score to each index</span>
+        <span class="c"># the index with the highest score are put in the innermost loop.</span>
+        <span class="n">score_table</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">score_table</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">arrays</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Indexed</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">indices</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">score_table</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rate_index_position</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">score_table</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_print_NumberSymbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c"># A Number symbol that is not implemented here or with _printmethod</span>
+        <span class="c"># is registered and evaluated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_symbols</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&quot;precision&quot;</span><span class="p">]))))</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c"># dummies must be printed as unique symbols</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">_</span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">dummy_index</span><span class="p">)</span>  <span class="c"># Dummy</span>
+
+    <span class="n">_print_Catalan</span> <span class="o">=</span> <span class="n">_print_NumberSymbol</span>
+    <span class="n">_print_EulerGamma</span> <span class="o">=</span> <span class="n">_print_NumberSymbol</span>
+    <span class="n">_print_GoldenRatio</span> <span class="o">=</span> <span class="n">_print_NumberSymbol</span>
+
+    <span class="k">def</span> <span class="nf">_print_Mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+
+        <span class="n">prec</span> <span class="o">=</span> <span class="n">precedence</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+        <span class="n">c</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_coeff_Mul</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">_keep_coeff</span><span class="p">(</span><span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="s">&quot;-&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># items in the numerator</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># items that are in the denominator (if any)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;old&#39;</span><span class="p">,</span> <span class="s">&#39;none&#39;</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_ordered_factors</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># use make_args in case expr was something like -x -&gt; x</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">Mul</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+        <span class="c"># Gather args for numerator/denominator</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">exp</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Pow</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">-</span><span class="n">item</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Pow</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">-</span><span class="n">item</span><span class="o">.</span><span class="n">exp</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="ow">or</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">]</span>
+
+        <span class="n">a_str</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
+        <span class="n">b_str</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sign</span> <span class="o">+</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a_str</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span> <span class="ow">or</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Add</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">sign</span> <span class="o">+</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="n">a_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b_str</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sign</span> <span class="o">+</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a_str</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">b_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sign</span> <span class="o">+</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">a_str</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_not_supported</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">emptyPrinter</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="c"># The following can not be simply translated into C or Fortran</span>
+    <span class="n">_print_Basic</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_ComplexInfinity</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Derivative</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_dict</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_ExprCondPair</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_GeometryEntity</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Infinity</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Integral</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Interval</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Limit</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_list</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Matrix</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_DeferredVector</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_NaN</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_NegativeInfinity</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Normal</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Order</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_PDF</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_RootOf</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_RootsOf</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_RootSum</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Sample</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_SparseMatrix</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_tuple</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Uniform</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Unit</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_Wild</span> <span class="o">=</span> <span class="n">_print_not_supported</span>
+    <span class="n">_print_WildFunction</span> <span class="o">=</span> <span class="n">_print_not_supported</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

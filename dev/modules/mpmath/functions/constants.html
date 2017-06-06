@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mathematical constants &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Powers and logarithms" href="powers.html" />
+    <link rel="prev" title="Mathematical functions" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="powers.html" title="Powers and logarithms"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Mathematical functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mathematical-constants">
+<h1>Mathematical constants<a class="headerlink" href="#mathematical-constants" title="Permalink to this headline">¶</a></h1>
+<p>Mpmath supports arbitrary-precision computation of various common (and less common) mathematical constants. These constants are implemented as lazy objects that can evaluate to any precision. Whenever the objects are used as function arguments or as operands in arithmetic operations, they automagically evaluate to the current working precision. A lazy number can be converted to a regular <tt class="docutils literal"><span class="pre">mpf</span></tt> using the unary <tt class="docutils literal"><span class="pre">+</span></tt> operator, or by calling it as a function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span>
+<span class="go">&lt;pi: 3.14159~&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span>
+<span class="go">mpf(&#39;6.2831853071795862&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">pi</span>
+<span class="go">mpf(&#39;3.1415926535897931&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="p">()</span>
+<span class="go">mpf(&#39;3.1415926535897931&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span>
+<span class="go">&lt;pi: 3.14159~&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span>
+<span class="go">mpf(&#39;6.283185307179586476925286766559005768394338&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">pi</span>
+<span class="go">mpf(&#39;3.141592653589793238462643383279502884197169&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="p">()</span>
+<span class="go">mpf(&#39;3.141592653589793238462643383279502884197169&#39;)</span>
+</pre></div>
+</div>
+<div class="section" id="exact-constants">
+<h2>Exact constants<a class="headerlink" href="#exact-constants" title="Permalink to this headline">¶</a></h2>
+<p>The predefined objects <tt class="xref py py-data docutils literal"><span class="pre">j</span></tt> (imaginary unit), <tt class="xref py py-data docutils literal"><span class="pre">inf</span></tt> (positive infinity) and <tt class="xref py py-data docutils literal"><span class="pre">nan</span></tt> (not-a-number) are shortcuts to <tt class="xref py py-class docutils literal"><span class="pre">mpc</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">mpf</span></tt> instances with these fixed values.</p>
+</div>
+<div class="section" id="pi-pi">
+<h2>Pi (<tt class="docutils literal"><span class="pre">pi</span></tt>)<a class="headerlink" href="#pi-pi" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.pi">
+<tt class="descclassname">mp.</tt><tt class="descname">pi</tt><em class="property"> = &lt;pi: 3.14159~&gt;</em><a class="headerlink" href="#mpmath.mp.pi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="degree-degree">
+<h2>Degree (<tt class="docutils literal"><span class="pre">degree</span></tt>)<a class="headerlink" href="#degree-degree" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.degree">
+<tt class="descclassname">mp.</tt><tt class="descname">degree</tt><em class="property"> = &lt;1 deg = pi / 180: 0.0174533~&gt;</em><a class="headerlink" href="#mpmath.mp.degree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="base-of-the-natural-logarithm-e">
+<h2>Base of the natural logarithm (<tt class="docutils literal"><span class="pre">e</span></tt>)<a class="headerlink" href="#base-of-the-natural-logarithm-e" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.e">
+<tt class="descclassname">mp.</tt><tt class="descname">e</tt><em class="property"> = &lt;e = exp(1): 2.71828~&gt;</em><a class="headerlink" href="#mpmath.mp.e" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="golden-ratio-phi">
+<h2>Golden ratio (<tt class="docutils literal"><span class="pre">phi</span></tt>)<a class="headerlink" href="#golden-ratio-phi" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.phi">
+<tt class="descclassname">mp.</tt><tt class="descname">phi</tt><em class="property"> = &lt;Golden ratio phi: 1.61803~&gt;</em><a class="headerlink" href="#mpmath.mp.phi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="euler-s-constant-euler">
+<h2>Euler&#8217;s constant (<tt class="docutils literal"><span class="pre">euler</span></tt>)<a class="headerlink" href="#euler-s-constant-euler" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.euler">
+<tt class="descclassname">mp.</tt><tt class="descname">euler</tt><em class="property"> = &lt;Euler's constant: 0.577216~&gt;</em><a class="headerlink" href="#mpmath.mp.euler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="catalan-s-constant-catalan">
+<h2>Catalan&#8217;s constant (<tt class="docutils literal"><span class="pre">catalan</span></tt>)<a class="headerlink" href="#catalan-s-constant-catalan" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.catalan">
+<tt class="descclassname">mp.</tt><tt class="descname">catalan</tt><em class="property"> = &lt;Catalan's constant: 0.915966~&gt;</em><a class="headerlink" href="#mpmath.mp.catalan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="apery-s-constant-apery">
+<h2>Apery&#8217;s constant (<tt class="docutils literal"><span class="pre">apery</span></tt>)<a class="headerlink" href="#apery-s-constant-apery" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.apery">
+<tt class="descclassname">mp.</tt><tt class="descname">apery</tt><em class="property"> = &lt;Apery's constant: 1.20206~&gt;</em><a class="headerlink" href="#mpmath.mp.apery" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="khinchin-s-constant-khinchin">
+<h2>Khinchin&#8217;s constant (<tt class="docutils literal"><span class="pre">khinchin</span></tt>)<a class="headerlink" href="#khinchin-s-constant-khinchin" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.khinchin">
+<tt class="descclassname">mp.</tt><tt class="descname">khinchin</tt><em class="property"> = &lt;Khinchin's constant: 2.68545~&gt;</em><a class="headerlink" href="#mpmath.mp.khinchin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="glaisher-s-constant-glaisher">
+<h2>Glaisher&#8217;s constant (<tt class="docutils literal"><span class="pre">glaisher</span></tt>)<a class="headerlink" href="#glaisher-s-constant-glaisher" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.glaisher">
+<tt class="descclassname">mp.</tt><tt class="descname">glaisher</tt><em class="property"> = &lt;Glaisher's constant: 1.28243~&gt;</em><a class="headerlink" href="#mpmath.mp.glaisher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="mertens-constant-mertens">
+<h2>Mertens constant (<tt class="docutils literal"><span class="pre">mertens</span></tt>)<a class="headerlink" href="#mertens-constant-mertens" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.mertens">
+<tt class="descclassname">mp.</tt><tt class="descname">mertens</tt><em class="property"> = &lt;Mertens' constant: 0.261497~&gt;</em><a class="headerlink" href="#mpmath.mp.mertens" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="twin-prime-constant-twinprime">
+<h2>Twin prime constant (<tt class="docutils literal"><span class="pre">twinprime</span></tt>)<a class="headerlink" href="#twin-prime-constant-twinprime" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="mpmath.mp.twinprime">
+<tt class="descclassname">mp.</tt><tt class="descname">twinprime</tt><em class="property"> = &lt;Twin prime constant: 0.660162~&gt;</em><a class="headerlink" href="#mpmath.mp.twinprime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mathematical constants</a><ul>
+<li><a class="reference internal" href="#exact-constants">Exact constants</a></li>
+<li><a class="reference internal" href="#pi-pi">Pi (<tt class="docutils literal"><span class="pre">pi</span></tt>)</a></li>
+<li><a class="reference internal" href="#degree-degree">Degree (<tt class="docutils literal"><span class="pre">degree</span></tt>)</a></li>
+<li><a class="reference internal" href="#base-of-the-natural-logarithm-e">Base of the natural logarithm (<tt class="docutils literal"><span class="pre">e</span></tt>)</a></li>
+<li><a class="reference internal" href="#golden-ratio-phi">Golden ratio (<tt class="docutils literal"><span class="pre">phi</span></tt>)</a></li>
+<li><a class="reference internal" href="#euler-s-constant-euler">Euler&#8217;s constant (<tt class="docutils literal"><span class="pre">euler</span></tt>)</a></li>
+<li><a class="reference internal" href="#catalan-s-constant-catalan">Catalan&#8217;s constant (<tt class="docutils literal"><span class="pre">catalan</span></tt>)</a></li>
+<li><a class="reference internal" href="#apery-s-constant-apery">Apery&#8217;s constant (<tt class="docutils literal"><span class="pre">apery</span></tt>)</a></li>
+<li><a class="reference internal" href="#khinchin-s-constant-khinchin">Khinchin&#8217;s constant (<tt class="docutils literal"><span class="pre">khinchin</span></tt>)</a></li>
+<li><a class="reference internal" href="#glaisher-s-constant-glaisher">Glaisher&#8217;s constant (<tt class="docutils literal"><span class="pre">glaisher</span></tt>)</a></li>
+<li><a class="reference internal" href="#mertens-constant-mertens">Mertens constant (<tt class="docutils literal"><span class="pre">mertens</span></tt>)</a></li>
+<li><a class="reference internal" href="#twin-prime-constant-twinprime">Twin prime constant (<tt class="docutils literal"><span class="pre">twinprime</span></tt>)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Mathematical functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="powers.html"
+                        title="next chapter">Powers and logarithms</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/constants.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="powers.html" title="Powers and logarithms"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Mathematical functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

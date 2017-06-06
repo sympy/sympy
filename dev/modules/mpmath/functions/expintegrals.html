@@ -1,0 +1,1152 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Exponential integrals and error functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Bessel functions and related functions" href="bessel.html" />
+    <link rel="prev" title="Factorials and gamma functions" href="gamma.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bessel.html" title="Bessel functions and related functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gamma.html" title="Factorials and gamma functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="exponential-integrals-and-error-functions">
+<h1>Exponential integrals and error functions<a class="headerlink" href="#exponential-integrals-and-error-functions" title="Permalink to this headline">¶</a></h1>
+<p>Exponential integrals give closed-form solutions to a large class of commonly occurring transcendental integrals that cannot be evaluated using elementary functions. Integrals of this type include those with an integrand of the form <span class="math">\(t^a e^{t}\)</span> or <span class="math">\(e^{-x^2}\)</span>, the latter giving rise to the Gaussian (or normal) probability distribution.</p>
+<p>The most general function in this section is the incomplete gamma function, to which all others can be reduced. The incomplete gamma function, in turn, can be expressed using hypergeometric functions (see <a class="reference internal" href="hypergeometric.html"><em>Hypergeometric functions</em></a>).</p>
+<div class="section" id="incomplete-gamma-functions">
+<h2>Incomplete gamma functions<a class="headerlink" href="#incomplete-gamma-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gammainc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">gammainc()</span></tt><a class="headerlink" href="#gammainc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.gammainc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">gammainc</tt><big>(</big><em>z</em>, <em>a=0</em>, <em>b=inf</em>, <em>regularized=False</em><big>)</big><a class="headerlink" href="#mpmath.gammainc" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">gammainc(z,</span> <span class="pre">a=0,</span> <span class="pre">b=inf)</span></tt> computes the (generalized) incomplete
+gamma function with integration limits <span class="math">\([a, b]\)</span>:</p>
+<div class="math">
+\[\Gamma(z,a,b) = \int_a^b t^{z-1} e^{-t} \, dt\]</div>
+<p>The generalized incomplete gamma function reduces to the
+following special cases when one or both endpoints are fixed:</p>
+<ul class="simple">
+<li><span class="math">\(\Gamma(z,0,\infty)\)</span> is the standard (&#8220;complete&#8221;)
+gamma function, <span class="math">\(\Gamma(z)\)</span> (available directly
+as the mpmath function <a class="reference internal" href="gamma.html#mpmath.gamma" title="mpmath.gamma"><tt class="xref py py-func docutils literal"><span class="pre">gamma()</span></tt></a>)</li>
+<li><span class="math">\(\Gamma(z,a,\infty)\)</span> is the &#8220;upper&#8221; incomplete gamma
+function, <span class="math">\(\Gamma(z,a)\)</span></li>
+<li><span class="math">\(\Gamma(z,0,b)\)</span> is the &#8220;lower&#8221; incomplete gamma
+function, <span class="math">\(\gamma(z,b)\)</span>.</li>
+</ul>
+<p>Of course, we have
+<span class="math">\(\Gamma(z,0,x) + \Gamma(z,x,\infty) = \Gamma(z)\)</span>
+for all <span class="math">\(z\)</span> and <span class="math">\(x\)</span>.</p>
+<p>Note however that some authors reverse the order of the
+arguments when defining the lower and upper incomplete
+gamma function, so one should be careful to get the correct
+definition.</p>
+<p>If also given the keyword argument <tt class="docutils literal"><span class="pre">regularized=True</span></tt>,
+<a class="reference internal" href="#mpmath.gammainc" title="mpmath.gammainc"><tt class="xref py py-func docutils literal"><span class="pre">gammainc()</span></tt></a> computes the &#8220;regularized&#8221; incomplete gamma
+function</p>
+<div class="math">
+\[P(z,a,b) = \frac{\Gamma(z,a,b)}{\Gamma(z)}.\]</div>
+<p><strong>Examples</strong></p>
+<p>We can compare with numerical quadrature to verify that
+<a class="reference internal" href="#mpmath.gammainc" title="mpmath.gammainc"><tt class="xref py py-func docutils literal"><span class="pre">gammainc()</span></tt></a> computes the integral in the definition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">(0.00977212668627705160602312 - 0.0770637306312989892451977j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="go">(0.00977212668627705160602312 - 0.0770637306312989892451977j)</span>
+</pre></div>
+</div>
+<p>Argument symmetries follow directly from the integral definition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">1.523793388892911312363331</span>
+<span class="go">1.523793388892911312363331</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<p>Evaluation for arbitrarily large arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="go">4.083660630910611272288592e-26</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10000000000000000</span><span class="p">)</span>
+<span class="go">5.290402449901174752972486e-4342944819032375</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mi">1000000</span><span class="o">+</span><span class="mi">1000000</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-1.257913707524362408877881e-434284 + 2.556691003883483531962095e-434284j)</span>
+</pre></div>
+</div>
+<p>Evaluation of a generalized incomplete gamma function automatically chooses
+the representation that gives a more accurate result, depending on which
+parameter is larger:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">10000000</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">10000000</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>   <span class="c"># Bad</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">10000000</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>   <span class="c"># Good</span>
+<span class="go">1.755146243738946045873491e+4771204</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100000001</span><span class="p">)</span> <span class="o">-</span> <span class="n">gammainc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">)</span>   <span class="c"># Bad</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">,</span> <span class="mi">100000001</span><span class="p">)</span>   <span class="c"># Good</span>
+<span class="go">4.078258353474186729184421e-43429441</span>
+</pre></div>
+</div>
+<p>The incomplete gamma functions satisfy simple recurrence
+relations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mf">3.5</span><span class="p">),</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span> <span class="n">z</span><span class="o">*</span><span class="n">gammainc</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
+<span class="go">10.60130296933533459267329</span>
+<span class="go">10.60130296933533459267329</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">a</span><span class="p">);</span> <span class="n">z</span><span class="o">*</span><span class="n">gammainc</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span><span class="o">**</span><span class="n">z</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
+<span class="go">1.030425427232114336470932</span>
+<span class="go">1.030425427232114336470932</span>
+</pre></div>
+</div>
+<p>Evaluation at integers and poles:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">(-0.2214577048967798566234192 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>If <span class="math">\(z\)</span> is an integer, the recurrence reduces the incomplete gamma
+function to <span class="math">\(P(a) \exp(-a) + Q(b) \exp(-b)\)</span> where <span class="math">\(P\)</span> and
+<span class="math">\(Q\)</span> are polynomials:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.1353352832366126918939995</span>
+<span class="go">0.1353352832366126918939995</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">gammainc</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="s">&#39;exp(-1)&#39;</span><span class="p">,</span> <span class="s">&#39;exp(-2)&#39;</span><span class="p">])</span>
+<span class="go">&#39;(326*exp(-1) + (-872)*exp(-2))&#39;</span>
+</pre></div>
+</div>
+<p>The incomplete gamma functions reduce to functions such as
+the exponential integral Ei and the error function for special
+arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span> <span class="o">-</span><span class="n">ei</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">0.00377935240984890647887486</span>
+<span class="go">0.00377935240984890647887486</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gammainc</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">erf</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">1.691806732945198336509541</span>
+<span class="go">1.691806732945198336509541</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="exponential-integrals">
+<h2>Exponential integrals<a class="headerlink" href="#exponential-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ei">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ei()</span></tt><a class="headerlink" href="#ei" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ei">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ei</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.ei" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the exponential integral or Ei-function, <span class="math">\(\mathrm{Ei}(x)\)</span>.
+The exponential integral is defined as</p>
+<div class="math">
+\[\mathrm{Ei}(x) = \int_{-\infty\,}^x \frac{e^t}{t} \, dt.\]</div>
+<p>When the integration range includes <span class="math">\(t = 0\)</span>, the exponential
+integral is interpreted as providing the Cauchy principal value.</p>
+<p>For real <span class="math">\(x\)</span>, the Ei-function behaves roughly like
+<span class="math">\(\mathrm{Ei}(x) \approx \exp(x) + \log(|x|)\)</span>.</p>
+<p>The Ei-function is related to the more general family of exponential
+integral functions denoted by <span class="math">\(E_n\)</span>, which are available as <a class="reference internal" href="#mpmath.expint" title="mpmath.expint"><tt class="xref py py-func docutils literal"><span class="pre">expint()</span></tt></a>.</p>
+<p><strong>Basic examples</strong></p>
+<p>Some basic values and limits are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.89511781635594</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>For <span class="math">\(x &lt; 0\)</span>, the defining integral can be evaluated
+numerically as a reference:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">-0.00377935240984891</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">/</span><span class="n">t</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">])</span>
+<span class="go">-0.00377935240984891</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.ei" title="mpmath.ei"><tt class="xref py py-func docutils literal"><span class="pre">ei()</span></tt></a> supports complex arguments and arbitrary
+precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">10.928374389331410348638445906907535171566338835056</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-4.154091651642689822535359 + 4.294418620024357476985535j)</span>
+</pre></div>
+</div>
+<p><strong>Related functions</strong></p>
+<p>The exponential integral is closely related to the logarithmic
+integral. See <a class="reference internal" href="#mpmath.li" title="mpmath.li"><tt class="xref py py-func docutils literal"><span class="pre">li()</span></tt></a> for additional information.</p>
+<p>The exponential integral is related to the hyperbolic
+and trigonometric integrals (see <a class="reference internal" href="#mpmath.chi" title="mpmath.chi"><tt class="xref py py-func docutils literal"><span class="pre">chi()</span></tt></a>, <a class="reference internal" href="#mpmath.shi" title="mpmath.shi"><tt class="xref py py-func docutils literal"><span class="pre">shi()</span></tt></a>,
+<a class="reference internal" href="#mpmath.ci" title="mpmath.ci"><tt class="xref py py-func docutils literal"><span class="pre">ci()</span></tt></a>, <a class="reference internal" href="#mpmath.si" title="mpmath.si"><tt class="xref py py-func docutils literal"><span class="pre">si()</span></tt></a>) similarly to how the ordinary
+exponential function is related to the hyperbolic and
+trigonometric functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">9.93383257062542</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">shi</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">9.93383257062542</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">ci</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="n">j</span><span class="o">*</span><span class="n">si</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="n">pi</span><span class="o">*</span><span class="n">j</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">9.93383257062542</span>
+</pre></div>
+</div>
+<p>Beware that logarithmic corrections, as in the last example
+above, are required to obtain the correct branch in general.
+For details, see [1].</p>
+<p>The exponential integral is also a special case of the
+hypergeometric function <span class="math">\(\,_2F_2\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="o">*</span><span class="n">hyper</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">ln</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">-</span><span class="n">ln</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">euler</span>
+<span class="go">0.769881289937359</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="go">0.769881289937359</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li>Relations between Ei and other functions:
+<a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/">http://functions.wolfram.com/GammaBetaErf/ExpIntegralEi/27/01/</a></li>
+<li>Abramowitz &amp; Stegun, section 5:
+<a class="reference external" href="http://www.math.sfu.ca/~cbm/aands/page_228.htm">http://www.math.sfu.ca/~cbm/aands/page_228.htm</a></li>
+<li>Asymptotic expansion for Ei:
+<a class="reference external" href="http://mathworld.wolfram.com/En-Function.html">http://mathworld.wolfram.com/En-Function.html</a></li>
+</ol>
+</dd></dl>
+
+</div>
+<div class="section" id="e1">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">e1()</span></tt><a class="headerlink" href="#e1" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.e1">
+<tt class="descclassname">mpmath.</tt><tt class="descname">e1</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.e1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the exponential integral <span class="math">\(\mathrm{E}_1(z)\)</span>, given by</p>
+<div class="math">
+\[\mathrm{E}_1(z) = \int_z^{\infty} \frac{e^{-t}}{t} dt.\]</div>
+<p>This is equivalent to <a class="reference internal" href="#mpmath.expint" title="mpmath.expint"><tt class="xref py py-func docutils literal"><span class="pre">expint()</span></tt></a> with <span class="math">\(n = 1\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Two ways to evaluate this function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e1</span><span class="p">(</span><span class="mf">6.25</span><span class="p">)</span>
+<span class="go">0.0002704758872637179088496194</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mf">6.25</span><span class="p">)</span>
+<span class="go">0.0002704758872637179088496194</span>
+</pre></div>
+</div>
+<p>The E1-function is essentially the same as the Ei-function (<a class="reference internal" href="#mpmath.ei" title="mpmath.ei"><tt class="xref py py-func docutils literal"><span class="pre">ei()</span></tt></a>)
+with negated argument, except for an imaginary branch cut term:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e1</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">0.02491491787026973549562801</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">ei</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">0.02491491787026973549562801</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e1</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">(-7.073765894578600711923552 - 3.141592653589793238462643j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">ei</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">-7.073765894578600711923552</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="expint">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">expint()</span></tt><a class="headerlink" href="#expint" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.expint">
+<tt class="descclassname">mpmath.</tt><tt class="descname">expint</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#mpmath.expint" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="xref py py-func docutils literal"><span class="pre">expint(n,z)()</span></tt> gives the generalized exponential integral
+or En-function,</p>
+<div class="math">
+\[\mathrm{E}_n(z) = \int_1^{\infty} \frac{e^{-zt}}{t^n} dt,\]</div>
+<p>where <span class="math">\(n\)</span> and <span class="math">\(z\)</span> may both be complex numbers. The case with <span class="math">\(n = 1\)</span> is
+also given by <a class="reference internal" href="#mpmath.e1" title="mpmath.e1"><tt class="xref py py-func docutils literal"><span class="pre">e1()</span></tt></a>.</p>
+<p><strong>Examples</strong></p>
+<p>Evaluation at real and complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">6.25</span><span class="p">)</span>
+<span class="go">0.0002704758872637179088496194</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.00299658467335472929656159 + 0.06100816202125885450319632j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="o">-</span><span class="mi">5</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.001803529474663565056945248 - 0.002235061547756185403349091j)</span>
+</pre></div>
+</div>
+<p>At negative integer values of <span class="math">\(n\)</span>, <span class="math">\(E_n(z)\)</span> reduces to a
+rational-exponential function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">fac</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="n">k</span><span class="o">/</span><span class="n">fac</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span>\
+<span class="gp">... </span>    <span class="n">exp</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">584.2604820613019908668219</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">584.2604820613019908668219</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expint</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">115366.5762594725451811138</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">115366.5762594725451811138</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="logarithmic-integral">
+<h2>Logarithmic integral<a class="headerlink" href="#logarithmic-integral" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="li">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">li()</span></tt><a class="headerlink" href="#li" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.li">
+<tt class="descclassname">mpmath.</tt><tt class="descname">li</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.li" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the logarithmic integral or li-function
+<span class="math">\(\mathrm{li}(x)\)</span>, defined by</p>
+<div class="math">
+\[\mathrm{li}(x) = \int_0^x \frac{1}{\log t} \, dt\]</div>
+<p>The logarithmic integral has a singularity at <span class="math">\(x = 1\)</span>.</p>
+<p>Alternatively, <tt class="docutils literal"><span class="pre">li(x,</span> <span class="pre">offset=True)</span></tt> computes the offset
+logarithmic integral (used in number theory)</p>
+<div class="math">
+\[\mathrm{Li}(x) = \int_2^x \frac{1}{\log t} \, dt.\]</div>
+<p>These two functions are related via the simple identity
+<span class="math">\(\mathrm{Li}(x) = \mathrm{li}(x) - \mathrm{li}(2)\)</span>.</p>
+<p>The logarithmic integral should also not be confused with
+the polylogarithm (also denoted by Li), which is implemented
+as <a class="reference internal" href="zeta.html#mpmath.polylog" title="mpmath.polylog"><tt class="xref py py-func docutils literal"><span class="pre">polylog()</span></tt></a>.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1.04516378011749278484458888919</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">li</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1.45136923488338105028396848589</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-1.04516378011749278484458888919</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">5.12043572466980515267839286347</span>
+</pre></div>
+</div>
+<p>The logarithmic integral can be evaluated for arbitrary
+complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(3.1343755504645775265 + 2.6769247817778742392j)</span>
+</pre></div>
+</div>
+<p>The logarithmic integral is related to the exponential integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ei</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">2.1635885946671919729</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">2.1635885946671919729</span>
+</pre></div>
+</div>
+<p>The logarithmic integral grows like <span class="math">\(O(x/\log(x))\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">4.34294481903252e+97</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">4.3619719871407e+97</span>
+</pre></div>
+</div>
+<p>The prime number theorem states that the number of primes less
+than <span class="math">\(x\)</span> is asymptotic to <span class="math">\(\mathrm{Li}(x)\)</span> (equivalently
+<span class="math">\(\mathrm{li}(x)\)</span>). For example, it is known that there are
+exactly 1,925,320,391,606,803,968,923 prime numbers less than
+<span class="math">\(10^{23}\)</span> [1]. The logarithmic integral provides a very
+accurate estimate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">li</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">23</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">1.92532039161405e+21</span>
+</pre></div>
+</div>
+<p>A definite integral is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">li</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">-0.693147180559945</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">ln</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">-0.693147180559945</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://mathworld.wolfram.com/PrimeCountingFunction.html">http://mathworld.wolfram.com/PrimeCountingFunction.html</a></li>
+<li><a class="reference external" href="http://mathworld.wolfram.com/LogarithmicIntegral.html">http://mathworld.wolfram.com/LogarithmicIntegral.html</a></li>
+</ol>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="trigonometric-integrals">
+<h2>Trigonometric integrals<a class="headerlink" href="#trigonometric-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ci">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ci()</span></tt><a class="headerlink" href="#ci" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ci">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ci</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.ci" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cosine integral,</p>
+<div class="math">
+\[\mathrm{Ci}(x) = -\int_x^{\infty} \frac{\cos t}{t}\,dt
+= \gamma + \log x + \int_0^x \frac{\cos t - 1}{t}\,dt\]</div>
+<p><strong>Examples</strong></p>
+<p>Some values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.3374039229009681346626462</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0.07366791204642548599010096</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">(0.0 + 3.141592653589793238462643j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.408292501520849518759125 - 2.983617742029605093121118j)</span>
+</pre></div>
+</div>
+<p>The cosine integral behaves roughly like the sinc function
+(see <a class="reference internal" href="trigonometric.html#mpmath.sinc" title="mpmath.sinc"><tt class="xref py py-func docutils literal"><span class="pre">sinc()</span></tt></a>) for large real <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-4.875060251748226537857298e-11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinc</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-4.875060250875106915277943e-11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">limit</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="n">inf</span><span class="p">))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>It has infinitely many roots on the positive real axis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.6165054856207162337971104</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.384180422551186426397851</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for <span class="math">\(z\)</span> anywhere in the complex plane:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(4.449410587611035724984376e+434287 + 9.75744874290013526417059e+434287j)</span>
+</pre></div>
+</div>
+<p>We can evaluate the defining integral as a reference:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">/</span><span class="n">t</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-0.190029749656644</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">-0.190029749656644</span>
+</pre></div>
+</div>
+<p>Some infinite series can be evaluated using the
+cosine integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">fac</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">-0.239811742000565</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ci</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">euler</span>
+<span class="go">-0.239811742000565</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="si">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">si()</span></tt><a class="headerlink" href="#si" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.si">
+<tt class="descclassname">mpmath.</tt><tt class="descname">si</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.si" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the sine integral,</p>
+<div class="math">
+\[\mathrm{Si}(x) = \int_0^x \frac{\sin t}{t}\,dt.\]</div>
+<p>The sine integral is thus the antiderivative of the sinc
+function (see <a class="reference internal" href="trigonometric.html#mpmath.sinc" title="mpmath.sinc"><tt class="xref py py-func docutils literal"><span class="pre">sinc()</span></tt></a>).</p>
+<p><strong>Examples</strong></p>
+<p>Some values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.9460830703671830149413533</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-0.9460830703671830149413533</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">1.851937051982466170361053</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(4.547513889562289219853204 + 1.399196580646054789459839j)</span>
+</pre></div>
+</div>
+<p>The sine integral approaches <span class="math">\(\pi/2\)</span> for large real <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">1.570796326707584656968511</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span>
+<span class="go">1.570796326794896619231322</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for <span class="math">\(z\)</span> anywhere in the complex plane:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(-9.75744874290013526417059e+434287 + 4.449410587611035724984376e+434287j)</span>
+</pre></div>
+</div>
+<p>We can evaluate the defining integral as a reference:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sinc</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">1.54993124494467</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">1.54993124494467</span>
+</pre></div>
+</div>
+<p>Some infinite series can be evaluated using the
+sine integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">/</span><span class="p">(</span><span class="n">fac</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">0.946083070367183</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">si</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.946083070367183</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="hyperbolic-integrals">
+<h2>Hyperbolic integrals<a class="headerlink" href="#hyperbolic-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="chi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">chi()</span></tt><a class="headerlink" href="#chi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.chi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">chi</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.chi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the hyperbolic cosine integral, defined
+in analogy with the cosine integral (see <a class="reference internal" href="#mpmath.ci" title="mpmath.ci"><tt class="xref py py-func docutils literal"><span class="pre">ci()</span></tt></a>) as</p>
+<div class="math">
+\[\mathrm{Chi}(x) = -\int_x^{\infty} \frac{\cosh t}{t}\,dt
+= \gamma + \log x + \int_0^x \frac{\cosh t - 1}{t}\,dt\]</div>
+<p>Some values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.8378669409802082408946786</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.5238225713898644064509583</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.1683628683277204662429321 + 2.625115880451325002151688j)</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for <span class="math">\(z\)</span> anywhere in the complex plane:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">chi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(4.449410587611035724984376e+434287 - 9.75744874290013526417059e+434287j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="shi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">shi()</span></tt><a class="headerlink" href="#shi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.shi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">shi</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.shi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the hyperbolic sine integral, defined
+in analogy with the sine integral (see <a class="reference internal" href="#mpmath.si" title="mpmath.si"><tt class="xref py py-func docutils literal"><span class="pre">si()</span></tt></a>) as</p>
+<div class="math">
+\[\mathrm{Shi}(x) = \int_0^x \frac{\sinh t}{t}\,dt.\]</div>
+<p>Some values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.057250875375728514571842</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1.057250875375728514571842</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.1931890762719198291678095 + 2.645432555362369624818525j)</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for <span class="math">\(z\)</span> anywhere in the complex plane:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">shi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(4.449410587611035724984376e+434287 - 9.75744874290013526417059e+434287j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="error-functions">
+<h2>Error functions<a class="headerlink" href="#error-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="erf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">erf()</span></tt><a class="headerlink" href="#erf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.erf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">erf</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.erf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the error function, <span class="math">\(\mathrm{erf}(x)\)</span>. The error
+function is the normalized antiderivative of the Gaussian function
+<span class="math">\(\exp(-t^2)\)</span>. More precisely,</p>
+<div class="math">
+\[\mathrm{erf}(x) = \frac{2}{\sqrt \pi} \int_0^x \exp(-t^2) \,dt\]</div>
+<p><strong>Basic examples</strong></p>
+<p>Simple values and limits include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.842700792949715</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-0.842700792949715</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-1.0</span>
+</pre></div>
+</div>
+<p>For large real <span class="math">\(x\)</span>, <span class="math">\(\mathrm{erf}(x)\)</span> approaches 1 very
+rapidly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.999977909503001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">0.999999999998463</span>
+</pre></div>
+</div>
+<p>The error function is an odd function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">erf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+<span class="go">[0.0, 1.12838, 0.0, -0.376126, 0.0, 0.112838]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.erf" title="mpmath.erf"><tt class="xref py py-func docutils literal"><span class="pre">erf()</span></tt></a> implements arbitrary-precision evaluation and
+supports complex numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.52049987781304653768274665389196452873645157575796</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.316151281697947644880271 + 0.1904534692378346862841089j)</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for large arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="s">&#39;1e1000&#39;</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="s">&#39;-1e1000&#39;</span><span class="p">)</span>
+<span class="go">-1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="s">&#39;1e-1000&#39;</span><span class="p">)</span>
+<span class="go">1.128379167095512573896159e-1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="s">&#39;1e7j&#39;</span><span class="p">)</span>
+<span class="go">(0.0 + 8.593897639029319267398803e+43429448190317j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="s">&#39;1e7+1e7j&#39;</span><span class="p">)</span>
+<span class="go">(0.9999999858172446172631323 + 3.728805278735270407053139e-8j)</span>
+</pre></div>
+</div>
+<p><strong>Related functions</strong></p>
+<p>See also <a class="reference internal" href="#mpmath.erfc" title="mpmath.erfc"><tt class="xref py py-func docutils literal"><span class="pre">erfc()</span></tt></a>, which is more accurate for large <span class="math">\(x\)</span>,
+and <a class="reference internal" href="#mpmath.erfi" title="mpmath.erfi"><tt class="xref py py-func docutils literal"><span class="pre">erfi()</span></tt></a> which gives the antiderivative of
+<span class="math">\(\exp(t^2)\)</span>.</p>
+<p>The Fresnel integrals <a class="reference internal" href="#mpmath.fresnels" title="mpmath.fresnels"><tt class="xref py py-func docutils literal"><span class="pre">fresnels()</span></tt></a> and <a class="reference internal" href="#mpmath.fresnelc" title="mpmath.fresnelc"><tt class="xref py py-func docutils literal"><span class="pre">fresnelc()</span></tt></a>
+are also related to the error function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="erfc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">erfc()</span></tt><a class="headerlink" href="#erfc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.erfc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">erfc</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.erfc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the complementary error function,
+<span class="math">\(\mathrm{erfc}(x) = 1-\mathrm{erf}(x)\)</span>.
+This function avoids cancellation that occurs when naively
+computing the complementary error function as <tt class="docutils literal"><span class="pre">1-erf(x)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span> <span class="o">-</span> <span class="n">erf</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfc</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">2.08848758376254e-45</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.erfc" title="mpmath.erfc"><tt class="xref py py-func docutils literal"><span class="pre">erfc()</span></tt></a> works accurately even for ludicrously large
+arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erfc</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">4.3504398860243e-43429448190325182776</span>
+</pre></div>
+</div>
+<p>Complex arguments are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erfc</span><span class="p">(</span><span class="mi">500</span><span class="o">+</span><span class="mi">50</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.19739830969552e-107492 + 1.46072418957528e-107491j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="erfi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">erfi()</span></tt><a class="headerlink" href="#erfi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.erfi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">erfi</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.erfi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the imaginary error function, <span class="math">\(\mathrm{erfi}(x)\)</span>.
+The imaginary error function is defined in analogy with the
+error function, but with a positive sign in the integrand:</p>
+<div class="math">
+\[\mathrm{erfi}(x) = \frac{2}{\sqrt \pi} \int_0^x \exp(t^2) \,dt\]</div>
+<p>Whereas the error function rapidly converges to 1 as <span class="math">\(x\)</span> grows,
+the imaginary error function rapidly diverges to infinity.
+The functions are related as
+<span class="math">\(\mathrm{erfi}(x) = -i\,\mathrm{erf}(ix)\)</span> for all complex
+numbers <span class="math">\(x\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.65042575879754</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1.65042575879754</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-inf</span>
+</pre></div>
+</div>
+<p>Note the symmetry between erf and erfi:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 + 0.999977909503001j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.999977909503001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.536643565778565 - 5.04914370344703j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-5.04914370344703 - 0.536643565778565j)</span>
+</pre></div>
+</div>
+<p>Large arguments are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">1.71130938718796e+434291</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">7.3167287567024e+43429448190325182754</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-7.3167287567024e+43429448190325182754</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">1000</span><span class="o">-</span><span class="mi">500</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(2.49895233563961e+325717 + 2.6846779342253e+325717j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="mi">100000</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 + 1.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfi</span><span class="p">(</span><span class="o">-</span><span class="mi">100000</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 - 1.0j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="erfinv">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">erfinv()</span></tt><a class="headerlink" href="#erfinv" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.erfinv">
+<tt class="descclassname">mpmath.</tt><tt class="descname">erfinv</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.erfinv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the inverse error function, satisfying</p>
+<div class="math">
+\[\mathrm{erf}(\mathrm{erfinv}(x)) =
+\mathrm{erfinv}(\mathrm{erf}(x)) = x.\]</div>
+<p>This function is defined only for <span class="math">\(-1 \le x \le 1\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Special values include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfinv</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfinv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfinv</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-inf</span>
+</pre></div>
+</div>
+<p>The domain is limited to the standard interval:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erfinv</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">erfinv(x) is defined only for -1 &lt;= x &lt;= 1</span>
+</pre></div>
+</div>
+<p>It is simple to check that <a class="reference internal" href="#mpmath.erfinv" title="mpmath.erfinv"><tt class="xref py py-func docutils literal"><span class="pre">erfinv()</span></tt></a> computes inverse values of
+<a class="reference internal" href="#mpmath.erf" title="mpmath.erf"><tt class="xref py py-func docutils literal"><span class="pre">erf()</span></tt></a> as promised:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="n">erfinv</span><span class="p">(</span><span class="mf">0.75</span><span class="p">))</span>
+<span class="go">0.75</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erf</span><span class="p">(</span><span class="n">erfinv</span><span class="p">(</span><span class="o">-</span><span class="mf">0.995</span><span class="p">))</span>
+<span class="go">-0.995</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.erfinv" title="mpmath.erfinv"><tt class="xref py py-func docutils literal"><span class="pre">erfinv()</span></tt></a> supports arbitrary-precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">erf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">0.99532226501895273416206925636725292861089179704006</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">erfinv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p>A definite integral involving the inverse error function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">erfinv</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.564189583547756</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0.564189583547756</span>
+</pre></div>
+</div>
+<p>The inverse error function can be used to generate random numbers
+with a Gaussian distribution (although this is a relatively
+inefficient algorithm):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">([</span><span class="n">erfinv</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">rand</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)])</span> 
+<span class="go">[-0.586747, 1.10233, -0.376796, 0.926037, -0.708142, -0.732012]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="the-normal-distribution">
+<h2>The normal distribution<a class="headerlink" href="#the-normal-distribution" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="npdf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">npdf()</span></tt><a class="headerlink" href="#npdf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.npdf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">npdf</tt><big>(</big><em>x</em>, <em>mu=0</em>, <em>sigma=1</em><big>)</big><a class="headerlink" href="#mpmath.npdf" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">npdf(x,</span> <span class="pre">mu=0,</span> <span class="pre">sigma=1)</span></tt> evaluates the probability density
+function of a normal distribution with mean value <span class="math">\(\mu\)</span>
+and variance <span class="math">\(\sigma^2\)</span>.</p>
+<p>Elementary properties of the probability distribution can
+be verified using numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">npdf</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">npdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">npdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">0.5</span>
+</pre></div>
+</div>
+<p>See also <a class="reference internal" href="#mpmath.ncdf" title="mpmath.ncdf"><tt class="xref py py-func docutils literal"><span class="pre">ncdf()</span></tt></a>, which gives the cumulative
+distribution.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="ncdf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ncdf()</span></tt><a class="headerlink" href="#ncdf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ncdf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ncdf</tt><big>(</big><em>x</em>, <em>mu=0</em>, <em>sigma=1</em><big>)</big><a class="headerlink" href="#mpmath.ncdf" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">ncdf(x,</span> <span class="pre">mu=0,</span> <span class="pre">sigma=1)</span></tt> evaluates the cumulative distribution
+function of a normal distribution with mean value <span class="math">\(\mu\)</span>
+and variance <span class="math">\(\sigma^2\)</span>.</p>
+<p>See also <a class="reference internal" href="#mpmath.npdf" title="mpmath.npdf"><tt class="xref py py-func docutils literal"><span class="pre">npdf()</span></tt></a>, which gives the probability density.</p>
+<p>Elementary properties include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ncdf</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ncdf</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ncdf</span><span class="p">(</span><span class="o">+</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>The cumulative distribution is the integral of the density
+function having identical mu and sigma:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">ncdf</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">0.053990966513188</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">npdf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.053990966513188</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">ncdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">0.107981933026376</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">npdf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.107981933026376</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="fresnel-integrals">
+<h2>Fresnel integrals<a class="headerlink" href="#fresnel-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fresnels">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fresnels()</span></tt><a class="headerlink" href="#fresnels" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fresnels">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fresnels</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.fresnels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Fresnel sine integral</p>
+<div class="math">
+\[S(x) = \int_0^x \sin\left(\frac{\pi t^2}{2}\right) \,dt\]</div>
+<p>Note that some sources define this function
+without the normalization factor <span class="math">\(\pi/2\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.4382591473903547660767567</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(36.72546488399143842838788 + 15.58775110440458732748279j)</span>
+</pre></div>
+</div>
+<p>Comparing with the definition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fresnels</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.4963129989673750360976123</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">0.4963129989673750360976123</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fresnelc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fresnelc()</span></tt><a class="headerlink" href="#fresnelc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fresnelc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fresnelc</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.fresnelc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Fresnel cosine integral</p>
+<div class="math">
+\[C(x) = \int_0^x \cos\left(\frac{\pi t^2}{2}\right) \,dt\]</div>
+<p>Note that some sources define this function
+without the normalization factor <span class="math">\(\pi/2\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.7798934003768228294742064</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(16.08787137412548041729489 - 36.22568799288165021578758j)</span>
+</pre></div>
+</div>
+<p>Comparing with the definition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fresnelc</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.6057207892976856295561611</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">0.6057207892976856295561611</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Exponential integrals and error functions</a><ul>
+<li><a class="reference internal" href="#incomplete-gamma-functions">Incomplete gamma functions</a><ul>
+<li><a class="reference internal" href="#gammainc"><tt class="docutils literal"><span class="pre">gammainc()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exponential-integrals">Exponential integrals</a><ul>
+<li><a class="reference internal" href="#ei"><tt class="docutils literal"><span class="pre">ei()</span></tt></a></li>
+<li><a class="reference internal" href="#e1"><tt class="docutils literal"><span class="pre">e1()</span></tt></a></li>
+<li><a class="reference internal" href="#expint"><tt class="docutils literal"><span class="pre">expint()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logarithmic-integral">Logarithmic integral</a><ul>
+<li><a class="reference internal" href="#li"><tt class="docutils literal"><span class="pre">li()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trigonometric-integrals">Trigonometric integrals</a><ul>
+<li><a class="reference internal" href="#ci"><tt class="docutils literal"><span class="pre">ci()</span></tt></a></li>
+<li><a class="reference internal" href="#si"><tt class="docutils literal"><span class="pre">si()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hyperbolic-integrals">Hyperbolic integrals</a><ul>
+<li><a class="reference internal" href="#chi"><tt class="docutils literal"><span class="pre">chi()</span></tt></a></li>
+<li><a class="reference internal" href="#shi"><tt class="docutils literal"><span class="pre">shi()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#error-functions">Error functions</a><ul>
+<li><a class="reference internal" href="#erf"><tt class="docutils literal"><span class="pre">erf()</span></tt></a></li>
+<li><a class="reference internal" href="#erfc"><tt class="docutils literal"><span class="pre">erfc()</span></tt></a></li>
+<li><a class="reference internal" href="#erfi"><tt class="docutils literal"><span class="pre">erfi()</span></tt></a></li>
+<li><a class="reference internal" href="#erfinv"><tt class="docutils literal"><span class="pre">erfinv()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-normal-distribution">The normal distribution</a><ul>
+<li><a class="reference internal" href="#npdf"><tt class="docutils literal"><span class="pre">npdf()</span></tt></a></li>
+<li><a class="reference internal" href="#ncdf"><tt class="docutils literal"><span class="pre">ncdf()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fresnel-integrals">Fresnel integrals</a><ul>
+<li><a class="reference internal" href="#fresnels"><tt class="docutils literal"><span class="pre">fresnels()</span></tt></a></li>
+<li><a class="reference internal" href="#fresnelc"><tt class="docutils literal"><span class="pre">fresnelc()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gamma.html"
+                        title="previous chapter">Factorials and gamma functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bessel.html"
+                        title="next chapter">Bessel functions and related functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/expintegrals.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="bessel.html" title="Bessel functions and related functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gamma.html" title="Factorials and gamma functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

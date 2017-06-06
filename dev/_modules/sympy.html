@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SymPy is a Python library for symbolic mathematics. It aims to become a</span>
+<span class="sd">full-featured computer algebra system (CAS) while keeping the code as</span>
+<span class="sd">simple as possible in order to be comprehensible and easily extensible.</span>
+<span class="sd">SymPy is written entirely in Python and does not require any external</span>
+<span class="sd">libraries, except optionally for plotting support.</span>
+
+<span class="sd">See the webpage for more information and documentation:</span>
+
+<span class="sd">    http://code.google.com/p/sympy/&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.7.3&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;Python Version 2.6 or above is required for SymPy.&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>  <span class="c"># Python 3</span>
+    <span class="k">pass</span>
+    <span class="c"># Here we can also check for specific Python 3 versions, if needed</span>
+
+<span class="k">del</span> <span class="n">sys</span>
+
+
+<span class="k">def</span> <span class="nf">__sympy_debug</span><span class="p">():</span>
+    <span class="c"># helper function so we don&#39;t import os globally</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s">&#39;SYMPY_DEBUG&#39;</span><span class="p">,</span> <span class="s">&#39;False&#39;</span><span class="p">))</span>
+<span class="n">SYMPY_DEBUG</span> <span class="o">=</span> <span class="n">__sympy_debug</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.logic</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.assumptions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.polys</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.series</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.functions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.ntheory</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.concrete</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.simplify</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.sets</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.solvers</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.matrices</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.geometry</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.integrals</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.tensor</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.parsing</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="c"># Adds about .04-.05 seconds of import time</span>
+<span class="c"># from combinatorics import *</span>
+<span class="c"># This module is slow to import:</span>
+<span class="c">#from physics import units</span>
+<span class="kn">from</span> <span class="nn">.plotting</span> <span class="kn">import</span> <span class="n">plot</span><span class="p">,</span> <span class="n">Plot</span><span class="p">,</span> <span class="n">textplot</span><span class="p">,</span> <span class="n">plot_backends</span><span class="p">,</span> <span class="n">plot_implicit</span>
+<span class="kn">from</span> <span class="nn">.printing</span> <span class="kn">import</span> <span class="n">pretty</span><span class="p">,</span> <span class="n">pretty_print</span><span class="p">,</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">pprint_use_unicode</span><span class="p">,</span> \
+    <span class="n">pprint_try_use_unicode</span><span class="p">,</span> <span class="n">print_gtk</span><span class="p">,</span> <span class="n">print_tree</span><span class="p">,</span> <span class="n">pager_print</span><span class="p">,</span> <span class="n">TableForm</span>
+<span class="kn">from</span> <span class="nn">.printing</span> <span class="kn">import</span> <span class="n">ccode</span><span class="p">,</span> <span class="n">fcode</span><span class="p">,</span> <span class="n">jscode</span><span class="p">,</span> <span class="n">latex</span><span class="p">,</span> <span class="n">preview</span>
+<span class="kn">from</span> <span class="nn">.printing</span> <span class="kn">import</span> <span class="n">python</span><span class="p">,</span> <span class="n">print_python</span><span class="p">,</span> <span class="n">srepr</span><span class="p">,</span> <span class="n">sstr</span><span class="p">,</span> <span class="n">sstrrepr</span>
+<span class="kn">from</span> <span class="nn">.interactive</span> <span class="kn">import</span> <span class="n">init_session</span><span class="p">,</span> <span class="n">init_printing</span>
+
+<span class="n">evalf</span><span class="o">.</span><span class="n">_create_evalf_table</span><span class="p">()</span>
+
+<span class="c"># This is slow to import:</span>
+<span class="c">#import abc</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

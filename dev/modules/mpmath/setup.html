@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Setting up mpmath &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="index.html" />
+    <link rel="next" title="Basic usage" href="basics.html" />
+    <link rel="prev" title="Welcome to mpmath’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to mpmath’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="setting-up-mpmath">
+<h1>Setting up mpmath<a class="headerlink" href="#setting-up-mpmath" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="download-and-installation">
+<h2>Download and installation<a class="headerlink" href="#download-and-installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installer">
+<h3>Installer<a class="headerlink" href="#installer" title="Permalink to this headline">¶</a></h3>
+<p>The mpmath setup files can be downloaded from the <a class="reference external" href="http://code.google.com/p/mpmath/downloads/list">mpmath download page</a> or the <a class="reference external" href="http://pypi.python.org/pypi/mpmath/">Python Package Index</a>. Download the source package (available as both .zip and .tar.gz), extract it, open the extracted directory, and run</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt></div></blockquote>
+<p>If you are using Windows, you can download the binary installer</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">mpmath-(version).win32.exe</span></tt></div></blockquote>
+<p>from the mpmath website or the Python Package Index. Run the installer and follow the instructions.</p>
+</div>
+<div class="section" id="using-setuptools">
+<h3>Using setuptools<a class="headerlink" href="#using-setuptools" title="Permalink to this headline">¶</a></h3>
+<p>If you have <a class="reference external" href="http://pypi.python.org/pypi/setuptools">setuptools</a> installed, you can download and install mpmath in one step by running:</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">easy_install</span> <span class="pre">mpmath</span></tt></div></blockquote>
+<p>or</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">easy_install</span> <span class="pre">mpmath</span></tt></div></blockquote>
+<p>If you have an old version of mpmath installed already, you may have to pass <tt class="docutils literal"><span class="pre">easy_install</span></tt> the <tt class="docutils literal"><span class="pre">-U</span></tt> flag to force an upgrade.</p>
+</div>
+<div class="section" id="debian-ubuntu">
+<h3>Debian/Ubuntu<a class="headerlink" href="#debian-ubuntu" title="Permalink to this headline">¶</a></h3>
+<p>Debian and Ubuntu users can install mpmath with</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-mpmath</span></tt></div></blockquote>
+<p>See <a class="reference external" href="http://packages.debian.org/python-mpmath">debian</a> and <a class="reference external" href="https://launchpad.net/ubuntu/+source/mpmath">ubuntu</a> package information; please verify that you are getting the latest version.</p>
+</div>
+<div class="section" id="opensuse">
+<h3>OpenSUSE<a class="headerlink" href="#opensuse" title="Permalink to this headline">¶</a></h3>
+<p>Mpmath is provided in the &#8220;Science&#8221; repository for all recent versions of <a class="reference external" href="http://www.opensuse.org/">openSUSE</a>. To add this repository to the YAST software management tool, see <a class="reference external" href="http://en.opensuse.org/SDB:Add_package_repositories">http://en.opensuse.org/SDB:Add_package_repositories</a></p>
+<p>Look up <a class="reference external" href="http://download.opensuse.org/repositories/science/">http://download.opensuse.org/repositories/science/</a> for a list
+of supported OpenSUSE versions and use <a class="reference external" href="http://download.opensuse.org/repositories/science/openSUSE_12.2/">http://download.opensuse.org/repositories/science/openSUSE_12.2/</a>
+(or accordingly for your OpenSUSE version) as the repository URL for YAST.</p>
+</div>
+<div class="section" id="current-development-version">
+<h3>Current development version<a class="headerlink" href="#current-development-version" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference external" href="http://code.google.com/p/mpmath/source/checkout">http://code.google.com/p/mpmath/source/checkout</a> for instructions on how to check out the mpmath Subversion repository. The source code can also be browsed online from the Google Code page.</p>
+</div>
+<div class="section" id="checking-that-it-works">
+<h3>Checking that it works<a class="headerlink" href="#checking-that-it-works" title="Permalink to this headline">¶</a></h3>
+<p>After the setup has completed, you should be able to fire up the interactive Python interpreter and do the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="n">mpf</span><span class="p">(</span><span class="s">&#39;0.5&#39;</span><span class="p">)</span>
+<span class="go">1.4142135623730950488016887242096980785696718753769</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span>
+<span class="go">6.2831853071795864769252867665590057683943387987502</span>
+</pre></div>
+</div>
+<p><em>Note: if you have are upgrading mpmath from an earlier version, you may have to manually uninstall the old version or remove the old files.</em></p>
+</div>
+</div>
+<div class="section" id="using-gmpy-optional">
+<h2>Using gmpy (optional)<a class="headerlink" href="#using-gmpy-optional" title="Permalink to this headline">¶</a></h2>
+<p>By default, mpmath uses Python integers internally. If <a class="reference external" href="http://code.google.com/p/gmpy/">gmpy</a> version 1.03 or later is installed on your system, mpmath will automatically detect it and transparently use gmpy integers intead. This makes mpmath much faster, especially at high precision (approximately above 100 digits).</p>
+<p>To verify that mpmath uses gmpy, check the internal variable <tt class="docutils literal"><span class="pre">BACKEND</span></tt> is not equal to &#8216;python&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mpmath.libmp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmath</span><span class="o">.</span><span class="n">libmp</span><span class="o">.</span><span class="n">BACKEND</span>
+<span class="go">&#39;gmpy&#39;</span>
+</pre></div>
+</div>
+<p>The gmpy mode can be disabled by setting the MPMATH_NOGMPY environment variable. Note that the mode cannot be switched during runtime; mpmath must be re-imported for this change to take effect.</p>
+</div>
+<div class="section" id="running-tests">
+<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<p>It is recommended that you run mpmath&#8217;s full set of unit tests to make sure everything works. The tests are located in the <tt class="docutils literal"><span class="pre">tests</span></tt> subdirectory of the main mpmath directory. They can be run in the interactive interpreter using the <tt class="docutils literal"><span class="pre">runtests()</span></tt> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">mpmath</span>
+<span class="n">mpmath</span><span class="o">.</span><span class="n">runtests</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Alternatively, they can be run from the <tt class="docutils literal"><span class="pre">tests</span></tt> directory via</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">runtests.py</span></tt></div></blockquote>
+<p>The tests should finish in about a minute. If you have <a class="reference external" href="http://psyco.sourceforge.net/">psyco</a> installed, the tests can also be run with</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">runtests.py</span> <span class="pre">-psyco</span></tt></div></blockquote>
+<p>which will cut the running time in half.</p>
+<p>If any test fails, please send a detailed bug report to the <a class="reference external" href="http://code.google.com/p/sympy/issues/list">mpmath issue tracker</a>. The tests can also be run with <a class="reference external" href="http://codespeak.net/py/dist/">py.test</a>. This will sometimes generate more useful information in case of a failure.</p>
+<p>To run the tests with support for gmpy disabled, use</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">runtests.py</span> <span class="pre">-nogmpy</span></tt></div></blockquote>
+<p>To enable extra diagnostics, use</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">runtests.py</span> <span class="pre">-strict</span></tt></div></blockquote>
+</div>
+<div class="section" id="compiling-the-documentation">
+<h2>Compiling the documentation<a class="headerlink" href="#compiling-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>If you downloaded the source package, the text source for these documentation pages is included in the <tt class="docutils literal"><span class="pre">doc</span></tt> directory. The documentation can be compiled to pretty HTML using <a class="reference external" href="http://sphinx.pocoo.org/">Sphinx</a>. Go to the <tt class="docutils literal"><span class="pre">doc</span></tt> directory and run</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">build.py</span></tt></div></blockquote>
+<p>You can also test that all the interactive examples in the documentation work by running</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">python</span> <span class="pre">run_doctest.py</span></tt></div></blockquote>
+<p>and by running the individual <tt class="docutils literal"><span class="pre">.py</span></tt> files in the mpmath source.</p>
+<p>(The doctests may take several minutes.)</p>
+<p>Finally, some additional demo scripts are available in the <tt class="docutils literal"><span class="pre">demo</span></tt> directory included in the source package.</p>
+</div>
+<div class="section" id="mpmath-under-sympy">
+<h2>Mpmath under SymPy<a class="headerlink" href="#mpmath-under-sympy" title="Permalink to this headline">¶</a></h2>
+<p>Mpmath is available as a subpackage of <a class="reference external" href="http://sympy.org">SymPy</a>. With SymPy installed, you can just do</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">import</span> <span class="pre">sympy.mpmath</span> <span class="pre">as</span> <span class="pre">mpmath</span></tt></div></blockquote>
+<p>instead of <tt class="docutils literal"><span class="pre">import</span> <span class="pre">mpmath</span></tt>. Note that the SymPy version of mpmath might not be the most recent. You can make a separate mpmath installation even if SymPy is installed; the two mpmath packages will not interfere with each other.</p>
+</div>
+<div class="section" id="mpmath-under-sage">
+<h2>Mpmath under Sage<a class="headerlink" href="#mpmath-under-sage" title="Permalink to this headline">¶</a></h2>
+<p>Mpmath is a standard package in <a class="reference external" href="http://sagemath.org/">Sage</a>, in version 4.1 or later of Sage.
+Mpmath is preinstalled a regular Python module, and can be imported as usual within Sage:</p>
+<div class="highlight-python"><pre>----------------------------------------------------------------------
+| Sage Version 4.1, Release Date: 2009-07-09                         |
+| Type notebook() for the GUI, and license() for information.        |
+----------------------------------------------------------------------
+sage: import mpmath
+sage: mpmath.mp.dps = 50
+sage: print mpmath.mpf(2) ** 0.5
+1.4142135623730950488016887242096980785696718753769</pre>
+</div>
+<p>The mpmath installation under Sage automatically use Sage integers for asymptotically fast arithmetic,
+so there is no need to install GMPY:</p>
+<div class="highlight-python"><pre>sage: mpmath.libmp.BACKEND
+'sage'</pre>
+</div>
+<p>In Sage, mpmath can alternatively be imported via the interface library
+<tt class="docutils literal"><span class="pre">sage.libs.mpmath.all</span></tt>. For example:</p>
+<div class="highlight-python"><pre>sage: import sage.libs.mpmath.all as mpmath</pre>
+</div>
+<p>This module provides a few extra conversion functions, including <tt class="xref py py-func docutils literal"><span class="pre">call()</span></tt>
+which permits calling any mpmath function with Sage numbers as input, and getting
+Sage <tt class="docutils literal"><span class="pre">RealNumber</span></tt> or <tt class="docutils literal"><span class="pre">ComplexNumber</span></tt> instances
+with the appropriate precision back:</p>
+<div class="highlight-python"><pre>sage: w = mpmath.call(mpmath.erf, 2+3*I, prec=100)
+sage: w
+-20.829461427614568389103088452 + 8.6873182714701631444280787545*I
+sage: type(w)
+&lt;type 'sage.rings.complex_number.ComplexNumber'&gt;
+sage: w.prec()
+100</pre>
+</div>
+<p>See the help for <tt class="docutils literal"><span class="pre">sage.libs.mpmath.all</span></tt> for further information.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Setting up mpmath</a><ul>
+<li><a class="reference internal" href="#download-and-installation">Download and installation</a><ul>
+<li><a class="reference internal" href="#installer">Installer</a></li>
+<li><a class="reference internal" href="#using-setuptools">Using setuptools</a></li>
+<li><a class="reference internal" href="#debian-ubuntu">Debian/Ubuntu</a></li>
+<li><a class="reference internal" href="#opensuse">OpenSUSE</a></li>
+<li><a class="reference internal" href="#current-development-version">Current development version</a></li>
+<li><a class="reference internal" href="#checking-that-it-works">Checking that it works</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-gmpy-optional">Using gmpy (optional)</a></li>
+<li><a class="reference internal" href="#running-tests">Running tests</a></li>
+<li><a class="reference internal" href="#compiling-the-documentation">Compiling the documentation</a></li>
+<li><a class="reference internal" href="#mpmath-under-sympy">Mpmath under SymPy</a></li>
+<li><a class="reference internal" href="#mpmath-under-sage">Mpmath under Sage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to mpmath&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="basics.html"
+                        title="next chapter">Basic usage</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/setup.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to mpmath’s documentation!"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

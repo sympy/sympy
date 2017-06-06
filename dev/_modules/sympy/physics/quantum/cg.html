@@ -1,0 +1,838 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.cg &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.cg</h1><div class="highlight"><pre>
+<span class="c">#TODO:</span>
+<span class="c"># -Implement Clebsch-Gordan symmetries</span>
+<span class="c"># -Improve simplification method</span>
+<span class="c"># -Implement new simpifications</span>
+<span class="sd">&quot;&quot;&quot;Clebsch-Gordon Coefficients.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Add</span><span class="p">,</span> <span class="n">expand</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Sum</span><span class="p">,</span>
+                   <span class="n">symbols</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Wild</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span><span class="p">,</span> <span class="n">stringPict</span>
+
+<span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.wigner</span> <span class="kn">import</span> <span class="n">clebsch_gordan</span><span class="p">,</span> <span class="n">wigner_3j</span><span class="p">,</span> <span class="n">wigner_6j</span><span class="p">,</span> <span class="n">wigner_9j</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;CG&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Wigner3j&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Wigner6j&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Wigner9j&#39;</span><span class="p">,</span>
+    <span class="s">&#39;cg_simp&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># CG Coefficients</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Wigner3j"><a class="viewcode-back" href="../../../../modules/physics/quantum/cg.html#sympy.physics.quantum.cg.Wigner3j">[docs]</a><span class="k">class</span> <span class="nc">Wigner3j</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for the Wigner-3j symbols</span>
+
+<span class="sd">    Wigner 3j-symbols are coefficients determined by the coupling of</span>
+<span class="sd">    two angular momenta. When created, they are expressed as symbolic</span>
+<span class="sd">    quantities that, for numerical parameters, can be evaluated using the</span>
+<span class="sd">    ``.doit()`` method [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    j1, m1, j2, m2, j3, m3 : Number, Symbol</span>
+<span class="sd">        Terms determining the angular momentum of coupled angular momentum</span>
+<span class="sd">        systems.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Declare a Wigner-3j coefficient and calcualte its value</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.cg import Wigner3j</span>
+<span class="sd">        &gt;&gt;&gt; w3j = Wigner3j(6,0,4,0,2,0)</span>
+<span class="sd">        &gt;&gt;&gt; w3j</span>
+<span class="sd">        Wigner3j(6, 0, 4, 0, 2, 0)</span>
+<span class="sd">        &gt;&gt;&gt; w3j.doit()</span>
+<span class="sd">        sqrt(715)/143</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    CG: Clebsch-Gordan coefficients</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">m3</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">m3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">m1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">m2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">m3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="c"># This is modified from the _print_Matrix method</span>
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">((</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">)))</span>
+        <span class="n">hsep</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">vsep</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">maxw</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">])</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">D_row</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">wdelta</span> <span class="o">=</span> <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                <span class="n">wleft</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">//</span><span class="mi">2</span>
+                <span class="n">wright</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">-</span> <span class="n">wleft</span>
+
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wright</span><span class="p">))</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wleft</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">D_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">D_row</span> <span class="o">=</span> <span class="n">s</span>
+                    <span class="k">continue</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">hsep</span><span class="p">))</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">D_row</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vsep</span><span class="p">):</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="n">D_row</span><span class="p">))</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">D</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">r&#39;\left(\begin{array}{ccc} </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> </span><span class="se">\\</span><span class="s"> </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> \end{array}\right)&#39;</span> <span class="o">%</span> \
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_symbolic</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Coefficients must be numerical&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wigner_3j</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="CG"><a class="viewcode-back" href="../../../../modules/physics/quantum/cg.html#sympy.physics.quantum.cg.CG">[docs]</a><span class="k">class</span> <span class="nc">CG</span><span class="p">(</span><span class="n">Wigner3j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for Clebsch-Gordan coefficient</span>
+
+<span class="sd">    Clebsch-Gordan coefficients describe the angular momentum coupling between</span>
+<span class="sd">    two systems. The coefficients give the expansion of a coupled total angular</span>
+<span class="sd">    momentum state and an uncoupled tensor product state. The Clebsch-Gordan</span>
+<span class="sd">    coefficients are defined as [1]_:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\\rangle</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    j1, m1, j2, m2, j3, m3 : Number, Symbol</span>
+<span class="sd">        Terms determining the angular momentum of coupled angular momentum</span>
+<span class="sd">        systems.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Define a Clebsch-Gordan coefficient and evaluate its value</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.cg import CG</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">        &gt;&gt;&gt; cg = CG(S(3)/2, S(3)/2, S(1)/2, -S(1)/2, 1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; cg</span>
+<span class="sd">        CG(3/2, 3/2, 1/2, -1/2, 1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; cg.doit()</span>
+<span class="sd">        sqrt(3)/2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Wigner3j: Wigner-3j symbols</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_symbolic</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Coefficients must be numerical&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clebsch_gordan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">bot</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print_seq</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print_seq</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+
+        <span class="n">pad</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">bot</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="n">bot</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">bot</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">top</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pad</span> <span class="o">==</span> <span class="n">bot</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
+            <span class="n">bot</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">bot</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">pad</span> <span class="o">-</span> <span class="n">bot</span><span class="o">.</span><span class="n">width</span><span class="p">())))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pad</span> <span class="o">==</span> <span class="n">top</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
+            <span class="n">top</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">top</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">pad</span> <span class="o">-</span> <span class="n">top</span><span class="o">.</span><span class="n">width</span><span class="p">())))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="s">&#39;C&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">pad</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="n">bot</span><span class="p">))</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">above</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">m1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">r&#39;C^{</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">}_{</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Wigner6j"><a class="viewcode-back" href="../../../../modules/physics/quantum/cg.html#sympy.physics.quantum.cg.Wigner6j">[docs]</a><span class="k">class</span> <span class="nc">Wigner6j</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for the Wigner-6j symbols</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Wigner3j: Wigner-3j symbols</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">j12</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">j23</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">j12</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">j23</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j12</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j23</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="c"># This is modified from the _print_Matrix method</span>
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">((</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j23</span><span class="p">)))</span>
+        <span class="n">hsep</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">vsep</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">maxw</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">])</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">D_row</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">wdelta</span> <span class="o">=</span> <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                <span class="n">wleft</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">//</span><span class="mi">2</span>
+                <span class="n">wright</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">-</span> <span class="n">wleft</span>
+
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wright</span><span class="p">))</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wleft</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">D_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">D_row</span> <span class="o">=</span> <span class="n">s</span>
+                    <span class="k">continue</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">hsep</span><span class="p">))</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">D_row</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vsep</span><span class="p">):</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="n">D_row</span><span class="p">))</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;{&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;}&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">D</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j23</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">r&#39;\left\{\begin{array}{ccc} </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> </span><span class="se">\\</span><span class="s"> </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> \end{array}\right\}&#39;</span> <span class="o">%</span> \
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_symbolic</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Coefficients must be numerical&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wigner_6j</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Wigner9j"><a class="viewcode-back" href="../../../../modules/physics/quantum/cg.html#sympy.physics.quantum.cg.Wigner9j">[docs]</a><span class="k">class</span> <span class="nc">Wigner9j</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for the Wigner-9j symbols</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Wigner3j: Wigner-3j symbols</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">j12</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">j4</span><span class="p">,</span> <span class="n">j34</span><span class="p">,</span> <span class="n">j13</span><span class="p">,</span> <span class="n">j24</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">,</span> <span class="n">j12</span><span class="p">,</span> <span class="n">j3</span><span class="p">,</span> <span class="n">j4</span><span class="p">,</span> <span class="n">j34</span><span class="p">,</span> <span class="n">j13</span><span class="p">,</span> <span class="n">j24</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j12</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j34</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j13</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j24</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">j</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="c"># This is modified from the _print_Matrix method</span>
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j13</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j4</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j24</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j34</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">)))</span>
+        <span class="n">hsep</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">vsep</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">maxw</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">])</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">D_row</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">wdelta</span> <span class="o">=</span> <span class="n">maxw</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+                <span class="n">wleft</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">//</span><span class="mi">2</span>
+                <span class="n">wright</span> <span class="o">=</span> <span class="n">wdelta</span> <span class="o">-</span> <span class="n">wleft</span>
+
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wright</span><span class="p">))</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">wleft</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">D_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">D_row</span> <span class="o">=</span> <span class="n">s</span>
+                    <span class="k">continue</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">hsep</span><span class="p">))</span>
+                <span class="n">D_row</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D_row</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">D</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">D_row</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vsep</span><span class="p">):</span>
+                <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">below</span><span class="p">(</span><span class="n">D_row</span><span class="p">))</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;{&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;}&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">D</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">j4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j34</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j13</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j24</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">r&#39;\left\{\begin{array}{ccc} </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> </span><span class="se">\\</span><span class="s"> </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> </span><span class="se">\\</span><span class="s"> </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> &amp; </span><span class="si">%s</span><span class="s"> \end{array}\right\}&#39;</span> <span class="o">%</span> \
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_symbolic</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Coefficients must be numerical&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wigner_9j</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">j1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j12</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j34</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j13</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j24</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">j</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="cg_simp"><a class="viewcode-back" href="../../../../modules/physics/quantum/cg.html#sympy.physics.quantum.cg.cg_simp">[docs]</a><span class="k">def</span> <span class="nf">cg_simp</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simplify and combine CG coefficients</span>
+
+<span class="sd">    This function uses various symmetry and properties of sums and</span>
+<span class="sd">    products of Clebsch-Gordan coefficients to simplify statements</span>
+<span class="sd">    involving these terms [1]_.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Simplify the sum over CG(a,alpha,0,0,a,alpha) for all alpha to</span>
+<span class="sd">    2*a+1</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.cg import CG, cg_simp</span>
+<span class="sd">        &gt;&gt;&gt; a = CG(1,1,0,0,1,1)</span>
+<span class="sd">        &gt;&gt;&gt; b = CG(1,0,0,0,1,0)</span>
+<span class="sd">        &gt;&gt;&gt; c = CG(1,-1,0,0,1,-1)</span>
+<span class="sd">        &gt;&gt;&gt; cg_simp(a+b+c)</span>
+<span class="sd">        3</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    CG: Clebsh-Gordan coefficients</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_cg_simp_add</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_cg_simp_sum</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">cg_simp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Pow</span><span class="p">(</span><span class="n">cg_simp</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_cg_simp_add</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="c">#TODO: Improve simplification method</span>
+    <span class="sd">&quot;&quot;&quot;Takes a sum of terms involving Clebsch-Gordan coefficients and</span>
+<span class="sd">    simplifies the terms.</span>
+
+<span class="sd">    First, we create two lists, cg_part, which is all the terms involving CG</span>
+<span class="sd">    coefficients, and other_part, which is all other terms. The cg_part list</span>
+<span class="sd">    is then passed to the simplification methods, which return the new cg_part</span>
+<span class="sd">    and any additional terms that are added to other_part</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cg_part</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">other_part</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">e</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">CG</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+                <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_cg_simp_sum</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+                <span class="n">terms</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+                        <span class="n">terms</span> <span class="o">*=</span> <span class="n">_cg_simp_sum</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">terms</span> <span class="o">*=</span> <span class="n">term</span>
+                <span class="k">if</span> <span class="n">terms</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">CG</span><span class="p">):</span>
+                    <span class="n">cg_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cg_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="n">cg_part</span><span class="p">,</span> <span class="n">other</span> <span class="o">=</span> <span class="n">_check_varsh_871_1</span><span class="p">(</span><span class="n">cg_part</span><span class="p">)</span>
+    <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="n">cg_part</span><span class="p">,</span> <span class="n">other</span> <span class="o">=</span> <span class="n">_check_varsh_871_2</span><span class="p">(</span><span class="n">cg_part</span><span class="p">)</span>
+    <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="n">cg_part</span><span class="p">,</span> <span class="n">other</span> <span class="o">=</span> <span class="n">_check_varsh_872_9</span><span class="p">(</span><span class="n">cg_part</span><span class="p">)</span>
+    <span class="n">other_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">cg_part</span><span class="p">)</span> <span class="o">+</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">other_part</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_871_1</span><span class="p">(</span><span class="n">term_list</span><span class="p">):</span>
+    <span class="c"># Sum( CG(a,alpha,b,0,a,alpha), (alpha, -a, a)) == KroneckerDelta(b,0)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lt</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Wild</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;lt&#39;</span><span class="p">))</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">lt</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="n">simp</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">lt</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">alpha</span>
+    <span class="k">return</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">lt</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_871_2</span><span class="p">(</span><span class="n">term_list</span><span class="p">):</span>
+    <span class="c"># Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a))</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">lt</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Wild</span><span class="p">,</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;lt&#39;</span><span class="p">))</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">lt</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">alpha</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">simp</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">lt</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">alpha</span>
+    <span class="k">return</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">lt</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_872_9</span><span class="p">(</span><span class="n">term_list</span><span class="p">):</span>
+    <span class="c"># Sum( CG(a,alpha,b,beta,c,gamma)*CG(a,alpha&#39;,b,beta&#39;,c,gamma), (gamma, -c, c), (c, abs(a-b), a+b))</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">lt</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Wild</span><span class="p">,</span> <span class="p">(</span>
+        <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;alphap&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="s">&#39;betap&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;gamma&#39;</span><span class="p">,</span> <span class="s">&#39;lt&#39;</span><span class="p">))</span>
+    <span class="c"># Case alpha==alphap, beta==betap</span>
+
+    <span class="c"># For numerical alpha,beta</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">lt</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">simp</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">lt</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">lt</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">))</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span>
+    <span class="n">term_list</span><span class="p">,</span> <span class="n">other1</span> <span class="o">=</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">lt</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+    <span class="c"># For symbolic alpha,beta</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">gamma</span>
+    <span class="n">term_list</span><span class="p">,</span> <span class="n">other2</span> <span class="o">=</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">lt</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+    <span class="c"># Case alpha!=alphap or beta!=betap</span>
+    <span class="c"># Note: this only works with leading term of 1, pattern matching is unable to match when there is a Wild leading term</span>
+    <span class="c"># For numerical alpha,alphap,beta,betap</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">betap</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="n">simp</span> <span class="o">=</span> <span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">)</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">))</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span>
+    <span class="n">term_list</span><span class="p">,</span> <span class="n">other3</span> <span class="o">=</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+    <span class="c"># For symbolic alpha,alphap,beta,betap</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">build_expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">index_expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">gamma</span>
+    <span class="n">term_list</span><span class="p">,</span> <span class="n">other4</span> <span class="o">=</span> <span class="n">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">term_list</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">),</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">alphap</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">betap</span><span class="p">),</span> <span class="n">build_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">term_list</span><span class="p">,</span> <span class="n">other1</span> <span class="o">+</span> <span class="n">other2</span> <span class="o">+</span> <span class="n">other4</span>
+
+
+<span class="k">def</span> <span class="nf">_check_cg_simp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">simp</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">term_list</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">dep_variables</span><span class="p">,</span> <span class="n">build_index_expr</span><span class="p">,</span> <span class="n">index_expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks for simplifications that can be made, returning a tuple of the</span>
+<span class="sd">    simplified list of terms and any terms generated by simplification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr: expression</span>
+<span class="sd">        The expression with Wild terms that will be matched to the terms in</span>
+<span class="sd">        the sum</span>
+
+<span class="sd">    simp: expression</span>
+<span class="sd">        The expression with Wild terms that is substituted in place of the CG</span>
+<span class="sd">        terms in the case of simplification</span>
+
+<span class="sd">    sign: expression</span>
+<span class="sd">        The expression with Wild terms denoting the sign that is on expr that</span>
+<span class="sd">        must match</span>
+
+<span class="sd">    lt: expression</span>
+<span class="sd">        The expression with Wild terms that gives the leading term of the</span>
+<span class="sd">        matched expr</span>
+
+<span class="sd">    term_list: list</span>
+<span class="sd">        A list of all of the terms is the sum to be simplified</span>
+
+<span class="sd">    variables: list</span>
+<span class="sd">        A list of all the variables that appears in expr</span>
+
+<span class="sd">    dep_variables: list</span>
+<span class="sd">        A list of the variables that must match for all the terms in the sum,</span>
+<span class="sd">        i.e. the dependant variables</span>
+
+<span class="sd">    build_index_expr: expression</span>
+<span class="sd">        Expression with Wild terms giving the number of elements in cg_index</span>
+
+<span class="sd">    index_expr: expression</span>
+<span class="sd">        Expression with Wild terms giving the index terms have when storing</span>
+<span class="sd">        them to cg_index</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">other_part</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">term_list</span><span class="p">):</span>
+        <span class="n">sub_1</span> <span class="o">=</span> <span class="n">_check_cg</span><span class="p">(</span><span class="n">term_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">expr</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sub_1</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sympify</span><span class="p">(</span><span class="n">build_index_expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_1</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="n">sub_dep</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">sub_1</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dep_variables</span><span class="p">]</span>
+        <span class="n">cg_index</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">build_index_expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">term_list</span><span class="p">)):</span>
+            <span class="n">sub_2</span> <span class="o">=</span> <span class="n">_check_cg</span><span class="p">(</span><span class="n">term_list</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">dep_variables</span><span class="p">),</span> <span class="n">sign</span><span class="o">=</span><span class="p">(</span><span class="n">sign</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_1</span><span class="p">),</span> <span class="n">sign</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">sub_2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sympify</span><span class="p">(</span><span class="n">index_expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">cg_index</span><span class="p">[</span><span class="n">index_expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">j</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">lt</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_2</span><span class="p">),</span> <span class="n">lt</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_2</span><span class="p">),</span> <span class="n">sign</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dep</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cg_index</span><span class="p">):</span>
+            <span class="n">min_lt</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">cg_index</span> <span class="p">])</span>
+            <span class="n">indicies</span> <span class="o">=</span> <span class="p">[</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">cg_index</span><span class="p">]</span>
+            <span class="n">indicies</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="n">indicies</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+            <span class="p">[</span> <span class="n">term_list</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indicies</span> <span class="p">]</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">cg_index</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">min_lt</span><span class="p">:</span>
+                    <span class="n">term_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_lt</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">other_part</span> <span class="o">+=</span> <span class="n">min_lt</span> <span class="o">*</span> <span class="p">(</span><span class="n">sign</span><span class="o">*</span><span class="n">simp</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">term_list</span><span class="p">,</span> <span class="n">other_part</span>
+
+
+<span class="k">def</span> <span class="nf">_check_cg</span><span class="p">(</span><span class="n">cg_term</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks whether a term matches the given expression&quot;&quot;&quot;</span>
+    <span class="c"># TODO: Check for symmetries</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">cg_term</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">matches</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">sign</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sign</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;sign must be a tuple&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sign</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">sign</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">matches</span><span class="p">):</span>
+            <span class="k">return</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">==</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">matches</span>
+
+
+<span class="k">def</span> <span class="nf">_cg_simp_sum</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">_check_varsh_sum_871_1</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">_check_varsh_sum_871_2</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">_check_varsh_sum_872_4</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">e</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_sum_871_1</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">e</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_sum_871_2</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+        <span class="n">Sum</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="n">alpha</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">match</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">e</span>
+
+
+<span class="k">def</span> <span class="nf">_check_varsh_sum_872_4</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;beta&#39;</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;cp&#39;</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;gamma&#39;</span><span class="p">)</span>
+    <span class="n">gammap</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;gammap&#39;</span><span class="p">)</span>
+    <span class="n">match1</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">*</span><span class="n">CG</span><span class="p">(</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">cp</span><span class="p">,</span> <span class="n">gammap</span><span class="p">),</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">match1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">match1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cp</span><span class="p">)</span><span class="o">*</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">gammap</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">match1</span><span class="p">)</span>
+    <span class="n">match2</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span>
+        <span class="n">CG</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">match2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">match2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">e</span>
+
+
+<span class="k">def</span> <span class="nf">_cg_list</span><span class="p">(</span><span class="n">term</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">CG</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">term</span><span class="p">,),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="n">cg</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">coeff</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Pow</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;term must be CG, Add, Mul or Pow&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Pow</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sympify</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sympify</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="p">[</span> <span class="n">cg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">term</span><span class="p">,),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">term</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">CG</span><span class="p">):</span>
+                <span class="n">cg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coeff</span> <span class="o">*=</span> <span class="n">arg</span>
+        <span class="k">return</span> <span class="n">cg</span><span class="p">,</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">coeff</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

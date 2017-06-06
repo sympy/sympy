@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.utilities.randtest &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.utilities.randtest</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Helpers for randomized testing &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">uniform</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span><span class="p">,</span> <span class="n">nsimplify</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span><span class="p">,</span> <span class="n">as_int</span>
+
+
+<div class="viewcode-block" id="random_complex_number"><a class="viewcode-back" href="../../../modules/utilities/randtest.html#sympy.utilities.randtest.random_complex_number">[docs]</a><span class="k">def</span> <span class="nf">random_complex_number</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rational</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a random complex number.</span>
+
+<span class="sd">    To reduce chance of hitting branch cuts or anything, we guarantee</span>
+<span class="sd">    b &lt;= Im z &lt;= d, a &lt;= Re z &lt;= c</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">uniform</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="n">uniform</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rational</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">B</span>
+    <span class="k">return</span> <span class="n">nsimplify</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">rational</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">nsimplify</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">rational</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="comp"><a class="viewcode-back" href="../../../modules/utilities/randtest.html#sympy.utilities.randtest.comp">[docs]</a><span class="k">def</span> <span class="nf">comp</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a bool indicating whether the error between z1 and z2 is &lt;= tol.</span>
+
+<span class="sd">    If z2 is non-zero and ``|z1| &gt; 1`` the error is normalized by ``|z1|``, so</span>
+<span class="sd">    if you want the absolute error, call this as ``comp(z1 - z2, 0, tol)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">z1</span><span class="p">:</span>
+        <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span> <span class="o">=</span> <span class="n">z2</span><span class="p">,</span> <span class="n">z1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">z1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z1</span> <span class="o">-</span> <span class="n">z2</span><span class="p">)</span>
+    <span class="n">az1</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">z2</span> <span class="ow">and</span> <span class="n">az1</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="o">/</span><span class="n">az1</span> <span class="o">&lt;=</span> <span class="n">tol</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">diff</span> <span class="o">&lt;=</span> <span class="n">tol</span>
+
+</div>
+<div class="viewcode-block" id="test_numerically"><a class="viewcode-back" href="../../../modules/utilities/randtest.html#sympy.utilities.randtest.test_numerically">[docs]</a><span class="k">def</span> <span class="nf">test_numerically</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test numerically that f and g agree when evaluated in the argument z.</span>
+
+<span class="sd">    If z is None, all symbols will be tested. This routine does not test</span>
+<span class="sd">    whether there are Floats present with precision higher than 15 digits</span>
+<span class="sd">    so if there are, your results may not be what you expect due to round-</span>
+<span class="sd">    off errors.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import sin, cos</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.randtest import test_numerically as tn</span>
+<span class="sd">    &gt;&gt;&gt; tn(sin(x)**2 + cos(x)**2, 1, x)</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="n">z</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">free_symbols</span> <span class="o">|</span> <span class="n">g</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span>
+    <span class="n">reps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="p">[</span><span class="n">random_complex_number</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">zi</span> <span class="ow">in</span> <span class="n">z</span><span class="p">]))</span>
+    <span class="n">z1</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+    <span class="n">z2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">comp</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="test_derivative_numerically"><a class="viewcode-back" href="../../../modules/utilities/randtest.html#sympy.utilities.randtest.test_derivative_numerically">[docs]</a><span class="k">def</span> <span class="nf">test_derivative_numerically</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Test numerically that the symbolically computed derivative of f</span>
+<span class="sd">    with respect to z is correct.</span>
+
+<span class="sd">    This routine does not test whether there are Floats present with</span>
+<span class="sd">    precision higher than 15 digits so if there are, your results may</span>
+<span class="sd">    not be what you expect due to round-off errors.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import sin</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.randtest import test_derivative_numerically as td</span>
+<span class="sd">    &gt;&gt;&gt; td(sin(x), x)</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Derivative</span>
+    <span class="n">z0</span> <span class="o">=</span> <span class="n">random_complex_number</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">doit_numerically</span><span class="p">(</span><span class="n">z0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">comp</span><span class="p">(</span><span class="n">f1</span><span class="o">.</span><span class="n">n</span><span class="p">(),</span> <span class="n">f2</span><span class="o">.</span><span class="n">n</span><span class="p">(),</span> <span class="n">tol</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">_randrange</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a randrange generator. ``seed`` can be</span>
+<span class="sd">        o None - return randomly seeded generator</span>
+<span class="sd">        o int - return a generator seeded with the int</span>
+<span class="sd">        o list - the values to be returned will be taken from the list</span>
+<span class="sd">          in the order given; the provided list is not modified.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.randtest import _randrange</span>
+<span class="sd">    &gt;&gt;&gt; rr = _randrange()</span>
+<span class="sd">    &gt;&gt;&gt; rr(1000) # doctest: +SKIP</span>
+<span class="sd">    999</span>
+<span class="sd">    &gt;&gt;&gt; rr = _randrange(3)</span>
+<span class="sd">    &gt;&gt;&gt; rr(1000) # doctest: +SKIP</span>
+<span class="sd">    238</span>
+<span class="sd">    &gt;&gt;&gt; rr = _randrange([0, 5, 1, 3, 4])</span>
+<span class="sd">    &gt;&gt;&gt; rr(3), rr(3)</span>
+<span class="sd">    (0, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">randrange</span>
+    <span class="k">elif</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>  <span class="c"># make a copy</span>
+        <span class="n">seed</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">give</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">seq</span><span class="o">=</span><span class="n">seed</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">as_int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randrange got empty range&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randrange expects a list-like sequence&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randrange sequence was too short&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">give</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">give</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randrange got an unexpected seed&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_randint</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a randint generator. ``seed`` can be</span>
+<span class="sd">        o None - return randomly seeded generator</span>
+<span class="sd">        o int - return a generator seeded with the int</span>
+<span class="sd">        o list - the values to be returned will be taken from the list</span>
+<span class="sd">          in the order given; the provided list is not modified.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.randtest import _randint</span>
+<span class="sd">    &gt;&gt;&gt; ri = _randint()</span>
+<span class="sd">    &gt;&gt;&gt; ri(1, 1000) # doctest: +SKIP</span>
+<span class="sd">    999</span>
+<span class="sd">    &gt;&gt;&gt; ri = _randint(3)</span>
+<span class="sd">    &gt;&gt;&gt; ri(1, 1000) # doctest: +SKIP</span>
+<span class="sd">    238</span>
+<span class="sd">    &gt;&gt;&gt; ri = _randint([0, 5, 1, 2, 4])</span>
+<span class="sd">    &gt;&gt;&gt; ri(1, 3), ri(1, 3)</span>
+<span class="sd">    (1, 2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">randint</span>
+    <span class="k">elif</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>  <span class="c"># make a copy</span>
+        <span class="n">seed</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">give</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">seq</span><span class="o">=</span><span class="n">seed</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">as_int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randint got empty range&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randint expects a list-like sequence&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randint sequence was too short&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">give</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">give</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;_randint got an unexpected seed&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

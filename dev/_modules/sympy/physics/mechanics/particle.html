@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.mechanics.particle &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.mechanics.particle</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Particle&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.point</span> <span class="kn">import</span> <span class="n">Point</span>
+
+
+<div class="viewcode-block" id="Particle"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle">[docs]</a><span class="k">class</span> <span class="nc">Particle</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A particle.</span>
+
+<span class="sd">    Particles have a non-zero mass and lack spatial extension; they take up no</span>
+<span class="sd">    space.</span>
+
+<span class="sd">    Values need to be supplied on initialization, but can be changed later.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of particle</span>
+<span class="sd">    point : Point</span>
+<span class="sd">        A physics/mechanics Point which represents the position, velocity, and</span>
+<span class="sd">        acceleration of this Particle</span>
+<span class="sd">    mass : sympifyable</span>
+<span class="sd">        A SymPy expression representing the Particle&#39;s mass</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">    &gt;&gt;&gt; po = Point(&#39;po&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; m = Symbol(&#39;m&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; pa = Particle(&#39;pa&#39;, po, m)</span>
+<span class="sd">    &gt;&gt;&gt; # Or you could change these later</span>
+<span class="sd">    &gt;&gt;&gt; pa.mass = m</span>
+<span class="sd">    &gt;&gt;&gt; pa.point = po</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">mass</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Supply a valid name.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_mass</span><span class="p">(</span><span class="n">mass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_point</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pe</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="n">__repr__</span> <span class="o">=</span> <span class="n">__str__</span>
+
+<div class="viewcode-block" id="Particle.get_mass"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.get_mass">[docs]</a>    <span class="k">def</span> <span class="nf">get_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mass of the particle.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mass</span>
+</div>
+    <span class="k">def</span> <span class="nf">set_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mass</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">mass</span><span class="p">)</span>
+
+    <span class="n">mass</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_mass</span><span class="p">,</span> <span class="n">set_mass</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Particle.get_point"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.get_point">[docs]</a>    <span class="k">def</span> <span class="nf">get_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Point of the particle.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_point</span>
+</div>
+    <span class="k">def</span> <span class="nf">set_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Particle point attribute must be a Point object.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_point</span> <span class="o">=</span> <span class="n">p</span>
+
+    <span class="n">point</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_point</span><span class="p">,</span> <span class="n">set_point</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Particle.linear_momentum"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.linear_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">linear_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Linear momentum of the particle.</span>
+
+<span class="sd">        The linear momentum L, of a particle P, with respect to frame N is</span>
+<span class="sd">        given by</span>
+
+<span class="sd">        L = m * v</span>
+
+<span class="sd">        where m is the mass of the particle, and v is the velocity of the</span>
+<span class="sd">        particle in the frame N.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        frame : ReferenceFrame</span>
+<span class="sd">            The frame in which linear momentum is desired.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point, ReferenceFrame</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import dynamicsymbols</span>
+<span class="sd">        &gt;&gt;&gt; m, v = dynamicsymbols(&#39;m v&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; N = ReferenceFrame(&#39;N&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Point(&#39;P&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; A = Particle(&#39;A&#39;, P, m)</span>
+<span class="sd">        &gt;&gt;&gt; P.set_vel(N, v * N.x)</span>
+<span class="sd">        &gt;&gt;&gt; A.linear_momentum(N)</span>
+<span class="sd">        m*v*N.x</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Particle.angular_momentum"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.angular_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">angular_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Angular momentum of the particle about the point.</span>
+
+<span class="sd">        The angular momentum H, about some point O of a particle, P, is given</span>
+<span class="sd">        by:</span>
+
+<span class="sd">        H = r x m * v</span>
+
+<span class="sd">        where r is the position vector from point O to the particle P, m is</span>
+<span class="sd">        the mass of the particle, and v is the velocity of the particle in</span>
+<span class="sd">        the inertial frame, N.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        point : Point</span>
+<span class="sd">            The point about which angular momentum of the particle is desired.</span>
+
+<span class="sd">        frame : ReferenceFrame</span>
+<span class="sd">            The frame in which angular momentum is desired.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point, ReferenceFrame</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import dynamicsymbols</span>
+<span class="sd">        &gt;&gt;&gt; m, v, r = dynamicsymbols(&#39;m v r&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; N = ReferenceFrame(&#39;N&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; O = Point(&#39;O&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; A = O.locatenew(&#39;A&#39;, r * N.x)</span>
+<span class="sd">        &gt;&gt;&gt; P = Particle(&#39;P&#39;, A, m)</span>
+<span class="sd">        &gt;&gt;&gt; P.point.set_vel(N, v * N.y)</span>
+<span class="sd">        &gt;&gt;&gt; P.angular_momentum(O, N)</span>
+<span class="sd">        m*r*v*N.z</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Particle.kinetic_energy"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.kinetic_energy">[docs]</a>    <span class="k">def</span> <span class="nf">kinetic_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Kinetic energy of the particle</span>
+
+<span class="sd">        The kinetic energy, T, of a particle, P, is given by</span>
+
+<span class="sd">        &#39;T = 1/2 m v^2&#39;</span>
+
+<span class="sd">        where m is the mass of particle P, and v is the velocity of the</span>
+<span class="sd">        particle in the supplied ReferenceFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        frame : ReferenceFrame</span>
+<span class="sd">            The Particle&#39;s velocity is typically defined with respect to</span>
+<span class="sd">            an inertial frame but any relevant frame in which the velocity is</span>
+<span class="sd">            known can be supplied.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point, ReferenceFrame</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; m, v, r = symbols(&#39;m v r&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; N = ReferenceFrame(&#39;N&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; O = Point(&#39;O&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Particle(&#39;P&#39;, O, m)</span>
+<span class="sd">        &gt;&gt;&gt; P.point.set_vel(N, v * N.y)</span>
+<span class="sd">        &gt;&gt;&gt; P.kinetic_energy(N)</span>
+<span class="sd">        m*v**2/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">/</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span> <span class="o">&amp;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Particle.set_potential_energy"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.set_potential_energy">[docs]</a>    <span class="k">def</span> <span class="nf">set_potential_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to set the potential energy of the Particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        scalar : Sympifyable</span>
+<span class="sd">            The potential energy (a scalar) of the Particle.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; m, g, h = symbols(&#39;m g h&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; O = Point(&#39;O&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Particle(&#39;P&#39;, O, m)</span>
+<span class="sd">        &gt;&gt;&gt; P.set_potential_energy(m * g * h)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pe</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Particle.potential_energy"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/part_bod.html#sympy.physics.mechanics.particle.Particle.potential_energy">[docs]</a>    <span class="k">def</span> <span class="nf">potential_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The potential energy of the Particle.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Particle, Point</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; m, g, h = symbols(&#39;m g h&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; O = Point(&#39;O&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Particle(&#39;P&#39;, O, m)</span>
+<span class="sd">        &gt;&gt;&gt; P.set_potential_energy(m * g * h)</span>
+<span class="sd">        &gt;&gt;&gt; P.potential_energy</span>
+<span class="sd">        g*h*m</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pe</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

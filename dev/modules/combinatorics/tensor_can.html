@@ -1,0 +1,476 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tensor Canonicalization &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Number Theory" href="../ntheory.html" />
+    <link rel="prev" title="Test Utilities" href="testutil.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../ntheory.html" title="Number Theory"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="testutil.html" title="Test Utilities"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.tensor_can">
+<span id="tensor-canonicalization"></span><span id="combinatorics-tensor-can"></span><h1>Tensor Canonicalization<a class="headerlink" href="#module-sympy.combinatorics.tensor_can" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sympy.combinatorics.tensor_can.canonicalize">
+<tt class="descclassname">sympy.combinatorics.tensor_can.</tt><tt class="descname">canonicalize</tt><big>(</big><em>g</em>, <em>dummies</em>, <em>msym</em>, <em>*v</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/tensor_can.html#canonicalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.tensor_can.canonicalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonicalize tensor formed by tensors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>g</strong> : permutation representing the tensor</p>
+<p><strong>dummies</strong> : list representing the dummy indices</p>
+<blockquote>
+<div><p>it can be a list of dummy indices of the same type
+or a list of lists of dummy indices, one list for each
+type of index;
+the dummy indices must come after the free indices,
+and put in order contravariant, covariant
+[d0, -d0, d1,-d1,...]</p>
+</div></blockquote>
+<p><strong>msym</strong> :  symmetry of the metric(s)</p>
+<blockquote>
+<div><p>it can be an integer or a list;
+in the first case it is the symmetry of the dummy index metric;
+in the second case it is the list of the symmetries of the
+index metric for each type</p>
+</div></blockquote>
+<p><strong>v</strong> : list, (base_i, gens_i, n_i, sym_i) for tensors of type <span class="math">\(i\)</span></p>
+<p><strong>base_i, gens_i</strong> : BSGS for tensors of this type.</p>
+<blockquote>
+<div><p>The BSGS should have minimal base under lexicographic ordering;
+if not, an attempt is made do get the minimal BSGS;
+in case of failure,
+canonicalize_naive is used, which is much slower.</p>
+</div></blockquote>
+<p><strong>n_i</strong> :    number of tensors of type <span class="math">\(i\)</span>.</p>
+<p><strong>sym_i</strong> :  symmetry under exchange of component tensors of type <span class="math">\(i\)</span>.</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Both for msym and sym_i the cases are</dt>
+<dd><ul class="first last simple">
+<li>None  no symmetry</li>
+<li>0     commuting</li>
+<li>1     anticommuting</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>0 if the tensor is zero, else return the array form of</strong> :</p>
+<p class="last"><strong>the permutation representing the canonical form of the tensor.</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>one type of index with commuting metric;</p>
+<p><span class="math">\(A_{a b}\)</span> and <span class="math">\(B_{a b}\)</span> antisymmetric and commuting</p>
+<p><span class="math">\(T = A_{d0 d1} * B^{d0}{}_{d2} * B^{d2 d1}\)</span></p>
+<p><span class="math">\(ord = [d0,-d0,d1,-d1,d2,-d2]\)</span> order of the indices</p>
+<p>g = [1,3,0,5,4,2,6,7]</p>
+<p><span class="math">\(T_c = 0\)</span></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.tensor_can</span> <span class="kn">import</span> <span class="n">get_symmetric_group_sgs</span><span class="p">,</span> <span class="n">canonicalize</span><span class="p">,</span> <span class="n">bsgs_direct_product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base2a</span><span class="p">,</span> <span class="n">gens2a</span> <span class="o">=</span> <span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">base2a</span><span class="p">,</span> <span class="n">gens2a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">base2a</span><span class="p">,</span> <span class="n">gens2a</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">canonicalize</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>same as above, but with <span class="math">\(B_{a b}\)</span> anticommuting</p>
+<p><span class="math">\(T_c = -A^{d0 d1} * B_{d0}{}^{d2} * B_{d1 d2}\)</span></p>
+<p>can = [0,2,1,4,3,5,7,6]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">base2a</span><span class="p">,</span> <span class="n">gens2a</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">canonicalize</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">)</span>
+<span class="go">[0, 2, 1, 4, 3, 5, 7, 6]</span>
+</pre></div>
+</div>
+<p>two types of indices <span class="math">\([a,b,c,d,e,f]\)</span> and <span class="math">\([m,n]\)</span>, in this order,
+both with commuting metric</p>
+<p><span class="math">\(f^{a b c}\)</span> antisymmetric, commuting</p>
+<p><span class="math">\(A_{m a}\)</span> no symmetry, commuting</p>
+<p><span class="math">\(T = f^c{}_{d a} * f^f{}_{e b} * A_m{}^d * A^{m b} * A_n{}^a * A^{n e}\)</span></p>
+<p>ord = [c,f,a,-a,b,-b,d,-d,e,-e,m,-m,n,-n]</p>
+<p>g = [0,7,3, 1,9,5, 11,6, 10,4, 13,2, 12,8, 14,15]</p>
+<p>The canonical tensor is
+<span class="math">\(T_c = -f^{c a b} * f^{f d e} * A^m{}_a * A_{m d} * A^n{}_b * A_{n e}\)</span></p>
+<p>can = [0,2,4, 1,6,8, 10,3, 11,7, 12,5, 13,9, 15,14]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">base_f</span><span class="p">,</span> <span class="n">gens_f</span> <span class="o">=</span> <span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span> <span class="o">=</span> <span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_A</span><span class="p">,</span> <span class="n">gens_A</span> <span class="o">=</span> <span class="n">bsgs_direct_product</span><span class="p">(</span><span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span><span class="p">,</span> <span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_f</span><span class="p">,</span> <span class="n">gens_f</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_A</span><span class="p">,</span> <span class="n">gens_A</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dummies</span> <span class="o">=</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">canonicalize</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">dummies</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">)</span>
+<span class="go">[0, 2, 4, 1, 6, 8, 10, 3, 11, 7, 12, 5, 13, 9, 15, 14]</span>
+</pre></div>
+</div>
+<p class="rubric">Algorithm</p>
+<p>First one uses canonical_free to get the minimum tensor under
+lexicographic order, using only the slot symmetries.
+If the component tensors have not minimal BSGS, it is attempted
+to find it; if the attempt fails canonicalize_naive
+is used instead.</p>
+<p>Compute the residual slot symmetry keeping fixed the free indices
+using tensor_gens(base, gens, list_free_indices, sym).</p>
+<p>Reduce the problem eliminating the free indices.</p>
+<p>Then use double_coset_can_rep and lift back the result reintroducing
+the free indices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.tensor_can.double_coset_can_rep">
+<tt class="descclassname">sympy.combinatorics.tensor_can.</tt><tt class="descname">double_coset_can_rep</tt><big>(</big><em>dummies</em>, <em>sym</em>, <em>b_S</em>, <em>sgens</em>, <em>S_transversals</em>, <em>g</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/tensor_can.html#double_coset_can_rep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.tensor_can.double_coset_can_rep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Butler-Portugal algorithm for tensor canonicalization with dummy indices</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>dummies</dt>
+<dd>list of lists of dummy indices,
+one list for each type of index;
+the dummy indices are put in order contravariant, covariant
+[d0, -d0, d1, -d1, ...].</dd>
+<dt>sym</dt>
+<dd>list of the symmetries of the index metric for each type.</dd>
+<dt>possible symmetries of the metrics</dt>
+<dd><ul class="first last simple">
+<li>0     symmetric</li>
+<li>1     antisymmetric</li>
+<li>None  no symmetry</li>
+</ul>
+</dd>
+<dt>b_S</dt>
+<dd>base of a minimal slot symmetry BSGS.</dd>
+<dt>sgens</dt>
+<dd>generators of the slot symmetry BSGS.</dd>
+<dt>S_transversals</dt>
+<dd>transversals for the slot BSGS.</dd>
+<dt>g</dt>
+<dd>permutation representing the tensor.</dd>
+</dl>
+</div></blockquote>
+<p>Return 0 if the tensor is zero, else return the array form of
+the permutation representing the canonical form of the tensor.</p>
+<p>A tensor with dummy indices can be represented in a number
+of equivalent ways which typically grows exponentially with
+the number of indices. To be able to establish if two tensors
+with many indices are equal becomes computationally very slow
+in absence of an efficient algorithm.</p>
+<p>The Butler-Portugal algorithm [3] is an efficient algorithm to
+put tensors in canonical form, solving the above problem.</p>
+<p>Portugal observed that a tensor can be represented by a permutation,
+and that the class of tensors equivalent to it under slot and dummy
+symmetries is equivalent to the double coset <span class="math">\(D*g*S\)</span>
+(Note: in this documentation we use the conventions for multiplication
+of permutations p, q with (p*q)(i) = p[q[i]] which is opposite
+to the one used in the Permutation class)</p>
+<p>Using the algorithm by Butler to find a representative of the
+double coset one can find a canonical form for the tensor.</p>
+<p>To see this correspondence,
+let <span class="math">\(g\)</span> be a permutation in array form; a tensor with indices <span class="math">\(ind\)</span>
+(the indices including both the contravariant and the covariant ones)
+can be written as</p>
+<p><span class="math">\(t = T(ind[g[0],..., ind[g[n-1]])\)</span>,</p>
+<p>where <span class="math">\(n= len(ind)\)</span>;
+<span class="math">\(g\)</span> has size <span class="math">\(n + 2\)</span>, the last two indices for the sign of the tensor
+(trick introduced in [4]).</p>
+<p>A slot symmetry transformation <span class="math">\(s\)</span> is a permutation acting on the slots
+<span class="math">\(t -&gt; T(ind[(g*s)[0]],..., ind[(g*s)[n-1]])\)</span></p>
+<p>A dummy symmetry transformation acts on <span class="math">\(ind\)</span>
+<span class="math">\(t -&gt; T(ind[(d*g)[0]],..., ind[(d*g)[n-1]])\)</span></p>
+<p>Being interested only in the transformations of the tensor under
+these symmetries, one can represent the tensor by <span class="math">\(g\)</span>, which transforms
+as</p>
+<p><span class="math">\(g -&gt; d*g*s\)</span>, so it belongs to the coset <span class="math">\(D*g*S\)</span>.</p>
+<p>Let us explain the conventions by an example.</p>
+<dl class="docutils">
+<dt>Given a tensor <span class="math">\(T^{d3 d2 d1}{}_{d1 d2 d3}\)</span> with the slot symmetries</dt>
+<dd><p class="first"><span class="math">\(T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}\)</span></p>
+<p class="last"><span class="math">\(T^{a0 a1 a2 a3 a4 a5} = -T^{a4 a1 a2 a3 a0 a5}\)</span></p>
+</dd>
+</dl>
+<p>and symmetric metric, find the tensor equivalent to it which
+is the lowest under the ordering of indices:
+lexicographic ordering <span class="math">\(d1, d2, d3\)</span> then and contravariant index
+before covariant index; that is the canonical form of the tensor.</p>
+<p>The canonical form is <span class="math">\(-T^{d1 d2 d3}{}_{d1 d2 d3}\)</span>
+obtained using <span class="math">\(T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}\)</span>.</p>
+<p>To convert this problem in the input for this function,
+use the following labelling of the index names
+(- for covariant for short) <span class="math">\(d1, -d1, d2, -d2, d3, -d3\)</span></p>
+<p><span class="math">\(T^{d3 d2 d1}{}_{d1 d2 d3}\)</span> corresponds to <span class="math">\(g = [4,2,0,1,3,5,6,7]\)</span>
+where the last two indices are for the sign</p>
+<p><span class="math">\(sgens = [Permutation(0,2)(6,7), Permutation(0,4)(6,7)]\)</span></p>
+<p>sgens[0] is the slot symmetry <span class="math">\(-(0,2)\)</span>
+<span class="math">\(T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}\)</span></p>
+<p>sgens[1] is the slot symmetry <span class="math">\(-(0,4)\)</span>
+<span class="math">\(T^{a0 a1 a2 a3 a4 a5} = -T^{a4 a1 a2 a3 a0 a5}\)</span></p>
+<p>The dummy symmetry group D is generated by the strong base generators
+<span class="math">\([(0,1),(2,3),(4,5),(0,1)(2,3),(2,3)(4,5)]\)</span></p>
+<p>The dummy symmetry acts from the left
+<span class="math">\(d = [1,0,2,3,4,5,6,7]\)</span>  exchange <span class="math">\(d1 -&gt; -d1\)</span>
+<span class="math">\(T^{d3 d2 d1}{}_{d1 d2 d3} == T^{d3 d2}{}_{d1}{}^{d1}{}_{d2 d3}\)</span></p>
+<p><span class="math">\(g=[4,2,0,1,3,5,6,7]  -&gt; [4,2,1,0,3,5,6,7] = _af_rmul(d, g)\)</span>
+which differs from <span class="math">\(_af_rmul(g, d)\)</span>.</p>
+<p>The slot symmetry acts from the right
+<span class="math">\(s = [2,1,0,3,4,5,7,6]\)</span>  exchanges slots 0 and 2 and changes sign
+<span class="math">\(T^{d3 d2 d1}{}_{d1 d2 d3} == -T^{d1 d2 d3}{}_{d1 d2 d3}\)</span></p>
+<p><span class="math">\(g=[4,2,0,1,3,5,6,7]  -&gt; [0,2,4,1,3,5,7,6] = _af_rmul(g, s)\)</span></p>
+<p>Example in which the tensor is zero, same slot symmetries as above:
+<span class="math">\(T^{d3}{}_{d1,d2}{}^{d1}{}_{d3}{}^{d2}\)</span></p>
+<p><span class="math">\(= -T^{d3}{}_{d1,d3}{}^{d1}{}_{d2}{}^{d2}\)</span>   under slot symmetry <span class="math">\(-(2,4)\)</span>;</p>
+<p><span class="math">\(= T_{d3 d1}{}^{d3}{}^{d1}{}_{d2}{}^{d2}\)</span>    under slot symmetry <span class="math">\(-(0,2)\)</span>;</p>
+<p><span class="math">\(= T^{d3}{}_{d1 d3}{}^{d1}{}_{d2}{}^{d2}\)</span>    symmetric metric;</p>
+<p><span class="math">\(= 0\)</span>  since two of these lines have tensors differ only for the sign.</p>
+<p>The double coset D*g*S consists of permutations <span class="math">\(h = d*g*s\)</span> corresponding
+to equivalent tensors; if there are two <span class="math">\(h\)</span> which are the same apart
+from the sign, return zero; otherwise
+choose as representative the tensor with indices
+ordered lexicographically according to <span class="math">\([d1, -d1, d2, -d2, d3, -d3]\)</span>
+that is <span class="math">\(rep = min(D*g*S) = min([d*g*s for d in D for s in S])\)</span></p>
+<p>The indices are fixed one by one; first choose the lowest index
+for slot 0, then the lowest remaining index for slot 1, etc.
+Doing this one obtains a chain of stabilizers</p>
+<p><span class="math">\(S -&gt; S_{b0} -&gt; S_{b0,b1} -&gt; ...\)</span> and
+<span class="math">\(D -&gt; D_{p0} -&gt; D_{p0,p1} -&gt; ...\)</span></p>
+<p>where <span class="math">\([b0, b1, ...] = range(b)\)</span> is a base of the symmetric group;
+the strong base <span class="math">\(b_S\)</span> of S is an ordered sublist of it;
+therefore it is sufficient to compute once the
+strong base generators of S using the Schreier-Sims algorithm;
+the stabilizers of the strong base generators are the
+strong base generators of the stabilizer subgroup.</p>
+<p><span class="math">\(dbase = [p0,p1,...]\)</span> is not in general in lexicographic order,
+so that one must recompute the strong base generators each time;
+however this is trivial, there is no need to use the Schreier-Sims
+algorithm for D.</p>
+<p>The algorithm keeps a TAB of elements <span class="math">\((s_i, d_i, h_i)\)</span>
+where <span class="math">\(h_i = d_i*g*s_i\)</span> satisfying <span class="math">\(h_i[j] = p_j\)</span> for <span class="math">\(0 &lt;= j &lt; i\)</span>
+starting from <span class="math">\(s_0 = id, d_0 = id, h_0 = g\)</span>.</p>
+<p>The equations <span class="math">\(h_0[0] = p_0, h_1[1] = p_1,...\)</span> are solved in this order,
+choosing each time the lowest possible value of p_i</p>
+<p>For <span class="math">\(j &lt; i\)</span>
+<span class="math">\(d_i*g*s_i*S_{b_0,...,b_{i-1}}*b_j = D_{p_0,...,p_{i-1}}*p_j\)</span>
+so that for dx in <span class="math">\(D_{p_0,...,p_{i-1}}\)</span> and sx in
+<span class="math">\(S_{base[0],...,base[i-1]}\)</span> one has <span class="math">\(dx*d_i*g*s_i*sx*b_j = p_j\)</span></p>
+<p>Search for dx, sx such that this equation holds for <span class="math">\(j = i\)</span>;
+it can be written as <span class="math">\(s_i*sx*b_j = J, dx*d_i*g*J = p_j\)</span>
+<span class="math">\(sx*b_j = s_i**-1*J; sx = trace(s_i**-1, S_{b_0,...,b_{i-1}})\)</span>
+<span class="math">\(dx**-1*p_j = d_i*g*J; dx = trace(d_i*g*J, D_{p_0,...,p_{i-1}})\)</span></p>
+<p><span class="math">\(s_{i+1} = s_i*trace(s_i**-1*J, S_{b_0,...,b_{i-1}})\)</span>
+<span class="math">\(d_{i+1} = trace(d_i*g*J, D_{p_0,...,p_{i-1}})**-1*d_i\)</span>
+<span class="math">\(h_{i+1}*b_i = d_{i+1}*g*s_{i+1}*b_i = p_i\)</span></p>
+<p><span class="math">\(h_n*b_j = p_j\)</span> for all j, so that <span class="math">\(h_n\)</span> is the solution.</p>
+<p>Add the found <span class="math">\((s, d, h)\)</span> to TAB1.</p>
+<p>At the end of the iteration sort TAB1 with respect to the <span class="math">\(h\)</span>;
+if there are two consecutive <span class="math">\(h\)</span> in TAB1 which differ only for the
+sign, the tensor is zero, so return 0;
+if there are two consecutive <span class="math">\(h\)</span> which are equal, keep only one.</p>
+<p>Then stabilize the slot generators under <span class="math">\(i\)</span> and the dummy generators
+under <span class="math">\(p_i\)</span>.</p>
+<p>Assign <span class="math">\(TAB = TAB1\)</span> at the end of the iteration step.</p>
+<p>At the end <span class="math">\(TAB\)</span> contains a unique <span class="math">\((s, d, h)\)</span>, since all the slots
+of the tensor <span class="math">\(h\)</span> have been fixed to have the minimum value according
+to the symmetries. The algorithm returns <span class="math">\(h\)</span>.</p>
+<p>It is important that the slot BSGS has lexicographic minimal base,
+otherwise there is an <span class="math">\(i\)</span> which does not belong to the slot base
+for which <span class="math">\(p_i\)</span> is fixed by the dummy symmetry only, while <span class="math">\(i\)</span>
+is not invariant from the slot stabilizer, so <span class="math">\(p_i\)</span> is not in
+general the minimal value.</p>
+<dl class="docutils">
+<dt>This algorithm differs slightly from the original algorithm [3]:</dt>
+<dd>the canonical form is minimal lexicographically, and
+the BSGS has minimal base under lexicographic order.
+Equal tensors <span class="math">\(h\)</span> are eliminated from TAB.</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">PermutationGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.tensor_can</span> <span class="kn">import</span> <span class="n">double_coset_can_rep</span><span class="p">,</span> <span class="n">get_transversals</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">Permutation</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transversals</span> <span class="o">=</span> <span class="n">get_transversals</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">double_coset_can_rep</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">))],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">transversals</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">[0, 1, 2, 3, 4, 5, 7, 6]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">double_coset_can_rep</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">))],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">transversals</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.tensor_can.get_symmetric_group_sgs">
+<tt class="descclassname">sympy.combinatorics.tensor_can.</tt><tt class="descname">get_symmetric_group_sgs</tt><big>(</big><em>n</em>, <em>antisym=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/tensor_can.html#get_symmetric_group_sgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.tensor_can.get_symmetric_group_sgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return base, gens of the minimal BSGS for (anti)symmetric tensor</p>
+<p><tt class="docutils literal"><span class="pre">n</span></tt>  rank of the tensor</p>
+<p><tt class="docutils literal"><span class="pre">antisym</span> <span class="pre">=</span> <span class="pre">False</span></tt> symmetric tensor
+<tt class="docutils literal"><span class="pre">antisym</span> <span class="pre">=</span> <span class="pre">True</span></tt>  antisymmetric tensor</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.tensor_can</span> <span class="kn">import</span> <span class="n">get_symmetric_group_sgs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Permutation</span><span class="o">.</span><span class="n">print_cyclic</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">([0, 1], [Permutation(4)(0, 1), Permutation(4)(1, 2)])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.tensor_can.bsgs_direct_product">
+<tt class="descclassname">sympy.combinatorics.tensor_can.</tt><tt class="descname">bsgs_direct_product</tt><big>(</big><em>base1</em>, <em>gens1</em>, <em>base2</em>, <em>gens2</em>, <em>signed=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/tensor_can.html#bsgs_direct_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.tensor_can.bsgs_direct_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>direct product of two BSGS</p>
+<p>base1    base of the first BSGS.</p>
+<p>gens1    strong generating sequence of the first BSGS.</p>
+<p>base2, gens2   similarly for the second BSGS.</p>
+<p>signed   flag for signed permutations.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.tensor_can</span> <span class="kn">import</span> <span class="p">(</span><span class="n">get_symmetric_group_sgs</span><span class="p">,</span> <span class="n">bsgs_direct_product</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Permutation</span><span class="o">.</span><span class="n">print_cyclic</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span> <span class="o">=</span> <span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base2</span><span class="p">,</span> <span class="n">gens2</span> <span class="o">=</span> <span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bsgs_direct_product</span><span class="p">(</span><span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span><span class="p">,</span> <span class="n">base2</span><span class="p">,</span> <span class="n">gens2</span><span class="p">)</span>
+<span class="go">([1], [Permutation(4)(1, 2)])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="testutil.html"
+                        title="previous chapter">Test Utilities</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../ntheory.html"
+                        title="next chapter">Number Theory</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/tensor_can.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../ntheory.html" title="Number Theory"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="testutil.html" title="Test Utilities"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

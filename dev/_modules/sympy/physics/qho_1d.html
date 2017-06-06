@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.qho_1d &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.qho_1d</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Rational</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">hermite</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">factorial</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.constants</span> <span class="kn">import</span> <span class="n">hbar</span>
+
+
+<div class="viewcode-block" id="psi_n"><a class="viewcode-back" href="../../../modules/physics/qho_1d.html#sympy.physics.qho_1d.psi_n">[docs]</a><span class="k">def</span> <span class="nf">psi_n</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the wavefunction psi_{n} for the One-dimensional harmonic oscillator.</span>
+
+<span class="sd">    ``n``</span>
+<span class="sd">        the &quot;nodal&quot; quantum number.  Corresponds to the number of nodes in the</span>
+<span class="sd">        wavefunction.  n &gt;= 0</span>
+<span class="sd">    ``x``</span>
+<span class="sd">        x coordinate</span>
+<span class="sd">    ``m``</span>
+<span class="sd">        mass of the particle</span>
+<span class="sd">    ``omega``</span>
+<span class="sd">        angular frequency of the oscillator</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.qho_1d import psi_n</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import var</span>
+<span class="sd">    &gt;&gt;&gt; var(&quot;x m omega&quot;)</span>
+<span class="sd">    (x, m, omega)</span>
+<span class="sd">    &gt;&gt;&gt; psi_n(0, x, m, omega)</span>
+<span class="sd">    (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(hbar**(1/4)*pi**(1/4))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># sympify arguments</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">omega</span><span class="p">])</span>
+    <span class="n">nu</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">/</span> <span class="n">hbar</span>
+    <span class="c"># normalization coefficient</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="p">(</span><span class="n">nu</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">C</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">hermite</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="E_n"><a class="viewcode-back" href="../../../modules/physics/qho_1d.html#sympy.physics.qho_1d.E_n">[docs]</a><span class="k">def</span> <span class="nf">E_n</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the Energy of the One-dimensional harmonic oscillator</span>
+
+<span class="sd">    ``n``</span>
+<span class="sd">        the &quot;nodal&quot; quantum number</span>
+<span class="sd">    ``omega``</span>
+<span class="sd">        the harmonic oscillator angular frequency</span>
+
+<span class="sd">    The unit of the returned value matches the unit of hw, since the energy is</span>
+<span class="sd">    calculated as:</span>
+
+<span class="sd">        E_n = hbar * omega*(n + 1/2)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.qho_1d import E_n</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import var</span>
+<span class="sd">    &gt;&gt;&gt; var(&quot;x omega&quot;)</span>
+<span class="sd">    (x, omega)</span>
+<span class="sd">    &gt;&gt;&gt; E_n(x, omega)</span>
+<span class="sd">    hbar*omega*(x + 1/2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">hbar</span> <span class="o">*</span> <span class="n">omega</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

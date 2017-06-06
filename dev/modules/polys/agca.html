@@ -1,0 +1,1760 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AGCA - Algebraic Geometry and Commutative Algebra Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Polynomials Manipulation Module" href="index.html" />
+    <link rel="next" title="Internals of the Polynomial Manipulation Module" href="internals.html" />
+    <link rel="prev" title="Polynomials Manipulation Module Reference" href="reference.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="internals.html" title="Internals of the Polynomial Manipulation Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Polynomials Manipulation Module Reference"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Polynomials Manipulation Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="agca-algebraic-geometry-and-commutative-algebra-module">
+<span id="polys-agca"></span><h1>AGCA - Algebraic Geometry and Commutative Algebra Module<a class="headerlink" href="#agca-algebraic-geometry-and-commutative-algebra-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Algebraic geometry is a mixture of the ideas of two Mediterranean
+cultures. It is the superposition of the Arab science of the lightening
+calculation of the solutions of equations over the Greek art of position
+and shape.
+This tapestry was originally woven on European soil and is still being refined
+under the influence of international fashion. Algebraic geometry studies the
+delicate balance between the geometrically plausible and the algebraically
+possible.  Whenever one side of this mathematical teeter-totter outweighs the
+other, one immediately loses interest and runs off in search of a more exciting
+amusement.</p>
+<blockquote>
+<div>George R. Kempf
+1944 &#8211; 2002</div></blockquote>
+</div></blockquote>
+<p>Algebraic Geometry refers to the study of geometric problems via algebraic
+methods (and sometimes vice versa). While this is a rather old topic,
+algebraic geometry as understood today is very much a 20th century
+development. Building on ideas of e.g. Riemann and Dedekind, it was realized
+that there is an intimate connection between properties of the set of
+solutions of a system of polynomial equations (called an algebraic variety)
+and the behavior of the set of polynomial functions on that variety
+(called the coordinate ring).</p>
+<p>As in many geometric disciplines, we can distinguish between local and global
+questions (and methods). Local investigations in algebraic geometry are
+essentially equivalent to the study of certain rings, their ideals and modules.
+This latter topic is also called commutative algebra. It is the basic local
+toolset of algebraic geometers, in much the same way that differential analysis
+is the local toolset of differential geometers.</p>
+<p>A good conceptual introduction to commutative algebra is <a class="reference internal" href="literature.html#atiyah69">[Atiyah69]</a>. An
+introduction more geared towards computations, and the work most of the
+algorithms in this module are based on, is <a class="reference internal" href="literature.html#greuel2008">[Greuel2008]</a>.</p>
+<p>This module aims to eventually allow expression and solution of both
+local and global geometric problems, both in the classical case over a field
+and in the more modern arithmetic cases. So far, however, there is no geometric
+functionality at all. Currently the module only provides tools for computational
+commutative algebra over fields.</p>
+<p>All code examples assume:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y,z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">wrap_line</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">no_global</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h2>
+<p>In this section we document the usage of the AGCA module. For convenience of
+the reader, some definitions and examples/explanations are interspersed.</p>
+<div class="section" id="base-rings">
+<h3>Base Rings<a class="headerlink" href="#base-rings" title="Permalink to this headline">¶</a></h3>
+<p>Almost all computations in commutative algebra are relative to a &#8220;base ring&#8221;.
+(For example, when asking questions about an ideal, the base ring is the ring
+the ideal is a subset of.) In principle all polys &#8220;domains&#8221; can be used as base
+rings. However, useful functionality is only implemented for polynomial rings
+over fields, and various localizations and quotients thereof.</p>
+<p>As demonstrated in
+the examples below, the most convenient method to create objects you are
+interested in is to build them up from the ground field, and then use the
+various methods to create new objects from old. For example, in order to
+create the local ring of the nodal cubic <span class="math">\(y^2 = x^3\)</span> at the origin, over
+<span class="math">\(\mathbb{Q}\)</span>, you do:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lr</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&quot;ilex&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="p">[</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr</span>
+<span class="go">ℚ[x, y, order=ilex]</span>
+<span class="go">───────────────────</span>
+<span class="go">    ╱   3    2╲</span>
+<span class="go">    ╲- x  + y ╱</span>
+</pre></div>
+</div>
+<p>Note how the python list notation can be used as a short cut to express ideals.
+You can use the <tt class="docutils literal"><span class="pre">convert</span></tt> method to return ordinary sympy objects into
+objects understood by the AGCA module (although in many cases this will be done
+automatically &#8211; for example the list was automatically turned into an ideal,
+and in the process the symbols <span class="math">\(x\)</span> and <span class="math">\(y\)</span> were automatically converted into
+other representations). For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">lr</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="p">;</span> <span class="n">X</span>
+<span class="go">    ╱   3    2╲</span>
+<span class="go">x + ╲- x  + y ╱</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">==</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="o">**</span><span class="mi">3</span> <span class="o">==</span> <span class="n">Y</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>When no localisation is needed, a more mathematical notation can be
+used. For example, let us create the coordinate ring of three-dimensional
+affine space <span class="math">\(\mathbb{A}^3\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ar</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">);</span> <span class="n">ar</span>
+<span class="go">ℚ[x, y, z]</span>
+</pre></div>
+</div>
+<p>For more details, refer to the following class documentation. Note that
+the base rings, being domains, are the main point of overlap between the
+AGCA module and the rest of the polys module. All domains are documented
+in detail in the polys reference, so we show here only an abridged version,
+with the methods most pertinent to the AGCA module.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">sympy.polys.domains.ring.</tt><tt class="descname">Ring</tt><a class="reference internal" href="../../_modules/sympy/polys/domains/ring.html#Ring"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Represents a ring domain.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>alias</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>dtype</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>one</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>rep</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>zero</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt>
+<tt class="descclassname">Ring.</tt><tt class="descname">free_module</tt><big>(</big><em>rank</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/domains/ring.html#Ring.free_module"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generate a free module of rank <tt class="docutils literal"><span class="pre">rank</span></tt> over self.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">QQ[x]**2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">Ring.</tt><tt class="descname">ideal</tt><big>(</big><em>*gens</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/domains/ring.html#Ring.ideal"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generate an ideal of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;x**2&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">Ring.</tt><tt class="descname">quotient_ring</tt><big>(</big><em>e</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/domains/ring.html#Ring.quotient_ring"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Form a quotient ring of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">e</span></tt> can be an ideal or an iterable.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">quotient_ring</span><span class="p">(</span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">QQ[x]/&lt;x**2&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">quotient_ring</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">QQ[x]/&lt;x**2&gt;</span>
+</pre></div>
+</div>
+<p>The division operator has been overloaded for this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">QQ[x]/&lt;x**2&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt>
+<tt class="descclassname">sympy.polys.domains.polynomialring.</tt><tt class="descname">PolynomialRing</tt><big>(</big><em>domain_or_ring</em>, <em>symbols=None</em>, <em>order=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/domains/polynomialring.html#PolynomialRing"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A class for representing multivariate polynomial rings.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>alias</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>domain</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>dtype</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>gens</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>ngens</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>rep</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>symbols</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">sympy.polys.domains.quotientring.</tt><tt class="descname">QuotientRing</tt><big>(</big><em>ring</em>, <em>ideal</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/domains/quotientring.html#QuotientRing"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Class representing (commutative) quotient rings.</p>
+<p>You should not usually instantiate this by hand, instead use the constructor
+from the base ring in the construction.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">quotient_ring</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="go">QQ[x]/&lt;x**3 + 1&gt;</span>
+</pre></div>
+</div>
+<p>Shorter versions are possible:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">I</span>
+<span class="go">QQ[x]/&lt;x**3 + 1&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="go">QQ[x]/&lt;x**3 + 1&gt;</span>
+</pre></div>
+</div>
+<p>Attributes:</p>
+<ul class="simple">
+<li>ring - the base ring</li>
+<li>base_ideal - the ideal used to form the quotient</li>
+</ul>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>alias</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>one</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>rep</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>zero</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="modules-ideals-and-their-elementary-properties">
+<h3>Modules, Ideals and their Elementary Properties<a class="headerlink" href="#modules-ideals-and-their-elementary-properties" title="Permalink to this headline">¶</a></h3>
+<p>Let <span class="math">\(A\)</span> be a ring. An <span class="math">\(A\)</span>-module is a set <span class="math">\(M\)</span>, together with two binary
+operations <span class="math">\(+: M \times M \to M\)</span> and <span class="math">\(\times: R \times M \to M\)</span> called
+addition and scalar multiplication. These are required to satisfy certain
+axioms, which can be found in e.g. <a class="reference internal" href="literature.html#atiyah69">[Atiyah69]</a>. In this way modules are
+a direct generalisation of both vector spaces (<span class="math">\(A\)</span> being a field) and abelian
+groups (<span class="math">\(A = \mathbb{Z}\)</span>). A <em>submodule</em> of the <span class="math">\(A\)</span>-module <span class="math">\(M\)</span> is a subset
+<span class="math">\(N \subset M\)</span>, such that the binary operations restrict to <span class="math">\(N\)</span>, and <span class="math">\(N\)</span> becomes
+an <span class="math">\(A\)</span>-module with these operations.</p>
+<p>The ring <span class="math">\(A\)</span> itself has a natural <span class="math">\(A\)</span>-module structure where addition and
+multiplication in the module coincide with addition and multiplication in
+the ring. This <span class="math">\(A\)</span>-module is also written as <span class="math">\(A\)</span>. An <span class="math">\(A\)</span>-submodule of <span class="math">\(A\)</span>
+is called an <em>ideal</em> of <span class="math">\(A\)</span>. Ideals come up very naturally in algebraic
+geometry. More general modules can be seen as a technically convenient &#8220;elbow
+room&#8221; beyond talking only about ideals.</p>
+<p>If <span class="math">\(M\)</span>, <span class="math">\(N\)</span> are <span class="math">\(A\)</span>-modules,
+then there is a natural (componentwise) <span class="math">\(A\)</span>-module structure on <span class="math">\(M \times N\)</span>.
+Similarly there are <span class="math">\(A\)</span>-module structures on cartesian products of more
+components. (For the categorically inclined:
+the cartesian product of finitely many <span class="math">\(A\)</span>-modules, with this
+<span class="math">\(A\)</span>-module structure, is the finite biproduct in the category of all
+<span class="math">\(A\)</span>-modules. With infinitely many components, it is the direct product
+(but the infinite direct sum has to be constructed differently).) As usual,
+repeated product of the <span class="math">\(A\)</span>-module <span class="math">\(M\)</span> is denoted <span class="math">\(M, M^2, M^3 \dots\)</span>, or
+<span class="math">\(M^I\)</span> for arbitrary index sets <span class="math">\(I\)</span>.</p>
+<p>An <span class="math">\(A\)</span>-module <span class="math">\(M\)</span> is called <em>free</em> if it is isomorphic to the <span class="math">\(A\)</span>-module
+<span class="math">\(A^I\)</span> for some (not necessarily finite) index set <span class="math">\(I\)</span> (refer to the next
+section for a definition of isomorphism). The cardinality of <span class="math">\(I\)</span> is called
+the <em>rank</em> of <span class="math">\(M\)</span>; one may prove this is well-defined.
+In general, the AGCA module only works with free modules of finite rank, and
+other closely related modules. The easiest way to create modules is to use
+member methods of the objects they are made up from. For example, let us create
+a free module of rank 4 over the coordinate ring of <span class="math">\(\mathbb{A}^2\)</span>
+we created above, together with a submodule:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">ar</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="p">;</span> <span class="n">F</span>
+<span class="go">          4</span>
+<span class="go">ℚ[x, y, z]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span> <span class="p">;</span> <span class="n">S</span>
+<span class="go">╱⎡       2   3⎤              ╲</span>
+<span class="go">╲⎣1, x, x , x ⎦, [0, 1, 0, y]╱</span>
+</pre></div>
+</div>
+<p>Note how python lists can be used as a short-cut notation for module
+elements (vectors). As usual, the <tt class="docutils literal"><span class="pre">convert</span></tt> method can be used to convert
+sympy/python objects into the internal AGCA representation (see detailed
+reference below).</p>
+<p>Here is the detailed documentation of the classes for modules, free modules,
+and submodules:</p>
+<dl class="class">
+<dt id="sympy.polys.agca.modules.Module">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.modules.</tt><tt class="descname">Module</tt><big>(</big><em>ring</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for modules.</p>
+<p>Do not instantiate - use ring explicit constructors instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">QQ[x]**2</span>
+</pre></div>
+</div>
+<p>Attributes:</p>
+<ul class="simple">
+<li>dtype - type of elements</li>
+<li>ring - containing ring</li>
+</ul>
+<p>Non-implemented methods:</p>
+<ul class="simple">
+<li>submodule</li>
+<li>quotient_module</li>
+<li>is_zero</li>
+<li>is_submodule</li>
+<li>multiply_ideal</li>
+</ul>
+<p>The method convert likely needs to be changed in subclasses.</p>
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.contains">
+<tt class="descname">contains</tt><big>(</big><em>elem</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">elem</span></tt> is an element of this module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.convert">
+<tt class="descname">convert</tt><big>(</big><em>elem</em>, <em>M=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="docutils literal"><span class="pre">elem</span></tt> into internal representation of this module.</p>
+<p>If <tt class="docutils literal"><span class="pre">M</span></tt> is not None, it should be a module containing it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.identity_hom">
+<tt class="descname">identity_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.identity_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.identity_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the identity homomorphism on <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.is_submodule">
+<tt class="descname">is_submodule</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.is_submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.is_submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">other</span></tt> is a submodule of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">self</span></tt> is a zero module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.multiply_ideal">
+<tt class="descname">multiply_ideal</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.multiply_ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.multiply_ideal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply <tt class="docutils literal"><span class="pre">self</span></tt> by the ideal <tt class="docutils literal"><span class="pre">other</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.quotient_module">
+<tt class="descname">quotient_module</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.quotient_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.quotient_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a quotient module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.submodule">
+<tt class="descname">submodule</tt><big>(</big><em>*gens</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a submodule.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.Module.subset">
+<tt class="descname">subset</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#Module.subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.Module.subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">other</span></tt> is is a subset of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">subset</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">subset</span><span class="p">([(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.polys.agca.modules.FreeModule">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.modules.</tt><tt class="descname">FreeModule</tt><big>(</big><em>ring</em>, <em>rank</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for free modules.</p>
+<p>Additional attributes:</p>
+<ul class="simple">
+<li>rank - rank of the free module</li>
+</ul>
+<p>Non-implemented methods:</p>
+<ul class="simple">
+<li>submodule</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.basis">
+<tt class="descname">basis</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of basis elements.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">basis</span><span class="p">()</span>
+<span class="go">([1, 0, 0], [0, 1, 0], [0, 0, 1])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.convert">
+<tt class="descname">convert</tt><big>(</big><em>elem</em>, <em>M=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="docutils literal"><span class="pre">elem</span></tt> into the internal representation.</p>
+<p>This method is called implicitly whenever computations involve elements
+not in the internal representation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">[1, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.polys.agca.modules.FreeModule.dtype">
+<tt class="descname">dtype</tt><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">FreeModuleElement</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.identity_hom">
+<tt class="descname">identity_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.identity_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.identity_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the identity homomorphism on <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.is_submodule">
+<tt class="descname">is_submodule</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.is_submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.is_submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">other</span></tt> is a submodule of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">self</span></tt> is a zero module.</p>
+<p>(If, as this implementation assumes, the coefficient ring is not the
+zero ring, then this is equivalent to the rank being zero.)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.multiply_ideal">
+<tt class="descname">multiply_ideal</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.multiply_ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.multiply_ideal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply <tt class="docutils literal"><span class="pre">self</span></tt> by the ideal <tt class="docutils literal"><span class="pre">other</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">multiply_ideal</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="go">&lt;[x, 0], [0, x]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.FreeModule.quotient_module">
+<tt class="descname">quotient_module</tt><big>(</big><em>submodule</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#FreeModule.quotient_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.FreeModule.quotient_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a quotient module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">quotient_module</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">QQ[x]**2/&lt;[1, x], [x, 2]&gt;</span>
+</pre></div>
+</div>
+<p>Or more conicisely, using the overloaded division operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="go">QQ[x]**2/&lt;[1, x], [x, 2]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.polys.agca.modules.SubModule">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.modules.</tt><tt class="descname">SubModule</tt><big>(</big><em>gens</em>, <em>container</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for submodules.</p>
+<p>Attributes:</p>
+<ul class="simple">
+<li>container - containing module</li>
+<li>gens - generators (subset of containing module)</li>
+<li>rank - rank of containing module</li>
+</ul>
+<p>Non-implemented methods:</p>
+<ul class="simple">
+<li>_contains</li>
+<li>_syzygies</li>
+<li>_in_terms_of_generators</li>
+<li>_intersect</li>
+<li>_module_quotient</li>
+</ul>
+<p>Methods that likely need change in subclasses:</p>
+<ul class="simple">
+<li>reduce_element</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.convert">
+<tt class="descname">convert</tt><big>(</big><em>elem</em>, <em>M=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="docutils literal"><span class="pre">elem</span></tt> into the internal represantition.</p>
+<p>Mostly called implicitly.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">])</span>
+<span class="go">[2, 2*x]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.identity_hom">
+<tt class="descname">identity_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.identity_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.identity_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the identity homomorphism on <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : &lt;[x, x]&gt; -&gt; &lt;[x, x]&gt;</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.in_terms_of_generators">
+<tt class="descname">in_terms_of_generators</tt><big>(</big><em>e</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.in_terms_of_generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.in_terms_of_generators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Express element <tt class="docutils literal"><span class="pre">e</span></tt> of <tt class="docutils literal"><span class="pre">self</span></tt> in terms of the generators.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">in_terms_of_generators</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">[-x**2 + x, x**2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.inclusion_hom">
+<tt class="descname">inclusion_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.inclusion_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.inclusion_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a homomorphism representing the inclusion map of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>That is, the natural map from <tt class="docutils literal"><span class="pre">self</span></tt> to <tt class="docutils literal"><span class="pre">self.container</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">inclusion_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : &lt;[x, x]&gt; -&gt; QQ[x]**2</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.intersect">
+<tt class="descname">intersect</tt><big>(</big><em>other</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the intersection of <tt class="docutils literal"><span class="pre">self</span></tt> with submodule <tt class="docutils literal"><span class="pre">other</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">]))</span>
+<span class="go">&lt;[x*y, x*y]&gt;</span>
+</pre></div>
+</div>
+<p>Some implementation allow further options to be passed. Currently, to
+only one implemented is <tt class="docutils literal"><span class="pre">relations=True</span></tt>, in which case the function
+will return a triple <tt class="docutils literal"><span class="pre">(res,</span> <span class="pre">rela,</span> <span class="pre">relb)</span></tt>, where <tt class="docutils literal"><span class="pre">res</span></tt> is the
+intersection module, and <tt class="docutils literal"><span class="pre">rela</span></tt> and <tt class="docutils literal"><span class="pre">relb</span></tt> are lists of coefficient
+vectors, expressing the generators of <tt class="docutils literal"><span class="pre">res</span></tt> in terms of the
+generators of <tt class="docutils literal"><span class="pre">self</span></tt> (<tt class="docutils literal"><span class="pre">rela</span></tt>) and <tt class="docutils literal"><span class="pre">other</span></tt> (<tt class="docutils literal"><span class="pre">relb</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">]),</span> <span class="n">relations</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(&lt;[x*y, x*y]&gt;, [(y,)], [(x,)])</span>
+</pre></div>
+</div>
+<p>The above result says: the intersection module is generated by the
+single element <span class="math">\((-xy, -xy) = -y (x, x) = -x (y, y)\)</span>, where
+<span class="math">\((x, x)\)</span> and <span class="math">\((y, y)\)</span> respectively are the unique generators of
+the two modules being intersected.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.is_full_module">
+<tt class="descname">is_full_module</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.is_full_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.is_full_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is the entire free module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.is_submodule">
+<tt class="descname">is_submodule</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.is_submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.is_submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">other</span></tt> is a submodule of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a zero module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.module_quotient">
+<tt class="descname">module_quotient</tt><big>(</big><em>other</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.module_quotient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.module_quotient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the module quotient of <tt class="docutils literal"><span class="pre">self</span></tt> by submodule <tt class="docutils literal"><span class="pre">other</span></tt>.</p>
+<p>That is, if <tt class="docutils literal"><span class="pre">self</span></tt> is the module <span class="math">\(M\)</span> and <tt class="docutils literal"><span class="pre">other</span></tt> is <span class="math">\(N\)</span>, then
+return the ideal <span class="math">\(\{f \in R | fN \subset M\}\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">module_quotient</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="go">&lt;y&gt;</span>
+</pre></div>
+</div>
+<p>Some implementations allow further options to be passed. Currently, the
+only one implemented is <tt class="docutils literal"><span class="pre">relations=True</span></tt>, which may only be passed
+if <tt class="docutils literal"><span class="pre">other</span></tt> is prinicipal. In this case the function
+will return a pair <tt class="docutils literal"><span class="pre">(res,</span> <span class="pre">rel)</span></tt> where <tt class="docutils literal"><span class="pre">res</span></tt> is the ideal, and
+<tt class="docutils literal"><span class="pre">rel</span></tt> is a list of coefficient vectors, expressing the generators of
+the ideal, multiplied by the generator of <tt class="docutils literal"><span class="pre">other</span></tt> in terms of
+generators of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">module_quotient</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">relations</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(&lt;y&gt;, [[1]])</span>
+</pre></div>
+</div>
+<p>This means that the quotient ideal is generated by the single element
+<span class="math">\(y\)</span>, and that <span class="math">\(y (x, x) = 1 (xy, xy)\)</span>, <span class="math">\((x, x)\)</span> and <span class="math">\((xy, xy)\)</span> being
+the generators of <span class="math">\(T\)</span> and <span class="math">\(S\)</span>, respectively.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.multiply_ideal">
+<tt class="descname">multiply_ideal</tt><big>(</big><em>I</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.multiply_ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.multiply_ideal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply <tt class="docutils literal"><span class="pre">self</span></tt> by the ideal <tt class="docutils literal"><span class="pre">I</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">*</span><span class="n">M</span>
+<span class="go">&lt;[x**2, x**2]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.quotient_module">
+<tt class="descname">quotient_module</tt><big>(</big><em>other</em>, <em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.quotient_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.quotient_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a quotient module.</p>
+<p>This is the same as taking a submodule of a quotient of the containing
+module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span><span class="o">.</span><span class="n">quotient_module</span><span class="p">(</span><span class="n">S2</span><span class="p">)</span>
+<span class="go">&lt;[x, 1] + &lt;[x**2, x]&gt;&gt;</span>
+</pre></div>
+</div>
+<p>Or more coincisely, using the overloaded division operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">[(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="go">&lt;[x, 1] + &lt;[x**2, x]&gt;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.reduce_element">
+<tt class="descname">reduce_element</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.reduce_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.reduce_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the element <tt class="docutils literal"><span class="pre">x</span></tt> of our ring modulo the ideal <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>Here &#8220;reduce&#8221; has no specific meaning, it could return a unique normal
+form, simplify the expression a bit, or just do nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.submodule">
+<tt class="descname">submodule</tt><big>(</big><em>*gens</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a submodule.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="go">&lt;[x**2, x]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.syzygy_module">
+<tt class="descname">syzygy_module</tt><big>(</big><em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.syzygy_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.syzygy_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the syzygy module of the generators of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>Suppose <span class="math">\(M\)</span> is generated by <span class="math">\(f_1, \dots, f_n\)</span> over the ring
+<span class="math">\(R\)</span>. Consider the homomorphism <span class="math">\(\phi: R^n \to M\)</span>, given by
+sending <span class="math">\((r_1, \dots, r_n) \to r_1 f_1 + \dots + r_n f_n\)</span>.
+The syzygy module is defined to be the kernel of <span class="math">\(\phi\)</span>.</p>
+<p>The syzygy module is zero iff the generators generate freely a free
+submodule:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">syzygy_module</span><span class="p">()</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>A slightly more interesting example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">syzygy_module</span><span class="p">()</span> <span class="o">==</span> <span class="n">S</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubModule.union">
+<tt class="descname">union</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubModule.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubModule.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the module generated by the union of <tt class="docutils literal"><span class="pre">self</span></tt> and <tt class="docutils literal"><span class="pre">other</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">])</span> <span class="c"># &lt;x(x+1)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="c"># &lt;(x-1)(x+1)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<p>Ideals are created very similarly to modules. For example, let&#8217;s verify
+that the nodal cubic is indeed singular at the origin:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">==</span> <span class="n">lr</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">==</span> <span class="n">lr</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>We are using here the fact that a curve is non-singular at a point if and only
+if the maximal ideal of the local ring is principal, and that in this case at
+least one of <span class="math">\(x\)</span> and <span class="math">\(y\)</span> must be generators.</p>
+<p>This is the detailed documentation of the class ideal. Please note that most
+of the methods regarding properties of ideals (primality etc.) are not yet
+implemented.</p>
+<dl class="class">
+<dt id="sympy.polys.agca.ideals.Ideal">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.ideals.</tt><tt class="descname">Ideal</tt><big>(</big><em>ring</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for ideals.</p>
+<p>Do not instantiate - use explicit constructors in the ring class instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;x + 1&gt;</span>
+</pre></div>
+</div>
+<p>Attributes</p>
+<ul class="simple">
+<li>ring - the ring this ideal belongs to</li>
+</ul>
+<p>Non-implemented methods:</p>
+<ul class="simple">
+<li>_contains_elem</li>
+<li>_contains_ideal</li>
+<li>_quotient</li>
+<li>_intersect</li>
+<li>_union</li>
+<li>_product</li>
+<li>is_whole_ring</li>
+<li>is_zero</li>
+<li>is_prime, is_maximal, is_primary, is_radical</li>
+<li>is_principal</li>
+<li>height, depth</li>
+<li>radical</li>
+</ul>
+<p>Methods that likely should be overridden in subclasses:</p>
+<ul class="simple">
+<li>reduce_element</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.contains">
+<tt class="descname">contains</tt><big>(</big><em>elem</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">elem</span></tt> is an element of this ideal.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.depth">
+<tt class="descname">depth</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.depth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the depth of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.height">
+<tt class="descname">height</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the height of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.intersect">
+<tt class="descname">intersect</tt><big>(</big><em>J</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the intersection of self with ideal J.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">&lt;x*y&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_maximal">
+<tt class="descname">is_maximal</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_maximal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_maximal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a maximal ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_primary">
+<tt class="descname">is_primary</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_primary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_primary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a primary ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_prime">
+<tt class="descname">is_prime</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_prime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_prime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a prime ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_principal">
+<tt class="descname">is_principal</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_principal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_principal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a principal ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_radical">
+<tt class="descname">is_radical</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_radical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_radical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a radical ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_whole_ring">
+<tt class="descname">is_whole_ring</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_whole_ring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_whole_ring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is the whole ring.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is the zero ideal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.product">
+<tt class="descname">product</tt><big>(</big><em>J</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ideal product of <tt class="docutils literal"><span class="pre">self</span></tt> and <tt class="docutils literal"><span class="pre">J</span></tt>.</p>
+<p>That is, compute the ideal generated by products <span class="math">\(xy\)</span>, for <span class="math">\(x\)</span> an element
+of <tt class="docutils literal"><span class="pre">self</span></tt> and <span class="math">\(y \in J\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">&lt;x*y&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.quotient">
+<tt class="descname">quotient</tt><big>(</big><em>J</em>, <em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.quotient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.quotient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ideal quotient of <tt class="docutils literal"><span class="pre">self</span></tt> by <tt class="docutils literal"><span class="pre">J</span></tt>.</p>
+<p>That is, if <tt class="docutils literal"><span class="pre">self</span></tt> is the ideal <span class="math">\(I\)</span>, compute the set
+<span class="math">\(I : J = \{x \in R | xJ \subset I \}\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">quotient</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">&lt;y&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.radical">
+<tt class="descname">radical</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.radical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.radical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the radical of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.reduce_element">
+<tt class="descname">reduce_element</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.reduce_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.reduce_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduce the element <tt class="docutils literal"><span class="pre">x</span></tt> of our ring modulo the ideal <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>Here &#8220;reduce&#8221; has no specific meaning: it could return a unique normal
+form, simplify the expression a bit, or just do nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.saturate">
+<tt class="descname">saturate</tt><big>(</big><em>J</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.saturate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.saturate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ideal saturation of <tt class="docutils literal"><span class="pre">self</span></tt> by <tt class="docutils literal"><span class="pre">J</span></tt>.</p>
+<p>That is, if <tt class="docutils literal"><span class="pre">self</span></tt> is the ideal <span class="math">\(I\)</span>, compute the set
+<span class="math">\(I : J^\infty = \{x \in R | xJ^n \subset I \text{ for some } n\}\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.subset">
+<tt class="descname">subset</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">other</span></tt> is is a subset of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">other</span></tt> may be an ideal.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">subset</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">subset</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">subset</span><span class="p">(</span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.ideals.Ideal.union">
+<tt class="descname">union</tt><big>(</big><em>J</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/ideals.html#Ideal.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.ideals.Ideal.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the ideal generated by the union of <tt class="docutils literal"><span class="pre">self</span></tt> and <tt class="docutils literal"><span class="pre">J</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">((</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">==</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<p>If <span class="math">\(M\)</span> is an <span class="math">\(A\)</span>-module and <span class="math">\(N\)</span> is an <span class="math">\(A\)</span>-submodule, we can define two elements
+<span class="math">\(x\)</span> and <span class="math">\(y\)</span> of <span class="math">\(M\)</span> to be equivalent if <span class="math">\(x - y \in N\)</span>. The set of equivalence
+classes is written <span class="math">\(M/N\)</span>, and has a natural <span class="math">\(A\)</span>-module structure. This is
+called the quotient module of <span class="math">\(M\)</span> by <span class="math">\(N\)</span>. If <span class="math">\(K\)</span> is a submodule of <span class="math">\(M\)</span>
+containing <span class="math">\(N\)</span>, then <span class="math">\(K/N\)</span> is in a natural way a submodule of <span class="math">\(M/N\)</span>. Such a
+module is called a subquotient. Here is the documentation of quotient and
+subquotient modules:</p>
+<dl class="class">
+<dt id="sympy.polys.agca.modules.QuotientModule">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.modules.</tt><tt class="descname">QuotientModule</tt><big>(</big><em>ring</em>, <em>base</em>, <em>submodule</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for quotient modules.</p>
+<p>Do not instantiate this directly. For subquotients, see the
+SubQuotientModule class.</p>
+<p>Attributes:</p>
+<ul class="simple">
+<li>base - the base module we are a quotient of</li>
+<li>killed_module - the submodule used to form the quotient</li>
+<li>rank of the base</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.convert">
+<tt class="descname">convert</tt><big>(</big><em>elem</em>, <em>M=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="docutils literal"><span class="pre">elem</span></tt> into the internal representation.</p>
+<p>This method is called implicitly whenever computations involve elements
+not in the internal representation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">[1, 0] + &lt;[1, 2], [1, x]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.polys.agca.modules.QuotientModule.dtype">
+<tt class="descname">dtype</tt><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">QuotientModuleElement</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.identity_hom">
+<tt class="descname">identity_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.identity_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.identity_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the identity homomorphism on <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : QQ[x]**2/&lt;[1, 2], [1, x]&gt; -&gt; QQ[x]**2/&lt;[1, 2], [1, x]&gt;</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.is_submodule">
+<tt class="descname">is_submodule</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.is_submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.is_submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">other</span></tt> is a submodule of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a zero module.</p>
+<p>This happens if and only if the base module is the same as the
+submodule being killed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">F</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">F</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.quotient_hom">
+<tt class="descname">quotient_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.quotient_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.quotient_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the quotient homomorphism to <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>That is, return a homomorphism representing the natural map from
+<tt class="docutils literal"><span class="pre">self.base</span></tt> to <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">quotient_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 2], [1, x]&gt;</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.QuotientModule.submodule">
+<tt class="descname">submodule</tt><big>(</big><em>*gens</em>, <em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#QuotientModule.submodule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.QuotientModule.submodule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a submodule.</p>
+<p>This is the same as taking a quotient of a submodule of the base
+module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;[x, 0] + &lt;[x, x]&gt;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.polys.agca.modules.SubQuotientModule">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.modules.</tt><tt class="descname">SubQuotientModule</tt><big>(</big><em>gens</em>, <em>container</em>, <em>**opts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubQuotientModule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubQuotientModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submodule of a quotient module.</p>
+<p>Equivalently, quotient module of a submodule.</p>
+<p>Do not instantiate this, instead use the submodule or quotient_module
+constructing methods:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">F</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">==</span> <span class="n">Q</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Attributes:</p>
+<ul class="simple">
+<li>base - base module we are quotient of</li>
+<li>killed_module - submodule used to form the quotient</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubQuotientModule.is_full_module">
+<tt class="descname">is_full_module</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubQuotientModule.is_full_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubQuotientModule.is_full_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is the entire free module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.modules.SubQuotientModule.quotient_hom">
+<tt class="descname">quotient_hom</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/modules.html#SubQuotientModule.quotient_hom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.modules.SubQuotientModule.quotient_hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the quotient homomorphism to self.</p>
+<p>That is, return the natural map from <tt class="docutils literal"><span class="pre">self.base</span></tt> to <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="p">(</span><span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)])</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">quotient_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : &lt;[1, 0], [1, x]&gt; -&gt; &lt;[1, 0] + &lt;[1, x]&gt;, [1, x] + &lt;[1, x]&gt;&gt;</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-homomorphisms-and-syzygies">
+<h3>Module Homomorphisms and Syzygies<a class="headerlink" href="#module-homomorphisms-and-syzygies" title="Permalink to this headline">¶</a></h3>
+<p>Let <span class="math">\(M\)</span> and <span class="math">\(N\)</span> be <span class="math">\(A\)</span>-modules. A mapping <span class="math">\(f: M \to N\)</span> satisfying various
+obvious properties (see <a class="reference internal" href="literature.html#atiyah69">[Atiyah69]</a>) is called an <span class="math">\(A\)</span>-module homomorphism.
+In this case <span class="math">\(M\)</span> is called the <em>domain</em> and <em>N</em> the <em>codomain</em>. The
+set <span class="math">\(\{x \in M | f(x) = 0\}\)</span> is called the <em>kernel</em> <span class="math">\(ker(f)\)</span>, whereas the
+set <span class="math">\(\{f(x) | x \in M\}\)</span> is called the <em>image</em> <span class="math">\(im(f)\)</span>.
+The kernel is a submodule of <span class="math">\(M\)</span>, the image is a submodule of <span class="math">\(N\)</span>.
+The homomorphism <span class="math">\(f\)</span> is injective if and only if <span class="math">\(ker(f) = 0\)</span> and surjective
+if and only if <span class="math">\(im(f) = N\)</span>.
+A bijective homomorphism is called an <em>isomorphism</em>. Equivalently, <span class="math">\(ker(f) = 0\)</span>
+and <span class="math">\(im(f) = N\)</span>. (A related notion, which currently has no special name in
+the AGCA module, is that of the <em>cokernel</em>, <span class="math">\(coker(f) = N/im(f)\)</span>.)</p>
+<p>Suppose now <span class="math">\(M\)</span> is an <span class="math">\(A\)</span>-module. <span class="math">\(M\)</span> is called <em>finitely generated</em> if there
+exists a surjective homomorphism <span class="math">\(A^n \to M\)</span> for some <span class="math">\(n\)</span>. If such a morphism
+<span class="math">\(f\)</span> is chosen, the images of the standard basis of <span class="math">\(A^n\)</span> are called the
+<em>generators</em> of <span class="math">\(M\)</span>. The module <span class="math">\(ker(f)\)</span> is called <em>syzygy module</em> with respect
+to the generators. A module is called <em>finitely presented</em> if it is finitely
+generated with a finitely generated syzygy module. The class of finitely
+presented modules is essentially the largest class we can hope to be able to
+meaningfully compute in.</p>
+<p>It is an important theorem that, for all the rings we are considering,
+all submodules of finitely generated modules are finitely generated, and hence
+finitely generated and finitely presented modules are the same.</p>
+<p>The notion of syzygies, while it may first seem rather abstract, is actually
+very computational. This is because there exist (fairly easy) algorithms for
+computing them, and more general questions (kernels, intersections, ...) are
+often reduced to syzygy computation.</p>
+<p>Let us say a few words about the definition of homomorphisms in the AGCA
+module. Suppose first that <span class="math">\(f : M \to N\)</span> is an arbitrary morphism of
+<span class="math">\(A\)</span>-modules. Then if <span class="math">\(K\)</span> is a submodule of <span class="math">\(M\)</span>, <span class="math">\(f\)</span> naturally defines a new
+homomorphism <span class="math">\(g: K \to N\)</span> (via <span class="math">\(g(x) = f(x)\)</span>), called the <em>restriction</em> of
+<span class="math">\(f\)</span> to <span class="math">\(K\)</span>. If now <span class="math">\(K\)</span> contained in the kernel of
+<span class="math">\(f\)</span>, then moreover <span class="math">\(f\)</span> defines in a natural homomorphism <span class="math">\(g: M/K \to N\)</span>
+(same formula as above!), and we say that <span class="math">\(f\)</span> <em>descends</em> to <span class="math">\(M/K\)</span>.
+Similarly, if <span class="math">\(L\)</span> is a submodule of <span class="math">\(N\)</span>, there is a natural homomorphism
+<span class="math">\(g: M \to N/L\)</span>, we say that <span class="math">\(g\)</span> <em>factors</em> through <span class="math">\(f\)</span>. Finally, if now <span class="math">\(L\)</span>
+contains the image of <span class="math">\(f\)</span>, then there is a natural homomorphism <span class="math">\(g: M \to L\)</span>
+(defined, again, by the same formula), and we say <span class="math">\(g\)</span> is obtained from <span class="math">\(f\)</span>
+by restriction of codomain. Observe also that each of these four operations
+is reversible, in the sense that given <span class="math">\(g\)</span>, one can always (non-uniquely)
+find <span class="math">\(f\)</span> such that <span class="math">\(g\)</span> is obtained from <span class="math">\(f\)</span> in the above way.</p>
+<p>Note that all modules implemented in AGCA are obtained from free modules by
+taking a succession of submodules and quotients. Hence, in order to explain
+how to define a homomorphism between arbitrary modules, in light of the above,
+we need only explain how to define homomorphisms of free modules. But,
+essentially by the definition of free module, a homomorphism from a free module
+<span class="math">\(A^n\)</span> to any module <span class="math">\(M\)</span> is precisely the same as giving <span class="math">\(n\)</span> elements of <span class="math">\(M\)</span>
+(the images of the standard basis), and giving an element of a free module
+<span class="math">\(A^m\)</span> is precisely the same as giving <span class="math">\(m\)</span> elements of <span class="math">\(A\)</span>. Hence a
+homomorphism of free modules <span class="math">\(A^n \to A^m\)</span> can be specified via a matrix,
+entirely analogously to the case of vector spaces.</p>
+<p>The functions <tt class="docutils literal"><span class="pre">restrict_domain</span></tt> etc. of the class <tt class="docutils literal"><span class="pre">Homomorphism</span></tt> can be
+used
+to carry out the operations described above, and homomorphisms of free modules
+can in principle be instantiated by hand. Since these operations are so common,
+there is a convenience function <tt class="docutils literal"><span class="pre">homomorphism</span></tt> to define a homomorphism
+between arbitrary modules via the method outlined above. It is essentially
+the only way homomorphisms need ever be created by the user.</p>
+<dl class="function">
+<dt id="sympy.polys.agca.homomorphisms.homomorphism">
+<tt class="descclassname">sympy.polys.agca.homomorphisms.</tt><tt class="descname">homomorphism</tt><big>(</big><em>domain</em>, <em>codomain</em>, <em>matrix</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#homomorphism"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.homomorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a homomorphism object.</p>
+<p>This function tries to build a homomorphism from <tt class="docutils literal"><span class="pre">domain</span></tt> to <tt class="docutils literal"><span class="pre">codomain</span></tt>
+via the matrix <tt class="docutils literal"><span class="pre">matrix</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <tt class="docutils literal"><span class="pre">domain</span></tt> is a free module generated by <span class="math">\(e_1, \dots, e_n\)</span>, then
+<tt class="docutils literal"><span class="pre">matrix</span></tt> should be an n-element iterable <span class="math">\((b_1, \dots, b_n)\)</span> where
+the <span class="math">\(b_i\)</span> are elements of <tt class="docutils literal"><span class="pre">codomain</span></tt>. The constructed homomorphism is the
+unique homomorphism sending <span class="math">\(e_i\)</span> to <span class="math">\(b_i\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x**2], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[x,    0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">[1, x]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">[x**2, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">[x**2 + 1, x]</span>
+</pre></div>
+</div>
+<p>If <tt class="docutils literal"><span class="pre">domain</span></tt> is a submodule of a free module, them <tt class="docutils literal"><span class="pre">matrix</span></tt> determines
+a homomoprhism from the containing free module to <tt class="docutils literal"><span class="pre">codomain</span></tt>, and the
+homomorphism returned is obtained by restriction to <tt class="docutils literal"><span class="pre">domain</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x**2], : &lt;[1, 0], [0, x]&gt; -&gt; QQ[x]**2</span>
+<span class="go">[x,    0]])</span>
+</pre></div>
+</div>
+<p>If <tt class="docutils literal"><span class="pre">domain</span></tt> is a (sub)quotient <span class="math">\(N/K\)</span>, then <tt class="docutils literal"><span class="pre">matrix</span></tt> determines a
+homomorphism from <span class="math">\(N\)</span> to <tt class="docutils literal"><span class="pre">codomain</span></tt>. If the kernel contains <span class="math">\(K\)</span>, this
+homomorphism descends to <tt class="docutils literal"><span class="pre">domain</span></tt> and is returned; otherwise an exception
+is raised.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">S</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="n">T</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, x**2], : &lt;[1, 0] + &lt;[1, 0]&gt;, [0, x] + &lt;[1, 0]&gt;, [1, 0] + &lt;[1, 0]&gt;&gt; -&gt; QQ[x]**2</span>
+<span class="go">[0,    0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">S</span><span class="o">/</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)],</span> <span class="n">T</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">kernel &lt;[1, 0], [0, 0]&gt; must contain sm, got &lt;[0,x]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>Finally, here is the detailed reference of the actual homomorphism class:</p>
+<dl class="class">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism">
+<em class="property">class </em><tt class="descclassname">sympy.polys.agca.homomorphisms.</tt><tt class="descname">ModuleHomomorphism</tt><big>(</big><em>domain</em>, <em>codomain</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for module homomoprhisms. Do not instantiate.</p>
+<p>Instead, use the <tt class="docutils literal"><span class="pre">homomorphism</span></tt> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+<p>Attributes:</p>
+<ul class="simple">
+<li>ring - the ring over which we are considering modules</li>
+<li>domain - the domain module</li>
+<li>codomain - the codomain module</li>
+<li>_ker - cached kernel</li>
+<li>_img - cachd image</li>
+</ul>
+<p>Non-implemented methods:</p>
+<ul class="simple">
+<li>_kernel</li>
+<li>_image</li>
+<li>_restrict_domain</li>
+<li>_restrict_codomain</li>
+<li>_quotient_domain</li>
+<li>_quotient_codomain</li>
+<li>_apply</li>
+<li>_mul_scalar</li>
+<li>_compose</li>
+<li>_add</li>
+</ul>
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.image">
+<tt class="descname">image</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the image of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>That is, if <tt class="docutils literal"><span class="pre">self</span></tt> is the homomorphism <span class="math">\(\phi: M \to N\)</span>, then compute
+<span class="math">\(im(\phi) = \{\phi(x) | x \in M \}\)</span>.  This is a submodule of <span class="math">\(N\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span><span class="o">.</span><span class="n">image</span><span class="p">()</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_injective">
+<tt class="descname">is_injective</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.is_injective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_injective" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is injective.</p>
+<p>That is, check if the elements of the domain are mapped to the same
+codomain element.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">is_injective</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">quotient_domain</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">kernel</span><span class="p">())</span><span class="o">.</span><span class="n">is_injective</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_isomorphism">
+<tt class="descname">is_isomorphism</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.is_isomorphism"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_isomorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is an isomorphism.</p>
+<p>That is, check if every element of the codomain has precisely one
+preimage. Equivalently, <tt class="docutils literal"><span class="pre">self</span></tt> is both injective and surjective.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">restrict_codomain</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">image</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">is_isomorphism</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">quotient_domain</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">kernel</span><span class="p">())</span><span class="o">.</span><span class="n">is_isomorphism</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_surjective">
+<tt class="descname">is_surjective</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.is_surjective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_surjective" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is surjective.</p>
+<p>That is, check if every element of the codomain has at least one
+preimage.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">is_surjective</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">restrict_codomain</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">image</span><span class="p">())</span><span class="o">.</span><span class="n">is_surjective</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_zero">
+<tt class="descname">is_zero</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if <tt class="docutils literal"><span class="pre">self</span></tt> is a zero morphism.</p>
+<p>That is, check if every element of the domain is mapped to zero
+under self.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">restrict_domain</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">())</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">image</span><span class="p">())</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.kernel">
+<tt class="descname">kernel</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.kernel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.kernel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the kernel of <tt class="docutils literal"><span class="pre">self</span></tt>.</p>
+<p>That is, if <tt class="docutils literal"><span class="pre">self</span></tt> is the homomorphism <span class="math">\(\phi: M \to N\)</span>, then compute
+<span class="math">\(ker(\phi) = \{x \in M | \phi(x) = 0\}\)</span>.  This is a submodule of <span class="math">\(M\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">&lt;[x, -1]&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_codomain">
+<tt class="descname">quotient_codomain</tt><big>(</big><em>sm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.quotient_codomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_codomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">self</span></tt> with codomain replaced by <tt class="docutils literal"><span class="pre">codomain/sm</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">sm</span></tt> must be a submodule of <tt class="docutils literal"><span class="pre">self.codomain</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 1]&gt;</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+<p>This is the same as composing with the quotient map on the left:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">F</span><span class="o">/</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span><span class="o">.</span><span class="n">quotient_hom</span><span class="p">()</span> <span class="o">*</span> <span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 1]&gt;</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_domain">
+<tt class="descname">quotient_domain</tt><big>(</big><em>sm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.quotient_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">self</span></tt> with domain replaced by <tt class="docutils literal"><span class="pre">domain/sm</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">sm</span></tt> must be a submodule of <tt class="docutils literal"><span class="pre">self.kernel()</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">quotient_domain</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2/&lt;[-x, 1]&gt; -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_codomain">
+<tt class="descname">restrict_codomain</tt><big>(</big><em>sm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.restrict_codomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_codomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">self</span></tt>, with codomain restricted to to <tt class="docutils literal"><span class="pre">sm</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">sm</span></tt> has to be a submodule of <tt class="docutils literal"><span class="pre">self.codomain</span></tt> containing the
+image.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">restrict_codomain</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; &lt;[1, 0]&gt;</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_domain">
+<tt class="descname">restrict_domain</tt><big>(</big><em>sm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/polys/agca/homomorphisms.html#ModuleHomomorphism.restrict_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">self</span></tt>, with the domain restricted to <tt class="docutils literal"><span class="pre">sm</span></tt>.</p>
+<p>Here <tt class="docutils literal"><span class="pre">sm</span></tt> has to be a submodule of <tt class="docutils literal"><span class="pre">self.domain</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">QQ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.polys.agca</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">old_poly_ring</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">homomorphism</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">restrict_domain</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : &lt;[1, 0]&gt; -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+<p>This is the same as just composing on the right with the submodule
+inclusion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">*</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">inclusion_hom</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, x], : &lt;[1, 0]&gt; -&gt; QQ[x]**2</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">AGCA - Algebraic Geometry and Commutative Algebra Module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#base-rings">Base Rings</a></li>
+<li><a class="reference internal" href="#modules-ideals-and-their-elementary-properties">Modules, Ideals and their Elementary Properties</a></li>
+<li><a class="reference internal" href="#module-homomorphisms-and-syzygies">Module Homomorphisms and Syzygies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="previous chapter">Polynomials Manipulation Module Reference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="internals.html"
+                        title="next chapter">Internals of the Polynomial Manipulation Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/polys/agca.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="internals.html" title="Internals of the Polynomial Manipulation Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Polynomials Manipulation Module Reference"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Polynomials Manipulation Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

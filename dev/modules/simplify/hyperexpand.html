@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Details on the Hypergeometric Function Expansion Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Statistics" href="../statistics.html" />
+    <link rel="prev" title="Simplify" href="simplify.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../statistics.html" title="Statistics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simplify.html" title="Simplify"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="details-on-the-hypergeometric-function-expansion-module">
+<h1>Details on the Hypergeometric Function Expansion Module<a class="headerlink" href="#details-on-the-hypergeometric-function-expansion-module" title="Permalink to this headline">¶</a></h1>
+<p>This page describes how the function <tt class="xref py py-func docutils literal"><span class="pre">hyperexpand()</span></tt> and related code
+work. For usage, see the documentation of the symplify module.</p>
+<div class="section" id="hypergeometric-function-expansion-algorithm">
+<h2>Hypergeometric Function Expansion Algorithm<a class="headerlink" href="#hypergeometric-function-expansion-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>This section describes the algorithm used to expand hypergeometric functions.
+Most of it is based on the papers <a class="reference internal" href="#roach1996">[Roach1996]</a> and <a class="reference internal" href="#roach1997">[Roach1997]</a>.</p>
+<p>Recall that the hypergeometric function is (initially) defined as</p>
+<div class="math">
+\[\begin{split}{}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+                 \middle| z \right)
+    = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
+                        \frac{z^n}{n!}.\end{split}\]</div>
+<p>It turns out that there are certain differential operators that can change the
+<span class="math">\(a_p\)</span> and <span class="math">\(p_q\)</span> parameters by integers. If a sequence of such
+operators is known that converts the set of indices <span class="math">\(a_r^0\)</span> and
+<span class="math">\(b_s^0\)</span> into <span class="math">\(a_p\)</span> and <span class="math">\(b_q\)</span>, then we shall say the pair <span class="math">\(a_p,
+b_q\)</span> is reachable from <span class="math">\(a_r^0, b_s^0\)</span>. Our general strategy is thus as
+follows: given a set <span class="math">\(a_p, b_q\)</span> of parameters, try to look up an origin
+<span class="math">\(a_r^0, b_s^0\)</span> for which we know an expression, and then apply the
+sequence of differential operators to the known expression to find an
+expression for the Hypergeometric function we are interested in.</p>
+<div class="section" id="notation">
+<h3>Notation<a class="headerlink" href="#notation" title="Permalink to this headline">¶</a></h3>
+<p>In the following, the symbol <span class="math">\(a\)</span> will always denote a numerator parameter
+and the symbol <span class="math">\(b\)</span> will always denote a denominator parameter. The
+subscripts <span class="math">\(p, q, r, s\)</span> denote vectors of that length, so e.g.
+<span class="math">\(a_p\)</span> denotes a vector of <span class="math">\(p\)</span> numerator parameters. The subscripts
+<span class="math">\(i\)</span> and <span class="math">\(j\)</span> denote &#8220;running indices&#8221;, so they should usually be used in
+conjuction with a &#8220;for all <span class="math">\(i\)</span>&#8221;. E.g. <span class="math">\(a_i &lt; 4\)</span> for all <span class="math">\(i\)</span>.
+Uppercase subscripts <span class="math">\(I\)</span> and <span class="math">\(J\)</span> denote a chosen, fixed index. So
+for example <span class="math">\(a_I &gt; 0\)</span> is true if the inequality holds for the one index
+<span class="math">\(I\)</span> we are currently interested in.</p>
+</div>
+<div class="section" id="incrementing-and-decrementing-indices">
+<h3>Incrementing and decrementing indices<a class="headerlink" href="#incrementing-and-decrementing-indices" title="Permalink to this headline">¶</a></h3>
+<p>Suppose <span class="math">\(a_i \ne 0\)</span>. Set <span class="math">\(A(a_i) =
+\frac{z}{a_i}\frac{\mathrm{d}}{dz}+1\)</span>. It is then easy to show that
+<span class="math">\(A(a_i) {}_p F_q\left({a_p \atop b_q} \middle| z \right) = {}_p F_q\left({a_p +
+e_i \atop b_q} \middle| z \right)\)</span>, where <span class="math">\(e_i\)</span> is the i-th unit vector.
+Similarly for <span class="math">\(b_j \ne 1\)</span> we set <span class="math">\(B(b_j) = \frac{z}{b_j-1}
+\frac{\mathrm{d}}{dz}+1\)</span> and find <span class="math">\(B(b_j) {}_p F_q\left({a_p \atop b_q}
+\middle| z \right) = {}_p F_q\left({a_p \atop b_q - e_i} \middle| z \right)\)</span>.
+Thus we can increment upper and decrement lower indices at will, as long as we
+don&#8217;t go through zero. The <span class="math">\(A(a_i)\)</span> and <span class="math">\(B(b_j)\)</span> are called shift
+operators.</p>
+<p>It is also easy to show that <span class="math">\(\frac{\mathrm{d}}{dz} {}_p F_q\left({a_p
+\atop b_q} \middle| z \right) = \frac{a_1 \dots a_p}{b_1 \dots b_q} {}_p
+F_q\left({a_p + 1 \atop b_q + 1} \middle| z \right)\)</span>, where <span class="math">\(a_p + 1\)</span> is
+the vector <span class="math">\(a_1 + 1, a_2 + 1, \dots\)</span> and similarly for <span class="math">\(b_q + 1\)</span>.
+Combining this with the shift operators,  we arrive at one form of the
+Hypergeometric differential equation: <span class="math">\(\left[ \frac{\mathrm{d}}{dz}
+\prod_{j=1}^q B(b_j) - \frac{a_1 \dots a_p}{(b_1-1) \dots (b_q-1)}
+\prod_{i=1}^p A(a_i) \right] {}_p F_q\left({a_p \atop b_q} \middle| z \right) =
+0\)</span>. This holds if all shift operators are defined, i.e. if no <span class="math">\(a_i = 0\)</span>
+and no <span class="math">\(b_j = 1\)</span>. Clearing denominators and multiplying through by z we
+arrive at the following equation: <span class="math">\(\left[ z\frac{\mathrm{d}}{dz}
+\prod_{j=1}^q \left(z\frac{\mathrm{d}}{dz} + b_j-1 \right) - z \prod_{i=1}^p
+\left( z\frac{\mathrm{d}}{\mathrm{d}z} + a_i \right) \right] {}_p F_q\left({a_p
+\atop b_q} \middle| z\right) = 0\)</span>. Even though our derivation does not show it,
+it can be checked that this equation holds whenever the <span class="math">\({}_p F_q\)</span> is
+defined.</p>
+<p>Notice that, under suitable conditions on <span class="math">\(a_I, b_J\)</span>, each of the
+operators <span class="math">\(A(a_i)\)</span>, <span class="math">\(B(b_j)\)</span> and
+<span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z}\)</span> can be expressed in terms of <span class="math">\(A(a_I)\)</span> or
+<span class="math">\(B(b_J)\)</span>. Our next aim is to write the Hypergeometric differential
+equation as follows: <span class="math">\([X A(a_I) - r] {}_p F_q\left({a_p \atop b_q}
+\middle| z\right) = 0\)</span>, for some operator <span class="math">\(X\)</span> and some constant <span class="math">\(r\)</span>
+to be determined. If
+<span class="math">\(r \ne 0\)</span>, then we can write this as <span class="math">\(\frac{-1}{r} X {}_p F_q\left({a_p +
+e_I \atop b_q} \middle| z\right) = {}_p F_q\left({a_p \atop b_q} \middle|
+z\right)\)</span>, and so <span class="math">\(\frac{-1}{r}X\)</span> undoes the shifting of <span class="math">\(A(a_I)\)</span>,
+whence it will be called an inverse-shift operator.</p>
+<p>Now <span class="math">\(A(a_I)\)</span> exists if <span class="math">\(a_I \ne 0\)</span>, and then
+<span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z} = a_I A(a_I) - a_I\)</span>. Observe also that all the
+operators <span class="math">\(A(a_i)\)</span>, <span class="math">\(B(b_j)\)</span> and
+<span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z}\)</span> commute. We have <span class="math">\(\prod_{i=1}^p \left(
+z\frac{\mathrm{d}}{\mathrm{d}z} + a_i \right) = \left(\prod_{i=1, i \ne I}^p
+\left( z\frac{\mathrm{d}}{\mathrm{d}z} + a_i \right)\right) a_I A(a_I)\)</span>, so
+this gives us the first half of <span class="math">\(X\)</span>. The other half does not have such a
+nice expression. We find <span class="math">\(z\frac{\mathrm{d}}{dz} \prod_{j=1}^q
+\left(z\frac{\mathrm{d}}{dz} + b_j-1 \right) = \left(a_I A(a_I) - a_I\right)
+\prod_{j=1}^q \left(a_I A(a_I) - a_I + b_j - 1\right)\)</span>. Since the first
+half had no constant term, we infer <span class="math">\(r = -a_I\prod_{j=1}^q(b_j - 1
+-a_I)\)</span>.</p>
+<p>This tells us under which conditions we can &#8220;un-shift&#8221; <span class="math">\(A(a_I)\)</span>, namely
+when <span class="math">\(a_I \ne 0\)</span> and <span class="math">\(r \ne 0\)</span>. Substituting <span class="math">\(a_I - 1\)</span> for
+<span class="math">\(a_I\)</span> then tells us under what conditions we can decrement the index
+<span class="math">\(a_I\)</span>. Doing a similar analysis for <span class="math">\(B(a_J)\)</span>, we arrive at the
+following rules:</p>
+<ul class="simple">
+<li>An index <span class="math">\(a_I\)</span> can be decremented if <span class="math">\(a_I \ne 1\)</span> and
+<span class="math">\(a_I \ne b_j\)</span> for all <span class="math">\(b_j\)</span>.</li>
+<li>An index <span class="math">\(b_J\)</span> can be
+incremented if <span class="math">\(b_J \ne -1\)</span> and <span class="math">\(b_J \ne a_i\)</span> for all
+<span class="math">\(a_i\)</span>.</li>
+</ul>
+<p>Combined with the conditions (stated above) for the existence of shift
+operators, we have thus established the rules of the game!</p>
+</div>
+<div class="section" id="reduction-of-order">
+<h3>Reduction of Order<a class="headerlink" href="#reduction-of-order" title="Permalink to this headline">¶</a></h3>
+<p>Notice that, quite trivially, if <span class="math">\(a_I = b_J\)</span>, we have <span class="math">\({}_p
+F_q\left({a_p \atop b_q} \middle| z \right) = {}_{p-1} F_{q-1}\left({a_p^*
+\atop b_q^*} \middle| z \right)\)</span>, where <span class="math">\(a_p^*\)</span> means <span class="math">\(a_p\)</span> with
+<span class="math">\(a_I\)</span> omitted, and similarly for <span class="math">\(b_q^*\)</span>. We call this reduction of
+order.</p>
+<p>In fact, we can do even better. If <span class="math">\(a_I - b_J \in \mathbb{Z}_{&gt;0}\)</span>, then
+it is easy to see that <span class="math">\(\frac{(a_I)_n}{(b_J)_n}\)</span> is actually a polynomial
+in <span class="math">\(n\)</span>. It is also easy to see that
+<span class="math">\((z\frac{\mathrm{d}}{\mathrm{d}z})^k z^n = n^k z^n\)</span>. Combining these two remarks
+we find:</p>
+<blockquote>
+<div>If <span class="math">\(a_I - b_J \in \mathbb{Z}_{&gt;0}\)</span>, then there exists a polynomial
+<span class="math">\(p(n) = p_0 + p_1 n + \dots\)</span> (of degree <span class="math">\(a_I - b_J\)</span>) such
+that <span class="math">\(\frac{(a_I)_n}{(b_J)_n} = p(n)\)</span> and <span class="math">\({}_p F_q\left({a_p
+\atop b_q} \middle| z \right) = \left(p_0 + p_1
+z\frac{\mathrm{d}}{\mathrm{d}z} + p_2
+\left(z\frac{\mathrm{d}}{\mathrm{d}z}\right)^2 + \dots \right) {}_{p-1}
+F_{q-1}\left({a_p^* \atop b_q^*} \middle| z \right)\)</span>.</div></blockquote>
+<p>Thus any set of parameters <span class="math">\(a_p, b_q\)</span> is reachable from a set of
+parameters <span class="math">\(c_r, d_s\)</span> where <span class="math">\(c_i - d_j \in \mathbb{Z}\)</span> implies
+<span class="math">\(c_i &lt; d_j\)</span>. Such a set of parameters <span class="math">\(c_r, d_s\)</span> is called
+suitable. Our database of known formulae should only contain suitable origins.
+The reasons are twofold: firstly, working from suitable origins is easier, and
+secondly, a formula for a non-suitable origin can be deduced from a lower order
+formula, and we should put this one into the database instead.</p>
+</div>
+<div class="section" id="moving-around-in-the-parameter-space">
+<h3>Moving Around in the Parameter Space<a class="headerlink" href="#moving-around-in-the-parameter-space" title="Permalink to this headline">¶</a></h3>
+<p>It remains to investigate the following question: suppose <span class="math">\(a_p, b_q\)</span> and
+<span class="math">\(a_p^0, b_q^0\)</span> are both suitable, and also <span class="math">\(a_i - a_i^0 \in
+\mathbb{Z}\)</span>, <span class="math">\(b_j - b_j^0 \in \mathbb{Z}\)</span>. When is <span class="math">\(a_p, b_q\)</span>
+reachable from <span class="math">\(a_p^0, b_q^0\)</span>? It is clear that we can treat all
+parameters independently that are incongruent mod 1. So assume that <span class="math">\(a_i\)</span>
+and <span class="math">\(b_j\)</span> are congruent to <span class="math">\(r\)</span> mod 1, for all <span class="math">\(i\)</span> and
+<span class="math">\(j\)</span>. The same then follows for <span class="math">\(a_i^0\)</span> and <span class="math">\(b_j^0\)</span>.</p>
+<p>If <span class="math">\(r \ne 0\)</span>, then any such <span class="math">\(a_p, b_q\)</span> is reachable from any
+<span class="math">\(a_p^0, b_q^0\)</span>. To see this notice that there exist constants <span class="math">\(c, c^0\)</span>,
+congruent mod 1, such that <span class="math">\(a_i &lt; c &lt; b_j\)</span> for all <span class="math">\(i\)</span> and
+<span class="math">\(j\)</span>, and similarly <span class="math">\(a_i^0 &lt; c^0 &lt; b_j^0\)</span>. If <span class="math">\(n = c - c^0 &gt; 0\)</span> then
+we first inverse-shift all the <span class="math">\(b_j^0\)</span> <span class="math">\(n\)</span> times up, and then
+similarly shift shift up all the <span class="math">\(a_i^0\)</span> <span class="math">\(n\)</span> times. If <span class="math">\(n &lt;
+0\)</span> then we first inverse-shift down the <span class="math">\(a_i^0\)</span> and then shift down the
+<span class="math">\(b_j^0\)</span>. This reduces to the case <span class="math">\(c = c^0\)</span>. But evidently we can
+now shift or inverse-shift around the <span class="math">\(a_i^0\)</span> arbitrarily so long as we
+keep them less than <span class="math">\(c\)</span>, and similarly for the <span class="math">\(b_j^0\)</span> so long as
+we keep them bigger than <span class="math">\(c\)</span>. Thus <span class="math">\(a_p, b_q\)</span> is reachable from
+<span class="math">\(a_p^0, b_q^0\)</span>.</p>
+<p>If <span class="math">\(r = 0\)</span> then the problem is slightly more involved. WLOG no parameter
+is zero. We now have one additional complication: no parameter can ever move
+through zero. Hence <span class="math">\(a_p, b_q\)</span> is reachable from <span class="math">\(a_p^0, b_q^0\)</span> if
+and only if the number of <span class="math">\(a_i &lt; 0\)</span> equals the number of <span class="math">\(a_i^0 &lt;
+0\)</span>, and similarly for the <span class="math">\(b_i\)</span> and <span class="math">\(b_i^0\)</span>. But in a suitable set
+of parameters, all <span class="math">\(b_j &gt; 0\)</span>! This is because the Hypergeometric function
+is undefined if one of the <span class="math">\(b_j\)</span> is a non-positive integer and all
+<span class="math">\(a_i\)</span> are smaller than the <span class="math">\(b_j\)</span>. Hence the number of <span class="math">\(b_j \le 0\)</span> is
+always zero.</p>
+<p>We can thus associate to every suitable set of parameters <span class="math">\(a_p, b_q\)</span>,
+where no <span class="math">\(a_i = 0\)</span>, the following invariants:</p>
+<blockquote>
+<div><ul class="simple">
+<li>For every <span class="math">\(r \in [0, 1)\)</span> the number <span class="math">\(\alpha_r\)</span> of parameters
+<span class="math">\(a_i \equiv r \pmod{1}\)</span>, and similarly the number <span class="math">\(\beta_r\)</span>
+of parameters <span class="math">\(b_i \equiv r \pmod{1}\)</span>.</li>
+<li>The number <span class="math">\(\gamma\)</span>
+of integers <span class="math">\(a_i\)</span> with <span class="math">\(a_i &lt; 0\)</span>.</li>
+</ul>
+</div></blockquote>
+<p>The above reasoning shows that <span class="math">\(a_p, b_q\)</span> is reachable from <span class="math">\(a_p^0,
+b_q^0\)</span> if and only if the invariants <span class="math">\(\alpha_r, \beta_r, \gamma\)</span> all
+agree. Thus in particular &#8220;being reachable from&#8221; is a symmetric relation on
+suitable parameters without zeros.</p>
+</div>
+<div class="section" id="applying-the-operators">
+<h3>Applying the Operators<a class="headerlink" href="#applying-the-operators" title="Permalink to this headline">¶</a></h3>
+<p>If all goes well then for a given set of parameters we find an origin in our
+database for which we have a nice formula. We now have to apply (potentially)
+many differential operators to it. If we do this blindly then the result will
+be very messy. This is because with Hypergeometric type functions, the
+derivative is usually expressed as a sum of two contiguous functions. Hence if
+we compute <span class="math">\(N\)</span> derivatives, then the answer will involve <span class="math">\(2N\)</span>
+contiguous functions! This is clearly undesirable. In fact we know from the
+Hypergeometric differential equation that we need at most <span class="math">\(\max(p, q+1)\)</span>
+contiguous functions to express all derivatives.</p>
+<p>Hence instead of differentiating blindly, we will work with a
+<span class="math">\(\mathbb{C}(z)\)</span>-module basis: for an origin <span class="math">\(a_r^0, b_s^0\)</span> we either store
+(for particularly pretty answers) or compute a set of <span class="math">\(N\)</span> functions
+(typically <span class="math">\(N = \max(r, s+1)\)</span>) with the property that the derivative of
+any of them is a <span class="math">\(\mathbb{C}(z)\)</span>-linear combination of them. In formulae,
+we store a vector <span class="math">\(B\)</span> of <span class="math">\(N\)</span> functions, a matrix <span class="math">\(M\)</span> and a
+vector <span class="math">\(C\)</span> (the latter two with entries in <span class="math">\(\mathbb{C}(z)\)</span>), with
+the following properties:</p>
+<ul class="simple">
+<li><span class="math">\({}_r F_s\left({a_r^0 \atop b_s^0} \middle| z \right) = C B\)</span></li>
+<li><span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z} B = M B\)</span>.</li>
+</ul>
+<p>Then we can compute as many derivatives as we want and we will always end up
+with <span class="math">\(\mathbb{C}(z)\)</span>-linear combination of at most <span class="math">\(N\)</span> special
+functions.</p>
+<p>As hinted above, <span class="math">\(B\)</span>, <span class="math">\(M\)</span> and <span class="math">\(C\)</span> can either all be stored
+(for particularly pretty answers) or computed from a single <span class="math">\({}_p F_q\)</span>
+formula.</p>
+</div>
+<div class="section" id="loose-ends">
+<h3>Loose Ends<a class="headerlink" href="#loose-ends" title="Permalink to this headline">¶</a></h3>
+<p>This describes the bulk of the hypergeometric function algorithm. There a few
+further tricks, described in the hyperexpand.py source file. The extension to
+Meijer G-functions is also described there.</p>
+</div>
+</div>
+<div class="section" id="meijer-g-functions-of-finite-confluence">
+<h2>Meijer G-Functions of Finite Confluence<a class="headerlink" href="#meijer-g-functions-of-finite-confluence" title="Permalink to this headline">¶</a></h2>
+<p>Slater&#8217;s theorem essentially evaluates a <span class="math">\(G\)</span>-function as a sum of residues.
+If all poles are simple, the resulting series can be recognised as
+hypergeometric series. Thus a <span class="math">\(G\)</span>-function can be evaluated as a sum of
+Hypergeometric functions.</p>
+<p>If the poles are not simple, the resulting series are not hypergeometric. This
+is known as the &#8220;confluent&#8221; or &#8220;logarithmic&#8221; case (the latter because the
+resulting series tend to contain logarithms). The answer depends in a
+complicated way on the multiplicities of various poles, and there is no
+accepted notation for representing it (as far as I know).
+However if there are only finitely many
+multiple poles, we can evaluate the <span class="math">\(G\)</span> function as a sum of hypergeometric
+functions, plus finitely many extra terms. I could not find any good reference
+for this, which is why I work it out here.</p>
+<p>Recall the general setup. We define</p>
+<div class="math">
+\[G(z) = \frac{1}{2\pi i} \int_L \frac{\prod_{j=1}^m \Gamma(b_j - s)
+  \prod_{j=1}^n \Gamma(1 - a_j + s)}{\prod_{j=m+1}^q \Gamma(1 - b_j + s)
+  \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,\]</div>
+<p>where <span class="math">\(L\)</span> is a contour starting and ending at <span class="math">\(+\infty\)</span>, enclosing all of the
+poles of <span class="math">\(\Gamma(b_j - s)\)</span> for <span class="math">\(j = 1, \dots, n\)</span> once in the negative
+direction, and no other poles. Also the integral is assumed absolutely
+convergent.</p>
+<p>In what follows, for any complex numbers <span class="math">\(a, b\)</span>, we write <span class="math">\(a \equiv b \pmod{1}\)</span> if
+and only if there exists an integer <span class="math">\(k\)</span> such that <span class="math">\(a - b = k\)</span>. Thus there are
+double poles iff <span class="math">\(a_i \equiv a_j \pmod{1}\)</span> for some <span class="math">\(i \ne j \le n\)</span>.</p>
+<p>We now assume that whenever <span class="math">\(b_j \equiv a_i \pmod{1}\)</span> for <span class="math">\(i \le m\)</span>, <span class="math">\(j &gt; n\)</span>
+then <span class="math">\(b_j &lt; a_i\)</span>. This means that no quotient of the relevant gamma functions
+is a polynomial, and can always be achieved by &#8220;reduction of order&#8221;. Fix a
+complex number <span class="math">\(c\)</span> such that <span class="math">\(\{b_i | b_i \equiv c \pmod{1}, i \le  m\}\)</span> is
+not empty. Enumerate this set as <span class="math">\(b, b+k_1, \dots, b+k_u\)</span>, with <span class="math">\(k_i\)</span>
+non-negative integers. Enumerate similarly
+<span class="math">\(\{a_j | a_j \equiv c \pmod{1}, j &gt; n\}\)</span> as <span class="math">\(b + l_1, \dots, b + l_v\)</span>.
+Then <span class="math">\(l_i &gt; k_j\)</span> for all <span class="math">\(i, j\)</span>. For finite confluence, we need to assume
+<span class="math">\(v \ge u\)</span> for all such <span class="math">\(c\)</span>.</p>
+<p>Let <span class="math">\(c_1, \dots, c_w\)</span> be distinct <span class="math">\(\pmod{1}\)</span> and exhaust the congruence classes
+of the <span class="math">\(b_i\)</span>. I claim</p>
+<div class="math">
+\[G(z) = -\sum_{j=1}^w (F_j(z) + R_j(z)),\]</div>
+<p>where <span class="math">\(F_j(z)\)</span> is a hypergeometric function and <span class="math">\(R_j(z)\)</span> is a finite sum, both
+to be specified later. Indeed corresponding to every <span class="math">\(c_j\)</span> there is
+a sequence of poles, at mostly finitely many of them multiple poles. This is where
+the <span class="math">\(j\)</span>-th term comes from.</p>
+<p>Hence fix again <span class="math">\(c\)</span>, enumerate the relevant <span class="math">\(b_i\)</span> as
+<span class="math">\(b, b + k_1, \dots, b + k_u\)</span>. We will look at the <span class="math">\(a_j\)</span> corresponding to
+<span class="math">\(a + l_1, \dots, a + l_u\)</span>. The other <span class="math">\(a_i\)</span> are not treated specially. The
+corresponding gamma functions have poles at (potentially) <span class="math">\(s = b + r\)</span> for
+<span class="math">\(r = 0, 1, \dots\)</span>. For <span class="math">\(r \ge l_u\)</span>, pole of the integrand is simple. We thus set</p>
+<div class="math">
+\[R(z) = \sum_{r=0}^{l_u - 1} res_{s = r + b}.\]</div>
+<p>We finally need to investigate the other poles. Set <span class="math">\(r = l_u + t\)</span>, <span class="math">\(t \ge 0\)</span>.
+A computation shows</p>
+<div class="math">
+\[\frac{\Gamma(k_i - l_u - t)}{\Gamma(l_i - l_u - t)}
+     = \frac{1}{(k_i - l_u - t)_{l_i - k_i}}
+     = \frac{(-1)^{\delta_i}}{(l_u - l_i + 1)_{\delta_i}}
+       \frac{(l_u - l_i + 1)_t}{(l_u - k_i + 1)_t},\]</div>
+<p>where <span class="math">\(\delta_i = l_i - k_i\)</span>.</p>
+<p>Also</p>
+<div class="math">
+\[\begin{split}\Gamma(b_j - l_u - b - t) =
+    \frac{\Gamma(b_j - l_u - b)}{(-1)^t(l_u + b + 1 - b_j)_t}, \\\end{split}\]\[\Gamma(1 - a_j + l_u + b + t) =
+    \Gamma(1 - a_j + l_u + b) (1 - a_j + l_u + b)_t\]</div>
+<p>and</p>
+<div class="math">
+\[res_{s = b + l_u + t} \Gamma(b - s) = -\frac{(-1)^{l_u + t}}{(l_u + t)!}
+          = -\frac{(-1)^{l_u}}{l_u!} \frac{(-1)^t}{(l_u+1)_t}.\]</div>
+<p>Hence</p>
+<div class="math">
+\[\begin{split}res_{s = b + l_u + t} =&amp; -z^{b + l_u}
+   \frac{(-1)^{l_u}}{l_u!}
+   \prod_{i=1}^{u} \frac{(-1)^{\delta_i}}{(l_u - k_i + 1)_{\delta_i}}
+   \frac{\prod_{j=1}^n \Gamma(1 - a_j + l_u + b)
+         \prod_{j=1}^m \Gamma(b_j - l_u - b)^*}
+        {\prod_{j=n+1}^p \Gamma(a_j - l_u - b)^* \prod_{j=m+1}^q
+         \Gamma(1 - b_j + l_u + b)}
+   \\ &amp;\times
+   z^t
+   \frac{(-1)^t}{(l_u+1)_t}
+   \prod_{i=1}^{u} \frac{(l_u - l_i + 1)_t}{(l_u - k_i + 1)_t}
+   \frac{\prod_{j=1}^n (1 - a_j + l_u + b)_t
+         \prod_{j=n+1}^p (-1)^t (l_u + b + 1 - a_j)_t^*}
+        {\prod_{j=1}^m (-1)^t (l_u + b + 1 - b_j)_t^*
+         \prod_{j=m+1}^q (1 - b_j + l_u + b)_t},\end{split}\]</div>
+<p>where the <span class="math">\(*\)</span> means to omit the terms we treated specially.</p>
+<p>We thus arrive at</p>
+<div class="math">
+\[\begin{split}F(z) = C \times {}_{p+1}F_{q}\left(
+    \begin{matrix} 1, (1 + l_u - l_i), (1 + l_u + b - a_i)^* \\
+                   1 + l_u, (1 + l_u - k_i), (1 + l_u + b - b_i)^*
+    \end{matrix} \middle| (-1)^{p-m-n} z\right),\end{split}\]</div>
+<p>where <span class="math">\(C\)</span> designates the factor in the residue independent of <span class="math">\(t\)</span>.
+(This result can also be written in slightly simpler form by converting
+all the <span class="math">\(l_u\)</span> etc back to <span class="math">\(a_* - b_*\)</span>, but doing so is going to require more
+notation still and is not helpful for computation.)</p>
+</div>
+<div class="section" id="extending-the-hypergeometric-tables">
+<h2>Extending The Hypergeometric Tables<a class="headerlink" href="#extending-the-hypergeometric-tables" title="Permalink to this headline">¶</a></h2>
+<p>Adding new formulae to the tables is straightforward. At the top of the file
+<tt class="docutils literal"><span class="pre">sympy/simplify/hyperexpand.py</span></tt>, there is a function called
+<tt class="xref py py-func docutils literal"><span class="pre">add_formulae()</span></tt>. Nested in it are defined two helpers,
+<tt class="docutils literal"><span class="pre">add(ap,</span> <span class="pre">bq,</span> <span class="pre">res)</span></tt> and <tt class="docutils literal"><span class="pre">addb(ap,</span> <span class="pre">bq,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">M)</span></tt>, as well as dummys
+<tt class="docutils literal"><span class="pre">a</span></tt>, <tt class="docutils literal"><span class="pre">b</span></tt>, <tt class="docutils literal"><span class="pre">c</span></tt>, and <tt class="docutils literal"><span class="pre">z</span></tt>.</p>
+<p>The first step in adding a new formula is by using <tt class="docutils literal"><span class="pre">add(ap,</span> <span class="pre">bq,</span> <span class="pre">res)</span></tt>. This
+declares <tt class="docutils literal"><span class="pre">hyper(ap,</span> <span class="pre">bq,</span> <span class="pre">z)</span> <span class="pre">==</span> <span class="pre">res</span></tt>. Here <tt class="docutils literal"><span class="pre">ap</span></tt> and <tt class="docutils literal"><span class="pre">bq</span></tt> may use the
+dummys <tt class="docutils literal"><span class="pre">a</span></tt>, <tt class="docutils literal"><span class="pre">b</span></tt>, and <tt class="docutils literal"><span class="pre">c</span></tt> as free symbols. For example the well-known formula
+<span class="math">\(\sum_0^\infty \frac{(-a)_n z^n}{n!} = (1-z)^a\)</span> is declared by the following
+line: <tt class="docutils literal"><span class="pre">add((-a,</span> <span class="pre">),</span> <span class="pre">(),</span> <span class="pre">(1-z)**a)</span></tt>.</p>
+<p>From the information provided, the matrices <span class="math">\(B\)</span>, <span class="math">\(C\)</span> and <span class="math">\(M\)</span> will be computed,
+and the formula is now available when expanding hypergeometric functions.
+Next the test file <tt class="docutils literal"><span class="pre">sympy/simplify/tests/test_hyperexpand.py</span></tt> should be run,
+in particular the test <tt class="xref py py-func docutils literal"><span class="pre">test_formulae()</span></tt>. This will test the newly added
+formula numerically. If it fails, there is (presumably) a typo in what was
+entered.</p>
+<p>Since all newly-added formulae are probably relatively complicated, chances
+are that the automatically computed basis is rather suboptimal (there is no
+good way of testing this, other than observing very messy output). In this
+case the matrices <span class="math">\(B\)</span>, <span class="math">\(C\)</span> and <span class="math">\(M\)</span> should be computed by hand. Then the helper
+<tt class="docutils literal"><span class="pre">addb</span></tt> can be used to declare a hypergeometric formula with hand-computed
+basis.</p>
+<div class="section" id="an-example">
+<h3>An example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h3>
+<p>Because this explanation so far might be very theoretical and difficult to
+understand, we walk through an explicit example now. We take the Fresnel
+function <span class="math">\(C(z)\)</span> which obeys the following hypergeometric representation:</p>
+<div class="math">
+\[\begin{split}C(z) = z \cdot {}_{1}F_{2}\left.\left(
+    \begin{matrix} \frac{1}{4} \\
+                   \frac{1}{2}, \frac{5}{4}
+    \end{matrix} \right| -\frac{\pi^2 z^4}{16}\right) \,.\end{split}\]</div>
+<p>First we try to add this formula to the lookup table by using the
+(simpler) function <tt class="docutils literal"><span class="pre">add(ap,</span> <span class="pre">bq,</span> <span class="pre">res)</span></tt>. The first two arguments
+are simply the lists containing the parameter sets of <span class="math">\({}_{1}F_{2}\)</span>.
+The <tt class="docutils literal"><span class="pre">res</span></tt> argument is a little bit more complicated. We only know
+<span class="math">\(C(z)\)</span> in terms of <span class="math">\({}_{1}F_{2}(\ldots | f(z))\)</span> with <span class="math">\(f\)</span>
+a function of <span class="math">\(z\)</span>, in our case</p>
+<div class="math">
+\[f(z) = -\frac{\pi^2 z^4}{16} \,.\]</div>
+<p>What we need is a formula where the hypergeometric function has
+only <span class="math">\(z\)</span> as argument <span class="math">\({}_{1}F_{2}(\ldots | z)\)</span>. We
+introduce the new complex symbol <span class="math">\(w\)</span> and search for a function
+<span class="math">\(g(w)\)</span> such that</p>
+<div class="math">
+\[f(g(w)) = w\]</div>
+<p>holds. Then we can replace every <span class="math">\(z\)</span> in <span class="math">\(C(z)\)</span> by <span class="math">\(g(w)\)</span>.
+In the case of our example the function <span class="math">\(g\)</span> could look like</p>
+<div class="math">
+\[g(w) = \frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}} \,.\]</div>
+<p>We get these functions mainly by guessing and testing the result. Hence
+we proceed by computing <span class="math">\(f(g(w))\)</span> (and simplifying naively)</p>
+<div class="math">
+\[\begin{split}f(g(w)) &amp;= -\frac{\pi^2 g(w)^4}{16} \\
+        &amp;= -\frac{\pi^2 g\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)^4}{16} \\
+        &amp;= -\frac{\pi^2 \frac{2^4}{\sqrt{\pi}^4} \exp\left(\frac{i \pi}{4}\right)^4 {w^{\frac{1}{4}}}^4}{16} \\
+        &amp;= -\exp\left(i \pi\right) w \\
+        &amp;= w\end{split}\]</div>
+<p>and indeed get back <span class="math">\(w\)</span>. (In case of branched functions we have to be
+aware of branch cuts. In that case we take <span class="math">\(w\)</span> to be a positive real
+number and check the formula. If what we have found works for positive
+<span class="math">\(w\)</span>, then just replace <tt class="xref py py-func docutils literal"><span class="pre">exp()</span></tt> inside any branched function by
+<tt class="xref py py-func docutils literal"><span class="pre">exp_polar()</span></tt> and what we get is right for <span class="math">\(all\)</span> <span class="math">\(w\)</span>.) Hence
+we can write the formula as</p>
+<div class="math">
+\[\begin{split}C(g(w)) = g(w) \cdot {}_{1}F_{2}\left.\left(
+     \begin{matrix} \frac{1}{4} \\
+                    \frac{1}{2}, \frac{5}{4}
+     \end{matrix} \right| w\right) \,.\end{split}\]</div>
+<p>and trivially</p>
+<div class="math">
+\[\begin{split}{}_{1}F_{2}\left.\left(
+\begin{matrix} \frac{1}{4} \\
+               \frac{1}{2}, \frac{5}{4}
+\end{matrix} \right| w\right)
+= \frac{C(g(w))}{g(w)}
+= \frac{C\left(\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}\right)}
+       {\frac{2}{\sqrt{\pi}} \exp\left(\frac{i \pi}{4}\right) w^{\frac{1}{4}}}\end{split}\]</div>
+<p>which is exactly what is needed for the third paramenter,
+<tt class="docutils literal"><span class="pre">res</span></tt>, in <tt class="docutils literal"><span class="pre">add</span></tt>. Finally, the whole function call to add
+this rule to the table looks like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">add</span><span class="p">([</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">],</span>
+    <span class="n">fresnelc</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span>
+   <span class="p">)</span>
+</pre></div>
+</div>
+<p>Using this rule we will find that it works but the results are not really nice
+in terms of simplicity and number of special function instances included.
+We can obtain much better results by adding the formula to the lookup table
+in another way. For this we use the (more complicated) function <tt class="docutils literal"><span class="pre">addb(ap,</span> <span class="pre">bq,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">M)</span></tt>.
+The first two arguments are again the lists containing the parameter sets of
+<span class="math">\({}_{1}F_{2}\)</span>. The remaining three are the matrices mentioned earlier
+on this page.</p>
+<p>We know that the <span class="math">\(n = \max{\left(p, q+1\right)}\)</span>-th derivative can be
+expressed as a linear combination of lower order derivatives. The matrix
+<span class="math">\(B\)</span> contains the basis <span class="math">\(\{B_0, B_1, \ldots\}\)</span> and is of shape
+<span class="math">\(n \times 1\)</span>. The best way to get <span class="math">\(B_i\)</span> is to take the first
+<span class="math">\(n = \max(p, q+1)\)</span> derivatives of the expression for <span class="math">\({}_p F_q\)</span>
+and take out usefull pieces. In our case we find that
+<span class="math">\(n = \max{\left(1, 2+1\right)} = 3\)</span>. For computing the derivatives,
+we have to use the operator <span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z}\)</span>. The
+first basis element <span class="math">\(B_0\)</span> is set to the expression for <span class="math">\({}_1 F_2\)</span>
+from above:</p>
+<div class="math">
+\[B_0 = \frac{ \sqrt{\pi} \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)}
+{2 z^{\frac{1}{4}}}\]</div>
+<p>Next we compute <span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z} B_0\)</span>. For this we can
+directly use SymPy!</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">fresnelc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">expand</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B0</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">fresnelc</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span><span class="o">/</span>\
+<span class="gp">... </span>         <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">*</span> <span class="n">diff</span><span class="p">(</span><span class="n">B0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">z*(cosh(2*sqrt(z))/(4*z) -</span>
+<span class="go">sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(5/4)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">cosh(2*sqrt(z))/4 - sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(8*z**(1/4))</span>
+</pre></div>
+</div>
+<p>Formatting this result nicely we obtain</p>
+<div class="math">
+\[B_1^\prime =
+- \frac{1}{4} \frac{
+  \sqrt{\pi}
+  \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+  C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+}
+{2 z^{\frac{1}{4}}}
++ \frac{1}{4} \cosh{\left( 2 \sqrt{z} \right )}\]</div>
+<p>Computing the second derivative we find</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">cosh</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">fresnelc</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">diff</span><span class="p">,</span> <span class="n">expand</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B1prime</span> <span class="o">=</span> <span class="n">cosh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="mi">4</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span>\
+<span class="gp">... </span>          <span class="n">fresnelc</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">*</span> <span class="n">diff</span><span class="p">(</span><span class="n">B1prime</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">z*(-cosh(2*sqrt(z))/(16*z) + sinh(2*sqrt(z))/(4*sqrt(z)) + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(5/4)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">sqrt(z)*sinh(2*sqrt(z))/4 - cosh(2*sqrt(z))/16 + sqrt(pi)*exp(-I*pi/4)*fresnelc(2*z**(1/4)*exp(I*pi/4)/sqrt(pi))/(32*z**(1/4))</span>
+</pre></div>
+</div>
+<p>which can be printed as</p>
+<div class="math">
+\[B_2^\prime =
+\frac{1}{16} \frac{
+  \sqrt{\pi}
+  \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+  C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+}
+{2 z^{\frac{1}{4}}}
+- \frac{1}{16} \cosh{\left(2\sqrt{z}\right)}
++ \frac{1}{4} \sinh{\left(2\sqrt{z}\right)} \sqrt{z}\]</div>
+<p>We see the common pattern and can collect the pieces. Hence it makes sense to
+choose <span class="math">\(B_1\)</span> and <span class="math">\(B_2\)</span> as follows</p>
+<div class="math">
+\[\begin{split}B =
+\left( \begin{matrix}
+  B_0 \\ B_1 \\ B_2
+\end{matrix} \right)
+=
+\left( \begin{matrix}
+  \frac{
+    \sqrt{\pi}
+    \exp\left(-\frac{\mathbf{\imath}\pi}{4}\right)
+    C\left( \frac{2}{\sqrt{\pi}} \exp\left(\frac{\mathbf{\imath}\pi}{4}\right) z^{\frac{1}{4}}\right)
+  }{2 z^{\frac{1}{4}}} \\
+  \cosh\left(2\sqrt{z}\right) \\
+  \sinh\left(2\sqrt{z}\right) \sqrt{z}
+\end{matrix} \right)\end{split}\]</div>
+<p>(This is in contrast to the basis <span class="math">\(B = \left(B_0, B_1^\prime, B_2^\prime\right)\)</span> that would
+have been computed automatically if we used just <tt class="docutils literal"><span class="pre">add(ap,</span> <span class="pre">bq,</span> <span class="pre">res)</span></tt>.)</p>
+<p>Because it must hold that <span class="math">\({}_p F_q\left(\cdots \middle| z \right) = C B\)</span>
+the entries of <span class="math">\(C\)</span> are obviously</p>
+<div class="math">
+\[\begin{split}C =
+\left( \begin{matrix}
+  1 \\ 0 \\ 0
+\end{matrix} \right)\end{split}\]</div>
+<p>Finally we have to compute the entries of the <span class="math">\(3 \times 3\)</span> matrix <span class="math">\(M\)</span>
+such that <span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z} B = M B\)</span> holds. This is easy.
+We already computed the first part <span class="math">\(z\frac{\mathrm{d}}{\mathrm{d}z} B_0\)</span>
+above. This gives us the first row of <span class="math">\(M\)</span>. For the second row we have:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">cosh</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B1</span> <span class="o">=</span> <span class="n">cosh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">*</span> <span class="n">diff</span><span class="p">(</span><span class="n">B1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">sqrt(z)*sinh(2*sqrt(z))</span>
+</pre></div>
+</div>
+<p>and for the third one</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">sinh</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">expand</span><span class="p">,</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B2</span> <span class="o">=</span> <span class="n">sinh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand</span><span class="p">(</span><span class="n">z</span> <span class="o">*</span> <span class="n">diff</span><span class="p">(</span><span class="n">B2</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))</span>
+</pre></div>
+</div>
+<p>Now we have computed the entries of this matrix to be</p>
+<div class="math">
+\[\begin{split}M =
+\left( \begin{matrix}
+  -\frac{1}{4} &amp; \frac{1}{4} &amp; 0 \\
+  0            &amp; 0           &amp; 1 \\
+  0            &amp; z           &amp; \frac{1}{2} \\
+\end{matrix} \right)\end{split}\]</div>
+<p>Note that the entries of <span class="math">\(C\)</span> and <span class="math">\(M\)</span> should typically be
+rational functions in <span class="math">\(z\)</span>, with rational coefficients. This is all
+we need to do in order to add a new formula to the lookup table for
+<tt class="docutils literal"><span class="pre">hyperexpand</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="implemented-hypergeometric-formulae">
+<h2>Implemented Hypergeometric Formulae<a class="headerlink" href="#implemented-hypergeometric-formulae" title="Permalink to this headline">¶</a></h2>
+<p>A vital part of the algorithm is a relatively large table of hypergeometric
+function representations. The following automatically generated list contains
+all the representations implemented in SymPy (of course many more are
+derived from them). These formulae are mostly taken from <a class="reference internal" href="#luke1969">[Luke1969]</a> and
+<a class="reference internal" href="#prudnikov1990">[Prudnikov1990]</a>. They are all tested numerically.</p>
+<span class="target" id="module-sympy.simplify.hyperexpand_doc"></span><div class="math">
+\[\begin{split}{{}_{0}F_{0}\left(\begin{matrix}  \\  \end{matrix}\middle| {z} \right)} = e^{z}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{0}\left(\begin{matrix} a \\  \end{matrix}\middle| {z} \right)} = \left(- z + 1\right)^{- a}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} a, a - \frac{1}{2} \\ 2 a \end{matrix}\middle| {z} \right)} = 2^{2 a - 1} \left(\sqrt{- z + 1} + 1\right)^{- 2 a + 1}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} 1, 1 \\ 2 \end{matrix}\middle| {z} \right)} = - \frac{1}{z} \log{\left (- z + 1 \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} \frac{1}{2}, 1 \\ \frac{3}{2} \end{matrix}\middle| {z} \right)} = \frac{1}{\sqrt{z}} \operatorname{atanh}{\left (\sqrt{z} \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} \frac{1}{2}, \frac{1}{2} \\ \frac{3}{2} \end{matrix}\middle| {z} \right)} = \frac{1}{\sqrt{z}} \operatorname{asin}{\left (\sqrt{z} \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} a, a + \frac{1}{2} \\ \frac{1}{2} \end{matrix}\middle| {z} \right)} = \frac{1}{2} \left(\sqrt{z} + 1\right)^{- 2 a} + \frac{1}{2} \left(- \sqrt{z} + 1\right)^{- 2 a}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} a, - a \\ \frac{1}{2} \end{matrix}\middle| {z} \right)} = \cos{\left (2 a \operatorname{asin}{\left (\sqrt{z} \right )} \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} 1, 1 \\ \frac{3}{2} \end{matrix}\middle| {z} \right)} = \frac{\operatorname{asin}{\left (\sqrt{z} \right )}}{\sqrt{z} \sqrt{- z + 1}}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} \frac{1}{2}, \frac{1}{2} \\ 1 \end{matrix}\middle| {z} \right)} = \frac{2 K\left(z\right)}{\pi}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{1}\left(\begin{matrix} - \frac{1}{2}, \frac{1}{2} \\ 1 \end{matrix}\middle| {z} \right)} = \frac{2 E\left(z\right)}{\pi}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{3}F_{2}\left(\begin{matrix} - \frac{1}{2}, 1, 1 \\ \frac{1}{2}, 2 \end{matrix}\middle| {z} \right)} = - \frac{2 \sqrt{z}}{3} \operatorname{atanh}{\left (\sqrt{z} \right )} + \frac{2}{3} - \frac{1}{3 z} \log{\left (- z + 1 \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{3}F_{2}\left(\begin{matrix} - \frac{1}{2}, 1, 1 \\ 2, 2 \end{matrix}\middle| {z} \right)} = \left(\frac{4}{9} - \frac{16}{9 z}\right) \sqrt{- z + 1} + \frac{4}{3 z} \log{\left (\frac{1}{2} \sqrt{- z + 1} + \frac{1}{2} \right )} + \frac{16}{9 z}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{1}\left(\begin{matrix} 1 \\ b \end{matrix}\middle| {z} \right)} = z^{- b + 1} \left(b - 1\right) e^{z} \gamma\left(b - 1, z\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{1}\left(\begin{matrix} a \\ 2 a \end{matrix}\middle| {z} \right)} = 4^{a - \frac{1}{2}} z^{- a + \frac{1}{2}} e^{\frac{z}{2}} I_{a - \frac{1}{2}}\left(\frac{z}{2}\right) \Gamma{\left(a + \frac{1}{2} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{1}\left(\begin{matrix} a \\ a + 1 \end{matrix}\middle| {z} \right)} = a \left(z e^{i \pi}\right)^{- a} \gamma\left(a, z e^{i \pi}\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{1}\left(\begin{matrix} - \frac{1}{2} \\ \frac{1}{2} \end{matrix}\middle| {z} \right)} = \sqrt{z} i \sqrt{\pi} \operatorname{erf}{\left (\sqrt{z} i \right )} + e^{z}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} 1 \\ \frac{3}{4}, \frac{5}{4} \end{matrix}\middle| {z} \right)} = \frac{\sqrt{\pi} e^{- \frac{i \pi}{4}}}{2 \sqrt[4]{z}} \left(i \sinh{\left (2 \sqrt{z} \right )} S\left(\frac{2 \sqrt[4]{z}}{\sqrt{\pi}} e^{\frac{i \pi}{4}}\right) + \cosh{\left (2 \sqrt{z} \right )} C\left(\frac{2 \sqrt[4]{z}}{\sqrt{\pi}} e^{\frac{i \pi}{4}}\right)\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{2}\left(\begin{matrix} \frac{1}{2}, a \\ \frac{3}{2}, a + 1 \end{matrix}\middle| {z} \right)} = - \frac{a i \sqrt{\pi} \sqrt{\frac{1}{z}}}{2 a - 1} \operatorname{erf}{\left (\sqrt{z} i \right )} - \frac{a \left(z e^{i \pi}\right)^{- a}}{2 a - 1} \gamma\left(a, z e^{i \pi}\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{2}\left(\begin{matrix} 1, 1 \\ 2, 2 \end{matrix}\middle| {z} \right)} = \frac{1}{z} \left(- \log{\left (z \right )} + \operatorname{Ei}{\left (z \right )}\right) - \frac{\gamma}{z}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{0}F_{1}\left(\begin{matrix}  \\ \frac{1}{2} \end{matrix}\middle| {z} \right)} = \cosh{\left (2 \sqrt{z} \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{0}F_{1}\left(\begin{matrix}  \\ b \end{matrix}\middle| {z} \right)} = z^{- \frac{b}{2} + \frac{1}{2}} I_{b - 1}\left(2 \sqrt{z}\right) \Gamma{\left(b \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{0}F_{3}\left(\begin{matrix}  \\ \frac{1}{2}, a, a + \frac{1}{2} \end{matrix}\middle| {z} \right)} = 2^{- 2 a} z^{- \frac{a}{2} + \frac{1}{4}} \left(I_{2 a - 1}\left(4 \sqrt[4]{z}\right) + J_{2 a - 1}\left(4 \sqrt[4]{z}\right)\right) \Gamma{\left(2 a \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{0}F_{3}\left(\begin{matrix}  \\ a, a + \frac{1}{2}, 2 a \end{matrix}\middle| {z} \right)} = \left(2 \sqrt{z} e^{\frac{i \pi}{2}}\right)^{- 2 a + 1} I_{2 a - 1}\left(2 \sqrt{2} \sqrt[4]{z} e^{\frac{i \pi}{4}}\right) J_{2 a - 1}\left(2 \sqrt{2} \sqrt[4]{z} e^{\frac{i \pi}{4}}\right) \Gamma^{2}{\left(2 a \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} a \\ a - \frac{1}{2}, 2 a \end{matrix}\middle| {z} \right)} = 2 \cdot 4^{a - 1} z^{- a + 1} I_{a - \frac{3}{2}}\left(\sqrt{z}\right) I_{a - \frac{1}{2}}\left(\sqrt{z}\right) \Gamma{\left(a - \frac{1}{2} \right)} \Gamma{\left(a + \frac{1}{2} \right)} - 4^{a - \frac{1}{2}} z^{- a + \frac{1}{2}} I^{2}_{a - \frac{1}{2}}\left(\sqrt{z}\right) \Gamma^{2}{\left(a + \frac{1}{2} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} \frac{1}{2} \\ b, - b + 2 \end{matrix}\middle| {z} \right)} = \frac{\pi I_{- b + 1}\left(\sqrt{z}\right) I_{b - 1}\left(\sqrt{z}\right)}{\sin{\left (b \pi \right )}} \left(- b + 1\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} \frac{1}{2} \\ \frac{3}{2}, \frac{3}{2} \end{matrix}\middle| {z} \right)} = \frac{1}{2 \sqrt{z}} \operatorname{Shi}{\left (2 \sqrt{z} \right )}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} \frac{3}{4} \\ \frac{3}{2}, \frac{7}{4} \end{matrix}\middle| {z} \right)} = \frac{3 \sqrt{\pi}}{4 z^{\frac{3}{4}}} e^{- \frac{3 \pi}{4} i} S\left(\frac{2 \sqrt[4]{z}}{\sqrt{\pi}} e^{\frac{i \pi}{4}}\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{1}F_{2}\left(\begin{matrix} \frac{1}{4} \\ \frac{1}{2}, \frac{5}{4} \end{matrix}\middle| {z} \right)} = \frac{\sqrt{\pi} e^{- \frac{i \pi}{4}}}{2 \sqrt[4]{z}} C\left(\frac{2 \sqrt[4]{z}}{\sqrt{\pi}} e^{\frac{i \pi}{4}}\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{3}\left(\begin{matrix} a, a + \frac{1}{2} \\ 2 a, b, 2 a - b + 1 \end{matrix}\middle| {z} \right)} = \left(\frac{\sqrt{z}}{2}\right)^{- 2 a + 1} I_{2 a - b}\left(\sqrt{z}\right) I_{b - 1}\left(\sqrt{z}\right) \Gamma{\left(b \right)} \Gamma{\left(2 a - b + 1 \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{2}F_{3}\left(\begin{matrix} 1, 1 \\ 2, 2, \frac{3}{2} \end{matrix}\middle| {z} \right)} = \frac{1}{z} \left(- \log{\left (2 \sqrt{z} \right )} + \operatorname{Chi}{\left (2 \sqrt{z} \right )}\right) - \frac{\gamma}{z}\end{split}\]</div>
+<div class="math">
+\[\begin{split}{{}_{3}F_{3}\left(\begin{matrix} 1, 1, a \\ 2, 2, a + 1 \end{matrix}\middle| {z} \right)} = \frac{a \left(- z\right)^{- a}}{\left(a - 1\right)^{2}} \left(\Gamma{\left(a \right)} - \Gamma\left(a, - z\right)\right) + \frac{a}{z \left(a^{2} - 2 a + 1\right)} \left(- a + 1\right) \left(\log{\left (- z \right )} + \operatorname{E}_{1}\left(- z\right) + \gamma\right) - \frac{a e^{z}}{z \left(a^{2} - 2 a + 1\right)} + \frac{a}{z \left(a^{2} - 2 a + 1\right)}\end{split}\]</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<table class="docutils citation" frame="void" id="roach1996" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Roach1996]</a></td><td>Kelly B. Roach.  Hypergeometric Function Representations.
+In: Proceedings of the 1996 International Symposium on Symbolic and
+Algebraic Computation, pages 301-308, New York, 1996. ACM.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="roach1997" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[Roach1997]</a></td><td>Kelly B. Roach.  Meijer G Function Representations.
+In: Proceedings of the 1997 International Symposium on Symbolic and
+Algebraic Computation, pages 205-211, New York, 1997. ACM.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="luke1969" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[Luke1969]</a></td><td>Luke, Y. L. (1969), The Special Functions and Their
+Approximations, Volume 1.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="prudnikov1990" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[Prudnikov1990]</a></td><td>A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
+Integrals and Series: More Special Functions, Vol. 3,
+Gordon and Breach Science Publisher.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Details on the Hypergeometric Function Expansion Module</a><ul>
+<li><a class="reference internal" href="#hypergeometric-function-expansion-algorithm">Hypergeometric Function Expansion Algorithm</a><ul>
+<li><a class="reference internal" href="#notation">Notation</a></li>
+<li><a class="reference internal" href="#incrementing-and-decrementing-indices">Incrementing and decrementing indices</a></li>
+<li><a class="reference internal" href="#reduction-of-order">Reduction of Order</a></li>
+<li><a class="reference internal" href="#moving-around-in-the-parameter-space">Moving Around in the Parameter Space</a></li>
+<li><a class="reference internal" href="#applying-the-operators">Applying the Operators</a></li>
+<li><a class="reference internal" href="#loose-ends">Loose Ends</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#meijer-g-functions-of-finite-confluence">Meijer G-Functions of Finite Confluence</a></li>
+<li><a class="reference internal" href="#extending-the-hypergeometric-tables">Extending The Hypergeometric Tables</a><ul>
+<li><a class="reference internal" href="#an-example">An example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implemented-hypergeometric-formulae">Implemented Hypergeometric Formulae</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simplify.html"
+                        title="previous chapter">Simplify</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../statistics.html"
+                        title="next chapter">Statistics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/simplify/hyperexpand.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../statistics.html" title="Statistics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simplify.html" title="Simplify"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

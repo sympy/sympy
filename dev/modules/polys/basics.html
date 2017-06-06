@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Basic functionality of the module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Polynomials Manipulation Module" href="index.html" />
+    <link rel="next" title="Examples from Wester’s Article" href="wester.html" />
+    <link rel="prev" title="Polynomials Manipulation Module" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wester.html" title="Examples from Wester’s Article"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Polynomials Manipulation Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Polynomials Manipulation Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="basic-functionality-of-the-module">
+<span id="polys-basics"></span><h1>Basic functionality of the module<a class="headerlink" href="#basic-functionality-of-the-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial tries to give an overview of the functionality concerning
+polynomials within SymPy. All code examples assume:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y,z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">wrap_line</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">no_global</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="basic-functionality">
+<h2>Basic functionality<a class="headerlink" href="#basic-functionality" title="Permalink to this headline">¶</a></h2>
+<p>These functions provide different algorithms dealing with polynomials in the
+form of SymPy expression, like symbols, sums etc.</p>
+<div class="section" id="division">
+<h3>Division<a class="headerlink" href="#division" title="Permalink to this headline">¶</a></h3>
+<p>The function <tt class="xref py py-func docutils literal"><span class="pre">div()</span></tt> provides division of polynomials with remainder.
+That is, for polynomials <tt class="docutils literal"><span class="pre">f</span></tt> and <tt class="docutils literal"><span class="pre">g</span></tt>, it computes <tt class="docutils literal"><span class="pre">q</span></tt> and <tt class="docutils literal"><span class="pre">r</span></tt>, such
+that <span class="math">\(f = g \cdot q + r\)</span> and <span class="math">\(\deg(r) &lt; q\)</span>. For polynomials in one variables
+with coefficients in a field, say, the rational numbers, <tt class="docutils literal"><span class="pre">q</span></tt> and <tt class="docutils literal"><span class="pre">r</span></tt> are
+uniquely defined this way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="mi">5</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">10</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s">&#39;QQ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">5*x   5</span>
+<span class="go">--- + -</span>
+<span class="go"> 2    2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">-2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">q</span><span class="o">*</span><span class="n">g</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+<span class="go">   2</span>
+<span class="go">5*x  + 10*x + 3</span>
+</pre></div>
+</div>
+<p>As you can see, <tt class="docutils literal"><span class="pre">q</span></tt> has a non-integer coefficient. If you want to do division
+only in the ring of polynomials with integer coefficients, you can specify an
+additional parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s">&#39;ZZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">   2</span>
+<span class="go">5*x  + 10*x + 3</span>
+</pre></div>
+</div>
+<p>But be warned, that this ring is no longer Euclidean and that the degree of the
+remainder doesn&#8217;t need to be smaller than that of <tt class="docutils literal"><span class="pre">f</span></tt>. Since 2 doesn&#8217;t divide 5,
+<span class="math">\(2 x\)</span> doesn&#8217;t divide <span class="math">\(5 x^2\)</span>, even if the degree is smaller. But:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">5</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s">&#39;ZZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">9*x + 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">q</span><span class="o">*</span><span class="n">g</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+<span class="go">   2</span>
+<span class="go">5*x  + 10*x + 3</span>
+</pre></div>
+</div>
+<p>This also works for polynomials with multiple variables:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">z</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s">&#39;QQ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">y</span>
+<span class="go">-</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>In the last examples, all of the three variables <tt class="docutils literal"><span class="pre">x</span></tt>, <tt class="docutils literal"><span class="pre">y</span></tt> and <tt class="docutils literal"><span class="pre">z</span></tt> are
+assumed to be variables of the polynomials. But if you have some unrelated
+constant as coefficient, you can specify the variables explicitly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b,c&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">div</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="s">&#39;QQ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span>
+<span class="go">a*x   2*a   b</span>
+<span class="go">--- - --- + -</span>
+<span class="go"> 3     9    3</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">4*a   2*b</span>
+<span class="go">--- - --- + c</span>
+<span class="go"> 9     3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gcd-and-lcm">
+<h3>GCD and LCM<a class="headerlink" href="#gcd-and-lcm" title="Permalink to this headline">¶</a></h3>
+<p>With division, there is also the computation of the greatest common divisor and
+the least common multiple.</p>
+<p>When the polynomials have integer coefficients, the contents&#8217; gcd is also
+considered:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">12</span><span class="p">)</span><span class="o">*</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">16</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">4*x</span>
+</pre></div>
+</div>
+<p>But if the polynomials have rational coefficients, then the returned polynomial is
+monic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">9</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<p>It also works with multiple variables. In this case, the variables are ordered
+alphabetically, be default, which has influence on the leading coefficient:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">6</span><span class="o">*</span><span class="n">y</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">x + 2*y</span>
+</pre></div>
+</div>
+<p>The lcm is connected with the gcd and one can be computed using the other:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go">x*y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lcm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+<span class="go"> 3  2    2  3</span>
+<span class="go">x *y  + x *y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+<span class="go"> 4  3    3  4</span>
+<span class="go">x *y  + x *y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="n">lcm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+<span class="go"> 4  3    3  4</span>
+<span class="go">x *y  + x *y</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="square-free-factorization">
+<h3>Square-free factorization<a class="headerlink" href="#square-free-factorization" title="Permalink to this headline">¶</a></h3>
+<p>The square-free factorization of a univariate polynomial is the product of all
+factors (not necessarily irreducible) of degree 1, 2 etc.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">5</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqf_list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">(1, [(x + 2, 1), (x, 2), (x + 1, 2)])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqf</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go"> 2        2</span>
+<span class="go">x *(x + 1) *(x + 2)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="factorization">
+<h3>Factorization<a class="headerlink" href="#factorization" title="Permalink to this headline">¶</a></h3>
+<p>This function provides factorization of univariate and multivariate polynomials
+with rational coefficients:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">12</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go"> 2</span>
+<span class="go">x *(2*x - 1)*(3*x + 4)</span>
+<span class="go">----------------------</span>
+<span class="go">          12</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factor</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">         2</span>
+<span class="go">(x + 2*y)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="groebner-bases">
+<h3>Groebner bases<a class="headerlink" href="#groebner-bases" title="Permalink to this headline">¶</a></h3>
+<p>Buchberger&#8217;s algorithm is implemented, supporting various monomial orders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">groebner</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;lex&#39;</span><span class="p">)</span>
+<span class="go">             /[ 2       4    ]                            \</span>
+<span class="go">GroebnerBasis\[x  + 1, y  - 1], x, y, domain=ZZ, order=lex/</span>
+
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">groebner</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="mi">3</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;grevlex&#39;</span><span class="p">)</span>
+<span class="go">             /[ 4       3   2    ]                                   \</span>
+<span class="go">GroebnerBasis\[y  - 1, z , x  + 1], x, y, z, domain=ZZ, order=grevlex/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="solving-equations">
+<h3>Solving Equations<a class="headerlink" href="#solving-equations" title="Permalink to this headline">¶</a></h3>
+<p>We have (incomplete) methods to find the complex or even symbolic roots of
+polynomials and to solve some systems of polynomial equations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">roots</span><span class="p">,</span> <span class="n">solve_poly_system</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">           ____          ____</span>
+<span class="go">     1   \/ 11 *I  1   \/ 11 *I</span>
+<span class="go">[-1, - - --------, - + --------]</span>
+<span class="go">     2      2      2      2</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">q</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">          __________           __________</span>
+<span class="go">         /  2                 /  2</span>
+<span class="go">   p   \/  p  - 4*q     p   \/  p  - 4*q</span>
+<span class="go">[- - + -------------, - - - -------------]</span>
+<span class="go">   2         2          2         2</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_poly_system</span><span class="p">([</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">5</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[(5, 5)]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_poly_system</span><span class="p">([</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">                                   ___                 ___</span>
+<span class="go">                             1   \/ 3 *I         1   \/ 3 *I</span>
+<span class="go">[(0, I), (0, -I), (1, 0), (- - + -------, 0), (- - - -------, 0)]</span>
+<span class="go">                             2      2            2      2</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic functionality of the module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#basic-functionality">Basic functionality</a><ul>
+<li><a class="reference internal" href="#division">Division</a></li>
+<li><a class="reference internal" href="#gcd-and-lcm">GCD and LCM</a></li>
+<li><a class="reference internal" href="#square-free-factorization">Square-free factorization</a></li>
+<li><a class="reference internal" href="#factorization">Factorization</a></li>
+<li><a class="reference internal" href="#groebner-bases">Groebner bases</a></li>
+<li><a class="reference internal" href="#solving-equations">Solving Equations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Polynomials Manipulation Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="wester.html"
+                        title="next chapter">Examples from Wester&#8217;s Article</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/polys/basics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wester.html" title="Examples from Wester’s Article"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Polynomials Manipulation Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Polynomials Manipulation Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

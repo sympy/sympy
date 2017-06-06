@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.combinatorics.named_groups &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.combinatorics" href="../combinatorics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" accesskey="U">sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.combinatorics.named_groups</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">PermutationGroup</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.group_constructs</span> <span class="kn">import</span> <span class="n">DirectProduct</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span>
+
+<span class="n">_af_new</span> <span class="o">=</span> <span class="n">Permutation</span><span class="o">.</span><span class="n">_af_new</span>
+
+
+<div class="viewcode-block" id="AbelianGroup"><a class="viewcode-back" href="../../../modules/combinatorics/named_groups.html#sympy.combinatorics.named_groups.AbelianGroup">[docs]</a><span class="k">def</span> <span class="nf">AbelianGroup</span><span class="p">(</span><span class="o">*</span><span class="n">cyclic_orders</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the direct product of cyclic groups with the given orders.</span>
+
+<span class="sd">    According to the structure theorem for finite abelian groups ([1]),</span>
+<span class="sd">    every finite abelian group can be written as the direct product of finitely</span>
+<span class="sd">    many cyclic groups.</span>
+<span class="sd">    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import AbelianGroup</span>
+<span class="sd">    &gt;&gt;&gt; AbelianGroup(3, 4)</span>
+<span class="sd">    PermutationGroup([</span>
+<span class="sd">            Permutation(6)(0, 1, 2),</span>
+<span class="sd">            Permutation(3, 4, 5, 6)])</span>
+<span class="sd">    &gt;&gt;&gt; _.is_group()</span>
+<span class="sd">    False</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    DirectProduct</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">cyclic_orders</span><span class="p">:</span>
+        <span class="n">degree</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="n">order</span> <span class="o">*=</span> <span class="n">size</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CyclicGroup</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">DirectProduct</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_degree</span> <span class="o">=</span> <span class="n">degree</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="n">order</span>
+
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<div class="viewcode-block" id="AlternatingGroup"><a class="viewcode-back" href="../../../modules/combinatorics/named_groups.html#sympy.combinatorics.named_groups.AlternatingGroup">[docs]</a><span class="k">def</span> <span class="nf">AlternatingGroup</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the alternating group on ``n`` elements as a permutation group.</span>
+
+<span class="sd">    For ``n &gt; 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for</span>
+<span class="sd">    ``n`` odd</span>
+<span class="sd">    and ``(0 1 2), (1 2 ... n-1)`` for ``n`` even (See [1], p.31, ex.6.9.).</span>
+<span class="sd">    After the group is generated, some of its basic properties are set.</span>
+<span class="sd">    The cases ``n = 1, 2`` are handled separately.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import AlternatingGroup</span>
+<span class="sd">    &gt;&gt;&gt; G = AlternatingGroup(4)</span>
+<span class="sd">    &gt;&gt;&gt; G.is_group()</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; a = list(G.generate_dimino())</span>
+<span class="sd">    &gt;&gt;&gt; len(a)</span>
+<span class="sd">    12</span>
+<span class="sd">    &gt;&gt;&gt; all(perm.is_even for perm in a)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    SymmetricGroup, CyclicGroup, DihedralGroup</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] Armstrong, M. &quot;Groups and Symmetry&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># small cases are special</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">0</span><span class="p">])])</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">gen1</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">gen2</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">gen2</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">gen1</span><span class="p">,</span> <span class="n">gen2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">gen1</span> <span class="o">==</span> <span class="n">gen2</span><span class="p">:</span>
+        <span class="n">gens</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">],</span> <span class="n">dups</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_degree</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_transitive</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_alt</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<div class="viewcode-block" id="CyclicGroup"><a class="viewcode-back" href="../../../modules/combinatorics/named_groups.html#sympy.combinatorics.named_groups.CyclicGroup">[docs]</a><span class="k">def</span> <span class="nf">CyclicGroup</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the cyclic group of order ``n`` as a permutation group.</span>
+
+<span class="sd">    The generator taken is the ``n``-cycle ``(0 1 2 ... n-1)``</span>
+<span class="sd">    (in cycle notation). After the group is generated, some of its basic</span>
+<span class="sd">    properties are set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import CyclicGroup</span>
+<span class="sd">    &gt;&gt;&gt; G = CyclicGroup(6)</span>
+<span class="sd">    &gt;&gt;&gt; G.is_group()</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; G.order()</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; list(G.generate_schreier_sims(af=True))</span>
+<span class="sd">    [[0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 0], [2, 3, 4, 5, 0, 1],</span>
+<span class="sd">    [3, 4, 5, 0, 1, 2], [4, 5, 0, 1, 2, 3], [5, 0, 1, 2, 3, 4]]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    SymmetricGroup, DihedralGroup, AlternatingGroup</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">gen</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">gen</span><span class="p">])</span>
+
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_degree</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_transitive</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<div class="viewcode-block" id="DihedralGroup"><a class="viewcode-back" href="../../../modules/combinatorics/named_groups.html#sympy.combinatorics.named_groups.DihedralGroup">[docs]</a><span class="k">def</span> <span class="nf">DihedralGroup</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Generates the dihedral group `D_n` as a permutation group.</span>
+
+<span class="sd">    The dihedral group `D_n` is the group of symmetries of the regular</span>
+<span class="sd">    ``n``-gon. The generators taken are the ``n``-cycle ``a = (0 1 2 ... n-1)``</span>
+<span class="sd">    (a rotation of the ``n``-gon) and ``b = (0 n-1)(1 n-2)...``</span>
+<span class="sd">    (a reflection of the ``n``-gon) in cycle rotation. It is easy to see that</span>
+<span class="sd">    these satisfy ``a**n = b**2 = 1`` and ``bab = ~a`` so they indeed generate</span>
+<span class="sd">    `D_n` (See [1]). After the group is generated, some of its basic properties</span>
+<span class="sd">    are set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import DihedralGroup</span>
+<span class="sd">    &gt;&gt;&gt; G = DihedralGroup(5)</span>
+<span class="sd">    &gt;&gt;&gt; G.is_group()</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; a = list(G.generate_dimino())</span>
+<span class="sd">    &gt;&gt;&gt; [perm.cyclic_form for perm in a]</span>
+<span class="sd">    [[], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],</span>
+<span class="sd">    [[0, 3, 1, 4, 2]], [[0, 4, 3, 2, 1]], [[0, 4], [1, 3]],</span>
+<span class="sd">    [[1, 4], [2, 3]], [[0, 1], [2, 4]], [[0, 2], [3, 4]],</span>
+<span class="sd">    [[0, 3], [1, 2]]]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    SymmetricGroup, CyclicGroup, AlternatingGroup</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] http://en.wikipedia.org/wiki/Dihedral_group</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># small cases are special</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])])</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
+               <span class="n">Permutation</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])])</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">gen1</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">gen2</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">gen1</span><span class="p">,</span> <span class="n">gen2</span><span class="p">])</span>
+    <span class="c"># if n is a power of 2, group is nilpotent</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_degree</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_transitive</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_order</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<div class="viewcode-block" id="SymmetricGroup"><a class="viewcode-back" href="../../../modules/combinatorics/named_groups.html#sympy.combinatorics.named_groups.SymmetricGroup">[docs]</a><span class="k">def</span> <span class="nf">SymmetricGroup</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the symmetric group on ``n`` elements as a permutation group.</span>
+
+<span class="sd">    The generators taken are the ``n``-cycle</span>
+<span class="sd">    ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).</span>
+<span class="sd">    (See [1]). After the group is generated, some of its basic properties</span>
+<span class="sd">    are set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; G = SymmetricGroup(4)</span>
+<span class="sd">    &gt;&gt;&gt; G.is_group()</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; G.order()</span>
+<span class="sd">    24</span>
+<span class="sd">    &gt;&gt;&gt; list(G.generate_schreier_sims(af=True))</span>
+<span class="sd">    [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 1, 2, 0], [0, 2, 3, 1],</span>
+<span class="sd">    [1, 3, 0, 2], [2, 0, 1, 3], [3, 2, 0, 1], [0, 3, 1, 2], [1, 0, 2, 3],</span>
+<span class="sd">    [2, 1, 3, 0], [3, 0, 1, 2], [0, 1, 3, 2], [1, 2, 0, 3], [2, 3, 1, 0],</span>
+<span class="sd">    [3, 1, 0, 2], [0, 2, 1, 3], [1, 3, 2, 0], [2, 0, 3, 1], [3, 2, 1, 0],</span>
+<span class="sd">    [0, 3, 2, 1], [1, 0, 3, 2], [2, 1, 0, 3], [3, 0, 2, 1]]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    CyclicGroup, DihedralGroup, AlternatingGroup</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">0</span><span class="p">])])</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">gen1</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gen2</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">gen1</span><span class="p">,</span> <span class="n">gen2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_abelian</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_nilpotent</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">_is_solvable</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_degree</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_transitive</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">_is_sym</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<span class="k">def</span> <span class="nf">RubikGroup</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a group of Rubik&#39;s cube generators.</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import RubikGroup</span>
+<span class="sd">    &gt;&gt;&gt; RubikGroup(2).is_group()</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.combinatorics.generators</span> <span class="kn">import</span> <span class="n">rubik</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">PermutationGroup</span><span class="p">(</span><span class="n">rubik</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" >sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

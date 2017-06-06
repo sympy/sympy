@@ -1,0 +1,1629 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Elementary &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Functions Module" href="index.html" />
+    <link rel="next" title="Combinatorial" href="combinatorial.html" />
+    <link rel="prev" title="Functions Module" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="combinatorial.html" title="Combinatorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Functions Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Functions Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="elementary">
+<h1>Elementary<a class="headerlink" href="#elementary" title="Permalink to this headline">¶</a></h1>
+<p>This module implements elementary functions, as well as functions like <tt class="docutils literal"><span class="pre">Abs</span></tt>,
+<tt class="docutils literal"><span class="pre">Max</span></tt>, etc.</p>
+<div class="section" id="abs">
+<h2>Abs<a class="headerlink" href="#abs" title="Permalink to this headline">¶</a></h2>
+<p>Returns the absolute value of the argument.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">Abs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Abs</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sympy.functions.elementary.complexes.Abs">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.complexes.</tt><tt class="descname">Abs</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#Abs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.Abs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the absolute value of the argument.</p>
+<p>This is an extension of the built-in function abs() to accept symbolic
+values.  If you pass a SymPy expression to the built-in abs(), it will
+pass it automatically to Abs().</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sign</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">conjugate</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Abs</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Abs</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Abs</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Abs(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Abs</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">x**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="c"># The Python built-in</span>
+<span class="go">Abs(x)</span>
+</pre></div>
+</div>
+<p>Note that the Python built-in will return either an Expr or int depending on
+the argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">&lt;... &#39;int&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">))</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.One&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Abs will always return a sympy object.</p>
+<dl class="method">
+<dt id="sympy.functions.elementary.complexes.Abs.fdiff">
+<tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#Abs.fdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.Abs.fdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the first derivative of the argument to Abs().</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">Abs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Abs</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">fdiff</span><span class="p">()</span>
+<span class="go">sign(x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="acos">
+<h2>acos<a class="headerlink" href="#acos" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.acos">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">acos</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#acos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.acos" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">asin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cos</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>acos(x) will evaluate automatically in the cases
+oo, -oo, 0, 1, -1</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">acos</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">pi/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acos</span><span class="p">(</span><span class="n">oo</span><span class="p">)</span>
+<span class="go">oo*I</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.acos.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#acos.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.acos.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="acosh">
+<h2>acosh<a class="headerlink" href="#acosh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.acosh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">acosh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#acosh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.acosh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse hyperbolic cosine function.</p>
+<ul class="simple">
+<li>acosh(x) -&gt; Returns the inverse hyperbolic cosine of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">asinh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atanh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cosh</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.acosh.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#acosh.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.acosh.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="acot">
+<h2>acot<a class="headerlink" href="#acot" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.acot">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">acot</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#acot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.acot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.acot.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#acot.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.acot.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="acoth">
+<h2>acoth<a class="headerlink" href="#acoth" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.acoth">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">acoth</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#acoth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.acoth" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse hyperbolic cotangent function.</p>
+<ul class="simple">
+<li>acoth(x) -&gt; Returns the inverse hyperbolic cotangent of x</li>
+</ul>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.acoth.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#acoth.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.acoth.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="arg">
+<h2>arg<a class="headerlink" href="#arg" title="Permalink to this headline">¶</a></h2>
+<p>Returns the argument (in radians) of a complex number. For a real
+number, the argument is always 0.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">arg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="go">pi/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">pi/4</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sympy.functions.elementary.complexes.arg">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.complexes.</tt><tt class="descname">arg</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#arg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.arg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the argument (in radians) of a complex number</p>
+</dd></dl>
+
+</div>
+<div class="section" id="asin">
+<h2>asin<a class="headerlink" href="#asin" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.asin">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">asin</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#asin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.asin" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">acos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sin</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>asin(x) will evaluate automatically in the cases
+oo, -oo, 0, 1, -1</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">asin</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">asin</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">pi/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">asin</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-pi/2</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.asin.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#asin.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.asin.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="asinh">
+<h2>asinh<a class="headerlink" href="#asinh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.asinh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">asinh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#asinh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.asinh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse hyperbolic sine function.</p>
+<ul class="simple">
+<li>asinh(x) -&gt; Returns the inverse hyperbolic sine of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">acosh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atanh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sinh</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.asinh.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#asinh.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.asinh.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="atan">
+<h2>atan<a class="headerlink" href="#atan" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.atan">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">atan</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#atan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.atan" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">acos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">asin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tan</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>atan(x) will evaluate automatically in the cases
+oo, -oo, 0, 1, -1</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">atan</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">pi/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="n">oo</span><span class="p">)</span>
+<span class="go">pi/2</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.atan.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#atan.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.atan.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="atan2">
+<h2>atan2<a class="headerlink" href="#atan2" title="Permalink to this headline">¶</a></h2>
+<p>This function is like <span class="math">\(\operatorname{atan}\)</span>, but considers the sign of both
+arguments in order to correctly determine the quadrant of its result.</p>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.atan2">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">atan2</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#atan2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.atan2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function <tt class="docutils literal"><span class="pre">atan2(y,</span> <span class="pre">x)</span></tt> computes <span class="math">\(\operatorname{atan}(y/x)\)</span> taking
+two arguments <span class="math">\(y\)</span> and <span class="math">\(x\)</span>.  Signs of both <span class="math">\(y\)</span> and <span class="math">\(x\)</span> are considered to
+determine the appropriate quadrant of <span class="math">\(\operatorname{atan}(y/x)\)</span>.
+The range is <span class="math">\((-\pi, \pi]\)</span>. The complete definition reads as follows:</p>
+<div class="math">
+\[\begin{split}\operatorname{atan2}(y, x) =
+\begin{cases}
+  \arctan\left(\frac y x\right) &amp; \qquad x &gt; 0 \\
+  \arctan\left(\frac y x\right) + \pi&amp; \qquad y \ge 0 , x &lt; 0 \\
+  \arctan\left(\frac y x\right) - \pi&amp; \qquad y &lt; 0 , x &lt; 0 \\
+  +\frac{\pi}{2} &amp; \qquad y &gt; 0 , x = 0 \\
+  -\frac{\pi}{2} &amp; \qquad y &lt; 0 , x = 0 \\
+  \text{undefined} &amp; \qquad y = 0, x = 0
+\end{cases}\end{split}\]</div>
+<p>Attention: Note the role reversal of both arguments. The <span class="math">\(y\)</span>-coordinate
+is the first argument and the <span class="math">\(x\)</span>-coordinate the second.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sec</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">csc</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cot</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">asin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">acos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atan</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r52" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R52]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Atan2">http://en.wikipedia.org/wiki/Atan2</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r53" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R53]</a></td><td><a class="reference external" href="http://functions.wolfram.com/ElementaryFunctions/ArcTan2/">http://functions.wolfram.com/ElementaryFunctions/ArcTan2/</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Going counter-clock wise around the origin we find the
+following angles:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">atan2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">pi/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">pi/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">3*pi/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-3*pi/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">-pi/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">-pi/4</span>
+</pre></div>
+</div>
+<p>which are all correct. Compare this to the results of the ordinary
+<span class="math">\(\operatorname{atan}\)</span> function for the point <span class="math">\((x, y) = (-1, 1)\)</span></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">atan</span><span class="p">,</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-pi/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">3*pi/4</span>
+</pre></div>
+</div>
+<p>where only the <span class="math">\(\operatorname{atan2}\)</span> function reurns what we expect.
+We can differentiate the function with respect to both arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-y/(x**2 + y**2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">x/(x**2 + y**2)</span>
+</pre></div>
+</div>
+<p>We can express the <span class="math">\(\operatorname{atan2}\)</span> function in terms of
+complex logarithms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+<span class="go">-I*log((x + I*y)/sqrt(x**2 + y**2))</span>
+</pre></div>
+</div>
+<p>and in terms of <span class="math">\(\operatorname(atan)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">atan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">atan</span><span class="p">)</span>
+<span class="go">2*atan(y/(x + sqrt(x**2 + y**2)))</span>
+</pre></div>
+</div>
+<p>but note that this form is undefined on the negative real axis.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="atanh">
+<h2>atanh<a class="headerlink" href="#atanh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.atanh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">atanh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#atanh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.atanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inverse hyperbolic tangent function.</p>
+<ul class="simple">
+<li>atanh(x) -&gt; Returns the inverse hyperbolic tangent of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">asinh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">acosh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tanh</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.atanh.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#atanh.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.atanh.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ceiling">
+<h2>ceiling<a class="headerlink" href="#ceiling" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.integers.ceiling">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.integers.</tt><tt class="descname">ceiling</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/integers.html#ceiling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.integers.ceiling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ceiling is a univariate function which returns the smallest integer
+value not less than its argument. Ceiling function is generalized
+in this implementation to complex numbers.</p>
+<p>More information can be found in &#8220;Concrete mathematics&#8221; by Graham,
+pp. 87 or visit <a class="reference external" href="http://mathworld.wolfram.com/CeilingFunction.html">http://mathworld.wolfram.com/CeilingFunction.html</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ceiling</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Rational</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceiling</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>
+<span class="go">17</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceiling</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceiling</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceiling</span><span class="p">(</span><span class="o">-</span><span class="n">Float</span><span class="p">(</span><span class="mf">0.567</span><span class="p">))</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceiling</span><span class="p">(</span><span class="n">I</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">I</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">floor</span></tt></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="conjugate">
+<h2>conjugate<a class="headerlink" href="#conjugate" title="Permalink to this headline">¶</a></h2>
+<p>Returns the <a class="reference external" href="http://en.wikipedia.org/wiki/Complex_conjugation">complex conjugate</a>
+of an argument. In mathematics, the complex conjugate of a complex number is given
+by changing the sign of the imaginary part. Thus, the conjugate of the complex number</p>
+<blockquote>
+<div><span class="math">\(a + ib\)</span></div></blockquote>
+<p>(where a and b are real numbers) is</p>
+<blockquote>
+<div><span class="math">\(a - ib\)</span></div></blockquote>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">conjugate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conjugate</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conjugate</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="go">-I</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sympy.functions.elementary.complexes.conjugate">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.complexes.</tt><tt class="descname">conjugate</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#conjugate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.conjugate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes the sign of the imaginary part of a complex number.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sign</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">Abs</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">conjugate</span><span class="p">,</span> <span class="n">I</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conjugate</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">I</span><span class="p">)</span>
+<span class="go">1 - I</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="cos">
+<h2>cos<a class="headerlink" href="#cos" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.cos">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">cos</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#cos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.cos" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cosine function.</p>
+<ul class="simple">
+<li>cos(x) -&gt; Returns the cosine of x (measured in radians)</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">acos</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>cos(x) will evaluate automatically in the case x
+is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.</li>
+</ul>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r54" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R54]</a></td><td><a class="reference external" href="http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html">http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">-2*x*sin(x**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">-1/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="cosh">
+<h2>cosh<a class="headerlink" href="#cosh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.cosh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">cosh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#cosh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.cosh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hyperbolic cosine function, <span class="math">\(\frac{e^x + e^{-x}}{2}\)</span>.</p>
+<ul class="simple">
+<li>cosh(x) -&gt; Returns the hyperbolic cosine of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sinh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tanh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">acosh</span></tt></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="cot">
+<h2>cot<a class="headerlink" href="#cot" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.cot">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">cot</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#cot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.cot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.cot.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#cot.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.cot.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="coth">
+<h2>coth<a class="headerlink" href="#coth" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.coth">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">coth</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#coth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.coth" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hyperbolic cotangent function, <span class="math">\(\frac{\cosh(x)}{\sinh(x)}\)</span>.</p>
+<ul class="simple">
+<li>coth(x) -&gt; Returns the hyperbolic cotangent of x</li>
+</ul>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.coth.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#coth.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.coth.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exp">
+<h2>exp<a class="headerlink" href="#exp" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.exponential.exp">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.exponential.</tt><tt class="descname">exp</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>The exponential function, <span class="math">\(e^x\)</span>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">log</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.exp.as_real_imag">
+<tt class="descname">as_real_imag</tt><big>(</big><em>deep=True</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#exp.as_real_imag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.exp.as_real_imag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this function as a 2-tuple representing a complex number.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.functions.elementary.complexes.re" title="sympy.functions.elementary.complexes.re"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.elementary.complexes.re</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.elementary.complexes.im</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(exp(re(x))*cos(im(x)), exp(re(x))*sin(im(x)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(E, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(cos(1), sin(1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(E*cos(1), E*sin(1))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.functions.elementary.exponential.exp.base">
+<tt class="descname">base</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#exp.base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.exp.base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the base of the exponential function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.exp.fdiff">
+<tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#exp.fdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.exp.fdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of this function.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.functions.elementary.exponential.exp.taylor_term">
+<em class="property">static </em><tt class="descname">taylor_term</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#exp.taylor_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.exp.taylor_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the next term in the Taylor series expansion.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classes <a class="reference internal" href="#sympy.functions.elementary.exponential.log" title="sympy.functions.elementary.exponential.log"><tt class="xref py py-class docutils literal"><span class="pre">sympy.functions.elementary.exponential.log</span></tt></a></p>
+</div>
+</div>
+<div class="section" id="exprcondpair">
+<h2>ExprCondPair<a class="headerlink" href="#exprcondpair" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.piecewise.ExprCondPair">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.piecewise.</tt><tt class="descname">ExprCondPair</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#ExprCondPair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.ExprCondPair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an expression, condition pair.</p>
+<dl class="attribute">
+<dt id="sympy.functions.elementary.piecewise.ExprCondPair.cond">
+<tt class="descname">cond</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#ExprCondPair.cond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.ExprCondPair.cond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the condition of this pair.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.functions.elementary.piecewise.ExprCondPair.expr">
+<tt class="descname">expr</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#ExprCondPair.expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.ExprCondPair.expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the expression of this pair.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.functions.elementary.piecewise.ExprCondPair.free_symbols">
+<tt class="descname">free_symbols</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#ExprCondPair.free_symbols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.ExprCondPair.free_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the free symbols of this pair.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="floor">
+<h2>floor<a class="headerlink" href="#floor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.integers.floor">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.integers.</tt><tt class="descname">floor</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/integers.html#floor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.integers.floor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Floor is a univariate function which returns the largest integer
+value not greater than its argument. However this implementation
+generalizes floor to complex numbers.</p>
+<p>More information can be found in &#8220;Concrete mathematics&#8221; by Graham,
+pp. 87 or visit <a class="reference external" href="http://mathworld.wolfram.com/FloorFunction.html">http://mathworld.wolfram.com/FloorFunction.html</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Rational</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="mi">17</span><span class="p">)</span>
+<span class="go">17</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">23</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="o">-</span><span class="n">Float</span><span class="p">(</span><span class="mf">0.567</span><span class="p">))</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">-I</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">ceiling</span></tt></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="hyperbolicfunction">
+<h2>HyperbolicFunction<a class="headerlink" href="#hyperbolicfunction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.HyperbolicFunction">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">HyperbolicFunction</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#HyperbolicFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.HyperbolicFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for hyperbolic functions.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sinh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cosh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tanh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">coth</span></tt></p>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="identityfunction">
+<h2>IdentityFunction<a class="headerlink" href="#identityfunction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.miscellaneous.IdentityFunction">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.miscellaneous.</tt><tt class="descname">IdentityFunction</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/miscellaneous.html#IdentityFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.miscellaneous.IdentityFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>The identity function</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Id</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Id</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="im">
+<h2>im<a class="headerlink" href="#im" title="Permalink to this headline">¶</a></h2>
+<p>Returns the imaginary part of an expression.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">im</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.functions.elementary.complexes.re" title="sympy.functions.elementary.complexes.re"><tt class="xref py py-class docutils literal"><span class="pre">sympy.functions.elementary.complexes.re</span></tt></a></p>
+</div>
+</div>
+<div class="section" id="lambertw">
+<h2>LambertW<a class="headerlink" href="#lambertw" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.exponential.LambertW">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.exponential.</tt><tt class="descname">LambertW</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#LambertW"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.LambertW" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lambert W function, defined as the inverse function of
+x*exp(x). This function represents the principal branch
+of this inverse function, which like the natural logarithm
+is multivalued.</p>
+<p>For more information, see:
+<a class="reference external" href="http://en.wikipedia.org/wiki/Lambert_W_function">http://en.wikipedia.org/wiki/Lambert_W_function</a></p>
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.LambertW.fdiff">
+<tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#LambertW.fdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.LambertW.fdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the first derivative of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="log">
+<h2>log<a class="headerlink" href="#log" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.exponential.log">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.exponential.</tt><tt class="descname">log</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>The natural logarithm function <span class="math">\(\ln(x)\)</span> or <span class="math">\(\log(x)\)</span>.
+Logarithms are taken with the natural base, <span class="math">\(e\)</span>. To get
+a logarithm of a different base <tt class="docutils literal"><span class="pre">b</span></tt>, use <tt class="docutils literal"><span class="pre">log(x,</span> <span class="pre">b)</span></tt>,
+which is essentially short-hand for <tt class="docutils literal"><span class="pre">log(x)/log(b)</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">exp</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.log.as_base_exp">
+<tt class="descname">as_base_exp</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log.as_base_exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log.as_base_exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this function in the form (base, exponent).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.log.as_real_imag">
+<tt class="descname">as_real_imag</tt><big>(</big><em>deep=True</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log.as_real_imag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log.as_real_imag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this function as a complex coordinate.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(log(Abs(x)), arg(x))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(0, pi/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(log(sqrt(2)), pi/4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(log(Abs(x)), arg(I*x))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.log.fdiff">
+<tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log.fdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log.fdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of the function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.exponential.log.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <span class="math">\(e^x\)</span>, the inverse function of <span class="math">\(\log(x)\)</span>.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.functions.elementary.exponential.log.taylor_term">
+<em class="property">static </em><tt class="descname">taylor_term</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/exponential.html#log.taylor_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.exponential.log.taylor_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next term in the Taylor series expansion of <span class="math">\(\log(1+x)\)</span>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classes <a class="reference internal" href="#sympy.functions.elementary.exponential.exp" title="sympy.functions.elementary.exponential.exp"><tt class="xref py py-class docutils literal"><span class="pre">sympy.functions.elementary.exponential.exp</span></tt></a></p>
+</div>
+</div>
+<div class="section" id="min">
+<h2>Min<a class="headerlink" href="#min" title="Permalink to this headline">¶</a></h2>
+<p>Returns the minimum of two (comparable) expressions.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">Min</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Min(1, x)</span>
+</pre></div>
+</div>
+<p>It is named <tt class="docutils literal"><span class="pre">Min</span></tt> and not <tt class="docutils literal"><span class="pre">min</span></tt> to avoid conflicts with the built-in function <tt class="docutils literal"><span class="pre">min</span></tt>.</p>
+<dl class="class">
+<dt id="sympy.functions.elementary.miscellaneous.Min">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.miscellaneous.</tt><tt class="descname">Min</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/miscellaneous.html#Min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.miscellaneous.Min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return, if possible, the minimum value of the list.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">Max</span></tt></dt>
+<dd>find maximum values</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>                  
+<span class="go">Min(x, -2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">-2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">-3</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>                   
+<span class="go">Min(x, y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>     
+<span class="go">Min(n, -7)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="max">
+<h2>Max<a class="headerlink" href="#max" title="Permalink to this headline">¶</a></h2>
+<p>Returns the maximum of two (comparable) expressions</p>
+<p>It is named <tt class="docutils literal"><span class="pre">Max</span></tt> and not <tt class="docutils literal"><span class="pre">max</span></tt> to avoid conflicts with the built-in function <tt class="docutils literal"><span class="pre">max</span></tt>.</p>
+<dl class="class">
+<dt id="sympy.functions.elementary.miscellaneous.Max">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.miscellaneous.</tt><tt class="descname">Max</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/miscellaneous.html#Max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.miscellaneous.Max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return, if possible, the maximum value of the list.</p>
+<p>When number of arguments is equal one, then
+return this argument.</p>
+<p>When number of arguments is equal two, then
+return, if possible, the value from (a, b) that is &gt;= the other.</p>
+<p>In common case, when the length of list greater than 2, the task
+is more complicated. Return only the arguments, which are greater
+than others, if it is possible to determine directional relation.</p>
+<p>If is not possible to determine such a relation, return a partially
+evaluated result.</p>
+<p>Assumptions are used to make the decision too.</p>
+<p>Also, only comparable arguments are permitted.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">Min</span></tt></dt>
+<dd>find minimum values</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r55" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R55]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Directed_complete_partial_order">http://en.wikipedia.org/wiki/Directed_complete_partial_order</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r56" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R56]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Lattice_%28order%29">http://en.wikipedia.org/wiki/Lattice_%28order%29</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>                  
+<span class="go">Max(x, -2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">p</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>                   
+<span class="go">Max(x, y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">==</span> <span class="n">Max</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Max</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>           
+<span class="go">Max(x, y, z)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">)</span>        
+<span class="go">Max(8, p)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Max</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">oo</span>
+</pre></div>
+</div>
+<p>Algorithm</p>
+<p>The task can be considered as searching of supremums in the
+directed complete partial orders <a class="reference internal" href="#r55">[R55]</a>.</p>
+<p>The source values are sequentially allocated by the isolated subsets
+in which supremums are searched and result as Max arguments.</p>
+<p>If the resulted supremum is single, then it is returned.</p>
+<p>The isolated subsets are the sets of values which are only the comparable
+with each other in the current set. E.g. natural numbers are comparable with
+each other, but not comparable with the <span class="math">\(x\)</span> symbol. Another example: the
+symbol <span class="math">\(x\)</span> with negative assumption is comparable with a natural number.</p>
+<p>Also there are &#8220;least&#8221; elements, which are comparable with all others,
+and have a zero property (maximum or minimum for all elements). E.g. <span class="math">\(oo\)</span>.
+In case of it the allocation operation is terminated and only this value is
+returned.</p>
+<dl class="docutils">
+<dt>Assumption:</dt>
+<dd><ul class="first last simple">
+<li>if A &gt; B &gt; C then A &gt; C</li>
+<li>if A==B then B can be removed</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="piecewise">
+<h2>Piecewise<a class="headerlink" href="#piecewise" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.piecewise.Piecewise">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.piecewise.</tt><tt class="descname">Piecewise</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#Piecewise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.Piecewise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a piecewise function.</p>
+<p>Usage:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Piecewise( (expr,cond), (expr,cond), ... )</dt>
+<dd><ul class="first last simple">
+<li>Each argument is a 2-tuple defining a expression and condition</li>
+<li>The conds are evaluated in turn returning the first that is True.
+If any of the evaluated conds are not determined explicitly False,
+e.g. x &lt; 1, the function is returned in symbolic form.</li>
+<li>If the function is evaluated at a place where all conditions are False,
+a ValueError exception will be raised.</li>
+<li>Pairs where the cond is explicitly False, will be removed.</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">piecewise_fold</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Piecewise</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">(</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">&lt;-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">log(5)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.functions.elementary.piecewise.Piecewise.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#Piecewise.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.Piecewise.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate this piecewise function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.functions.elementary.piecewise.piecewise_fold">
+<tt class="descclassname">sympy.functions.elementary.piecewise.</tt><tt class="descname">piecewise_fold</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/piecewise.html#piecewise_fold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.piecewise.piecewise_fold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an expression containing a piecewise function and returns the
+expression in piecewise form.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Piecewise</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Piecewise</span><span class="p">,</span> <span class="n">piecewise_fold</span><span class="p">,</span> <span class="n">sympify</span> <span class="k">as</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">piecewise_fold</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
+<span class="go">Piecewise((x**2, x &lt; 1), (x, 1 &lt;= x))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="re">
+<h2>re<a class="headerlink" href="#re" title="Permalink to this headline">¶</a></h2>
+<p>Return the real part of an expression.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">re</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sympy.functions.elementary.complexes.re">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.complexes.</tt><tt class="descname">re</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#re"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.re" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns real part of expression. This function performs only
+elementary analysis and so it will fail to decompose properly
+more complicated expressions. If completely simplified result
+is needed then use Basic.as_real_imag() or perform complex
+expansion on instance of this function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">E</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="p">)</span>
+<span class="go">2*E</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="mi">17</span><span class="p">)</span>
+<span class="go">17</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="n">im</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">im</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.complexes.re.as_real_imag">
+<tt class="descname">as_real_imag</tt><big>(</big><em>deep=True</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#re.as_real_imag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.re.as_real_imag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the real number with a zero complex part.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-class docutils literal"><span class="pre">sympy.functions.elementary.complexes.im</span></tt></p>
+</div>
+</div>
+<div class="section" id="root">
+<h2>root<a class="headerlink" href="#root" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.functions.elementary.miscellaneous.root">
+<tt class="descclassname">sympy.functions.elementary.miscellaneous.</tt><tt class="descname">root</tt><big>(</big><em>arg</em>, <em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/miscellaneous.html#root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.miscellaneous.root" title="Permalink to this definition">¶</a></dt>
+<dd><p>The n-th root function (a shortcut for <tt class="docutils literal"><span class="pre">arg**(1/n)</span></tt>)</p>
+<p>root(x, n) -&gt; Returns the principal n-th root of x.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../polys/reference.html#sympy.polys.rootoftools.RootOf" title="sympy.polys.rootoftools.RootOf"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.polys.rootoftools.RootOf</span></tt></a>, <a class="reference internal" href="../core.html#sympy.core.power.integer_nthroot" title="sympy.core.power.integer_nthroot"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.power.integer_nthroot</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">sqrt</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">real_root</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Square_root">http://en.wikipedia.org/wiki/Square_root</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/real_root">http://en.wikipedia.org/wiki/real_root</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Root_of_unity">http://en.wikipedia.org/wiki/Root_of_unity</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Principal_value">http://en.wikipedia.org/wiki/Principal_value</a></li>
+<li><a class="reference external" href="http://mathworld.wolfram.com/CubeRoot.html">http://mathworld.wolfram.com/CubeRoot.html</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">root</span><span class="p">,</span> <span class="n">Rational</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">sqrt(x)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">x**(1/3)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">x**(1/n)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">Rational</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">x**(-3/2)</span>
+</pre></div>
+</div>
+<p>To get all n n-th roots you can use the RootOf function.
+The following examples show the roots of unity for n
+equal 2, 3 and 4:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">RootOf</span><span class="p">,</span> <span class="n">I</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">RootOf</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+<span class="go">[-1, 1]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">RootOf</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="p">]</span>
+<span class="go">[1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">RootOf</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span> <span class="p">]</span>
+<span class="go">[-1, 1, -I, I]</span>
+</pre></div>
+</div>
+<p>SymPy, like other symbolic algebra systems, returns the
+complex root of negative numbers. This is the principal
+root and differs from the text-book result that one might
+be expecting. For example, the cube root of -8 does not
+come back as -2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">2*(-1)**(1/3)</span>
+</pre></div>
+</div>
+<p>The real_root function can be used to either make such a result
+real or simply return the real root in the first place:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">real_root</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">real_root</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">-2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">real_root</span><span class="p">(</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">-2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="roundfunction">
+<h2>RoundFunction<a class="headerlink" href="#roundfunction" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.integers.RoundFunction">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.integers.</tt><tt class="descname">RoundFunction</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/integers.html#RoundFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.integers.RoundFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for rounding functions.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="sin">
+<h2>sin<a class="headerlink" href="#sin" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.sin">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">sin</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#sin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.sin" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sine function.</p>
+<ul class="simple">
+<li>sin(x) -&gt; Returns the sine of x (measured in radians)</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">cos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">asin</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>sin(x) will evaluate automatically in the case x
+is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.</li>
+</ul>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r57" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[R57]</a></td><td><a class="reference external" href="http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html">http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">2*x*cos(x**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">1/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sinh">
+<h2>sinh<a class="headerlink" href="#sinh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.sinh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">sinh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#sinh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.sinh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hyperbolic sine function, <span class="math">\(\frac{e^x - e^{-x}}{2}\)</span>.</p>
+<ul class="simple">
+<li>sinh(x) -&gt; Returns the hyperbolic sine of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">cosh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">tanh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">asinh</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.sinh.as_real_imag">
+<tt class="descname">as_real_imag</tt><big>(</big><em>deep=True</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#sinh.as_real_imag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.sinh.as_real_imag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns this function as a complex coordinate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.sinh.fdiff">
+<tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#sinh.fdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.sinh.fdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first derivative of this function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.sinh.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#sinh.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.sinh.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.functions.elementary.hyperbolic.sinh.taylor_term">
+<em class="property">static </em><tt class="descname">taylor_term</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#sinh.taylor_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.sinh.taylor_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next term in the Taylor series expansion.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="sqrt">
+<h2>sqrt<a class="headerlink" href="#sqrt" title="Permalink to this headline">¶</a></h2>
+<p>Returns the square root of an expression. It is equivalent to raise to <tt class="docutils literal"><span class="pre">Rational(1,2)</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="o">**</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="sympy.functions.elementary.miscellaneous.sqrt">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.miscellaneous.</tt><tt class="descname">sqrt</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/miscellaneous.html#sqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.miscellaneous.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p>The square root function</p>
+<p>sqrt(x) -&gt; Returns the principal square root of x.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../polys/reference.html#sympy.polys.rootoftools.RootOf" title="sympy.polys.rootoftools.RootOf"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.polys.rootoftools.RootOf</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">root</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Square_root">http://en.wikipedia.org/wiki/Square_root</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Principal_value">http://en.wikipedia.org/wiki/Principal_value</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">sqrt(x)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<p>Note that sqrt(x**2) does not simplify to x.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">sqrt(x**2)</span>
+</pre></div>
+</div>
+<p>This is because the two are not equal to each other in general.
+For example, consider x == -1:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+<p>This is because sqrt computes the principal square root, so the square may
+put the argument in a different branch.  This identity does hold if x is
+positive:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">y</span>
+</pre></div>
+</div>
+<p>You can force this simplification by using the powdenest() function with
+the force option set to True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">powdenest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">sqrt(x**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">force</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<p>To get both branches of the square root you can use the RootOf function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">RootOf</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">RootOf</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+<span class="go">[-sqrt(3), sqrt(3)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sign">
+<h2>sign<a class="headerlink" href="#sign" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.complexes.sign">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.complexes.</tt><tt class="descname">sign</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/complexes.html#sign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.complexes.sign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sign of an expression, that is:</p>
+<ul class="simple">
+<li>1 if expression is positive</li>
+<li>0 if expression is equal to zero</li>
+<li>-1 if expression is negative</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Abs</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">conjugate</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sign</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="tan">
+<h2>tan<a class="headerlink" href="#tan" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.trigonometric.tan">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.trigonometric.</tt><tt class="descname">tan</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#tan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.tan" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sin</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cos</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atan</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>tan(x) will evaluate automatically in the case x is a
+multiple of pi.</li>
+</ul>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r58" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[R58]</a></td><td><a class="reference external" href="http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html">http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">tan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">2*x*(tan(x**2)**2 + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tan</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.trigonometric.tan.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/trigonometric.html#tan.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.trigonometric.tan.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tanh">
+<h2>tanh<a class="headerlink" href="#tanh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.elementary.hyperbolic.tanh">
+<em class="property">class </em><tt class="descclassname">sympy.functions.elementary.hyperbolic.</tt><tt class="descname">tanh</tt><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#tanh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.tanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hyperbolic tangent function, <span class="math">\(\frac{\sinh(x)}{\cosh(x)}\)</span>.</p>
+<ul class="simple">
+<li>tanh(x) -&gt; Returns the hyperbolic tangent of x</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sinh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">cosh</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">atanh</span></tt></p>
+</div>
+<dl class="method">
+<dt id="sympy.functions.elementary.hyperbolic.tanh.inverse">
+<tt class="descname">inverse</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/elementary/hyperbolic.html#tanh.inverse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.elementary.hyperbolic.tanh.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the inverse of this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Elementary</a><ul>
+<li><a class="reference internal" href="#abs">Abs</a></li>
+<li><a class="reference internal" href="#acos">acos</a></li>
+<li><a class="reference internal" href="#acosh">acosh</a></li>
+<li><a class="reference internal" href="#acot">acot</a></li>
+<li><a class="reference internal" href="#acoth">acoth</a></li>
+<li><a class="reference internal" href="#arg">arg</a></li>
+<li><a class="reference internal" href="#asin">asin</a></li>
+<li><a class="reference internal" href="#asinh">asinh</a></li>
+<li><a class="reference internal" href="#atan">atan</a></li>
+<li><a class="reference internal" href="#atan2">atan2</a></li>
+<li><a class="reference internal" href="#atanh">atanh</a></li>
+<li><a class="reference internal" href="#ceiling">ceiling</a></li>
+<li><a class="reference internal" href="#conjugate">conjugate</a></li>
+<li><a class="reference internal" href="#cos">cos</a></li>
+<li><a class="reference internal" href="#cosh">cosh</a></li>
+<li><a class="reference internal" href="#cot">cot</a></li>
+<li><a class="reference internal" href="#coth">coth</a></li>
+<li><a class="reference internal" href="#exp">exp</a></li>
+<li><a class="reference internal" href="#exprcondpair">ExprCondPair</a></li>
+<li><a class="reference internal" href="#floor">floor</a></li>
+<li><a class="reference internal" href="#hyperbolicfunction">HyperbolicFunction</a></li>
+<li><a class="reference internal" href="#identityfunction">IdentityFunction</a></li>
+<li><a class="reference internal" href="#im">im</a></li>
+<li><a class="reference internal" href="#lambertw">LambertW</a></li>
+<li><a class="reference internal" href="#log">log</a></li>
+<li><a class="reference internal" href="#min">Min</a></li>
+<li><a class="reference internal" href="#max">Max</a></li>
+<li><a class="reference internal" href="#piecewise">Piecewise</a></li>
+<li><a class="reference internal" href="#re">re</a></li>
+<li><a class="reference internal" href="#root">root</a></li>
+<li><a class="reference internal" href="#roundfunction">RoundFunction</a></li>
+<li><a class="reference internal" href="#sin">sin</a></li>
+<li><a class="reference internal" href="#sinh">sinh</a></li>
+<li><a class="reference internal" href="#sqrt">sqrt</a></li>
+<li><a class="reference internal" href="#sign">sign</a></li>
+<li><a class="reference internal" href="#tan">tan</a></li>
+<li><a class="reference internal" href="#tanh">tanh</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Functions Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="combinatorial.html"
+                        title="next chapter">Combinatorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/functions/elementary.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="combinatorial.html" title="Combinatorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Functions Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Functions Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

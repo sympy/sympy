@@ -1,0 +1,806 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mechanics: Vector &amp; ReferenceFrame &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="index.html" />
+    <link rel="next" title="Mechanics: Kinematics" href="kinematics.html" />
+    <link rel="prev" title="Classical Mechanics" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Mechanics: Kinematics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Classical Mechanics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mechanics-vector-referenceframe">
+<h1>Mechanics: Vector &amp; ReferenceFrame<a class="headerlink" href="#mechanics-vector-referenceframe" title="Permalink to this headline">¶</a></h1>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>, vectors and reference frames are the &#8220;building blocks&#8221; of
+dynamic systems. This document will describe these mathematically and describe
+how to use them with this module&#8217;s code.</p>
+<div class="section" id="vector">
+<h2>Vector<a class="headerlink" href="#vector" title="Permalink to this headline">¶</a></h2>
+<p>A vector is a geometric object that has a magnitude (or length) and a
+direction.  Vectors in 3-space are often represented on paper as:</p>
+<div align="center" class="align-center"><img height="175" src="../../../_images/vec_rep.svg" width="350" /></div>
+</div>
+<div class="section" id="vector-algebra">
+<h2>Vector Algebra<a class="headerlink" href="#vector-algebra" title="Permalink to this headline">¶</a></h2>
+<p>Vector algebra is the first topic to be discussed.</p>
+<p>Two vectors are said to be equal if and only if (iff) they have the same same
+magnitude and orientation.</p>
+<div class="section" id="vector-operations">
+<h3>Vector Operations<a class="headerlink" href="#vector-operations" title="Permalink to this headline">¶</a></h3>
+<p>Multiple algebraic operations can be done with vectors: addition between
+vectors, scalar multiplication, and vector multiplication.</p>
+<p>Vector addition as based on the parallelogram law.</p>
+<div align="center" class="align-center"><img height="200" src="../../../_images/vec_add.svg" width="200" /></div>
+<p>Vector addition is also commutative:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} + \mathbf{b} &amp;= \mathbf{b} + \mathbf{a} \\
+(\mathbf{a} + \mathbf{b}) + \mathbf{c} &amp;= \mathbf{a} + (\mathbf{b} +
+\mathbf{c})\end{split}\]</div>
+<p>Scalar multiplication is the product of a vector and a scalar; the result is a
+vector with the same orientation but whose magnitude is scaled by the scalar.
+Note that multiplication by -1 is equivalent to rotating the vector by 180
+degrees about an arbitrary axis in the plane perpendicular to the vector.</p>
+<div align="center" class="align-center"><img height="150" src="../../../_images/vec_mul.svg" width="200" /></div>
+<p>A unit vector is simply a vector whose magnitude is equal to 1.  Given any
+vector <span class="math">\(\mathbf{v}\)</span> we can define a unit vector as:</p>
+<div class="math">
+\[\mathbf{\hat{n}_v} = \frac{\mathbf{v}}{\Vert \mathbf{v} \Vert}\]</div>
+<p>Note that every vector can be written as the product of a scalar and unit
+vector.</p>
+<p>Three vector products are implemented in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>: the dot product, the
+cross product, and the outer product.</p>
+<p>The dot product operation maps two vectors to a scalar.  It is defined as:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} \cdot \mathbf{b} = \Vert \mathbf{a} \Vert \Vert \mathbf{b}
+\Vert \cos(\theta)\\\end{split}\]</div>
+<p>where <span class="math">\(\theta\)</span> is the angle between <span class="math">\(\mathbf{a}\)</span> and
+<span class="math">\(\mathbf{b}\)</span>.</p>
+<p>The dot product of two unit vectors represent the magnitude of the common
+direction; for other vectors, it is the product of the magnitude of the common
+direction and the two vectors&#8217; magnitudes. The dot product of two perpendicular
+is zero. The figure below shows some examples:</p>
+<div align="center" class="align-center"><img height="250" src="../../../_images/vec_dot.svg" width="450" /></div>
+<p>The dot product is commutative:</p>
+<div class="math">
+\[\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}\]</div>
+<p>The cross product vector multiplication operation of two vectors returns a
+vector:</p>
+<div class="math">
+\[\mathbf{a} \times \mathbf{b} = \mathbf{c}\]</div>
+<p>The vector <span class="math">\(\mathbf{c}\)</span> has the following properties: it&#8217;s orientation is
+perpendicular to both <span class="math">\(\mathbf{a}\)</span> and <span class="math">\(\mathbf{b}\)</span>, it&#8217;s magnitude
+is defined as <span class="math">\(\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
+\mathbf{b} \Vert \sin(\theta)\)</span> (where <span class="math">\(\theta\)</span> is the angle between
+<span class="math">\(\mathbf{a}\)</span> and <span class="math">\(\mathbf{b}\)</span>), and has a sense defined by using
+the right hand rule between <span class="math">\(\Vert \mathbf{a} \Vert \Vert \mathbf{b}
+\Vert\)</span>. The figure below shows this:</p>
+<div align="center" class="align-center"><img height="350" src="../../../_images/vec_cross.svg" width="700" /></div>
+<p>The cross product has the following properties:</p>
+<p>It is not commutative:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} \times \mathbf{b} &amp;\neq \mathbf{b} \times \mathbf{a} \\
+\mathbf{a} \times \mathbf{b} &amp;= - \mathbf{b} \times \mathbf{a}\end{split}\]</div>
+<p>and not associative:</p>
+<div class="math">
+\[(\mathbf{a} \times \mathbf{b} ) \times \mathbf{c} \neq \mathbf{a} \times
+(\mathbf{b} \times \mathbf{c})\]</div>
+<p>Two parallel vectors will have a zero cross product.</p>
+<p>The outer product between two vectors will not be not be discussed here, but
+instead in the inertia section (that is where it is used). Other useful vector
+properties and relationships are:</p>
+<div class="math">
+\[\begin{split}\alpha (\mathbf{a} + \mathbf{b}) &amp;= \alpha \mathbf{a} + \alpha \mathbf{b}\\
+\mathbf{a} \cdot (\mathbf{b} + \mathbf{c}) &amp;= \mathbf{a} \cdot \mathbf{b} +
+\mathbf{a} \cdot \mathbf{c}\\
+\mathbf{a} \times (\mathbf{b} + \mathbf{c}) &amp;= \mathbf{a} \times \mathbf{b} +
+\mathbf{a} \times \mathbf{b}\\
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &amp; \textrm{ gives the scalar
+triple product.}\\
+\mathbf{a} \times (\mathbf{b} \cdot \mathbf{c}) &amp; \textrm{ does not work,
+as you cannot cross a vector and a scalar.}\\
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &amp;= \mathbf{a} \cdot
+(\mathbf{b} \times \mathbf{c})\\
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &amp;= (\mathbf{b} \times
+\mathbf{c}) \cdot \mathbf{a} = (\mathbf{c} \times \mathbf{a}) \cdot
+\mathbf{b}\\
+(\mathbf{a} \times \mathbf{b}) \times \mathbf{c} &amp;= \mathbf{b}(\mathbf{a}
+\cdot \mathbf{c}) - \mathbf{a}(\mathbf{b} \cdot \mathbf{c})\\
+\mathbf{a} \times (\mathbf{b} \times \mathbf{c}) &amp;= \mathbf{b}(\mathbf{a}
+\cdot \mathbf{c}) - \mathbf{c}(\mathbf{a} \cdot \mathbf{b})\\\end{split}\]</div>
+</div>
+<div class="section" id="alternative-representation">
+<h3>Alternative Representation<a class="headerlink" href="#alternative-representation" title="Permalink to this headline">¶</a></h3>
+<p>If we have three non-coplanar unit vectors
+<span class="math">\(\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}\)</span>,
+we can represent any vector
+<span class="math">\(\mathbf{a}\)</span> as <span class="math">\(\mathbf{a} = a_x \mathbf{\hat{n}_x} + a_y
+\mathbf{\hat{n}_y} + a_z \mathbf{\hat{n}_z}\)</span>. In this situation
+<span class="math">\(\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}\)</span>
+are referred to as a basis.  <span class="math">\(a_x, a_y, a_z\)</span>
+are called the measure numbers.
+Usually the unit vectors are mutually perpendicular, in which case we can refer
+to them as an orthonormal basis, and they are usually right-handed.</p>
+<p>To test equality between two vectors, now we can do the following. With
+vectors:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} &amp;= a_x \mathbf{\hat{n}_x} + a_y \mathbf{\hat{n}_y} + a_z
+\mathbf{\hat{n}_z}\\
+\mathbf{b} &amp;= b_x \mathbf{\hat{n}_x} + b_y \mathbf{\hat{n}_y} + b_z
+\mathbf{\hat{n}_z}\\\end{split}\]</div>
+<p>We can claim equality if: <span class="math">\(a_x = b_x, a_y = b_y, a_z = b_z\)</span>.</p>
+<p>Vector addition is then represented, for the same two vectors, as:</p>
+<div class="math">
+\[\mathbf{a} + \mathbf{b} = (a_x + b_x)\mathbf{\hat{n}_x} + (a_y + b_y)
+\mathbf{\hat{n}_y} + (a_z + b_z) \mathbf{\hat{n}_z}\]</div>
+<p>Multiplication operations are now defined as:</p>
+<div class="math">
+\[\begin{split}\alpha \mathbf{b} &amp;= \alpha b_x \mathbf{\hat{n}_x} + \alpha b_y
+\mathbf{\hat{n}_y} + \alpha b_z \mathbf{\hat{n}_z}\\
+\mathbf{a} \cdot \mathbf{b} &amp;= a_x b_x + a_y b_y + a_z b_z\\
+\mathbf{a} \times \mathbf{b} &amp;=
+\textrm{det }\begin{bmatrix} \mathbf{\hat{n}_x} &amp; \mathbf{\hat{n}_y} &amp;
+\mathbf{\hat{n}_z} \\ a_x &amp; a_y &amp; a_z \\ a_x &amp; a_y &amp; a_z \end{bmatrix}\\
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &amp;=
+\textrm{det }\begin{bmatrix} a_x &amp; a_y &amp; a_z \\ b_x &amp; b_y &amp; b_z \\ c_x &amp; c_y
+&amp; c_z \end{bmatrix}\\\end{split}\]</div>
+<p>To write a vector in a given basis, we can do the follow:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} = (\mathbf{a}\cdot\mathbf{\hat{n}_x})\mathbf{\hat{n}_x} +
+(\mathbf{a}\cdot\mathbf{\hat{n}_y})\mathbf{\hat{n}_y} +
+(\mathbf{a}\cdot\mathbf{\hat{n}_z})\mathbf{\hat{n}_z}\\\end{split}\]</div>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>Some numeric examples of these operations follow:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} &amp;= \mathbf{\hat{n}_x} + 5 \mathbf{\hat{n}_y}\\
+\mathbf{b} &amp;= \mathbf{\hat{n}_y} + \alpha \mathbf{\hat{n}_z}\\
+\mathbf{a} + \mathbf{b} &amp;= \mathbf{\hat{n}_x} + 6 \mathbf{\hat{n}_y} + \alpha
+\mathbf{\hat{n}_z}\\
+\mathbf{a} \cdot \mathbf{b} &amp;= 5\\
+\mathbf{a} \cdot \mathbf{\hat{n}_y} &amp;= 5\\
+\mathbf{a} \cdot \mathbf{\hat{n}_z} &amp;= 0\\
+\mathbf{a} \times \mathbf{b} &amp;= 5 \alpha \mathbf{\hat{n}_x} - \alpha
+\mathbf{\hat{n}_y} + \mathbf{\hat{n}_z}\\
+\mathbf{b} \times \mathbf{a} &amp;= -5 \alpha \mathbf{\hat{n}_x} + \alpha
+\mathbf{\hat{n}_y} - \mathbf{\hat{n}_z}\\\end{split}\]</div>
+</div>
+</div>
+<div class="section" id="vector-calculus">
+<h2>Vector Calculus<a class="headerlink" href="#vector-calculus" title="Permalink to this headline">¶</a></h2>
+<p>To deal with the calculus of vectors with moving object, we have to introduce
+the concept of a reference frame. A classic example is a train moving along its
+tracks, with you and a friend inside. If both you and your friend are sitting,
+the relative velocity between the two of you is zero. From an observer outside
+the train, you will both have velocity though.</p>
+<p>We will now apply more rigor to this definition. A reference frame is a virtual
+&#8220;platform&#8221; which we choose to observe vector quantities from. If we have a
+reference frame <span class="math">\(\mathbf{N}\)</span>, vector <span class="math">\(\mathbf{a}\)</span> is said to be
+fixed in the frame <span class="math">\(\mathbf{N}\)</span> if none of its properties ever change
+when observed from <span class="math">\(\mathbf{N}\)</span>. We will typically assign a fixed
+orthonormal basis vector set with each reference frame; <span class="math">\(\mathbf{N}\)</span> will
+have <span class="math">\(\mathbf{\hat{n}_x}, \mathbf{\hat{n}_y},\mathbf{\hat{n}_z}\)</span> as its
+basis vectors.</p>
+<div class="section" id="derivatives-of-vectors">
+<h3>Derivatives of Vectors<a class="headerlink" href="#derivatives-of-vectors" title="Permalink to this headline">¶</a></h3>
+<p>A vector which is not fixed in a reference frame therefore has changing
+properties when observed from that frame. Calculus is the study of change, and
+in order to deal with the peculiarities of vectors fixed and not fixed in
+different reference frames, we need to be more explicit in our definitions.</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/vec_fix_notfix.svg" width="450" /></div>
+<p>In the above figure, we have vectors <span class="math">\(\mathbf{c,d,e,f}\)</span>. If one were to
+take the derivative of <span class="math">\(\mathbf{e}\)</span> with respect to <span class="math">\(\theta\)</span>:</p>
+<div class="math">
+\[\frac{d \mathbf{e}}{d \theta}\]</div>
+<p>it is not clear what the derivative is. If you are observing from frame
+<span class="math">\(\mathbf{A}\)</span>, it is clearly non-zero. If you are observing from frame
+<span class="math">\(\mathbf{B}\)</span>, the derivative is zero. We will therefore introduce the
+frame as part of the derivative notation:</p>
+<div class="math">
+\[\begin{split}\frac{^{\mathbf{A}} d \mathbf{e}}{d \theta} &amp;\neq 0 \textrm{,
+the derivative of } \mathbf{e} \textrm{ with respect to } \theta
+\textrm{ in the reference frame } \mathbf{A}\\
+\frac{^{\mathbf{B}} d \mathbf{e}}{d \theta} &amp;= 0 \textrm{,
+ the derivative of } \mathbf{e} \textrm{ with respect to } \theta
+\textrm{ in the reference frame } \mathbf{B}\\
+\frac{^{\mathbf{A}} d \mathbf{c}}{d \theta} &amp;= 0 \textrm{,
+ the derivative of } \mathbf{c} \textrm{ with respect to } \theta
+\textrm{ in the reference frame } \mathbf{A}\\
+\frac{^{\mathbf{B}} d \mathbf{c}}{d \theta} &amp;\neq 0 \textrm{,
+ the derivative of } \mathbf{c} \textrm{ with respect to } \theta
+\textrm{ in the reference frame } \mathbf{B}\\\end{split}\]</div>
+<p>Here are some additional properties of derivatives of vectors in specific
+frames:</p>
+<div class="math">
+\[\begin{split}\frac{^{\mathbf{A}} d}{dt}(\mathbf{a} + \mathbf{b}) &amp;= \frac{^{\mathbf{A}}
+d\mathbf{a}}{dt} + \frac{^{\mathbf{A}} d\mathbf{b}}{dt}\\
+\frac{^{\mathbf{A}} d}{dt}\gamma \mathbf{a} &amp;= \frac{ d \gamma}{dt}\mathbf{a}
++ \gamma\frac{^{\mathbf{A}} d\mathbf{a}}{dt}\\
+\frac{^{\mathbf{A}} d}{dt}(\mathbf{a} \times \mathbf{b}) &amp;=
+\frac{^{\mathbf{A}} d\mathbf{a}}{dt} \times \mathbf{b} +
+\mathbf{a} \times \frac{^{\mathbf{A}} d\mathbf{b}}{dt}\\\end{split}\]</div>
+</div>
+<div class="section" id="relating-sets-of-basis-vectors">
+<h3>Relating Sets of Basis Vectors<a class="headerlink" href="#relating-sets-of-basis-vectors" title="Permalink to this headline">¶</a></h3>
+<p>We need to now define the relationship between two different reference frames;
+or how to relate the basis vectors of one frame to another. We can do this
+using a direction cosine matrix (DCM). The direction cosine matrix relates
+the basis vectors of one frame to another, in the following fashion:</p>
+<div class="math">
+\[\begin{split}\begin{bmatrix}
+\mathbf{\hat{a}_x} \\ \mathbf{\hat{a}_y} \\ \mathbf{\hat{a}_z} \\
+\end{bmatrix}  =
+\begin{bmatrix} ^{\mathbf{A}} \mathbf{C}^{\mathbf{B}} \end{bmatrix}
+\begin{bmatrix}
+\mathbf{\hat{b}_x} \\ \mathbf{\hat{b}_y} \\ \mathbf{\hat{b}_z} \\
+\end{bmatrix}\end{split}\]</div>
+<p>When two frames (say, <span class="math">\(\mathbf{A}\)</span> &amp; <span class="math">\(\mathbf{B}\)</span>) are initially
+aligned, then one frame has all of its basis vectors rotated around an axis
+which is aligned with a basis vector, we say the frames are related by a simple
+rotation. The figure below shows this:</p>
+<div align="center" class="align-center"><img height="250" src="../../../_images/simp_rot.svg" width="250" /></div>
+<p>The above rotation is a simple rotation about the Z axis by an angle
+<span class="math">\(\theta\)</span>. Note that after the rotation, the basis vectors
+<span class="math">\(\mathbf{\hat{a}_z}\)</span> and <span class="math">\(\mathbf{\hat{b}_z}\)</span> are still aligned.</p>
+<p>This rotation can be characterized by the following direction cosine matrix:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{A}}\mathbf{C}^{\mathbf{B}} =
+\begin{bmatrix}
+\cos(\theta) &amp; - \sin(\theta) &amp; 0\\
+\sin(\theta) &amp; \cos(\theta) &amp; 0\\
+0 &amp; 0 &amp; 1\\
+\end{bmatrix}\end{split}\]</div>
+<p>Simple rotations about the X and Y axes are defined by:</p>
+<div class="math">
+\[\begin{split}\textrm{DCM for x-axis rotation: }
+\begin{bmatrix}
+1 &amp; 0 &amp; 0\\
+0 &amp; \cos(\theta) &amp; -\sin(\theta)\\
+0 &amp; \sin(\theta) &amp; \cos(\theta)
+\end{bmatrix}\end{split}\]\[\begin{split}\textrm{DCM for y-axis rotation: }
+\begin{bmatrix}
+\cos(\theta) &amp; 0 &amp; \sin(\theta)\\
+0 &amp; 1 &amp; 0\\
+-\sin(\theta) &amp; 0 &amp; \cos(\theta)\\
+\end{bmatrix}\end{split}\]</div>
+<p>Rotation in the positive direction here will be defined by using the right-hand
+rule.</p>
+<p>The direction cosine matrix is also involved with the definition of the dot
+product between sets of basis vectors. If we have two reference frames with
+associated basis vectors, their direction cosine matrix can be defined as:</p>
+<div class="math">
+\[\begin{split}\begin{bmatrix}
+C_{xx} &amp; C_{xy} &amp; C_{xz}\\
+C_{yx} &amp; C_{yy} &amp; C_{yz}\\
+C_{zx} &amp; C_{zy} &amp; C_{zz}\\
+\end{bmatrix} =
+\begin{bmatrix}
+\mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_x} &amp;
+\mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_y} &amp;
+\mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_z}\\
+\mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_x} &amp;
+\mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_y} &amp;
+\mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_z}\\
+\mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_x} &amp;
+\mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_y} &amp;
+\mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_z}\\
+\end{bmatrix}\end{split}\]</div>
+<p>Additionally, the direction cosine matrix is orthogonal, in that:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{A}}\mathbf{C}^{\mathbf{B}} =
+(^{\mathbf{B}}\mathbf{C}^{\mathbf{A}})^{-1}\\ =
+(^{\mathbf{B}}\mathbf{C}^{\mathbf{A}})^T\\\end{split}\]</div>
+<p>If we have reference frames <span class="math">\(\mathbf{A}\)</span> and <span class="math">\(\mathbf{B}\)</span>, which in
+this example have undergone a simple z-axis rotation by an amount
+<span class="math">\(\theta\)</span>, we will have two sets of basis vectors. We can then define two
+vectors: <span class="math">\(\mathbf{a} = \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
+\mathbf{\hat{a}_z}\)</span> and <span class="math">\(\mathbf{b} = \mathbf{\hat{b}_x} +
+\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}\)</span>. If we wish to express
+<span class="math">\(\mathbf{b}\)</span> in the <span class="math">\(\mathbf{A}\)</span> frame, we do the following:</p>
+<div class="math">
+\[\begin{split}\mathbf{b} &amp;= \mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}\\
+\mathbf{b} &amp;= \begin{bmatrix}\mathbf{\hat{a}_x}\cdot (\mathbf{\hat{b}_x} +
+\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_x} +
+\begin{bmatrix}\mathbf{\hat{a}_y}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y}
++ \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_y} +
+\begin{bmatrix}\mathbf{\hat{a}_z}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y}
++ \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_z}\\ \mathbf{b} &amp;=
+(\cos(\theta) - \sin(\theta))\mathbf{\hat{a}_x} +
+(\sin(\theta) + \cos(\theta))\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}\end{split}\]</div>
+<p>And if we wish to express <span class="math">\(\mathbf{a}\)</span> in the <span class="math">\(\mathbf{B}\)</span>, we do:</p>
+<div class="math">
+\[\begin{split}\mathbf{a} &amp;= \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}\\
+\mathbf{a} &amp;= \begin{bmatrix}\mathbf{\hat{b}_x}\cdot (\mathbf{\hat{a}_x} +
+\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_x} +
+\begin{bmatrix}\mathbf{\hat{b}_y}\cdot (\mathbf{\hat{a}_x} +
+\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_y} +
+\begin{bmatrix}\mathbf{\hat{b}_z}\cdot (\mathbf{\hat{a}_x} +
+\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_z}\\
+\mathbf{a} &amp;= (\cos(\theta) + \sin(\theta))\mathbf{\hat{b}_x} +
+(-\sin(\theta)+\cos(\theta))\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}\end{split}\]</div>
+</div>
+<div class="section" id="derivatives-with-multiple-frames">
+<h3>Derivatives with Multiple Frames<a class="headerlink" href="#derivatives-with-multiple-frames" title="Permalink to this headline">¶</a></h3>
+<p>If we have reference frames <span class="math">\(\mathbf{A}\)</span> and <span class="math">\(\mathbf{B}\)</span>
+we will have two sets of basis vectors. We can then define two
+vectors: <span class="math">\(\mathbf{a} = a_x\mathbf{\hat{a}_x} + a_y\mathbf{\hat{a}_y} +
+a_z\mathbf{\hat{a}_z}\)</span> and <span class="math">\(\mathbf{b} = b_x\mathbf{\hat{b}_x} +
+b_y\mathbf{\hat{b}_y} + b_z\mathbf{\hat{b}_z}\)</span>. If we want to take the
+derivative of <span class="math">\(\mathbf{b}\)</span> in the reference frame <span class="math">\(\mathbf{A}\)</span>, we
+must first express it in <span class="math">\(\mathbf{A}\)</span>, and the take the derivatives of
+the measure numbers:</p>
+<div class="math">
+\[\frac{^{\mathbf{A}} d\mathbf{b}}{dx} = \frac{d (\mathbf{b}\cdot
+\mathbf{\hat{a}_x} )}{dx} \mathbf{\hat{a}_x} + \frac{d (\mathbf{b}\cdot
+\mathbf{\hat{a}_y} )}{dx} \mathbf{\hat{a}_y} + \frac{d (\mathbf{b}\cdot
+\mathbf{\hat{a}_z} )}{dx} \mathbf{\hat{a}_z} +\]</div>
+</div>
+<div class="section" id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>An example of vector calculus:</p>
+<div align="center" class="align-center"><img height="500" src="../../../_images/vec_simp_der.svg" width="350" /></div>
+<p>In this example we have two bodies, each with an attached reference frame.
+We will say that <span class="math">\(\theta\)</span> and <span class="math">\(x\)</span> are functions of time.
+We wish to know the time derivative of vector <span class="math">\(\mathbf{c}\)</span> in both the
+<span class="math">\(\mathbf{A}\)</span> and <span class="math">\(\mathbf{B}\)</span> frames.</p>
+<p>First, we need to define <span class="math">\(\mathbf{c}\)</span>;
+<span class="math">\(\mathbf{c}=x\mathbf{\hat{b}_x}+l\mathbf{\hat{b}_y}\)</span>. This provides a
+definition in the <span class="math">\(\mathbf{B}\)</span> frame. We can now do the following:</p>
+<div class="math">
+\[\begin{split}\frac{^{\mathbf{B}} d \mathbf{c}}{dt} &amp;= \frac{dx}{dt} \mathbf{\hat{b}_x} +
+\frac{dl}{dt} \mathbf{\hat{b}_y}\\
+&amp;= \dot{x} \mathbf{\hat{b}_x}\end{split}\]</div>
+<p>To take the derivative in the <span class="math">\(\mathbf{A}\)</span> frame, we have to first relate
+the two frames:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{A}} \mathbf{C} ^{\mathbf{B}} =
+\begin{bmatrix}
+\cos(\theta) &amp; 0 &amp; \sin(\theta)\\
+0 &amp; 1 &amp; 0\\
+-\sin(\theta) &amp; 0 &amp; \cos(\theta)\\
+\end{bmatrix}\end{split}\]</div>
+<p>Now we can do the following:</p>
+<div class="math">
+\[\begin{split}\frac{^{\mathbf{A}} d \mathbf{c}}{dt} &amp;= \frac{d (\mathbf{c} \cdot
+\mathbf{\hat{a}_x})}{dt} \mathbf{\hat{a}_x} + \frac{d (\mathbf{c} \cdot
+\mathbf{\hat{a}_y})}{dt} \mathbf{\hat{a}_y} + \frac{d (\mathbf{c} \cdot
+\mathbf{\hat{a}_z})}{dt} \mathbf{\hat{a}_z}\\
+&amp;= \frac{d (\cos(\theta) x)}{dt} \mathbf{\hat{a}_x} +
+\frac{d (l)}{dt} \mathbf{\hat{a}_y} +
+\frac{d (-\sin(\theta) x)}{dt} \mathbf{\hat{a}_z}\\
+&amp;= (-\dot{\theta}\sin(\theta)x + \cos(\theta)\dot{x}) \mathbf{\hat{a}_x} +
+(\dot{\theta}\cos(\theta)x + \sin(\theta)\dot{x}) \mathbf{\hat{a}_z}\end{split}\]</div>
+<p>Note that this is the time derivative of <span class="math">\(\mathbf{c}\)</span> in
+<span class="math">\(\mathbf{A}\)</span>, and is expressed in the <span class="math">\(\mathbf{A}\)</span> frame. We can
+express it in the <span class="math">\(\mathbf{B}\)</span> frame however, and the expression will
+still be valid:</p>
+<div class="math">
+\[\begin{split}\frac{^{\mathbf{A}} d \mathbf{c}}{dt} &amp;= (-\dot{\theta}\sin(\theta)x +
+\cos(\theta)\dot{x}) \mathbf{\hat{a}_x} + (\dot{\theta}\cos(\theta)x +
+\sin(\theta)\dot{x}) \mathbf{\hat{a}_z}\\
+&amp;= \dot{x}\mathbf{\hat{b}_x} - \theta x \mathbf{\hat{b}_z}\\\end{split}\]</div>
+<p>Note the difference in expression complexity between the two forms. They are
+equivalent, but one is much simpler. This is an extremely important concept, as
+defining vectors in the more complex forms can vastly slow down formulation of
+the equations of motion and increase their length, sometimes to a point where
+they cannot be shown on screen.</p>
+</div>
+</div>
+<div class="section" id="using-vectors-and-reference-frames-in-sympy-s-mechanics">
+<h2>Using Vectors and Reference Frames in SymPy&#8217;s Mechanics<a class="headerlink" href="#using-vectors-and-reference-frames-in-sympy-s-mechanics" title="Permalink to this headline">¶</a></h2>
+<p>We have waited until after all of the relevant mathematical relationships have
+been defined for vectors and reference frames to introduce code. This is due to
+how vectors are formed. When starting any problem in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>, one of
+the first steps is defining a reference frame (remember to import
+sympy.physics.mechanics first):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we have created a reference frame, <span class="math">\(\mathbf{N}\)</span>. To have access to
+any basis vectors, first a reference frame needs to be created. Now that we
+have made and object representing <span class="math">\(\mathbf{N}\)</span>, we can access its basis
+vectors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">N.x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">N.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">z</span>
+<span class="go">N.z</span>
+</pre></div>
+</div>
+<div class="section" id="vector-algebra-in-mechanics">
+<h3>Vector Algebra, in Mechanics<a class="headerlink" href="#vector-algebra-in-mechanics" title="Permalink to this headline">¶</a></h3>
+<p>We can now do basic algebraic operations on these vectors.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">N.x + N.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">2*N.x + N.y</span>
+</pre></div>
+</div>
+<p>Remember, don&#8217;t add a scalar quantity to a vector (<tt class="docutils literal"><span class="pre">N.x</span> <span class="pre">+</span> <span class="pre">5</span></tt>); this will
+raise an error. At this point, we&#8217;ll use SymPy&#8217;s Symbol in our vectors.
+Remember to refer to SymPy&#8217;s Gotchas and Pitfalls when dealing with symbols.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">x*N.x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">x*N.x + x*N.y</span>
+</pre></div>
+</div>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> multiple interfaces to vector multiplication have been
+implemented, at the operator level, method level, and function level. The
+vector dot product can work as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>The &#8220;official&#8221; interface is the function interface; this is what will be used
+in all examples. This is to avoid confusion with the attribute and methods
+being next to each other, and in the case of the operator operation priority.
+The operators used in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> for vector multiplication do not posses
+the correct order of operations; this can lead to errors. Care with parentheses
+is needed when using operators to represent vector multiplication.</p>
+<p>The cross product is the other vector multiplication which will be discussed
+here. It offers similar interfaces to the dot product, and comes with the same
+warnings.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">^</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">^</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">N.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="go">- N.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cross</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">N.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">^</span> <span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="go">- N.y + N.z</span>
+</pre></div>
+</div>
+<p>Two additional operations can be done with vectors: normalizing the vector to
+length 1, and getting its magnitude. These are done as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="go">sqrt(2)/2*N.x + sqrt(2)/2*N.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">magnitude</span><span class="p">()</span>
+<span class="go">sqrt(2)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vector-calculus-in-mechanics">
+<h3>Vector Calculus, in Mechanics<a class="headerlink" href="#vector-calculus-in-mechanics" title="Permalink to this headline">¶</a></h3>
+<p>We have already introduced our first reference frame. We can take the
+derivative in that frame right now, if we desire:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">N.x</span>
+</pre></div>
+</div>
+<p>SymPy has a <tt class="docutils literal"><span class="pre">diff</span></tt> function, but it does not currently work with
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> Vectors, so please use <tt class="docutils literal"><span class="pre">Vector</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">diff</span></tt> method.  The
+reason for this is that when differentiating a <tt class="docutils literal"><span class="pre">Vector</span></tt>, the frame of
+reference must be specified in addition to what you are taking the derivative
+with respect to; SymPy&#8217;s <tt class="docutils literal"><span class="pre">diff</span></tt> function doesn&#8217;t fit this mold.</p>
+<p>The more interesting case arise with multiple reference frames. If we introduce
+a second reference frame, <span class="math">\(\mathbf{A}\)</span>, we now have two frames. Note that
+at this point we can add components of <span class="math">\(\mathbf{N}\)</span> and
+<span class="math">\(\mathbf{A}\)</span> together, but cannot perform vector multiplication, as no
+relationship between the two frames has been defined.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="go">A.x + N.x</span>
+</pre></div>
+</div>
+<p>If we want to do vector multiplication, first we have to define and
+orientation. The <tt class="docutils literal"><span class="pre">orient</span></tt> method of <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> provides that
+functionality.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If we desire, we can view the DCM between these two frames at any time. This
+can be calculated with the <tt class="docutils literal"><span class="pre">dcm</span></tt> method. This code: <tt class="docutils literal"><span class="pre">N.dcm(A)</span></tt> gives the
+dcm <span class="math">\(^{\mathbf{N}} \mathbf{C} ^{\mathbf{A}}\)</span>.</p>
+<p>This orients the <span class="math">\(\mathbf{A}\)</span> frame relative to the <span class="math">\(\mathbf{N}\)</span>
+frame by a simple rotation around the Y axis, by an amount x. Other, more
+complicated rotation types include Body rotations, Space rotations,
+quaternions, and arbitrary axis rotations. Body and space rotations are
+equivalent to doing 3 simple rotations in a row, each about a basis vector in
+the new frame. An example follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Bp</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;Bp&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Bpp</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;Bpp&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">,</span><span class="n">q3</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Bpp</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Bp</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">Bpp</span><span class="p">,</span><span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q2</span><span class="p">,</span> <span class="n">Bpp</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">Bp</span><span class="p">,</span><span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q3</span><span class="p">,</span> <span class="n">Bp</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">dcm</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],</span>
+<span class="go">[sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],</span>
+<span class="go">[sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="s">&#39;Body&#39;</span><span class="p">,[</span><span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">,</span><span class="n">q3</span><span class="p">],</span><span class="s">&#39;XYZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">dcm</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],</span>
+<span class="go">[sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],</span>
+<span class="go">[sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])</span>
+</pre></div>
+</div>
+<p>Space orientations are similar to body orientation, but applied from the frame
+to body. Body and space rotations can involve either two or three axes: &#8216;XYZ&#8217;
+works, as does &#8216;YZX&#8217;, &#8216;ZXZ&#8217;, &#8216;YXY&#8217;, etc. What is key is that each simple
+rotation is about a different axis than the previous one; &#8216;ZZX&#8217; does not
+completely orient a set of basis vectors in 3 space.</p>
+<p>Sometimes it will be more convenient to create a new reference frame and orient
+relative to an existing one in one step. The <tt class="docutils literal"><span class="pre">orientnew</span></tt> method allows for
+this functionality, and essentially wraps the <tt class="docutils literal"><span class="pre">orient</span></tt> method. All of the
+things you can do in <tt class="docutils literal"><span class="pre">orient</span></tt>, you can do in <tt class="docutils literal"><span class="pre">orientnew</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Quaternions (or Euler Parameters) use 4 value to characterize the orientation
+of the frame. This and arbitrary axis rotations are described in the <tt class="docutils literal"><span class="pre">orient</span></tt>
+and <tt class="docutils literal"><span class="pre">orientnew</span></tt> method help, or in the references <a class="reference internal" href="reference.html#kane1983">[Kane1983]</a>.</p>
+<p>Finally, before starting multiframe calculus operations, we will introduce
+another <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> tool: <tt class="docutils literal"><span class="pre">dynamicsymbols</span></tt>. <tt class="docutils literal"><span class="pre">dynamicsymbols</span></tt> is
+a shortcut function to create undefined functions of time within SymPy. The
+derivative of such a &#8216;dynamicsymbol&#8217; is shown below.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">))</span>
+<span class="go">Derivative(q1(t), t)</span>
+</pre></div>
+</div>
+<p>The &#8216;dynamicsymbol&#8217; printing is not very clear above; we will also introduce a
+few other tools here. We can use <tt class="docutils literal"><span class="pre">mprint</span></tt> instead of print for
+non-interactive sessions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span>
+<span class="go">q1(t)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
+<span class="go">q1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">q1d</span><span class="p">)</span>
+<span class="go">q1&#39;</span>
+</pre></div>
+</div>
+<p>For interactive sessions use <tt class="docutils literal"><span class="pre">mechanics_printing</span></tt>. There also exist analogs
+for SymPy&#8217;s <tt class="docutils literal"><span class="pre">pprint</span></tt>, <tt class="docutils literal"><span class="pre">mpprint</span></tt>, and <tt class="docutils literal"><span class="pre">latex</span></tt>, <tt class="docutils literal"><span class="pre">mlatex</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span>
+<span class="go">q1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span>
+<span class="go">q1&#39;</span>
+</pre></div>
+</div>
+<p>A &#8216;dynamicsymbol&#8217; should be used to represent any time varying quantity in
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>, whether it is a coordinate, varying position, or force.  The
+primary use of a &#8216;dynamicsymbol&#8217; is for speeds and coordinates (of which there
+will be more discussion in the Kinematics Section of the documentation).</p>
+<p>Now we will define the orientation of our new frames with a &#8216;dynamicsymbol&#8217;,
+and can take derivatives and time derivatives with ease. Some examples follow.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">q2</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">q2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">B.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">q2</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">(-q1&#39; + q2&#39;)*B.y + q2*q1&#39;*B.z</span>
+</pre></div>
+</div>
+<p>Note that the output vectors are kept in the same frames that they were
+provided in. This remains true for vectors with components made of basis
+vectors from multiple frames:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">q2</span> <span class="o">+</span> <span class="n">B</span><span class="o">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">q2</span><span class="o">*</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">q2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">B.y + N.x</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-vectors-are-coded-in-mechanics">
+<h3>How Vectors are Coded in Mechanics<a class="headerlink" href="#how-vectors-are-coded-in-mechanics" title="Permalink to this headline">¶</a></h3>
+<p>What follows is a short description of how vectors are defined by the code in
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>. It is provided for those who want to learn more about how
+this part of <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> works, and does not need to be read to use this
+module; don&#8217;t read it unless you want to learn how this module was implemented.</p>
+<p>Every <tt class="docutils literal"><span class="pre">Vector</span></tt>&#8216;s main information is stored in the <tt class="docutils literal"><span class="pre">args</span></tt> attribute, which
+stores the three measure numbers for each basis vector in a frame, for every
+relevant frame. A vector does not exist in code until a <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>
+is created. At this point, the <tt class="docutils literal"><span class="pre">x</span></tt>, <tt class="docutils literal"><span class="pre">y</span></tt>, and <tt class="docutils literal"><span class="pre">z</span></tt> attributes of the
+reference frame are immutable <tt class="docutils literal"><span class="pre">Vector</span></tt>&#8216;s which have measure numbers of
+[1,0,0], [0,1,0], and [0,0,1] associated with that <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>. Once
+these vectors are accessible, new vectors can be created by doing algebraic
+operations with the basis vectors. A vector can have components from multiple
+frames though. That is why <tt class="docutils literal"><span class="pre">args</span></tt> is a list; it has as many elements in the
+list as there are unique <tt class="docutils literal"><span class="pre">ReferenceFrames</span></tt> in its components, i.e. if there
+are <tt class="docutils literal"><span class="pre">A</span></tt> and <tt class="docutils literal"><span class="pre">B</span></tt> frame basis vectors in our new vector, <tt class="docutils literal"><span class="pre">args</span></tt> is of
+length 2; if it has <tt class="docutils literal"><span class="pre">A</span></tt>, <tt class="docutils literal"><span class="pre">B</span></tt>, and <tt class="docutils literal"><span class="pre">C</span></tt> frame basis vector, <tt class="docutils literal"><span class="pre">args</span></tt> is of
+length three.</p>
+<p>Each element in the <tt class="docutils literal"><span class="pre">args</span></tt> list is a 2-tuple; the first element is a SymPy
+<tt class="docutils literal"><span class="pre">Matrix</span></tt> (this is where the measure numbers for each set of basis vectors are
+stored) and the second element is a <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> to associate those
+measure numbers with.</p>
+<p><tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> stores a few things. First, it stores the name you supply it
+on creation (<tt class="docutils literal"><span class="pre">name</span></tt> attribute). It also stores the direction cosine matrices,
+defined upon creation with the <tt class="docutils literal"><span class="pre">orientnew</span></tt> method, or calling the <tt class="docutils literal"><span class="pre">orient</span></tt>
+method after creation. The direction cosine matrices are represented by SymPy&#8217;s
+<tt class="docutils literal"><span class="pre">Matrix</span></tt>, and are part of a dictionary where the keys are the
+<tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> and the value the <tt class="docutils literal"><span class="pre">Matrix</span></tt>; these are set
+bi-directionally; in that when you orient <tt class="docutils literal"><span class="pre">A</span></tt> to <tt class="docutils literal"><span class="pre">N</span></tt> you are setting <tt class="docutils literal"><span class="pre">A</span></tt>&#8216;s
+orientation dictionary to include <tt class="docutils literal"><span class="pre">N</span></tt> and its <tt class="docutils literal"><span class="pre">Matrix</span></tt>, but also you also
+are setting <tt class="docutils literal"><span class="pre">N</span></tt>&#8216;s orientation dictionary to include <tt class="docutils literal"><span class="pre">A</span></tt> and its <tt class="docutils literal"><span class="pre">Matrix</span></tt>
+(that DCM being the transpose of the other).</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mechanics: Vector &amp; ReferenceFrame</a><ul>
+<li><a class="reference internal" href="#vector">Vector</a></li>
+<li><a class="reference internal" href="#vector-algebra">Vector Algebra</a><ul>
+<li><a class="reference internal" href="#vector-operations">Vector Operations</a></li>
+<li><a class="reference internal" href="#alternative-representation">Alternative Representation</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vector-calculus">Vector Calculus</a><ul>
+<li><a class="reference internal" href="#derivatives-of-vectors">Derivatives of Vectors</a></li>
+<li><a class="reference internal" href="#relating-sets-of-basis-vectors">Relating Sets of Basis Vectors</a></li>
+<li><a class="reference internal" href="#derivatives-with-multiple-frames">Derivatives with Multiple Frames</a></li>
+<li><a class="reference internal" href="#id1">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-vectors-and-reference-frames-in-sympy-s-mechanics">Using Vectors and Reference Frames in SymPy&#8217;s Mechanics</a><ul>
+<li><a class="reference internal" href="#vector-algebra-in-mechanics">Vector Algebra, in Mechanics</a></li>
+<li><a class="reference internal" href="#vector-calculus-in-mechanics">Vector Calculus, in Mechanics</a></li>
+<li><a class="reference internal" href="#how-vectors-are-coded-in-mechanics">How Vectors are Coded in Mechanics</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Classical Mechanics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kinematics.html"
+                        title="next chapter">Mechanics: Kinematics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/vectors.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Mechanics: Kinematics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Classical Mechanics"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

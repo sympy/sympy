@@ -1,0 +1,601 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Kinematics (Docstrings) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="../index.html" />
+    <link rel="next" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)" href="part_bod.html" />
+    <link rel="prev" title="Related Essential Functions (Docstrings)" href="functions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="part_bod.html" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="functions.html" title="Related Essential Functions (Docstrings)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="kinematics-docstrings">
+<h1>Kinematics (Docstrings)<a class="headerlink" href="#kinematics-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sympy.physics.mechanics.point">
+<span id="point"></span><h2>Point<a class="headerlink" href="#module-sympy.physics.mechanics.point" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.point.Point">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.point.</tt><tt class="descname">Point</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point" title="Permalink to this definition">¶</a></dt>
+<dd><p>This object represents a point in a dynamic system.</p>
+<p>It stores the: position, velocity, and acceleration of a point.
+The position is a vector defined as the vector distance from a parent
+point to this point.</p>
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.a1pt_theory">
+<tt class="descname">a1pt_theory</tt><big>(</big><em>otherpoint</em>, <em>outframe</em>, <em>interframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.a1pt_theory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.a1pt_theory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the acceleration of this point with the 1-point theory.</p>
+<p>The 1-point theory for point acceleration looks like this:</p>
+<p>^N a^P = ^B a^P + ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B
+x r^OP) + 2 ^N omega^B x ^B v^P</p>
+<p>where O is a point fixed in B, P is a point moving in B, and B is
+rotating in frame N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherpoint</strong> : Point</p>
+<blockquote>
+<div><p>The first point of the 1-point theory (O)</p>
+</div></blockquote>
+<p><strong>outframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame we want this point&#8217;s acceleration defined in (N)</p>
+</div></blockquote>
+<p><strong>fixedframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The intermediate frame in this calculation (B)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">q</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">qd</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">q2d</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">a1pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">(-25*q + q&#39;&#39;)*B.x + q2&#39;&#39;*B.y - 10*q&#39;*B.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.a2pt_theory">
+<tt class="descname">a2pt_theory</tt><big>(</big><em>otherpoint</em>, <em>outframe</em>, <em>fixedframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.a2pt_theory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.a2pt_theory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the acceleration of this point with the 2-point theory.</p>
+<p>The 2-point theory for point acceleration looks like this:</p>
+<p>^N a^P = ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B x r^OP)</p>
+<p>where O and P are both points fixed in frame B, which is rotating in
+frame N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherpoint</strong> : Point</p>
+<blockquote>
+<div><p>The first point of the 2-point theory (O)</p>
+</div></blockquote>
+<p><strong>outframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame we want this point&#8217;s acceleration defined in (N)</p>
+</div></blockquote>
+<p><strong>fixedframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which both points are fixed (B)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">a2pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">- 10*q&#39;**2*B.x + 10*q&#39;&#39;*B.y</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.acc">
+<tt class="descname">acc</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.acc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.acc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The acceleration Vector of this Point in a ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which the returned acceleration vector will be defined in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.locatenew">
+<tt class="descname">locatenew</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.locatenew"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.locatenew" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new point with a position defined from this point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : str</p>
+<blockquote>
+<div><p>The name for the new point</p>
+</div></blockquote>
+<p><strong>value</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The position of the new point relative to this point</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span> <span class="o">=</span> <span class="n">P1</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P2&#39;</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.pos_from">
+<tt class="descname">pos_from</tt><big>(</big><em>otherpoint</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.pos_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.pos_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Vector distance between this Point and the other Point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherpoint</strong> : Point</p>
+<blockquote class="last">
+<div><p>The otherpoint we are locating this one relative to</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_pos</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.set_acc">
+<tt class="descname">set_acc</tt><big>(</big><em>frame</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.set_acc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.set_acc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to set the acceleration of this Point in a ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> : Vector</p>
+<blockquote>
+<div><p>The vector value of this point&#8217;s acceleration in the frame</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which this point&#8217;s acceleration is defined</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.set_pos">
+<tt class="descname">set_pos</tt><big>(</big><em>otherpoint</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.set_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.set_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to set the position of this point w.r.t. another point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> : Vector</p>
+<blockquote>
+<div><p>The vector which defines the location of this point</p>
+</div></blockquote>
+<p><strong>point</strong> : Point</p>
+<blockquote class="last">
+<div><p>The other point which this point&#8217;s location is defined relative to</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_pos</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.set_vel">
+<tt class="descname">set_vel</tt><big>(</big><em>frame</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.set_vel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.set_vel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the velocity Vector of this Point in a ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>value</strong> : Vector</p>
+<blockquote>
+<div><p>The vector value of this point&#8217;s velocity in the frame</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which this point&#8217;s velocity is defined</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.v1pt_theory">
+<tt class="descname">v1pt_theory</tt><big>(</big><em>otherpoint</em>, <em>outframe</em>, <em>interframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.v1pt_theory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.v1pt_theory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the velocity of this point with the 1-point theory.</p>
+<p>The 1-point theory for point velocity looks like this:</p>
+<p>^N v^P = ^B v^P + ^N v^O + ^N omega^B x r^OP</p>
+<p>where O is a point fixed in B, P is a point moving in B, and B is
+rotating in frame N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherpoint</strong> : Point</p>
+<blockquote>
+<div><p>The first point of the 2-point theory (O)</p>
+</div></blockquote>
+<p><strong>outframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame we want this point&#8217;s velocity defined in (N)</p>
+</div></blockquote>
+<p><strong>interframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The intermediate frame in this calculation (B)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q2d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">q</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">qd</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">q2d</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">v1pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">q&#39;*B.x + q2&#39;*B.y - 5*q*B.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.v2pt_theory">
+<tt class="descname">v2pt_theory</tt><big>(</big><em>otherpoint</em>, <em>outframe</em>, <em>fixedframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.v2pt_theory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.v2pt_theory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the velocity of this point with the 2-point theory.</p>
+<p>The 2-point theory for point velocity looks like this:</p>
+<p>^N v^P = ^N v^O + ^N omega^B x r^OP</p>
+<p>where O and P are both points fixed in frame B, which is rotating in
+frame N.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherpoint</strong> : Point</p>
+<blockquote>
+<div><p>The first point of the 2-point theory (O)</p>
+</div></blockquote>
+<p><strong>outframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame we want this point&#8217;s velocity defined in (N)</p>
+</div></blockquote>
+<p><strong>fixedframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which both points are fixed (B)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">5*N.x + 10*q&#39;*B.y</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.point.Point.vel">
+<tt class="descname">vel</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/point.html#Point.vel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.point.Point.vel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The velocity Vector of this Point in the ReferenceFrame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame in which the returned velocity vector will be defined in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;p1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.physics.mechanics.functions">
+<span id="kinematic-equations"></span><h2>kinematic_equations<a class="headerlink" href="#module-sympy.physics.mechanics.functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.kinematic_equations">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">kinematic_equations</tt><big>(</big><em>speeds</em>, <em>coords</em>, <em>rot_type</em>, <em>rot_order=''</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#kinematic_equations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.kinematic_equations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives equations relating the qdot&#8217;s to u&#8217;s for a rotation type.</p>
+<p>Supply rotation type and order as in orient. Speeds are assumed to be
+body-fixed; if we are defining the orientation of B in A using by rot_type,
+the angular velocity of B in A is assumed to be in the form: speed[0]*B.x +
+speed[1]*B.y + speed[2]*B.z</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>speeds</strong> : list of length 3</p>
+<blockquote>
+<div><p>The body fixed angular velocity measure numbers.</p>
+</div></blockquote>
+<p><strong>coords</strong> : list of length 3 or 4</p>
+<blockquote>
+<div><p>The coordinates used to define the orientation of the two frames.</p>
+</div></blockquote>
+<p><strong>rot_type</strong> : str</p>
+<blockquote>
+<div><p>The type of rotation used to create the equations. Body, Space, or
+Quaternion only</p>
+</div></blockquote>
+<p><strong>rot_order</strong> : str</p>
+<blockquote class="last">
+<div><p>If applicable, the order of a series of rotations.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">kinematic_equations</span><span class="p">,</span> <span class="n">mprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">kinematic_equations</span><span class="p">([</span><span class="n">u1</span><span class="p">,</span><span class="n">u2</span><span class="p">,</span><span class="n">u3</span><span class="p">],</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span><span class="n">q2</span><span class="p">,</span><span class="n">q3</span><span class="p">],</span> <span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="s">&#39;313&#39;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="go">[-(u1*sin(q3) + u2*cos(q3))/sin(q2) + q1&#39;, -u1*cos(q3) + u2*sin(q3) + q2&#39;, (u1*sin(q3) + u2*cos(q3))*cos(q2)/sin(q2) - u3 + q3&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Kinematics (Docstrings)</a><ul>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.point">Point</a></li>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.functions">kinematic_equations</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="functions.html"
+                        title="previous chapter">Related Essential Functions (Docstrings)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="part_bod.html"
+                        title="next chapter">Masses, Inertias &amp; Particles, RigidBodys (Docstrings)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/modules/physics/mechanics/api/kinematics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="part_bod.html" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="functions.html" title="Related Essential Functions (Docstrings)"
+             >previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

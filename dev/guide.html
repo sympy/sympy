@@ -1,0 +1,645 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SymPy User’s Guide &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="index.html" />
+    <link rel="next" title="SymPy Modules Reference" href="modules/index.html" />
+    <link rel="prev" title="Gotchas and Pitfalls" href="gotchas.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules/index.html" title="SymPy Modules Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas and Pitfalls"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="sympy-user-s-guide">
+<span id="guide"></span><h1>SymPy User&#8217;s Guide<a class="headerlink" href="#sympy-user-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>If you are new to SymPy, start with the <a class="reference internal" href="tutorial/index.html#tutorial"><em>Tutorial</em></a>. If you went
+through it, now
+it&#8217;s time to learn how SymPy works internally, which is what this guide is
+about. Once you grasp the ideas behind SymPy, you will be able to use it
+effectively and also know how to extend it and fix it.
+You may also be just interested in <a class="reference internal" href="modules/index.html#module-docs"><em>SymPy Modules Reference</em></a>.</p>
+</div>
+<div class="section" id="learning-sympy">
+<h2>Learning SymPy<a class="headerlink" href="#learning-sympy" title="Permalink to this headline">¶</a></h2>
+<p>Everyone has different ways of understanding the code written by others.</p>
+<div class="section" id="ondrej-s-approach">
+<h3>Ondřej&#8217;s approach<a class="headerlink" href="#ondrej-s-approach" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s say I&#8217;d like to understand how <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span> <span class="pre">+</span> <span class="pre">x</span></tt> works and how it is possible
+that it gets simplified to <tt class="docutils literal"><span class="pre">2*x</span> <span class="pre">+</span> <span class="pre">y</span></tt>.</p>
+<p>I write a simple script, I usually call it <tt class="docutils literal"><span class="pre">t.py</span></tt> (I don&#8217;t remember anymore
+why I call it that way):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span>
+
+<span class="k">print</span> <span class="n">e</span>
+</pre></div>
+</div>
+<p>And I try if it works</p>
+<pre class="literal-block">
+$ <strong class="input">python t.py</strong>
+y + 2*x
+</pre>
+<p>Now I start <a class="reference external" href="http://winpdb.org/">winpdb</a> on it (if you&#8217;ve never used winpdb
+&#8211; it&#8217;s an excellent multiplatform debugger, works on Linux, Windows and Mac OS
+X):</p>
+<pre class="literal-block">
+$ <strong class="input">winpdb t.py</strong>
+y + 2*x
+</pre>
+<p>and a winpdb window will popup, I move to the next line using F6:</p>
+<img alt="_images/winpdb1.png" src="_images/winpdb1.png" />
+<p>Then I step into (F7) and after a little debugging I get for example:</p>
+<img alt="_images/winpdb2.png" src="_images/winpdb2.png" />
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">Make the winpdb window larger on your screen, it was just made smaller
+to fit in this guide.</p>
+</div>
+<p>I see values of all local variables in the left panel, so it&#8217;s very easy to see
+what&#8217;s happening. You can see, that the <tt class="docutils literal"><span class="pre">y</span> <span class="pre">+</span> <span class="pre">2*x</span></tt> is emerging in the <tt class="docutils literal"><span class="pre">obj</span></tt>
+variable. Observing that <tt class="docutils literal"><span class="pre">obj</span></tt> is constructed from <tt class="docutils literal"><span class="pre">c_part</span></tt> and <tt class="docutils literal"><span class="pre">nc_part</span></tt>
+and seeing what <tt class="docutils literal"><span class="pre">c_part</span></tt> contains (<tt class="docutils literal"><span class="pre">y</span></tt> and <tt class="docutils literal"><span class="pre">2*x</span></tt>). So looking at the line
+28 (the whole line is not visible on the screenshot, so here it is):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">c_part</span><span class="p">,</span> <span class="n">nc_part</span><span class="p">,</span> <span class="n">lambda_args</span><span class="p">,</span> <span class="n">order_symbols</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>you can see that the simplification happens in <tt class="docutils literal"><span class="pre">cls.flatten</span></tt>. Now you can set
+the breakpoint on the line 28, quit winpdb (it will remember the breakpoint),
+start it again, hit F5, this will stop at this breakpoint, hit F7, this will go
+into the function <tt class="docutils literal"><span class="pre">Add.flatten()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the sequence &quot;seq&quot; of nested Adds and returns a flatten list.</span>
+
+<span class="sd">    Returns: (commutative_part, noncommutative_part, lambda_args,</span>
+<span class="sd">        order_symbols)</span>
+
+<span class="sd">    Applies associativity, all terms are commutable with respect to</span>
+<span class="sd">    addition.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="p">{}</span>      <span class="c"># term -&gt; coeff</span>
+                    <span class="c"># e.g. x**2 -&gt; 5   for ... + 5*x**2 + ...</span>
+
+    <span class="n">coeff</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>  <span class="c"># standalone term</span>
+                    <span class="c"># e.g. 3 + ...</span>
+    <span class="n">lambda_args</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">order_factors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">seq</span><span class="p">:</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and then you can study how it works. I am going to stop here, this should be
+enough to get you going &#8211; with the above technique, I am able to understand
+almost any Python code.</p>
+</div>
+</div>
+<div class="section" id="sympy-s-architecture">
+<h2>SymPy&#8217;s Architecture<a class="headerlink" href="#sympy-s-architecture" title="Permalink to this headline">¶</a></h2>
+<p>We try to make the sources easily understandable, so you can look into the
+sources and read the doctests, it should be well documented and if you don&#8217;t
+understand something, ask on the <a class="reference external" href="http://groups.google.com/group/sympy">mailinglist</a>.</p>
+<p>You can find all the decisions archived in the <a class="reference external" href="http://code.google.com/p/sympy/issues/list">issues</a>, to see rationale for
+doing this and that.</p>
+<div class="section" id="basics">
+<h3>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h3>
+<p>All symbolic things are implemented using subclasses of the <tt class="docutils literal"><span class="pre">Basic</span></tt> class.
+First, you need to create symbols using <tt class="docutils literal"><span class="pre">Symbol(&quot;x&quot;)</span></tt> or numbers using
+<tt class="docutils literal"><span class="pre">Integer(5)</span></tt> or <tt class="docutils literal"><span class="pre">Float(34.3)</span></tt>. Then you construct the expression using any
+class from SymPy.  For example <tt class="docutils literal"><span class="pre">Add(Symbol(&quot;a&quot;),</span> <span class="pre">Symbol(&quot;b&quot;))</span></tt> gives an
+instance of the <tt class="docutils literal"><span class="pre">Add</span></tt> class.  You can call all methods, which the particular
+class supports.</p>
+<p>For easier use, there is a syntactic sugar for expressions like:</p>
+<p><tt class="docutils literal"><span class="pre">cos(x)</span> <span class="pre">+</span> <span class="pre">1</span></tt> is equal to <tt class="docutils literal"><span class="pre">cos(x).__add__(1)</span></tt> is equal to
+<tt class="docutils literal"><span class="pre">Add(cos(x),</span> <span class="pre">Integer(1))</span></tt></p>
+<p>or</p>
+<p><tt class="docutils literal"><span class="pre">2/cos(x)</span></tt> is equal to <tt class="docutils literal"><span class="pre">cos(x).__rdiv__(2)</span></tt> is equal to
+<tt class="docutils literal"><span class="pre">Mul(Rational(2),</span> <span class="pre">Pow(cos(x),</span> <span class="pre">Rational(-1)))</span></tt>.</p>
+<p>So, you can write normal expressions using python arithmetics like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="k">print</span> <span class="n">e</span>
+</pre></div>
+</div>
+<p>but from the SymPy point of view, we just need the classes <tt class="docutils literal"><span class="pre">Add</span></tt>, <tt class="docutils literal"><span class="pre">Mul</span></tt>,
+<tt class="docutils literal"><span class="pre">Pow</span></tt>, <tt class="docutils literal"><span class="pre">Rational</span></tt>, <tt class="docutils literal"><span class="pre">Integer</span></tt>.</p>
+</div>
+<div class="section" id="automatic-evaluation-to-canonical-form">
+<h3>Automatic evaluation to canonical form<a class="headerlink" href="#automatic-evaluation-to-canonical-form" title="Permalink to this headline">¶</a></h3>
+<p>For computation, all expressions need to be in a
+canonical form, this is done during the creation of the particular instance
+and only inexpensive operations are performed, necessary to put the expression
+in the
+canonical form.  So the canonical form doesn&#8217;t mean the simplest possible
+expression. The exact list of operations performed depend on the
+implementation.  Obviously, the definition of the canonical form is arbitrary,
+the only requirement is that all equivalent expressions must have the same
+canonical form.  We tried the conversion to a canonical (standard) form to be
+as fast as possible and also in a way so that the result is what you would
+write by hand - so for example <tt class="docutils literal"><span class="pre">b*a</span> <span class="pre">+</span> <span class="pre">-4</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">+</span> <span class="pre">a*b</span> <span class="pre">+</span> <span class="pre">4</span> <span class="pre">+</span> <span class="pre">(a</span> <span class="pre">+</span> <span class="pre">b)**2</span></tt> becomes
+<tt class="docutils literal"><span class="pre">2*a*b</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">+</span> <span class="pre">(a</span> <span class="pre">+</span> <span class="pre">b)**2</span></tt>.</p>
+<p>Whenever you construct an expression, for example <tt class="docutils literal"><span class="pre">Add(x,</span> <span class="pre">x)</span></tt>, the
+<tt class="docutils literal"><span class="pre">Add.__new__()</span></tt> is called and it determines what to return. In this case:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Add</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span>
+<span class="go">2*x</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">&lt;class &#39;sympy.core.mul.Mul&#39;&gt;</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">e</span></tt> is actually an instance of <tt class="docutils literal"><span class="pre">Mul(2,</span> <span class="pre">x)</span></tt>, because <tt class="docutils literal"><span class="pre">Add.__new__()</span></tt>
+returned <tt class="docutils literal"><span class="pre">Mul</span></tt>.</p>
+</div>
+<div class="section" id="comparisons">
+<h3>Comparisons<a class="headerlink" href="#comparisons" title="Permalink to this headline">¶</a></h3>
+<p>Expressions can be compared using a regular python syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">==</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">==</span> <span class="n">y</span> <span class="o">-</span> <span class="n">x</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>We made the following decision in SymPy: <tt class="docutils literal"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">Symbol(&quot;x&quot;)</span></tt> and another
+<tt class="docutils literal"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">Symbol(&quot;x&quot;)</span></tt> (with the same string &#8220;x&#8221;) is the same thing, i.e <tt class="docutils literal"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">b</span></tt> is
+<tt class="docutils literal"><span class="pre">True</span></tt>. We chose <tt class="docutils literal"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">b</span></tt>, because it is more natural - <tt class="docutils literal"><span class="pre">exp(x)</span> <span class="pre">==</span> <span class="pre">exp(x)</span></tt> is
+also <tt class="docutils literal"><span class="pre">True</span></tt> for the same instance of <tt class="docutils literal"><span class="pre">x</span></tt> but different instances of <tt class="docutils literal"><span class="pre">exp</span></tt>,
+so we chose to have <tt class="docutils literal"><span class="pre">exp(x)</span> <span class="pre">==</span> <span class="pre">exp(x)</span></tt> even for different instances of <tt class="docutils literal"><span class="pre">x</span></tt>.</p>
+<p>Sometimes, you need to have a unique symbol, for example as a temporary one in
+some calculation, which is going to be substituted for something else at the
+end anyway. This is achieved using <tt class="docutils literal"><span class="pre">Dummy(&quot;x&quot;)</span></tt>. So, to sum it
+up:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="debugging">
+<h3>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h3>
+<p>Starting with 0.6.4, you can turn on/off debug messages with the environment
+variable <tt class="docutils literal"><span class="pre">SYMPY_DEBUG</span></tt>, which is expected to have the values True or False. For
+example, to turn on debugging, you would issue:</p>
+<div class="highlight-python"><pre>[user@localhost]: SYMPY_DEBUG=True ./bin/isympy</pre>
+</div>
+</div>
+<div class="section" id="functionality">
+<h3>Functionality<a class="headerlink" href="#functionality" title="Permalink to this headline">¶</a></h3>
+<p>There are no given requirements on classes in the library. For example, if they
+don&#8217;t implement the <tt class="docutils literal"><span class="pre">fdiff()</span></tt> method and you construct an expression using
+such a class, then trying to use the <tt class="docutils literal"><span class="pre">Basic.series()</span></tt> method will raise an
+exception of not finding the <tt class="docutils literal"><span class="pre">fdiff()</span></tt> method in your class.  This &#8220;duck
+typing&#8221; has an advantage that you just implement the functionality which you
+need.</p>
+<p>You can define the <tt class="docutils literal"><span class="pre">cos</span></tt> class like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">cos</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>and use it like <tt class="docutils literal"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">cos(x)</span></tt>, but if you don&#8217;t implement the <tt class="docutils literal"><span class="pre">fdiff()</span></tt> method,
+you will not be able to call <tt class="docutils literal"><span class="pre">(1</span> <span class="pre">+</span> <span class="pre">cos(x)).series()</span></tt>.</p>
+<p>The symbolic object is characterized (defined) by the things which it can do,
+so implementing more methods like <tt class="docutils literal"><span class="pre">fdiff()</span></tt>, <tt class="docutils literal"><span class="pre">subs()</span></tt> etc., you are creating
+a &#8220;shape&#8221; of the symbolic object. Useful things to implement in new classes are:
+<tt class="docutils literal"><span class="pre">hash()</span></tt> (to use the class in comparisons), <tt class="docutils literal"><span class="pre">fdiff()</span></tt> (to use it in series
+expansion), <tt class="docutils literal"><span class="pre">subs()</span></tt> (to use it in expressions, where some parts are being
+substituted) and <tt class="docutils literal"><span class="pre">series()</span></tt> (if the series cannot be computed using the
+general <tt class="docutils literal"><span class="pre">Basic.series()</span></tt> method). When you create a new class, don&#8217;t worry
+about this too much - just try to use it in your code and you will realize
+immediately which methods need to be implemented in each situation.</p>
+<p>All objects in sympy are immutable - in the sense that any operation just
+returns a new instance (it can return the same instance only if it didn&#8217;t
+change). This is a common mistake to change the current instance, like
+<tt class="docutils literal"><span class="pre">self.arg</span> <span class="pre">=</span> <span class="pre">self.arg</span> <span class="pre">+</span> <span class="pre">1</span></tt> (wrong!). Use <tt class="docutils literal"><span class="pre">arg</span> <span class="pre">=</span> <span class="pre">self.arg</span> <span class="pre">+</span> <span class="pre">1;</span> <span class="pre">return</span> <span class="pre">arg</span></tt> instead.
+The object is immutable in the
+sense of the symbolic expression it represents. It can modify itself to keep
+track of, for example, its hash. Or it can recalculate anything regarding the
+expression it contains. But the expression cannot be changed. So you can pass
+any instance to other objects, because you don&#8217;t have to worry that it will
+change, or that this would break anything.</p>
+</div>
+<div class="section" id="conclusion">
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
+<p>Above are the main ideas behind SymPy that we try to obey. The rest
+depends on the current implementation and may possibly change in the future.
+The point of all of this is that the interdependencies inside SymPy should be
+kept to a minimum. If one wants to add new functionality to SymPy, all that is
+necessary is to create a subclass of <tt class="docutils literal"><span class="pre">Basic</span></tt> and implement what you want.</p>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<p>How to create a new function with one variable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">sign</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Basic</span><span class="o">.</span><span class="n">NaN</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Basic</span><span class="o">.</span><span class="n">Zero</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Basic</span><span class="o">.</span><span class="n">Mul</span><span class="p">):</span>
+            <span class="n">coeff</span><span class="p">,</span> <span class="n">terms</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">Basic</span><span class="o">.</span><span class="n">One</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span> <span class="o">*</span> <span class="n">cls</span><span class="p">(</span><span class="n">Basic</span><span class="o">.</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">))</span>
+
+    <span class="n">is_bounded</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Basic</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and that&#8217;s it. The <tt class="docutils literal"><span class="pre">_eval_*</span></tt> functions are called when something is needed.
+The <tt class="docutils literal"><span class="pre">eval</span></tt> is called when the class is about to be instantiated and it
+should return either some simplified instance of some other class or if the
+class should be unmodified, return <tt class="docutils literal"><span class="pre">None</span></tt> (see <tt class="docutils literal"><span class="pre">core/function.py</span></tt> in
+<tt class="docutils literal"><span class="pre">Function.__new__</span></tt> for implementation details). See also tests in
+<a class="reference external" href="https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py">sympy/functions/elementary/tests/test_interface.py</a> that test this interface. You can use them to create your own new functions.</p>
+<p>The applied function <tt class="docutils literal"><span class="pre">sign(x)</span></tt> is constructed using</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>both inside and outside of SymPy. Unapplied functions <tt class="docutils literal"><span class="pre">sign</span></tt> is just the class
+itself:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">sign</span>
+</pre></div>
+</div>
+<p>both inside and outside of SymPy. This is the current structure of classes in
+SymPy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">BasicType</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">MetaBasicMeths</span><span class="p">(</span><span class="n">BasicType</span><span class="p">):</span>
+    <span class="o">...</span>
+<span class="k">class</span> <span class="nc">BasicMeths</span><span class="p">(</span><span class="n">AssumeMeths</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">MetaBasicMeths</span>
+    <span class="o">...</span>
+<span class="k">class</span> <span class="nc">Basic</span><span class="p">(</span><span class="n">BasicMeths</span><span class="p">):</span>
+    <span class="o">...</span>
+<span class="k">class</span> <span class="nc">FunctionClass</span><span class="p">(</span><span class="n">MetaBasicMeths</span><span class="p">):</span>
+    <span class="o">...</span>
+<span class="k">class</span> <span class="nc">Function</span><span class="p">(</span><span class="n">Basic</span><span class="p">,</span> <span class="n">RelMeths</span><span class="p">,</span> <span class="n">ArithMeths</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">FunctionClass</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The exact names of the classes and the names of the methods and how they work
+can be changed in the future.</p>
+<p>This is how to create a function with two variables:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">chebyshevt_root</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;must have 0 &lt;= k &lt; n&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the first argument of a &#64;classmethod should be <tt class="docutils literal"><span class="pre">cls</span></tt> (i.e. not
+<tt class="docutils literal"><span class="pre">self</span></tt>).</p>
+</div>
+<p>Here it&#8217;s how to define a derivative of the function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">my_function</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">arg</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So guess what this <tt class="docutils literal"><span class="pre">my_function</span></tt> is going to be? Well, it&#8217;s derivative is
+<tt class="docutils literal"><span class="pre">cos</span></tt> and the function value at 0 is 0, but let&#8217;s pretend we don&#8217;t know:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">my_function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">     3     5     7       9</span>
+<span class="go">    x     x     x       x       / 10\</span>
+<span class="go">x - -- + --- - ---- + ------ + O\x  /</span>
+<span class="go">    6    120   5040   362880</span>
+</pre></div>
+</div>
+<p>Looks familiar indeed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">     3     5     7       9</span>
+<span class="go">    x     x     x       x       / 10\</span>
+<span class="go">x - -- + --- - ---- + ------ + O\x  /</span>
+<span class="go">    6    120   5040   362880</span>
+</pre></div>
+</div>
+<p>Let&#8217;s try a more complicated example. Let&#8217;s define the derivative in terms of
+the function itself:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">what_am_i</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">what_am_i</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="n">arg</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So what is <tt class="docutils literal"><span class="pre">what_am_i</span></tt>?  Let&#8217;s try it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">what_am_i</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">     3      5       7       9</span>
+<span class="go">    x    2*x    17*x    62*x     / 10\</span>
+<span class="go">x - -- + ---- - ----- + ----- + O\x  /</span>
+<span class="go">    3     15     315     2835</span>
+</pre></div>
+</div>
+<p>Well, it&#8217;s <tt class="docutils literal"><span class="pre">tanh</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">tanh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">     3      5       7       9</span>
+<span class="go">    x    2*x    17*x    62*x     / 10\</span>
+<span class="go">x - -- + ---- - ----- + ----- + O\x  /</span>
+<span class="go">    3     15     315     2835</span>
+</pre></div>
+</div>
+<p>The new functions we just defined are regular SymPy objects, you
+can use them all over SymPy, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">limit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">what_am_i</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="common-tasks">
+<h3>Common tasks<a class="headerlink" href="#common-tasks" title="Permalink to this headline">¶</a></h3>
+<p>Please use the same way as is shown below all across SymPy.</p>
+<p><strong>accessing parameters</strong>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sign</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(x**2,)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">x**2</span>
+
+<span class="go">Number arguments (in Adds and Muls) will always be the first argument;</span>
+<span class="go">other arguments might be in arbitrary order:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(y, z)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(y*z,)</span>
+</pre></div>
+</div>
+<p>Never use internal methods or variables, prefixed with &#8220;<tt class="docutils literal"><span class="pre">_</span></tt>&#8221; (example: don&#8217;t
+use <tt class="docutils literal"><span class="pre">_args</span></tt>, use <tt class="docutils literal"><span class="pre">.args</span></tt> instead).</p>
+<p><strong>testing the structure of a SymPy expression</strong></p>
+<p>Applied functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sign</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">sign</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Function</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>So <tt class="docutils literal"><span class="pre">e</span></tt> is a <tt class="docutils literal"><span class="pre">sign(z)</span></tt> function, but not <tt class="docutils literal"><span class="pre">exp(z)</span></tt> function.</p>
+<p>Unapplied functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sign</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">FunctionClass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">sign</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">exp</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Add</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">FunctionClass</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">FunctionClass</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">FunctionClass</span><span class="p">)</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="ow">is</span> <span class="n">Add</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>So <tt class="docutils literal"><span class="pre">e</span></tt> and <tt class="docutils literal"><span class="pre">f</span></tt> are functions, <tt class="docutils literal"><span class="pre">g</span></tt> is not a function.</p>
+</div>
+</div>
+<div class="section" id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>We welcome every SymPy user to participate in it&#8217;s development. Don&#8217;t worry if
+you&#8217;ve never contributed to any open source project, we&#8217;ll help you learn
+anything necessary, just ask on our <a class="reference external" href="http://groups.google.com/group/sympy">mailinglist</a>.</p>
+<p>Don&#8217;t be afraid to ask anything and don&#8217;t worry that you are wasting our time
+if you are new to SymPy and ask questions that maybe most of the people know
+the answer to &#8211; you are not, because that&#8217;s exactly what the <a class="reference external" href="http://groups.google.com/group/sympy">mailinglist</a> is
+for and people answer your emails because they want to. Also we try hard to
+answer every email, so you&#8217;ll always get some feedback and pointers what to do
+next.</p>
+<div class="section" id="improving-the-code">
+<h3>Improving the code<a class="headerlink" href="#improving-the-code" title="Permalink to this headline">¶</a></h3>
+<p>Go to <a class="reference external" href="http://code.google.com/p/sympy/issues/list">issues</a> that are sorted by priority and simply find something that you
+would like to get fixed and fix it. If you find something odd, please report it
+into <a class="reference external" href="http://code.google.com/p/sympy/issues/list">issues</a> first before fixing it. Feel free to consult with us on the
+<a class="reference external" href="http://groups.google.com/group/sympy">mailinglist</a>.  Then send your patch either to the <a class="reference external" href="http://code.google.com/p/sympy/issues/list">issues</a> or the <a class="reference external" href="http://groups.google.com/group/sympy">mailinglist</a>.</p>
+<p>Please read our excellent <a class="reference external" href="https://github.com/sympy/sympy/wiki/Development-workflow">SymPy Patches Tutorial</a> at our
+wiki for a guide on how to write patches to SymPy, how to work with Git,
+and how to make your life easier as you get started with SymPy.</p>
+</div>
+<div class="section" id="improving-the-docs">
+<h3>Improving the docs<a class="headerlink" href="#improving-the-docs" title="Permalink to this headline">¶</a></h3>
+<p>Please see <a class="reference internal" href="modules/index.html#module-docs"><em>the documentation</em></a> how to fix and improve
+SymPy&#8217;s documentation. All contribution is very welcome.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SymPy User&#8217;s Guide</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#learning-sympy">Learning SymPy</a><ul>
+<li><a class="reference internal" href="#ondrej-s-approach">Ondřej&#8217;s approach</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sympy-s-architecture">SymPy&#8217;s Architecture</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#automatic-evaluation-to-canonical-form">Automatic evaluation to canonical form</a></li>
+<li><a class="reference internal" href="#comparisons">Comparisons</a></li>
+<li><a class="reference internal" href="#debugging">Debugging</a></li>
+<li><a class="reference internal" href="#functionality">Functionality</a></li>
+<li><a class="reference internal" href="#conclusion">Conclusion</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#common-tasks">Common tasks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contributing">Contributing</a><ul>
+<li><a class="reference internal" href="#improving-the-code">Improving the code</a></li>
+<li><a class="reference internal" href="#improving-the-docs">Improving the docs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gotchas.html"
+                        title="previous chapter">Gotchas and Pitfalls</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules/index.html"
+                        title="next chapter">SymPy Modules Reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/guide.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules/index.html" title="SymPy Modules Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas and Pitfalls"
+             >previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

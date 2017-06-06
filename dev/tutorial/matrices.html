@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Matrices &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Advanced Expression Manipulation" href="manipulation.html" />
+    <link rel="prev" title="Solvers" href="solvers.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="manipulation.html" title="Advanced Expression Manipulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="matrices">
+<h1>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To make a matrix in SymPy, use the <tt class="docutils literal"><span class="pre">Matrix</span></tt> object.  A matrix is constructed
+by providing a list of row vectors that make up the matrix.  For example,
+to construct the matrix</p>
+<div class="math">
+\[\begin{split}\left[\begin{array}{cc}1 &amp; -1\\3 &amp; 4\\0 &amp; 2\end{array}\right]\end{split}\]</div>
+<p>use</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="go">⎡1  -1⎤</span>
+<span class="go">⎢     ⎥</span>
+<span class="go">⎢3  4 ⎥</span>
+<span class="go">⎢     ⎥</span>
+<span class="go">⎣0  2 ⎦</span>
+</pre></div>
+</div>
+<p>To make it easy to make column vectors, a list of elements is considered to be
+a column vector.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Matrix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">⎡1⎤</span>
+<span class="go">⎢ ⎥</span>
+<span class="go">⎢2⎥</span>
+<span class="go">⎢ ⎥</span>
+<span class="go">⎣3⎦</span>
+</pre></div>
+</div>
+<p>Matrices are manipulated just like any other object in SymPy or Python.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">*</span><span class="n">N</span>
+<span class="go">⎡5⎤</span>
+<span class="go">⎢ ⎥</span>
+<span class="go">⎣3⎦</span>
+</pre></div>
+</div>
+<p>One important thing to note about SymPy matrices is that, unlike every other
+object in SymPy, they are mutable.  This means that they can be modified in
+place, as we will see below.  The downside to this is that <tt class="docutils literal"><span class="pre">Matrix</span></tt> cannot
+be used in places that require immutability, such as inside other SymPy
+expressions or as keys to dictionaries.  If you need an immutable version of
+<tt class="docutils literal"><span class="pre">Matrix</span></tt>, use <tt class="docutils literal"><span class="pre">ImmutableMatrix</span></tt>.</p>
+<div class="section" id="basic-operations">
+<h2>Basic Operations<a class="headerlink" href="#basic-operations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="shape">
+<h3>Shape<a class="headerlink" href="#shape" title="Permalink to this headline">¶</a></h3>
+<p>Here are some basic operations on <tt class="docutils literal"><span class="pre">Matrix</span></tt>.  To get the shape of a matrix
+use <tt class="docutils literal"><span class="pre">shape</span></tt></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1   2  3⎤</span>
+<span class="go">⎢        ⎥</span>
+<span class="go">⎣-2  0  4⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2, 3)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="accessing-rows-and-columns">
+<h3>Accessing Rows and Columns<a class="headerlink" href="#accessing-rows-and-columns" title="Permalink to this headline">¶</a></h3>
+<p>To get an individual row or column of a matrix, use <tt class="docutils literal"><span class="pre">row</span></tt> or <tt class="docutils literal"><span class="pre">col</span></tt>.  For
+example, <tt class="docutils literal"><span class="pre">M.row(0)</span></tt> will get the first row. <tt class="docutils literal"><span class="pre">M.col(-1)</span></tt> will get the last
+column.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[1  2  3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">⎡3⎤</span>
+<span class="go">⎢ ⎥</span>
+<span class="go">⎣4⎦</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deleting-and-inserting-rows-and-columns">
+<h3>Deleting and Inserting Rows and Columns<a class="headerlink" href="#deleting-and-inserting-rows-and-columns" title="Permalink to this headline">¶</a></h3>
+<p>To delete a row or column, use <tt class="docutils literal"><span class="pre">row_del</span></tt> or <tt class="docutils literal"><span class="pre">col_del</span></tt>.  These operations
+will modify the Matrix <strong>in place</strong>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡2  3⎤</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎣0  4⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">[2  3]</span>
+</pre></div>
+</div>
+<p>To insert rows or columns, use <tt class="docutils literal"><span class="pre">row_insert</span></tt> or <tt class="docutils literal"><span class="pre">col_insert</span></tt>.  These
+operations <strong>do not</strong> operate in place.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">[2  3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">row_insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡2  3⎤</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎣0  4⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">col_insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1   2  3⎤</span>
+<span class="go">⎢        ⎥</span>
+<span class="go">⎣-2  0  4⎦</span>
+</pre></div>
+</div>
+<p>Unless explicitly stated, the methods mentioned below do not operate in
+place. In general, a method that does not operate in place will return a new
+<tt class="docutils literal"><span class="pre">Matrix</span></tt> and a method that does operate in place will return <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="basic-methods">
+<h2>Basic Methods<a class="headerlink" href="#basic-methods" title="Permalink to this headline">¶</a></h2>
+<p>As noted above, simple operations like addition and multiplication are done
+just by using <tt class="docutils literal"><span class="pre">+</span></tt>, <tt class="docutils literal"><span class="pre">*</span></tt>, and <tt class="docutils literal"><span class="pre">**</span></tt>.  To find the inverse of a matrix, just
+raise it to the <tt class="docutils literal"><span class="pre">-1</span></tt> power.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">+</span> <span class="n">N</span>
+<span class="go">⎡1   6 ⎤</span>
+<span class="go">⎢      ⎥</span>
+<span class="go">⎣-2  10⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">*</span><span class="n">N</span>
+<span class="go">⎡0  24⎤</span>
+<span class="go">⎢     ⎥</span>
+<span class="go">⎣0  15⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">3</span><span class="o">*</span><span class="n">M</span>
+<span class="go">⎡3   9⎤</span>
+<span class="go">⎢     ⎥</span>
+<span class="go">⎣-6  9⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">⎡-5  12⎤</span>
+<span class="go">⎢      ⎥</span>
+<span class="go">⎣-8  3 ⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">**-</span><span class="mi">1</span>
+<span class="go">⎡1/3  -1/3⎤</span>
+<span class="go">⎢         ⎥</span>
+<span class="go">⎣2/9  1/9 ⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">**-</span><span class="mi">1</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">Matrix det == 0; not invertible.</span>
+</pre></div>
+</div>
+<p>To take the transpose of a Matrix, use <tt class="docutils literal"><span class="pre">T</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1  2  3⎤</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎣4  5  6⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">T</span>
+<span class="go">⎡1  4⎤</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎢2  5⎥</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎣3  6⎦</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="matrix-constructors">
+<h2>Matrix Constructors<a class="headerlink" href="#matrix-constructors" title="Permalink to this headline">¶</a></h2>
+<p>Several constructors exist for creating common matrices.  To create an
+identity matrix, use <tt class="docutils literal"><span class="pre">eye</span></tt>.  <tt class="docutils literal"><span class="pre">eye(n)</span></tt> will create an <span class="math">\(n\times n\)</span> identity matrix.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">⎡1  0  0⎤</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎢0  1  0⎥</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎣0  0  1⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">⎡1  0  0  0⎤</span>
+<span class="go">⎢          ⎥</span>
+<span class="go">⎢0  1  0  0⎥</span>
+<span class="go">⎢          ⎥</span>
+<span class="go">⎢0  0  1  0⎥</span>
+<span class="go">⎢          ⎥</span>
+<span class="go">⎣0  0  0  1⎦</span>
+</pre></div>
+</div>
+<p>To create a matrix of all zeros, use <tt class="docutils literal"><span class="pre">zeros</span></tt>.  <tt class="docutils literal"><span class="pre">zeros(n,</span> <span class="pre">m)</span></tt> creates an
+<span class="math">\(n\times m\)</span> matrix of <span class="math">\(0\)</span>s.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">⎡0  0  0⎤</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎣0  0  0⎦</span>
+</pre></div>
+</div>
+<p>Similarly, <tt class="docutils literal"><span class="pre">ones</span></tt> creates a matrix of ones.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">⎡1  1⎤</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎢1  1⎥</span>
+<span class="go">⎢    ⎥</span>
+<span class="go">⎣1  1⎦</span>
+</pre></div>
+</div>
+<p>To create diagonal matrices, use <tt class="docutils literal"><span class="pre">diag</span></tt>.  The arguments to <tt class="docutils literal"><span class="pre">diag</span></tt> can be
+either numbers or matrices.  A number is interpreted as a <span class="math">\(1\times 1\)</span>
+matrix. The matrices are stacked diagonally.  The remaining elements are
+filled with <span class="math">\(0\)</span>s.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diag</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">⎡1  0  0⎤</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎢0  2  0⎥</span>
+<span class="go">⎢       ⎥</span>
+<span class="go">⎣0  0  3⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diag</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ones</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">Matrix</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">]))</span>
+<span class="go">⎡-1  0  0  0⎤</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   1  1  0⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   1  1  0⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   0  0  5⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   0  0  7⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎣0   0  0  5⎦</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-methods">
+<h2>Advanced Methods<a class="headerlink" href="#advanced-methods" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="determinant">
+<h3>Determinant<a class="headerlink" href="#determinant" title="Permalink to this headline">¶</a></h3>
+<p>To compute the determinant of a matrix, use <tt class="docutils literal"><span class="pre">det</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1  0   1⎤</span>
+<span class="go">⎢        ⎥</span>
+<span class="go">⎢2  -1  3⎥</span>
+<span class="go">⎢        ⎥</span>
+<span class="go">⎣4  3   2⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rref">
+<h3>RREF<a class="headerlink" href="#rref" title="Permalink to this headline">¶</a></h3>
+<p>To put a matrix into reduced row echelon form, use <tt class="docutils literal"><span class="pre">rref</span></tt>.  <tt class="docutils literal"><span class="pre">rref</span></tt> returns
+a tuple of two elements. The first is the reduced row echelon form, and the
+second is a list of indices of the pivot columns.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1   0   1   3 ⎤</span>
+<span class="go">⎢              ⎥</span>
+<span class="go">⎢2   3   4   7 ⎥</span>
+<span class="go">⎢              ⎥</span>
+<span class="go">⎣-1  -3  -3  -4⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">rref</span><span class="p">()</span>
+<span class="go">⎛⎡1  0   1    3 ⎤, [0, 1]⎞</span>
+<span class="go">⎜⎢              ⎥        ⎟</span>
+<span class="go">⎜⎢0  1  2/3  1/3⎥        ⎟</span>
+<span class="go">⎜⎢              ⎥        ⎟</span>
+<span class="go">⎝⎣0  0   0    0 ⎦        ⎠</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The first element of the tuple returned by <tt class="docutils literal"><span class="pre">rref</span></tt> is of type
+<tt class="docutils literal"><span class="pre">Matrix</span></tt>. The second is of type <tt class="docutils literal"><span class="pre">list</span></tt>.</p>
+</div>
+</div>
+<div class="section" id="nullspace">
+<h3>Nullspace<a class="headerlink" href="#nullspace" title="Permalink to this headline">¶</a></h3>
+<p>To find the nullspace of a matrix, use <tt class="docutils literal"><span class="pre">nullspace</span></tt>. <tt class="docutils literal"><span class="pre">nullspace</span></tt> returns a
+<tt class="docutils literal"><span class="pre">list</span></tt> of column vectors that span the nullspace of the matrix.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡1  2   3  0  0⎤</span>
+<span class="go">⎢              ⎥</span>
+<span class="go">⎣4  10  0  0  1⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">nullspace</span><span class="p">()</span>
+<span class="go">⎡⎡-15⎤, ⎡0⎤, ⎡ 1  ⎤⎤</span>
+<span class="go">⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥</span>
+<span class="go">⎢⎢ 6 ⎥  ⎢0⎥  ⎢-1/2⎥⎥</span>
+<span class="go">⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥</span>
+<span class="go">⎢⎢ 1 ⎥  ⎢0⎥  ⎢ 0  ⎥⎥</span>
+<span class="go">⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥</span>
+<span class="go">⎢⎢ 0 ⎥  ⎢1⎥  ⎢ 0  ⎥⎥</span>
+<span class="go">⎢⎢   ⎥  ⎢ ⎥  ⎢    ⎥⎥</span>
+<span class="go">⎣⎣ 0 ⎦  ⎣0⎦  ⎣ 1  ⎦⎦</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="eigenvalues-eigenvectors-and-diagonalization">
+<h3>Eigenvalues, Eigenvectors, and Diagonalization<a class="headerlink" href="#eigenvalues-eigenvectors-and-diagonalization" title="Permalink to this headline">¶</a></h3>
+<p>To find the eigenvalues of a matrix, use <tt class="docutils literal"><span class="pre">eigenvals</span></tt>.  <tt class="docutils literal"><span class="pre">eigenvals</span></tt>
+returns a dictionary of <tt class="docutils literal"><span class="pre">eigenvalue:algebraic</span> <span class="pre">multiplicity</span></tt> pairs (similar to the
+output of <a class="reference internal" href="solvers.html#tutorial-roots"><em>roots</em></a>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span>  <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span>  <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">⎡3  -2  4   -2⎤</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎢5  3   -3  -2⎥</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎢5  -2  2   -2⎥</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎣5  -2  -3  3 ⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">eigenvals</span><span class="p">()</span>
+<span class="go">{-2: 1, 3: 1, 5: 2}</span>
+</pre></div>
+</div>
+<p>This means that <tt class="docutils literal"><span class="pre">M</span></tt> has eigenvalues -2, 3, and 5, and that the
+eigenvalues -2 and 3 have algebraic multiplicity 1 and that the eigenvalue 5
+has algebraic multiplicity 2.</p>
+<p>To find the eigenvectors of a matrix, use <tt class="docutils literal"><span class="pre">eigenvects</span></tt>.  <tt class="docutils literal"><span class="pre">eigenvects</span></tt>
+returns a list of tuples of the form <tt class="docutils literal"><span class="pre">(eigenvalue:algebraic</span> <span class="pre">multiplicity,</span>
+<span class="pre">[eigenvectors])</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">eigenvects</span><span class="p">()</span>
+<span class="go">⎡⎛-2, 1, ⎡⎡0⎤⎤⎞, ⎛3, 1, ⎡⎡1⎤⎤⎞, ⎛5, 2, ⎡⎡1⎤, ⎡0 ⎤⎤⎞⎤</span>
+<span class="go">⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥</span>
+<span class="go">⎢⎜       ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥  ⎢-1⎥⎥⎟⎥</span>
+<span class="go">⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥</span>
+<span class="go">⎢⎜       ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥⎥⎟  ⎜      ⎢⎢1⎥  ⎢0 ⎥⎥⎟⎥</span>
+<span class="go">⎢⎜       ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥⎥⎟  ⎜      ⎢⎢ ⎥  ⎢  ⎥⎥⎟⎥</span>
+<span class="go">⎣⎝       ⎣⎣1⎦⎦⎠  ⎝      ⎣⎣1⎦⎦⎠  ⎝      ⎣⎣0⎦  ⎣1 ⎦⎦⎠⎦</span>
+</pre></div>
+</div>
+<p>This shows us that, for example, the eigenvalue 5 also has geometric
+multiplicity 2, because it has two eigenvectors.  Because the algebraic and
+geometric multiplicities are the same for all the eigenvalues, <tt class="docutils literal"><span class="pre">M</span></tt> is
+diagonalizable.</p>
+<p>To diagonalize a matrix, use <tt class="docutils literal"><span class="pre">diagonalize</span></tt>. <tt class="docutils literal"><span class="pre">diagonalize</span></tt> returns a tuple
+<span class="math">\((P, D)\)</span>, where <span class="math">\(D\)</span> is diagonal and <span class="math">\(M = PDP^{-1}\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">diagonalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span>
+<span class="go">⎡0  1  1  0 ⎤</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢1  1  1  -1⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢1  1  1  0 ⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎣1  1  0  1 ⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span>
+<span class="go">⎡-2  0  0  0⎤</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   3  0  0⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎢0   0  5  0⎥</span>
+<span class="go">⎢           ⎥</span>
+<span class="go">⎣0   0  0  5⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">*</span><span class="n">D</span><span class="o">*</span><span class="n">P</span><span class="o">**-</span><span class="mi">1</span>
+<span class="go">⎡3  -2  4   -2⎤</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎢5  3   -3  -2⎥</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎢5  -2  2   -2⎥</span>
+<span class="go">⎢             ⎥</span>
+<span class="go">⎣5  -2  -3  3 ⎦</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">*</span><span class="n">D</span><span class="o">*</span><span class="n">P</span><span class="o">**-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">M</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last"><tt class="docutils literal"><span class="pre">lambda</span></tt> is a reserved keyword in Python, so to create a Symbol called
+<span class="math">\(\lambda\)</span>, while using the same names for SymPy Symbols and Python
+variables, use <tt class="docutils literal"><span class="pre">lamda</span></tt> (without the <tt class="docutils literal"><span class="pre">b</span></tt>).  It will still pretty print
+as <span class="math">\(\lambda\)</span>.</p>
+</div>
+<p>Note that since <tt class="docutils literal"><span class="pre">eigenvects</span></tt> also includes the eigenvalues, you should use
+it instead of <tt class="docutils literal"><span class="pre">eigenvals</span></tt> if you also want the eigenvectors. However, as
+computing the eigenvectors may often be costly, <tt class="docutils literal"><span class="pre">eigenvals</span></tt> should be
+preferred if you only wish to find the eigenvalues.</p>
+<p>If all you want is the characteristic polynomial, use <tt class="docutils literal"><span class="pre">charpoly</span></tt>.  This is
+more efficient than <tt class="docutils literal"><span class="pre">eigenvals</span></tt>, because sometimes symbolic roots can be
+expensive to calculate.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lamda</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;lamda&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">charpoly</span><span class="p">(</span><span class="n">lamda</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factor</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">       2</span>
+<span class="go">(λ - 5) ⋅(λ - 3)⋅(λ + 2)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Matrices</a><ul>
+<li><a class="reference internal" href="#basic-operations">Basic Operations</a><ul>
+<li><a class="reference internal" href="#shape">Shape</a></li>
+<li><a class="reference internal" href="#accessing-rows-and-columns">Accessing Rows and Columns</a></li>
+<li><a class="reference internal" href="#deleting-and-inserting-rows-and-columns">Deleting and Inserting Rows and Columns</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-methods">Basic Methods</a></li>
+<li><a class="reference internal" href="#matrix-constructors">Matrix Constructors</a></li>
+<li><a class="reference internal" href="#advanced-methods">Advanced Methods</a><ul>
+<li><a class="reference internal" href="#determinant">Determinant</a></li>
+<li><a class="reference internal" href="#rref">RREF</a></li>
+<li><a class="reference internal" href="#nullspace">Nullspace</a></li>
+<li><a class="reference internal" href="#eigenvalues-eigenvectors-and-diagonalization">Eigenvalues, Eigenvectors, and Diagonalization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="solvers.html"
+                        title="previous chapter">Solvers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="manipulation.html"
+                        title="next chapter">Advanced Expression Manipulation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/matrices.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="manipulation.html" title="Advanced Expression Manipulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,567 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Subsets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Gray Code" href="graycode.html" />
+    <link rel="prev" title="Prufer Sequences" href="prufer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graycode.html" title="Gray Code"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prufer.html" title="Prufer Sequences"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.subsets">
+<span id="subsets"></span><span id="combinatorics-subsets"></span><h1>Subsets<a class="headerlink" href="#module-sympy.combinatorics.subsets" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.combinatorics.subsets.Subset">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.subsets.</tt><tt class="descname">Subset</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a basic subset object.</p>
+<p>We generate subsets using essentially two techniques,
+binary enumeration and lexicographic enumeration.
+The Subset class takes two arguments, the first one
+describes the initial subset to consider and the second
+describes the superset.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;b&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;c&#39;]</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="sympy.combinatorics.subsets.Subset.bitlist_from_subset">
+<em class="property">classmethod </em><tt class="descname">bitlist_from_subset</tt><big>(</big><em>subset</em>, <em>superset</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.bitlist_from_subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.bitlist_from_subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the bitlist corresponding to a subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.subset_from_bitlist" title="sympy.combinatorics.subsets.Subset.subset_from_bitlist"><tt class="xref py py-obj docutils literal"><span class="pre">subset_from_bitlist</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">bitlist_from_subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="go">&#39;0011&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.cardinality">
+<tt class="descname">cardinality</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.cardinality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.cardinality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of all possible subsets.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.subset" title="sympy.combinatorics.subsets.Subset.subset"><tt class="xref py py-obj docutils literal"><span class="pre">subset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset" title="sympy.combinatorics.subsets.Subset.superset"><tt class="xref py py-obj docutils literal"><span class="pre">superset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.size" title="sympy.combinatorics.subsets.Subset.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset_size" title="sympy.combinatorics.subsets.Subset.superset_size"><tt class="xref py py-obj docutils literal"><span class="pre">superset_size</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">cardinality</span>
+<span class="go">16</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.iterate_binary">
+<tt class="descname">iterate_binary</tt><big>(</big><em>k</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.iterate_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.iterate_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a helper function. It iterates over the
+binary subsets by k steps. This variable can be
+both positive or negative.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.next_binary" title="sympy.combinatorics.subsets.Subset.next_binary"><tt class="xref py py-obj docutils literal"><span class="pre">next_binary</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.prev_binary" title="sympy.combinatorics.subsets.Subset.prev_binary"><tt class="xref py py-obj docutils literal"><span class="pre">prev_binary</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">iterate_binary</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;d&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">iterate_binary</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.iterate_graycode">
+<tt class="descname">iterate_graycode</tt><big>(</big><em>k</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.iterate_graycode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.iterate_graycode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function used for prev_gray and next_gray.
+It performs k step overs to get the respective Gray codes.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.next_gray" title="sympy.combinatorics.subsets.Subset.next_gray"><tt class="xref py py-obj docutils literal"><span class="pre">next_gray</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.prev_gray" title="sympy.combinatorics.subsets.Subset.prev_gray"><tt class="xref py py-obj docutils literal"><span class="pre">prev_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">iterate_graycode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[1, 4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">iterate_graycode</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[1, 2, 4]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.next_binary">
+<tt class="descname">next_binary</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.next_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.next_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the next binary ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.prev_binary" title="sympy.combinatorics.subsets.Subset.prev_binary"><tt class="xref py py-obj docutils literal"><span class="pre">prev_binary</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_binary" title="sympy.combinatorics.subsets.Subset.iterate_binary"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_binary</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;b&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.next_gray">
+<tt class="descname">next_gray</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.next_gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.next_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the next Gray code ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_graycode" title="sympy.combinatorics.subsets.Subset.iterate_graycode"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_graycode</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.prev_gray" title="sympy.combinatorics.subsets.Subset.prev_gray"><tt class="xref py py-obj docutils literal"><span class="pre">prev_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_gray</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[1, 3]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.next_lexicographic">
+<tt class="descname">next_lexicographic</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.next_lexicographic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.next_lexicographic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the next lexicographically ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.prev_lexicographic" title="sympy.combinatorics.subsets.Subset.prev_lexicographic"><tt class="xref py py-obj docutils literal"><span class="pre">prev_lexicographic</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_lexicographic</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;d&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next_lexicographic</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.prev_binary">
+<tt class="descname">prev_binary</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.prev_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.prev_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the previous binary ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.next_binary" title="sympy.combinatorics.subsets.Subset.next_binary"><tt class="xref py py-obj docutils literal"><span class="pre">next_binary</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_binary" title="sympy.combinatorics.subsets.Subset.iterate_binary"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_binary</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_binary</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;c&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.prev_gray">
+<tt class="descname">prev_gray</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.prev_gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.prev_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the previous Gray code ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_graycode" title="sympy.combinatorics.subsets.Subset.iterate_graycode"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_graycode</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.next_gray" title="sympy.combinatorics.subsets.Subset.next_gray"><tt class="xref py py-obj docutils literal"><span class="pre">next_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_gray</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[2, 3, 4, 5]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.subsets.Subset.prev_lexicographic">
+<tt class="descname">prev_lexicographic</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.prev_lexicographic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.prev_lexicographic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the previous lexicographically ordered subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.next_lexicographic" title="sympy.combinatorics.subsets.Subset.next_lexicographic"><tt class="xref py py-obj docutils literal"><span class="pre">next_lexicographic</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_lexicographic</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;d&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prev_lexicographic</span><span class="p">()</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;c&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.rank_binary">
+<tt class="descname">rank_binary</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.rank_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.rank_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the binary ordered rank.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_binary" title="sympy.combinatorics.subsets.Subset.iterate_binary"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_binary</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.unrank_binary" title="sympy.combinatorics.subsets.Subset.unrank_binary"><tt class="xref py py-obj docutils literal"><span class="pre">unrank_binary</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_binary</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_binary</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.rank_gray">
+<tt class="descname">rank_gray</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.rank_gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.rank_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gray code ranking of the subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_graycode" title="sympy.combinatorics.subsets.Subset.iterate_graycode"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_graycode</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.unrank_gray" title="sympy.combinatorics.subsets.Subset.unrank_gray"><tt class="xref py py-obj docutils literal"><span class="pre">unrank_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_gray</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_gray</span>
+<span class="go">27</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.rank_lexicographic">
+<tt class="descname">rank_lexicographic</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.rank_lexicographic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.rank_lexicographic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the lexicographic ranking of the subset.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_lexicographic</span>
+<span class="go">14</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank_lexicographic</span>
+<span class="go">43</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.size">
+<tt class="descname">size</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the size of the subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.subset" title="sympy.combinatorics.subsets.Subset.subset"><tt class="xref py py-obj docutils literal"><span class="pre">subset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset" title="sympy.combinatorics.subsets.Subset.superset"><tt class="xref py py-obj docutils literal"><span class="pre">superset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset_size" title="sympy.combinatorics.subsets.Subset.superset_size"><tt class="xref py py-obj docutils literal"><span class="pre">superset_size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.cardinality" title="sympy.combinatorics.subsets.Subset.cardinality"><tt class="xref py py-obj docutils literal"><span class="pre">cardinality</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">size</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.subset">
+<tt class="descname">subset</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the subset represented by the current instance.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset" title="sympy.combinatorics.subsets.Subset.superset"><tt class="xref py py-obj docutils literal"><span class="pre">superset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.size" title="sympy.combinatorics.subsets.Subset.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset_size" title="sympy.combinatorics.subsets.Subset.superset_size"><tt class="xref py py-obj docutils literal"><span class="pre">superset_size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.cardinality" title="sympy.combinatorics.subsets.Subset.cardinality"><tt class="xref py py-obj docutils literal"><span class="pre">cardinality</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;c&#39;, &#39;d&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.subsets.Subset.subset_from_bitlist">
+<em class="property">classmethod </em><tt class="descname">subset_from_bitlist</tt><big>(</big><em>super_set</em>, <em>bitlist</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.subset_from_bitlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.subset_from_bitlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the subset defined by the bitlist.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.bitlist_from_subset" title="sympy.combinatorics.subsets.Subset.bitlist_from_subset"><tt class="xref py py-obj docutils literal"><span class="pre">bitlist_from_subset</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">subset_from_bitlist</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="s">&#39;0011&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;c&#39;, &#39;d&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.subsets.Subset.subset_indices">
+<em class="property">classmethod </em><tt class="descname">subset_indices</tt><big>(</big><em>subset</em>, <em>superset</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.subset_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.subset_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indices of subset in superset in a list; the list is empty
+if all elements of subset are not in superset.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">superset</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">superset</span><span class="p">)</span>
+<span class="go">[1, 2, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">superset</span><span class="p">)</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">([],</span> <span class="n">superset</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.superset">
+<tt class="descname">superset</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.superset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.superset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the superset of the subset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.subset" title="sympy.combinatorics.subsets.Subset.subset"><tt class="xref py py-obj docutils literal"><span class="pre">subset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.size" title="sympy.combinatorics.subsets.Subset.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset_size" title="sympy.combinatorics.subsets.Subset.superset_size"><tt class="xref py py-obj docutils literal"><span class="pre">superset_size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.cardinality" title="sympy.combinatorics.subsets.Subset.cardinality"><tt class="xref py py-obj docutils literal"><span class="pre">cardinality</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">superset</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.subsets.Subset.superset_size">
+<tt class="descname">superset_size</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.superset_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.superset_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the size of the superset.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.subset" title="sympy.combinatorics.subsets.Subset.subset"><tt class="xref py py-obj docutils literal"><span class="pre">subset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.superset" title="sympy.combinatorics.subsets.Subset.superset"><tt class="xref py py-obj docutils literal"><span class="pre">superset</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.size" title="sympy.combinatorics.subsets.Subset.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.cardinality" title="sympy.combinatorics.subsets.Subset.cardinality"><tt class="xref py py-obj docutils literal"><span class="pre">cardinality</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Subset</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">superset_size</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.subsets.Subset.unrank_binary">
+<em class="property">classmethod </em><tt class="descname">unrank_binary</tt><big>(</big><em>rank</em>, <em>superset</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.unrank_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.unrank_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the binary ordered subset of the specified rank.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_binary" title="sympy.combinatorics.subsets.Subset.iterate_binary"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_binary</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.rank_binary" title="sympy.combinatorics.subsets.Subset.rank_binary"><tt class="xref py py-obj docutils literal"><span class="pre">rank_binary</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">unrank_binary</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;b&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.subsets.Subset.unrank_gray">
+<em class="property">classmethod </em><tt class="descname">unrank_gray</tt><big>(</big><em>rank</em>, <em>superset</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/subsets.html#Subset.unrank_gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.subsets.Subset.unrank_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the Gray code ordered subset of the specified rank.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.subsets.Subset.iterate_graycode" title="sympy.combinatorics.subsets.Subset.iterate_graycode"><tt class="xref py py-obj docutils literal"><span class="pre">iterate_graycode</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.subsets.Subset.rank_gray" title="sympy.combinatorics.subsets.Subset.rank_gray"><tt class="xref py py-obj docutils literal"><span class="pre">rank_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">Subset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">unrank_gray</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[&#39;a&#39;, &#39;b&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Subset</span><span class="o">.</span><span class="n">unrank_gray</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">subset</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.subsets.ksubsets">
+<em class="property">static </em><tt class="descclassname">subsets.</tt><tt class="descname">ksubsets</tt><big>(</big><em>superset</em>, <em>k</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.subsets.ksubsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the subsets of size k in lexicographic order.</p>
+<p>This uses the itertools generator.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">class</span></tt></dt>
+<dd>Subset</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.subsets</span> <span class="kn">import</span> <span class="n">ksubsets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">ksubsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2), (1, 3), (2, 3)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">ksubsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4),     (2, 5), (3, 4), (3, 5), (4, 5)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="prufer.html"
+                        title="previous chapter">Prufer Sequences</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="graycode.html"
+                        title="next chapter">Gray Code</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/subsets.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="graycode.html" title="Gray Code"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prufer.html" title="Prufer Sequences"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

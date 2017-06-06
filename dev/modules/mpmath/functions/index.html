@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mathematical functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="../index.html" />
+    <link rel="next" title="Mathematical constants" href="constants.html" />
+    <link rel="prev" title="Plotting" href="../plotting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Mathematical constants"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../plotting.html" title="Plotting"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mathematical-functions">
+<h1>Mathematical functions<a class="headerlink" href="#mathematical-functions" title="Permalink to this headline">¶</a></h1>
+<p>Mpmath implements the standard functions from Python&#8217;s <tt class="docutils literal"><span class="pre">math</span></tt> and <tt class="docutils literal"><span class="pre">cmath</span></tt> modules, for both real and complex numbers and with arbitrary precision. Many other functions are also available in mpmath, including commonly-used variants of standard functions (such as the alternative trigonometric functions sec, csc, cot), but also a large number of &#8220;special functions&#8221; such as the gamma function, the Riemann zeta function, error functions, Bessel functions, etc.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="constants.html">Mathematical constants</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#exact-constants">Exact constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#pi-pi">Pi (<tt class="docutils literal"><span class="pre">pi</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#degree-degree">Degree (<tt class="docutils literal"><span class="pre">degree</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#base-of-the-natural-logarithm-e">Base of the natural logarithm (<tt class="docutils literal"><span class="pre">e</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#golden-ratio-phi">Golden ratio (<tt class="docutils literal"><span class="pre">phi</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#euler-s-constant-euler">Euler&#8217;s constant (<tt class="docutils literal"><span class="pre">euler</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#catalan-s-constant-catalan">Catalan&#8217;s constant (<tt class="docutils literal"><span class="pre">catalan</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#apery-s-constant-apery">Apery&#8217;s constant (<tt class="docutils literal"><span class="pre">apery</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#khinchin-s-constant-khinchin">Khinchin&#8217;s constant (<tt class="docutils literal"><span class="pre">khinchin</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#glaisher-s-constant-glaisher">Glaisher&#8217;s constant (<tt class="docutils literal"><span class="pre">glaisher</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#mertens-constant-mertens">Mertens constant (<tt class="docutils literal"><span class="pre">mertens</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="constants.html#twin-prime-constant-twinprime">Twin prime constant (<tt class="docutils literal"><span class="pre">twinprime</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="powers.html">Powers and logarithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="powers.html#nth-roots">Nth roots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="powers.html#exponentiation">Exponentiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="powers.html#logarithms">Logarithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="powers.html#lambert-w-function">Lambert W function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="powers.html#arithmetic-geometric-mean">Arithmetic-geometric mean</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="trigonometric.html">Trigonometric functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="trigonometric.html#degree-radian-conversion">Degree-radian conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trigonometric.html#id1">Trigonometric functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trigonometric.html#trigonometric-functions-with-modified-argument">Trigonometric functions with modified argument</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trigonometric.html#inverse-trigonometric-functions">Inverse trigonometric functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trigonometric.html#sinc-function">Sinc function</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hyperbolic.html">Hyperbolic functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hyperbolic.html#id1">Hyperbolic functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hyperbolic.html#inverse-hyperbolic-functions">Inverse hyperbolic functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gamma.html">Factorials and gamma functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#factorials">Factorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#binomial-coefficients">Binomial coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#gamma-function">Gamma function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#rising-and-falling-factorials">Rising and falling factorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#beta-function">Beta function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#super-and-hyperfactorials">Super- and hyperfactorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html#polygamma-functions-and-harmonic-numbers">Polygamma functions and harmonic numbers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expintegrals.html">Exponential integrals and error functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#incomplete-gamma-functions">Incomplete gamma functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#exponential-integrals">Exponential integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#logarithmic-integral">Logarithmic integral</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#trigonometric-integrals">Trigonometric integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#hyperbolic-integrals">Hyperbolic integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#error-functions">Error functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#the-normal-distribution">The normal distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="expintegrals.html#fresnel-integrals">Fresnel integrals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bessel.html">Bessel functions and related functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#bessel-functions">Bessel functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#bessel-function-zeros">Bessel function zeros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#hankel-functions">Hankel functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#kelvin-functions">Kelvin functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#struve-functions">Struve functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#anger-weber-functions">Anger-Weber functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#lommel-functions">Lommel functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#airy-and-scorer-functions">Airy and Scorer functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#coulomb-wave-functions">Coulomb wave functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#confluent-u-and-whittaker-functions">Confluent U and Whittaker functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html#parabolic-cylinder-functions">Parabolic cylinder functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="orthogonal.html">Orthogonal polynomials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#legendre-functions">Legendre functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#chebyshev-polynomials">Chebyshev polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#jacobi-polynomials">Jacobi polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#gegenbauer-polynomials">Gegenbauer polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#hermite-polynomials">Hermite polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#laguerre-polynomials">Laguerre polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orthogonal.html#spherical-harmonics">Spherical harmonics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hypergeometric.html">Hypergeometric functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hypergeometric.html#common-hypergeometric-series">Common hypergeometric series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hypergeometric.html#generalized-hypergeometric-functions">Generalized hypergeometric functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hypergeometric.html#meijer-g-function">Meijer G-function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hypergeometric.html#bilateral-hypergeometric-series">Bilateral hypergeometric series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hypergeometric.html#hypergeometric-functions-of-two-variables">Hypergeometric functions of two variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="elliptic.html">Elliptic functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#elliptic-arguments">Elliptic arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#legendre-elliptic-integrals">Legendre elliptic integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#carlson-symmetric-elliptic-integrals">Carlson symmetric elliptic integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#jacobi-theta-functions">Jacobi theta functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#jacobi-elliptic-functions">Jacobi elliptic functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elliptic.html#modular-functions">Modular functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="zeta.html">Zeta functions, L-series and polylogarithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#riemann-and-hurwitz-zeta-functions">Riemann and Hurwitz zeta functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#dirichlet-l-series">Dirichlet L-series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#stieltjes-constants">Stieltjes constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#zeta-function-zeros">Zeta function zeros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#lerch-transcendent">Lerch transcendent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#polylogarithms-and-clausen-functions">Polylogarithms and Clausen functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zeta.html#zeta-function-variants">Zeta function variants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="numtheory.html">Number-theoretical, combinatorial and integer functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#fibonacci-numbers">Fibonacci numbers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#bernoulli-numbers-and-polynomials">Bernoulli numbers and polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#euler-numbers-and-polynomials">Euler numbers and polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#bell-numbers-and-polynomials">Bell numbers and polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#prime-counting-functions">Prime counting functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#cyclotomic-polynomials">Cyclotomic polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="numtheory.html#arithmetic-functions">Arithmetic functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qfunctions.html">q-functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qfunctions.html#q-pochhammer-symbol">q-Pochhammer symbol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qfunctions.html#q-gamma-and-factorial">q-gamma and factorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qfunctions.html#hypergeometric-q-series">Hypergeometric q-series</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../plotting.html"
+                        title="previous chapter">Plotting</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="constants.html"
+                        title="next chapter">Mathematical constants</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Mathematical constants"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../plotting.html" title="Plotting"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

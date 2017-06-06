@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.statistics.distributions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.statistics.distributions</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">erf</span>
+<span class="kn">from</span> <span class="nn">sympy.printing</span> <span class="kn">import</span> <span class="n">sstr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+
+<div class="viewcode-block" id="Sample"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Sample">[docs]</a><span class="k">class</span> <span class="nc">Sample</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample([x1, x2, x3, ...]) represents a collection of samples.</span>
+<span class="sd">    Sample parameters like mean, variance and stddev can be accessed as</span>
+<span class="sd">    properties.</span>
+<span class="sd">    The sample will be sorted.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.statistics.distributions import Sample</span>
+<span class="sd">        &gt;&gt;&gt; Sample([0, 1, 2, 3])</span>
+<span class="sd">        Sample([0, 1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; Sample([8, 3, 2, 4, 1, 6, 9, 2])</span>
+<span class="sd">        Sample([1, 2, 2, 3, 4, 6, 8, 9])</span>
+<span class="sd">        &gt;&gt;&gt; s = Sample([1, 2, 3, 4, 5])</span>
+<span class="sd">        &gt;&gt;&gt; s.mean</span>
+<span class="sd">        3</span>
+<span class="sd">        &gt;&gt;&gt; s.stddev</span>
+<span class="sd">        sqrt(2)</span>
+<span class="sd">        &gt;&gt;&gt; s.median</span>
+<span class="sd">        3</span>
+<span class="sd">        &gt;&gt;&gt; s.variance</span>
+<span class="sd">        2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">tuple</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">Integer</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span> <span class="o">/</span> <span class="n">Integer</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">stddev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">variance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">median</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">median</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ContinuousProbability"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.ContinuousProbability">[docs]</a><span class="k">class</span> <span class="nc">ContinuousProbability</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for continuous probability distributions&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ContinuousProbability.probability"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.ContinuousProbability.probability">[docs]</a>    <span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the probability that a random number x generated</span>
+<span class="sd">        from the distribution satisfies a &lt;= x &lt;= b</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.core import oo</span>
+<span class="sd">            &gt;&gt;&gt; Normal(0, 1).probability(-1, 1)</span>
+<span class="sd">            erf(sqrt(2)/2)</span>
+<span class="sd">            &gt;&gt;&gt; Normal(0, 1).probability(1, oo)</span>
+<span class="sd">            -erf(sqrt(2)/2)/2 + 1/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ContinuousProbability.random"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.ContinuousProbability.random">[docs]</a>    <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        random() -- generate a random number from the distribution.</span>
+<span class="sd">        random(n) -- generate a Sample of n random numbers.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Uniform</span>
+<span class="sd">            &gt;&gt;&gt; x = Uniform(1, 5).random()</span>
+<span class="sd">            &gt;&gt;&gt; x &lt; 5 and x &gt; 1</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; x = Uniform(-4, 2).random()</span>
+<span class="sd">            &gt;&gt;&gt; x &lt; 2 and x &gt; -4</span>
+<span class="sd">            True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">_random</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Sample</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">_random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Normal"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Normal">[docs]</a><span class="k">class</span> <span class="nc">Normal</span><span class="p">(</span><span class="n">ContinuousProbability</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normal(mu, sigma) represents the normal or Gaussian distribution</span>
+<span class="sd">    with mean value mu and standard deviation sigma.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import oo</span>
+<span class="sd">        &gt;&gt;&gt; N = Normal(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; N.mean</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; N.variance</span>
+<span class="sd">        4</span>
+<span class="sd">        &gt;&gt;&gt; N.probability(-oo, 1)   # probability on an interval</span>
+<span class="sd">        1/2</span>
+<span class="sd">        &gt;&gt;&gt; N.probability(1, oo)</span>
+<span class="sd">        1/2</span>
+<span class="sd">        &gt;&gt;&gt; N.probability(-oo, oo)</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; N.probability(-1, 3)</span>
+<span class="sd">        erf(sqrt(2)/2)</span>
+<span class="sd">        &gt;&gt;&gt; _.evalf()</span>
+<span class="sd">        0.682689492137086</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">median</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">stddev</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Normal.pdf"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Normal.pdf">[docs]</a>    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the probability density function as an expression in x</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">            &gt;&gt;&gt; Normal(1, 2).pdf(0)</span>
+<span class="sd">            sqrt(2)*exp(-1/8)/(4*sqrt(pi))</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">            &gt;&gt;&gt; Normal(1, 2).pdf(x)</span>
+<span class="sd">            sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Normal.cdf"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Normal.cdf">[docs]</a>    <span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the cumulative density function as an expression in x</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">            &gt;&gt;&gt; Normal(1, 2).cdf(0)</span>
+<span class="sd">            -erf(sqrt(2)/4)/2 + 1/2</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">            &gt;&gt;&gt; Normal(1, 2).cdf(x)</span>
+<span class="sd">            erf(sqrt(2)*(x - 1)/4)/2 + 1/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">erf</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))))</span><span class="o">/</span><span class="mi">2</span>
+</div>
+    <span class="k">def</span> <span class="nf">_random</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Normal.confidence"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Normal.confidence">[docs]</a>    <span class="k">def</span> <span class="nf">confidence</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a symmetric (p*100)% confidence interval. For example,</span>
+<span class="sd">        p=0.95 gives a 95% confidence interval. Currently this function</span>
+<span class="sd">        only handles numerical values except in the trivial case p=1.</span>
+
+<span class="sd">        For example, one standard deviation:</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">            &gt;&gt;&gt; N = Normal(0, 1)</span>
+<span class="sd">            &gt;&gt;&gt; N.confidence(0.68)</span>
+<span class="sd">            (-0.994457883209753, 0.994457883209753)</span>
+<span class="sd">            &gt;&gt;&gt; N.probability(*_).evalf()</span>
+<span class="sd">            0.680000000000000</span>
+
+<span class="sd">        Two standard deviations:</span>
+
+<span class="sd">            &gt;&gt;&gt; N = Normal(0, 1)</span>
+<span class="sd">            &gt;&gt;&gt; N.confidence(0.95)</span>
+<span class="sd">            (-1.95996398454005, 1.95996398454005)</span>
+<span class="sd">            &gt;&gt;&gt; N.probability(*_).evalf()</span>
+<span class="sd">            0.950000000000000</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+        <span class="c"># In terms of n*sigma, we have n = sqrt(2)*ierf(p). The inverse</span>
+        <span class="c"># error function is not yet implemented in SymPy but can easily be</span>
+        <span class="c"># computed numerically</span>
+
+        <span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">mpf</span><span class="p">,</span> <span class="n">erfinv</span>
+
+        <span class="c"># calculate y = ierf(p) by solving erf(y) - p = 0</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">erfinv</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">sigma</span><span class="p">))</span> <span class="o">*</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">y</span><span class="p">))</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">mu</span> <span class="o">-</span> <span class="n">t</span><span class="p">,</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Normal.fit"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Normal.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a normal distribution fit to the mean and standard</span>
+<span class="sd">        deviation of the given distribution or sample.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Normal</span>
+<span class="sd">            &gt;&gt;&gt; Normal.fit([1,2,3,4,5])</span>
+<span class="sd">            Normal(3, sqrt(2))</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">            &gt;&gt;&gt; Normal.fit([x, y])</span>
+<span class="sd">            Normal(x/2 + y/2, sqrt((-x/2 + y/2)**2/2 + (x/2 - y/2)**2/2))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="s">&quot;stddev&quot;</span><span class="p">):</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Normal</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">stddev</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Uniform"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Uniform">[docs]</a><span class="k">class</span> <span class="nc">Uniform</span><span class="p">(</span><span class="n">ContinuousProbability</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Uniform(a, b) represents a probability distribution with uniform</span>
+<span class="sd">    probability density on the interval [a, b] and zero density</span>
+<span class="sd">    everywhere else.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">median</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c"># arbitrary</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">12</span><span class="p">)</span>
+    <span class="n">stddev</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">variance</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Uniform.pdf"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Uniform.pdf">[docs]</a>    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the probability density function as an expression in x</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Uniform</span>
+<span class="sd">            &gt;&gt;&gt; Uniform(1, 5).pdf(1)</span>
+<span class="sd">            1/4</span>
+<span class="sd">            &gt;&gt;&gt; Uniform(2, 4).pdf(2)</span>
+<span class="sd">            1/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;SymPy does not yet support &quot;</span>
+                <span class="s">&quot;piecewise functions&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Uniform.cdf"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Uniform.cdf">[docs]</a>    <span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the cumulative density function as an expression in x</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Uniform</span>
+<span class="sd">            &gt;&gt;&gt; Uniform(1, 5).cdf(2)</span>
+<span class="sd">            1/4</span>
+<span class="sd">            &gt;&gt;&gt; Uniform(1, 5).cdf(4)</span>
+<span class="sd">            3/4</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;SymPy does not yet support &quot;</span>
+                <span class="s">&quot;piecewise functions&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_random</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Float</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">b</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="Uniform.confidence"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Uniform.confidence">[docs]</a>    <span class="k">def</span> <span class="nf">confidence</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a symmetric (p*100)% confidence interval.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Rational</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.statistics import Uniform</span>
+<span class="sd">        &gt;&gt;&gt; U = Uniform(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; U.confidence(1)</span>
+<span class="sd">        (1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; U.confidence(Rational(1,2))</span>
+<span class="sd">        (5/4, 7/4)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">p</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">mean</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">mean</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Uniform.fit"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.Uniform.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="n">sample</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a uniform distribution fit to the mean and standard</span>
+<span class="sd">        deviation of the given distribution or sample.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics import Uniform</span>
+<span class="sd">            &gt;&gt;&gt; Uniform.fit([1, 2, 3, 4, 5])</span>
+<span class="sd">            Uniform(-sqrt(6) + 3, sqrt(6) + 3)</span>
+<span class="sd">            &gt;&gt;&gt; Uniform.fit([1, 2])</span>
+<span class="sd">            Uniform(-sqrt(3)/2 + 3/2, sqrt(3)/2 + 3/2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="s">&quot;stddev&quot;</span><span class="p">):</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">mean</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">12</span><span class="o">*</span><span class="n">sample</span><span class="o">.</span><span class="n">variance</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">Uniform</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="PDF"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.PDF">[docs]</a><span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">ContinuousProbability</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    PDF(func, (x, a, b)) represents continuous probability distribution</span>
+<span class="sd">    with probability distribution function func(x) on interval (a, b)</span>
+
+<span class="sd">    If func is not normalized so that integrate(func, (x, a, b)) == 1,</span>
+<span class="sd">    it can be normalized using PDF.normalize() method</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol, exp, oo</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.statistics.distributions import PDF</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, positive=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; exponential = PDF(exp(-x/a)/a, (x,0,oo))</span>
+<span class="sd">        &gt;&gt;&gt; exponential.pdf(x)</span>
+<span class="sd">        exp(-x/a)/a</span>
+<span class="sd">        &gt;&gt;&gt; exponential.cdf(x)</span>
+<span class="sd">        1 - exp(-x/a)</span>
+<span class="sd">        &gt;&gt;&gt; exponential.mean</span>
+<span class="sd">        a</span>
+<span class="sd">        &gt;&gt;&gt; exponential.variance</span>
+<span class="sd">        a**2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="c">#XXX maybe add some checking of parameters</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pdf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">var</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">pdf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="PDF.normalize"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.PDF.normalize">[docs]</a>    <span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalize the probability distribution function so that</span>
+<span class="sd">        integrate(self.pdf(x), (x, a, b)) == 1</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy import Symbol, exp, oo</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics.distributions import PDF</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">            &gt;&gt;&gt; a = Symbol(&#39;a&#39;, positive=True)</span>
+
+<span class="sd">            &gt;&gt;&gt; exponential = PDF(exp(-x/a), (x,0,oo))</span>
+<span class="sd">            &gt;&gt;&gt; exponential.normalize().pdf(x)</span>
+<span class="sd">            exp(-x/a)/a</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="n">norm</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="c">#self._cdf = Lambda(w, (self.cdf(w) - self.cdf(self.domain[0]))/norm)</span>
+            <span class="c">#if self._mean is not None:</span>
+            <span class="c">#    self._mean /= norm</span>
+            <span class="c">#if self._variance is not None:</span>
+            <span class="c">#    self._variance = (self._variance + (self._mean*norm)**2)/norm - self.mean**2</span>
+            <span class="c">#if self._stddev is not None:</span>
+            <span class="c">#    self._stddev = sqrt(self._variance)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="PDF.cdf"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.PDF.cdf">[docs]</a>    <span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the cumulative density function as an expression in x</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics.distributions import PDF</span>
+<span class="sd">            &gt;&gt;&gt; from sympy import exp, oo</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">            &gt;&gt;&gt; PDF(exp(-x/y), (x,0,oo)).cdf(4)</span>
+<span class="sd">            y - y*exp(-4/y)</span>
+<span class="sd">            &gt;&gt;&gt; PDF(2*x + y, (x, 10, oo)).cdf(0)</span>
+<span class="sd">            -10*y - 100</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">integrate</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">w</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span>
+                <span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">integrate</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">*</span><span class="n">w</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span>
+
+    <span class="k">def</span> <span class="nf">_get_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">simplify</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span>
+                <span class="n">w</span><span class="p">)</span><span class="o">*</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="o">**</span><span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variance</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variance</span>
+
+    <span class="k">def</span> <span class="nf">_get_stddev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stddev</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_mean</span><span class="p">)</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_variance</span><span class="p">)</span>
+    <span class="n">stddev</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_stddev</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_random</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="PDF.transform"><a class="viewcode-back" href="../../../modules/statistics.html#sympy.statistics.distributions.PDF.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a probability distribution of random variable func(x)</span>
+<span class="sd">        currently only some simple injective functions are supported</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.statistics.distributions import PDF</span>
+<span class="sd">            &gt;&gt;&gt; from sympy import oo</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">            &gt;&gt;&gt; PDF(2*x + y, (x, 10, oo)).transform(x, y)</span>
+<span class="sd">            PDF(0, ((_w,), x, x))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">solve</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+        <span class="n">inverse</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">func</span> <span class="o">-</span> <span class="n">w</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="n">newPdf</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">funcdiff</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="c">#TODO check if x is in domain</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inverse</span><span class="p">:</span>
+            <span class="c"># this assignment holds only for x in domain</span>
+            <span class="c"># in general it would require implementing</span>
+            <span class="c"># piecewise defined functions in sympy</span>
+            <span class="n">newPdf</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">funcdiff</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">PDF</span><span class="p">(</span><span class="n">newPdf</span><span class="p">,</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">func</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

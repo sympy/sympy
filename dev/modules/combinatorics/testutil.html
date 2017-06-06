@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Test Utilities &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Tensor Canonicalization" href="tensor_can.html" />
+    <link rel="prev" title="Group constructors" href="group_constructs.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensor_can.html" title="Tensor Canonicalization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="group_constructs.html" title="Group constructors"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.testutil">
+<span id="test-utilities"></span><span id="combinatorics-testutil"></span><h1>Test Utilities<a class="headerlink" href="#module-sympy.combinatorics.testutil" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sympy.combinatorics.testutil._cmp_perm_lists">
+<tt class="descclassname">sympy.combinatorics.testutil.</tt><tt class="descname">_cmp_perm_lists</tt><big>(</big><em>first</em>, <em>second</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/testutil.html#_cmp_perm_lists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.testutil._cmp_perm_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two lists of permutations as sets.</p>
+<p>This is used for testing purposes. Since the array form of a
+permutation is currently a list, Permutation is not hashable
+and cannot be put into a set.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.testutil</span> <span class="kn">import</span> <span class="n">_cmp_perm_lists</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls2</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_cmp_perm_lists</span><span class="p">(</span><span class="n">ls1</span><span class="p">,</span> <span class="n">ls2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.testutil._naive_list_centralizer">
+<tt class="descclassname">sympy.combinatorics.testutil.</tt><tt class="descname">_naive_list_centralizer</tt><big>(</big><em>self</em>, <em>other</em>, <em>af=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/testutil.html#_naive_list_centralizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.testutil._naive_list_centralizer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.testutil._verify_bsgs">
+<tt class="descclassname">sympy.combinatorics.testutil.</tt><tt class="descname">_verify_bsgs</tt><big>(</big><em>group</em>, <em>base</em>, <em>gens</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/testutil.html#_verify_bsgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.testutil._verify_bsgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the correctness of a base and strong generating set.</p>
+<p>This is a naive implementation using the definition of a base and a strong
+generating set relative to it. There are other procedures for
+verifying a base and strong generating set, but this one will
+serve for more robust testing.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="perm_groups.html#sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims" title="sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">AlternatingGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.testutil</span> <span class="kn">import</span> <span class="n">_verify_bsgs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">AlternatingGroup</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">schreier_sims</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_verify_bsgs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">strong_gens</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.testutil._verify_centralizer">
+<tt class="descclassname">sympy.combinatorics.testutil.</tt><tt class="descname">_verify_centralizer</tt><big>(</big><em>group</em>, <em>arg</em>, <em>centr=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/testutil.html#_verify_centralizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.testutil._verify_centralizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify the centralizer of a group/set/element inside another group.</p>
+<p>This is used for testing <tt class="docutils literal"><span class="pre">.centralizer()</span></tt> from
+<tt class="docutils literal"><span class="pre">sympy.combinatorics.perm_groups</span></tt></p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.testutil._naive_list_centralizer" title="sympy.combinatorics.testutil._naive_list_centralizer"><tt class="xref py py-obj docutils literal"><span class="pre">_naive_list_centralizer</span></tt></a>, <a class="reference internal" href="perm_groups.html#sympy.combinatorics.perm_groups.PermutationGroup.centralizer" title="sympy.combinatorics.perm_groups.PermutationGroup.centralizer"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.perm_groups.PermutationGroup.centralizer</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.testutil._cmp_perm_lists" title="sympy.combinatorics.testutil._cmp_perm_lists"><tt class="xref py py-obj docutils literal"><span class="pre">_cmp_perm_lists</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="p">(</span><span class="n">SymmetricGroup</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">AlternatingGroup</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">PermutationGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.testutil</span> <span class="kn">import</span> <span class="n">_verify_centralizer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">SymmetricGroup</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">AlternatingGroup</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">centr</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">([</span><span class="n">Permutation</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_verify_centralizer</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">centr</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.testutil._verify_normal_closure">
+<tt class="descclassname">sympy.combinatorics.testutil.</tt><tt class="descname">_verify_normal_closure</tt><big>(</big><em>group</em>, <em>arg</em>, <em>closure=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/testutil.html#_verify_normal_closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.testutil._verify_normal_closure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="group_constructs.html"
+                        title="previous chapter">Group constructors</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tensor_can.html"
+                        title="next chapter">Tensor Canonicalization</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/testutil.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensor_can.html" title="Tensor Canonicalization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="group_constructs.html" title="Group constructors"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

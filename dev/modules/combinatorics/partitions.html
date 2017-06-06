@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Partitions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Permutations" href="permutations.html" />
+    <link rel="prev" title="Combinatorics Module" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="permutations.html" title="Permutations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Combinatorics Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.partitions">
+<span id="partitions"></span><span id="combinatorics-partitions"></span><h1>Partitions<a class="headerlink" href="#module-sympy.combinatorics.partitions" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.combinatorics.partitions.Partition">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">Partition</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents an abstract partition.</p>
+<p>A partition is a set of disjoint sets whose union equals a given set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../utilities/iterables.html#sympy.utilities.iterables.partitions" title="sympy.utilities.iterables.partitions"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.utilities.iterables.partitions</span></tt></a>, <a class="reference internal" href="../utilities/iterables.html#sympy.utilities.iterables.multiset_partitions" title="sympy.utilities.iterables.multiset_partitions"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.utilities.iterables.multiset_partitions</span></tt></a></p>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.combinatorics.partitions.Partition.RGS">
+<tt class="descname">RGS</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition.RGS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition.RGS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the &#8220;restricted growth string&#8221; of the partition.</p>
+<p>The RGS is returned as a list of indices, L, where L[i] indicates
+the block in which element i appears. For example, in a partition
+of 3 elements (a, b, c) into 2 blocks ([c], [a, b]) the RGS is
+[1, 1, 0]: &#8220;a&#8221; is in block 1, &#8220;b&#8221; is in block 1 and &#8220;c&#8221; is in block 0.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">members</span>
+<span class="go">(1, 2, 3, 4, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">RGS</span>
+<span class="go">(0, 0, 1, 2, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">{{1, 2}, {3}, {4}, {5}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">RGS</span>
+<span class="go">(0, 0, 1, 2, 3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.partitions.Partition.from_rgs">
+<em class="property">classmethod </em><tt class="descname">from_rgs</tt><big>(</big><em>rgs</em>, <em>elements</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition.from_rgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition.from_rgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a set partition from a restricted growth string.</p>
+<p>The indices given in rgs are assumed to be the index
+of the element as given in elements <em>as provided</em> (the
+elements are not sorted by this routine). Block numbering
+starts from 0. If any block was not referenced in <tt class="docutils literal"><span class="pre">rgs</span></tt>
+an error will be raised.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Partition</span><span class="o">.</span><span class="n">from_rgs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="s">&#39;abcde&#39;</span><span class="p">))</span>
+<span class="go">{{c}, {a, d}, {b, e}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Partition</span><span class="o">.</span><span class="n">from_rgs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="s">&#39;cbead&#39;</span><span class="p">))</span>
+<span class="go">{{e}, {a, c}, {b, d}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Partition</span><span class="o">.</span><span class="n">from_rgs</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">RGS</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">members</span><span class="p">)</span>
+<span class="go">{{1, 4}, {2}, {3, 5}}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.partitions.Partition.partition">
+<tt class="descname">partition</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition.partition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition.partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return partition as a sorted list of lists.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span><span class="o">.</span><span class="n">partition</span>
+<span class="go">[[1], [2, 3]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.partitions.Partition.rank">
+<tt class="descname">rank</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition.rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the rank of a partition.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">13</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.partitions.Partition.sort_key">
+<tt class="descname">sort_key</tt><big>(</big><em>order=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#Partition.sort_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.Partition.sort_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a canonical key that can be used for sorting.</p>
+<p>Ordering is based on the size and sorted elements of the partition
+and ties are broken with the rank.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">);</span> <span class="n">l</span>
+<span class="go">[{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.combinatorics.partitions.IntegerPartition">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">IntegerPartition</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents an integer partition.</p>
+<p>In number theory and combinatorics, a partition of a positive integer,
+<tt class="docutils literal"><span class="pre">n</span></tt>, also called an integer partition, is a way of writing <tt class="docutils literal"><span class="pre">n</span></tt> as a
+list of positive integers that sum to n. Two partitions that differ only
+in the order of summands are considered to be the same partition; if order
+matters then the partitions are referred to as compositions. For example,
+4 has five partitions: [4], [3, 1], [2, 2], [2, 1, 1], and [1, 1, 1, 1];
+the compositions [1, 2, 1] and [1, 1, 2] are the same as partition
+[2, 1, 1].</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><a class="reference internal" href="../utilities/iterables.html#sympy.utilities.iterables.partitions" title="sympy.utilities.iterables.partitions"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.utilities.iterables.partitions</span></tt></a>, <a class="reference internal" href="../utilities/iterables.html#sympy.utilities.iterables.multiset_partitions" title="sympy.utilities.iterables.multiset_partitions"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.utilities.iterables.multiset_partitions</span></tt></a></p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">Reference</span></tt></dt>
+<dd><a class="reference external" href="http://en.wikipedia.org/wiki/Partition_%28number_theory%29">http://en.wikipedia.org/wiki/Partition_%28number_theory%29</a></dd>
+</dl>
+</div>
+<dl class="method">
+<dt id="sympy.combinatorics.partitions.IntegerPartition.as_dict">
+<tt class="descname">as_dict</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition.as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the partition as a dictionary whose keys are the
+partition integers and the values are the multiplicity of that
+integer.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">IntegerPartition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">IntegerPartition</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+<span class="go">{1: 3, 2: 1, 3: 4}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.partitions.IntegerPartition.as_ferrers">
+<tt class="descname">as_ferrers</tt><big>(</big><em>char='#'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition.as_ferrers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition.as_ferrers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the ferrer diagram of a partition.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">IntegerPartition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">IntegerPartition</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span><span class="o">.</span><span class="n">as_ferrers</span><span class="p">())</span>
+<span class="go">#####</span>
+<span class="go">#</span>
+<span class="go">#</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.partitions.IntegerPartition.conjugate">
+<tt class="descname">conjugate</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition.conjugate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition.conjugate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the conjugate partition of itself.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">IntegerPartition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">IntegerPartition</span><span class="p">([</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">conjugate</span>
+<span class="go">[5, 4, 3, 1, 1, 1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.partitions.IntegerPartition.next_lex">
+<tt class="descname">next_lex</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition.next_lex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition.next_lex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the next partition of the integer, n, in lexical order,
+wrapping around to [n] if the partition is [1, ..., 1].</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">IntegerPartition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">IntegerPartition</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">next_lex</span><span class="p">())</span>
+<span class="go">[4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">partition</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">next_lex</span><span class="p">()</span><span class="o">.</span><span class="n">partition</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.partitions.IntegerPartition.prev_lex">
+<tt class="descname">prev_lex</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#IntegerPartition.prev_lex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.IntegerPartition.prev_lex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the previous partition of the integer, n, in lexical order,
+wrapping around to [1, ..., 1] if the partition is [n].</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">IntegerPartition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">IntegerPartition</span><span class="p">([</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">prev_lex</span><span class="p">())</span>
+<span class="go">[3, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">partition</span> <span class="o">&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">prev_lex</span><span class="p">()</span><span class="o">.</span><span class="n">partition</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.partitions.random_integer_partition">
+<tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">random_integer_partition</tt><big>(</big><em>n</em>, <em>seed=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#random_integer_partition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.random_integer_partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a random integer partition summing to <tt class="docutils literal"><span class="pre">n</span></tt> as a list
+of reverse-sorted integers.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">random_integer_partition</span>
+</pre></div>
+</div>
+<p>For the following, a seed is given so a known value can be shown; in
+practice, the seed would not be given.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">random_integer_partition</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">[85, 12, 2, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random_integer_partition</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">[5, 3, 1, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random_integer_partition</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.partitions.RGS_generalized">
+<tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">RGS_generalized</tt><big>(</big><em>m</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#RGS_generalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.RGS_generalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the m + 1 generalized unrestricted growth strings
+and returns them as rows in matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">RGS_generalized</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_generalized</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[  1,   1,   1,  1,  1, 1, 1],</span>
+<span class="go">[  1,   2,   3,  4,  5, 6, 0],</span>
+<span class="go">[  2,   5,  10, 17, 26, 0, 0],</span>
+<span class="go">[  5,  15,  37, 77,  0, 0, 0],</span>
+<span class="go">[ 15,  52, 151,  0,  0, 0, 0],</span>
+<span class="go">[ 52, 203,   0,  0,  0, 0, 0],</span>
+<span class="go">[203,   0,   0,  0,  0, 0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.partitions.RGS_enum">
+<tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">RGS_enum</tt><big>(</big><em>m</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#RGS_enum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.RGS_enum" title="Permalink to this definition">¶</a></dt>
+<dd><p>RGS_enum computes the total number of restricted growth strings
+possible for a superset of size m.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">RGS_enum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">Partition</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_enum</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_enum</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">52</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_enum</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">203</span>
+</pre></div>
+</div>
+<p>We can check that the enumeration is correct by actually generating
+the partitions. Here, the 15 partitions of 4 items are generated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Partition</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">a</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">15</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.partitions.RGS_unrank">
+<tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">RGS_unrank</tt><big>(</big><em>rank</em>, <em>m</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#RGS_unrank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.RGS_unrank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the unranked restricted growth string for a given
+superset size.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">RGS_unrank</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_unrank</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[0, 1, 2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_unrank</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[0, 0, 0, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.partitions.RGS_rank">
+<tt class="descclassname">sympy.combinatorics.partitions.</tt><tt class="descname">RGS_rank</tt><big>(</big><em>rgs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/partitions.html#RGS_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.partitions.RGS_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the rank of a restricted growth string.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.partitions</span> <span class="kn">import</span> <span class="n">RGS_rank</span><span class="p">,</span> <span class="n">RGS_unrank</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_rank</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">RGS_rank</span><span class="p">(</span><span class="n">RGS_unrank</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Combinatorics Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="permutations.html"
+                        title="next chapter">Permutations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/partitions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="permutations.html" title="Permutations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Combinatorics Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

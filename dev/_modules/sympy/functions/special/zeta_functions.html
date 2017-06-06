@@ -1,0 +1,640 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.zeta_functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.zeta_functions</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Riemann zeta and related function. &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">###################### LERCH TRANSCENDENT #####################################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="lerchphi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.zeta_functions.lerchphi">[docs]</a><span class="k">class</span> <span class="nc">lerchphi</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Lerch transcendent (Lerch phi function).</span>
+
+<span class="sd">    For :math:`\operatorname{Re}(a) &gt; 0`, `|z| &lt; 1` and `s \in \mathbb{C}`, the</span>
+<span class="sd">    Lerch transcendent is defined as</span>
+
+<span class="sd">    .. math :: \Phi(z, s, a) = \sum_{n=0}^\infty \frac{z^n}{(n + a)^s},</span>
+
+<span class="sd">    where the standard branch of the argument is used for :math:`n + a`,</span>
+<span class="sd">    and by analytic continuation for other values of the parameters.</span>
+
+<span class="sd">    A commonly used related function is the Lerch zeta function, defined by</span>
+
+<span class="sd">    .. math:: L(q, s, a) = \Phi(e^{2\pi i q}, s, a).</span>
+
+<span class="sd">    **Analytic Continuation and Branching Behavior**</span>
+
+<span class="sd">    It can be shown that</span>
+
+<span class="sd">    .. math:: \Phi(z, s, a) = z\Phi(z, s, a+1) + a^{-s}.</span>
+
+<span class="sd">    This provides the analytic continuation to `\operatorname{Re}(a) \le 0`.</span>
+
+<span class="sd">    Assume now `\operatorname{Re}(a) &gt; 0`. The integral representation</span>
+
+<span class="sd">    .. math:: \Phi_0(z, s, a) = \int_0^\infty \frac{t^{s-1} e^{-at}}{1 - ze^{-t}}</span>
+<span class="sd">                                \frac{\mathrm{d}t}{\Gamma(s)}</span>
+
+<span class="sd">    provides an analytic continuation to :math:`\mathbb{C} - [1, \infty)`.</span>
+<span class="sd">    Finally, for :math:`x \in (1, \infty)` we find</span>
+
+<span class="sd">    .. math:: \lim_{\epsilon \to 0^+} \Phi_0(x + i\epsilon, s, a)</span>
+<span class="sd">             -\lim_{\epsilon \to 0^+} \Phi_0(x - i\epsilon, s, a)</span>
+<span class="sd">             = \frac{2\pi i \log^{s-1}{x}}{x^a \Gamma(s)},</span>
+
+<span class="sd">    using the standard branch for both :math:`\log{x}` and</span>
+<span class="sd">    :math:`\log{\log{x}}` (a branch of :math:`\log{\log{x}}` is needed to</span>
+<span class="sd">    evaluate :math:`\log{x}^{s-1}`).</span>
+<span class="sd">    This concludes the analytic continuation. The Lerch transcendent is thus</span>
+<span class="sd">    branched at :math:`z \in \{0, 1, \infty\}` and</span>
+<span class="sd">    :math:`a \in \mathbb{Z}_{\le 0}`. For fixed :math:`z, a` outside these</span>
+<span class="sd">    branch points, it is an entire function of :math:`s`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    polylog, zeta</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,</span>
+<span class="sd">           Vol. I, New York: McGraw-Hill. Section 1.11.</span>
+<span class="sd">    .. [2] http://dlmf.nist.gov/25.14</span>
+<span class="sd">    .. [3] http://en.wikipedia.org/wiki/Lerch_transcendent</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    The Lerch transcendent is a fairly general function, for this reason it does</span>
+<span class="sd">    not automatically evaluate to simpler functions. Use expand_func() to</span>
+<span class="sd">    achieve this.</span>
+
+<span class="sd">    If :math:`z=1`, the Lerch transcendent reduces to the Hurwitz zeta function:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import lerchphi, expand_func</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, s, a</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(lerchphi(1, s, a))</span>
+<span class="sd">    zeta(s, a)</span>
+
+<span class="sd">    More generally, if :math:`z` is a root of unity, the Lerch transcendent</span>
+<span class="sd">    reduces to a sum of Hurwitz zeta functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; expand_func(lerchphi(-1, s, a))</span>
+<span class="sd">    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)</span>
+
+<span class="sd">    If :math:`a=1`, the Lerch transcendent reduces to the polylogarithm:</span>
+
+<span class="sd">    &gt;&gt;&gt; expand_func(lerchphi(z, s, 1))</span>
+<span class="sd">    polylog(s, z)/z</span>
+
+<span class="sd">    More generally, if :math:`a` is rational, the Lerch transcendent reduces</span>
+<span class="sd">    to a sum of polylogarithms:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(lerchphi(z, s, S(1)/2))</span>
+<span class="sd">    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -</span>
+<span class="sd">                polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(lerchphi(z, s, S(3)/2))</span>
+<span class="sd">    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -</span>
+<span class="sd">                          polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z</span>
+
+<span class="sd">    The derivatives with respect to :math:`z` and :math:`a` can be computed in</span>
+<span class="sd">    closed form:</span>
+
+<span class="sd">    &gt;&gt;&gt; lerchphi(z, s, a).diff(z)</span>
+<span class="sd">    (-a*lerchphi(z, s, a) + lerchphi(z, s - 1, a))/z</span>
+<span class="sd">    &gt;&gt;&gt; lerchphi(z, s, a).diff(a)</span>
+<span class="sd">    -s*lerchphi(z, s + 1, a)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">unpolarify</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">zeta</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">((</span><span class="n">t</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">s</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">()):</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="n">c</span><span class="o">*</span><span class="n">start</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">t</span><span class="o">*</span><span class="n">start</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="c"># See section 18 of</span>
+            <span class="c">#   Kelly B. Roach.  Hypergeometric Function Representations.</span>
+            <span class="c">#   In: Proceedings of the 1997 International Symposium on Symbolic and</span>
+            <span class="c">#   Algebraic Computation, pages 205-211, New York, 1997. ACM.</span>
+            <span class="c"># TODO should something be polarified here?</span>
+            <span class="n">add</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">mul</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c"># First reduce a to the interaval (0, 1]</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">a</span><span class="p">:</span>
+                    <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">a</span> <span class="o">-=</span> <span class="n">n</span>
+                <span class="n">mul</span> <span class="o">=</span> <span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">)</span>
+                <span class="n">add</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="o">-</span><span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="n">s</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">a</span> <span class="o">+=</span> <span class="n">n</span>
+                <span class="n">mul</span> <span class="o">=</span> <span class="n">z</span><span class="o">**</span><span class="n">n</span>
+                <span class="n">add</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">s</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+
+            <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">S</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">q</span><span class="p">])</span>
+            <span class="n">zet</span> <span class="o">=</span> <span class="n">exp_polar</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">add</span> <span class="o">+</span> <span class="n">mul</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Add</span><span class="p">(</span>
+                <span class="o">*</span><span class="p">[</span><span class="n">polylog</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">zet</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                  <span class="o">/</span> <span class="p">(</span><span class="n">unpolarify</span><span class="p">(</span><span class="n">zet</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">root</span><span class="p">)</span><span class="o">**</span><span class="n">m</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+
+        <span class="c"># TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span> <span class="ow">and</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="p">))</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">or</span> <span class="n">z</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="o">-</span><span class="n">I</span><span class="p">]:</span>
+            <span class="c"># TODO reference?</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">S</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="o">==</span> <span class="n">I</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">S</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="o">==</span> <span class="o">-</span><span class="n">I</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">S</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">S</span><span class="p">([</span><span class="n">arg</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">q</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="n">q</span><span class="p">)</span><span class="o">/</span><span class="n">q</span><span class="o">**</span><span class="n">s</span><span class="o">*</span><span class="n">zeta</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">q</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">q</span><span class="p">)])</span>
+
+        <span class="k">return</span> <span class="n">lerchphi</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">s</span><span class="o">*</span><span class="n">lerchphi</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">lerchphi</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span><span class="o">*</span><span class="n">lerchphi</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="n">z</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_helper</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">zeta</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_polylog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_helper</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">polylog</span><span class="p">)</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">###################### POLYLOGARITHM ##########################################</span>
+<span class="c">###############################################################################</span>
+
+</div>
+<div class="viewcode-block" id="polylog"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.zeta_functions.polylog">[docs]</a><span class="k">class</span> <span class="nc">polylog</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Polylogarithm function.</span>
+
+<span class="sd">    For :math:`|z| &lt; 1` and :math:`s \in \mathbb{C}`, the polylogarithm is</span>
+<span class="sd">    defined by</span>
+
+<span class="sd">    .. math:: \operatorname{Li}_s(z) = \sum_{n=1}^\infty \frac{z^n}{n^s},</span>
+
+<span class="sd">    where the standard branch of the argument is used for :math:`n`. It admits</span>
+<span class="sd">    an analytic continuation which is branched at :math:`z=1` (notably not on the</span>
+<span class="sd">    sheet of initial definition), :math:`z=0` and :math:`z=\infty`.</span>
+
+<span class="sd">    The name polylogarithm comes from the fact that for :math:`s=1`, the</span>
+<span class="sd">    polylogarithm is related to the ordinary logarithm (see examples), and that</span>
+
+<span class="sd">    .. math:: \operatorname{Li}_{s+1}(z) =</span>
+<span class="sd">                    \int_0^z \frac{\operatorname{Li}_s(t)}{t} \mathrm{d}t.</span>
+
+<span class="sd">    The polylogarithm is a special case of the Lerch transcendent:</span>
+
+<span class="sd">    .. math:: \operatorname{Li}_{s}(z) = z \Phi(z, s, 1)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    zeta, lerchphi</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    For :math:`z \in \{0, 1, -1\}`, the polylogarithm is automatically expressed</span>
+<span class="sd">    using other functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import polylog</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import s</span>
+<span class="sd">    &gt;&gt;&gt; polylog(s, 0)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; polylog(s, 1)</span>
+<span class="sd">    zeta(s)</span>
+<span class="sd">    &gt;&gt;&gt; polylog(s, -1)</span>
+<span class="sd">    dirichlet_eta(s)</span>
+
+<span class="sd">    If :math:`s` is a negative integer, :math:`0` or :math:`1`, the</span>
+<span class="sd">    polylogarithm can be expressed using elementary functions. This can be</span>
+<span class="sd">    done using expand_func():</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import expand_func</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(polylog(1, z))</span>
+<span class="sd">    -log(z*exp_polar(-I*pi) + 1)</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(polylog(0, z))</span>
+<span class="sd">    z/(-z + 1)</span>
+
+<span class="sd">    The derivative with respect to :math:`z` can be computed in closed form:</span>
+
+<span class="sd">    &gt;&gt;&gt; polylog(s, z).diff(z)</span>
+<span class="sd">    polylog(s - 1, z)/z</span>
+
+<span class="sd">    The polylogarithm can be expressed in terms of the lerch transcendent:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import lerchphi</span>
+<span class="sd">    &gt;&gt;&gt; polylog(s, z).rewrite(lerchphi)</span>
+<span class="sd">    z*lerchphi(z, s, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">zeta</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dirichlet_eta</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">polylog</span><span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">z</span>
+        <span class="k">raise</span> <span class="n">ArgumentIndexError</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_lerchphi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">z</span><span class="o">*</span><span class="n">lerchphi</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">expand_mul</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">I</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp_polar</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">u</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">s</span><span class="p">):</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">u</span><span class="o">*</span><span class="n">start</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">polylog</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">###################### HURWITZ GENERALIZED ZETA FUNCTION ######################</span>
+<span class="c">###############################################################################</span>
+
+</div>
+<div class="viewcode-block" id="zeta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.zeta_functions.zeta">[docs]</a><span class="k">class</span> <span class="nc">zeta</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Hurwitz zeta function (or Riemann zeta function).</span>
+
+<span class="sd">    For `\operatorname{Re}(a) &gt; 0` and `\operatorname{Re}(s) &gt; 1`, this function is defined as</span>
+
+<span class="sd">    .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},</span>
+
+<span class="sd">    where the standard choice of argument for :math:`n + a` is used. For fixed</span>
+<span class="sd">    :math:`a` with `\operatorname{Re}(a) &gt; 0` the Hurwitz zeta function admits a</span>
+<span class="sd">    meromorphic continuation to all of :math:`\mathbb{C}`, it is an unbranched</span>
+<span class="sd">    function with a simple pole at :math:`s = 1`.</span>
+
+<span class="sd">    Analytic continuation to other :math:`a` is possible under some circumstances,</span>
+<span class="sd">    but this is not typically done.</span>
+
+<span class="sd">    The Hurwitz zeta function is a special case of the Lerch transcendent:</span>
+
+<span class="sd">    .. math:: \zeta(s, a) = \Phi(1, s, a).</span>
+
+<span class="sd">    This formula defines an analytic continuation for all possible values of</span>
+<span class="sd">    :math:`s` and :math:`a` (also `\operatorname{Re}(a) &lt; 0`), see the documentation of</span>
+<span class="sd">    :class:`lerchphi` for a description of the branching behavior.</span>
+
+<span class="sd">    If no value is passed for :math:`a`, by this function assumes a default value</span>
+<span class="sd">    of :math:`a = 1`, yielding the Riemann zeta function.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    dirichlet_eta, lerchphi, polylog</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://dlmf.nist.gov/25.11</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Hurwitz_zeta_function</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    For :math:`a = 1` the Hurwitz zeta function reduces to the famous Riemann</span>
+<span class="sd">    zeta function:</span>
+
+<span class="sd">    .. math:: \zeta(s, 1) = \zeta(s) = \sum_{n=1}^\infty \frac{1}{n^s}.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import zeta</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import s</span>
+<span class="sd">    &gt;&gt;&gt; zeta(s, 1)</span>
+<span class="sd">    zeta(s)</span>
+<span class="sd">    &gt;&gt;&gt; zeta(s)</span>
+<span class="sd">    zeta(s)</span>
+
+<span class="sd">    The Riemann zeta function can also be expressed using the Dirichlet eta</span>
+<span class="sd">    function:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import dirichlet_eta</span>
+<span class="sd">    &gt;&gt;&gt; zeta(s).rewrite(dirichlet_eta)</span>
+<span class="sd">    dirichlet_eta(s)/(-2**(-s + 1) + 1)</span>
+
+<span class="sd">    The Riemann zeta function at positive even integer and negative odd integer</span>
+<span class="sd">    values is related to the Bernoulli numbers:</span>
+
+<span class="sd">    &gt;&gt;&gt; zeta(2)</span>
+<span class="sd">    pi**2/6</span>
+<span class="sd">    &gt;&gt;&gt; zeta(4)</span>
+<span class="sd">    pi**4/90</span>
+<span class="sd">    &gt;&gt;&gt; zeta(-1)</span>
+<span class="sd">    -1/12</span>
+
+<span class="sd">    The specific formulae are:</span>
+
+<span class="sd">    .. math:: \zeta(2n) = (-1)^{n+1} \frac{B_{2n} (2\pi)^{2n}}{2(2n)!}</span>
+<span class="sd">    .. math:: \zeta(-n) = -\frac{B_{n+1}}{n+1}</span>
+
+<span class="sd">    At negative even integers the Riemann zeta function is zero:</span>
+
+<span class="sd">    &gt;&gt;&gt; zeta(-4)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    No closed-form expressions are known at positive odd integers, but</span>
+<span class="sd">    numerical evaluation is possible:</span>
+
+<span class="sd">    &gt;&gt;&gt; zeta(3).n()</span>
+<span class="sd">    1.20205690315959</span>
+
+<span class="sd">    The derivative of :math:`\zeta(s, a)` with respect to :math:`a` is easily</span>
+<span class="sd">    computed:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import a</span>
+<span class="sd">    &gt;&gt;&gt; zeta(s, a).diff(a)</span>
+<span class="sd">    -s*zeta(s + 1, a)</span>
+
+<span class="sd">    However the derivative with respect to :math:`s` has no useful closed form</span>
+<span class="sd">    expression:</span>
+
+<span class="sd">    &gt;&gt;&gt; zeta(s, a).diff(s)</span>
+<span class="sd">    Derivative(zeta(s, a), s)</span>
+
+<span class="sd">    The Hurwitz zeta function can be expressed in terms of the Lerch transcendent,</span>
+<span class="sd">    :class:`sympy.functions.special.lerchphi`:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import lerchphi</span>
+<span class="sd">    &gt;&gt;&gt; zeta(s, a).rewrite(lerchphi)</span>
+<span class="sd">    lerchphi(1, s, a)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a_</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a_</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">z</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">a_</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="ow">and</span> <span class="n">a_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="c"># TODO Should a == 0 return S.NaN as well?</span>
+
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">-</span> <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="k">elif</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                        <span class="n">zeta</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">z</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="o">-</span><span class="n">z</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="o">-</span><span class="n">z</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">z</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+                        <span class="n">B</span><span class="p">,</span> <span class="n">F</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                        <span class="n">zeta</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="o">*</span> <span class="n">pi</span><span class="o">**</span><span class="n">z</span> <span class="o">/</span> <span class="n">F</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span>
+
+                    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">zeta</span> <span class="o">+</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">zeta</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_dirichlet_eta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">dirichlet_eta</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_lerchphi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">lerchphi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">s</span><span class="o">*</span><span class="n">zeta</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span>
+
+</div>
+<div class="viewcode-block" id="dirichlet_eta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.zeta_functions.dirichlet_eta">[docs]</a><span class="k">class</span> <span class="nc">dirichlet_eta</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Dirichlet eta function.</span>
+
+<span class="sd">    For `\operatorname{Re}(s) &gt; 0`, this function is defined as</span>
+
+<span class="sd">    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.</span>
+
+<span class="sd">    It admits a unique analytic continuation to all of :math:`\mathbb{C}`.</span>
+<span class="sd">    It is an entire, unbranched function.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    zeta</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Dirichlet_eta_function</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    The Dirichlet eta function is closely related to the Riemann zeta function:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import dirichlet_eta, zeta</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import s</span>
+<span class="sd">    &gt;&gt;&gt; dirichlet_eta(s).rewrite(zeta)</span>
+<span class="sd">    (-2**(-s + 1) + 1)*zeta(s)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">z</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">zeta</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span><span class="o">*</span><span class="n">z</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_zeta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span> <span class="o">*</span> <span class="n">zeta</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

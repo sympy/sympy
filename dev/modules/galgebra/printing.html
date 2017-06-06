@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Printing for Geometric Algebra &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Geometric Algebra Module" href="index.html" />
+    <link rel="next" title="Noncommutative utilities for Geometric Algebra" href="ncutil.html" />
+    <link rel="prev" title="Precedence for Geometric Algebra" href="precedence.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ncutil.html" title="Noncommutative utilities for Geometric Algebra"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="precedence.html" title="Precedence for Geometric Algebra"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.galgebra.printing">
+<span id="printing-for-geometric-algebra"></span><h1>Printing for Geometric Algebra<a class="headerlink" href="#module-sympy.galgebra.printing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="class-reference">
+<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.galgebra.printing.enhance_print">
+<em class="property">class </em><tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">enhance_print</tt><big>(</big><em>base=None</em>, <em>fct=None</em>, <em>deriv=None</em>, <em>on=True</em>, <em>keys=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#enhance_print"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.enhance_print" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for color coding the string printing going to a terminal.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.galgebra.printing.GA_Printer">
+<em class="property">class </em><tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">GA_Printer</tt><big>(</big><em>settings=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#GA_Printer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.GA_Printer" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enhanced string printer that is galgebra-aware.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.galgebra.printing.GA_LatexPrinter">
+<em class="property">class </em><tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">GA_LatexPrinter</tt><big>(</big><em>settings=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#GA_LatexPrinter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.GA_LatexPrinter" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enhanced LaTeX printer that is galgebra-aware.</p>
+<p>The latex printer is turned on with the function (in ga.py) -</p>
+<blockquote>
+<div>Format(Fmode=True,Dmode=True,ipy=False)</div></blockquote>
+<p>where Fmode is the function printing mode that surpresses printing arguments,
+Dmode is the derivative printing mode that does not use fractions, and
+ipy=True is the Ipython notebook mode that does not redirect the print output.</p>
+<p>The latex output is post processed and displayed with the function (in GAPrint.py) -</p>
+<blockquote>
+<div>xdvi(filename=&#8217;tmplatex.tex&#8217;,debug=False)</div></blockquote>
+<p>where filename is the name of the tex file one would keep for future
+inclusion in documents and debug=True would display the tex file
+immediately.</p>
+<p>There are three options for printing multivectors in latex.  They are
+acessed with the multivector member function -</p>
+<blockquote>
+<div>A.Fmt(self,fmt=1,title=None)</div></blockquote>
+<p>where fmt=1, 2, or 3 determines whether the entire multivector A is
+printed entirely on one line, or one grade is printed per line, or
+one base is printed per line.  If title is not None then the latex
+string generated is of the form -</p>
+<blockquote>
+<div>title+&#8217; = &#8216;+str(A)</div></blockquote>
+<p>where it is assumed that title is a latex math mode string. If title
+contains &#8216;%&#8217; it is treated as a pure latex math mode string.  If it
+does not contain &#8216;%&#8217; then the following character mappings are applied -</p>
+<blockquote>
+<div><ul class="simple">
+<li>&#8216;grad&#8217; replaced by &#8216;\bm{\nabla} &#8216;</li>
+<li>&#8216;*&#8217; replaced by &#8216;&#8217;</li>
+<li>&#8216;^&#8217; replaced by &#8216;\W &#8216;</li>
+<li>&#8216;|&#8217; replaced by &#8216;\cdot &#8216;</li>
+<li>&#8216;&gt;&#8217; replaced by &#8216;\lfloor &#8216;</li>
+<li>&#8216;&lt;&#8217; replaced by &#8216;\rfloor &#8216;</li>
+</ul>
+</div></blockquote>
+<p>In the case of a print statement of the form -</p>
+<blockquote>
+<div>print(title,A)</div></blockquote>
+<p>everthing in the title processing still applies except that the multivector
+formatting is one multivector per line.</p>
+<p>For print statements of the form -</p>
+<blockquote>
+<div>print(title)</div></blockquote>
+<p>where no program variables are printed if title contains &#8216;#&#8217; then title
+is printed as regular latex line.  If title does not contain &#8216;#&#8217; then
+title is printed in equation mode. &#8216;%&#8217; has the same effect in title as
+in the Fmt() member function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="function-reference">
+<h2>Function Reference<a class="headerlink" href="#function-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.galgebra.printing.find_executable">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">find_executable</tt><big>(</big><em>executable</em>, <em>path=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#find_executable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.find_executable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find &#8216;executable&#8217; in the directories listed in &#8216;path&#8217; (a
+string listing directories separated by &#8216;os.pathsep&#8217;; defaults to
+os.environ[&#8216;PATH&#8217;]).  Returns the complete filename or None if not
+found</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.printing.Get_Program">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">Get_Program</tt><big>(</big><em>off=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#Get_Program"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.Get_Program" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.printing.latex">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">latex</tt><big>(</big><em>expr</em>, <em>**settings</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#latex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.latex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the LaTeX representation of the given expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.printing.Print_Function">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">Print_Function</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#Print_Function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.Print_Function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.printing.print_latex">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">print_latex</tt><big>(</big><em>expr</em>, <em>**settings</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#print_latex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.print_latex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the LaTeX representation of the given expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.printing.xdvi">
+<tt class="descclassname">sympy.galgebra.printing.</tt><tt class="descname">xdvi</tt><big>(</big><em>filename=None</em>, <em>debug=False</em>, <em>paper=(14</em>, <em>11)</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/printing.html#xdvi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.printing.xdvi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post processes LaTeX output (see comments below), adds preamble and
+postscript, generates tex file, inputs file to latex, displays resulting
+pdf file.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Printing for Geometric Algebra</a><ul>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#function-reference">Function Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="precedence.html"
+                        title="previous chapter">Precedence for Geometric Algebra</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ncutil.html"
+                        title="next chapter">Noncommutative utilities for Geometric Algebra</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/galgebra/printing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ncutil.html" title="Noncommutative utilities for Geometric Algebra"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="precedence.html" title="Precedence for Geometric Algebra"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

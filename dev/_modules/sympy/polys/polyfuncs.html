@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.polyfuncs &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.polyfuncs</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;High-level polynomials manipulation functions. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polytools</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">poly_from_expr</span><span class="p">,</span> <span class="n">parallel_poly_from_expr</span><span class="p">,</span> <span class="n">Poly</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyoptions</span> <span class="kn">import</span> <span class="n">allowed_flags</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.specialpolys</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">symmetric_poly</span><span class="p">,</span> <span class="n">interpolating_poly</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PolificationFailed</span><span class="p">,</span> <span class="n">ComputationFailed</span><span class="p">,</span>
+    <span class="n">MultivariatePolynomialError</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">numbered_symbols</span><span class="p">,</span> <span class="n">take</span><span class="p">,</span> <span class="n">public</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="symmetrize"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.polyfuncs.symmetrize">[docs]</a><span class="k">def</span> <span class="nf">symmetrize</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rewrite a polynomial in terms of elementary symmetric polynomials.</span>
+
+<span class="sd">    A symmetric polynomial is a multivariate polynomial that remains invariant</span>
+<span class="sd">    under any variable permutation, i.e., if ``f = f(x_1, x_2, ..., x_n)``,</span>
+<span class="sd">    then ``f = f(x_{i_1}, x_{i_2}, ..., x_{i_n})``, where</span>
+<span class="sd">    ``(i_1, i_2, ..., i_n)`` is a permutation of ``(1, 2, ..., n)`` (an</span>
+<span class="sd">    element of the group ``S_n``).</span>
+
+<span class="sd">    Returns a tuple of symmetric polynomials ``(f1, f2, ..., fn)`` such that</span>
+<span class="sd">    ``f = f1 + f2 + ... + fn``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.polyfuncs import symmetrize</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    &gt;&gt;&gt; symmetrize(x**2 + y**2)</span>
+<span class="sd">    (-2*x*y + (x + y)**2, 0)</span>
+
+<span class="sd">    &gt;&gt;&gt; symmetrize(x**2 + y**2, formal=True)</span>
+<span class="sd">    (s1**2 - 2*s2, 0, [(s1, x + y), (s2, x*y)])</span>
+
+<span class="sd">    &gt;&gt;&gt; symmetrize(x**2 - y**2)</span>
+<span class="sd">    (-2*x*y + (x + y)**2, -2*y**2)</span>
+
+<span class="sd">    &gt;&gt;&gt; symmetrize(x**2 - y**2, formal=True)</span>
+<span class="sd">    (s1**2 - 2*s2, -2*y**2, [(s1, x + y), (s2, x*y)])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_flags</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;formal&#39;</span><span class="p">,</span> <span class="s">&#39;symbols&#39;</span><span class="p">])</span>
+
+    <span class="n">iterable</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="p">[</span><span class="n">F</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">parallel_poly_from_expr</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolificationFailed</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">exc</span><span class="o">.</span><span class="n">exprs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ComputationFailed</span><span class="p">(</span><span class="s">&#39;symmetrize&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">F</span><span class="p">),</span> <span class="n">exc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">iterable</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">,</span> <span class="o">=</span> <span class="n">result</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exc</span><span class="o">.</span><span class="n">opt</span><span class="o">.</span><span class="n">formal</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">iterable</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">result</span> <span class="o">+</span> <span class="p">([],)</span>
+
+    <span class="n">polys</span><span class="p">,</span> <span class="n">symbols</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">opt</span><span class="o">.</span><span class="n">symbols</span>
+    <span class="n">gens</span><span class="p">,</span> <span class="n">dom</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">gens</span><span class="p">,</span> <span class="n">opt</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">)):</span>
+        <span class="n">poly</span> <span class="o">=</span> <span class="n">symmetric_poly</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">next</span><span class="p">(</span><span class="n">symbols</span><span class="p">),</span> <span class="n">poly</span><span class="o">.</span><span class="n">set_domain</span><span class="p">(</span><span class="n">dom</span><span class="p">)))</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">F</span><span class="p">:</span>
+        <span class="n">symmetric</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_homogeneous</span><span class="p">:</span>
+            <span class="n">symmetric</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">TC</span><span class="p">())</span>
+            <span class="n">f</span> <span class="o">-=</span> <span class="n">f</span><span class="o">.</span><span class="n">TC</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">_height</span><span class="p">,</span> <span class="n">_monom</span><span class="p">,</span> <span class="n">_coeff</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">terms</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">monom</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">monom</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">):</span>
+                    <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span> <span class="n">n</span><span class="o">*</span><span class="n">m</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">monom</span><span class="p">)</span> <span class="p">])</span>
+
+                    <span class="k">if</span> <span class="n">height</span> <span class="o">&gt;</span> <span class="n">_height</span><span class="p">:</span>
+                        <span class="n">_height</span><span class="p">,</span> <span class="n">_monom</span><span class="p">,</span> <span class="n">_coeff</span> <span class="o">=</span> <span class="n">height</span><span class="p">,</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span>
+
+            <span class="k">if</span> <span class="n">_height</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="o">=</span> <span class="n">_monom</span><span class="p">,</span> <span class="n">_coeff</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">exponents</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">monom</span><span class="p">,</span> <span class="n">monom</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)):</span>
+                <span class="n">exponents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m1</span> <span class="o">-</span> <span class="n">m2</span><span class="p">)</span>
+
+            <span class="n">term</span> <span class="o">=</span> <span class="p">[</span> <span class="n">s</span><span class="o">**</span><span class="n">n</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">exponents</span><span class="p">)</span> <span class="p">]</span>
+            <span class="n">poly</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="o">**</span><span class="n">n</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">exponents</span><span class="p">)</span> <span class="p">]</span>
+
+            <span class="n">symmetric</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="o">*</span><span class="n">term</span><span class="p">))</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="n">poly</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">poly</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">product</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="n">f</span> <span class="o">-=</span> <span class="n">product</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">symmetric</span><span class="p">),</span> <span class="n">f</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()))</span>
+
+    <span class="n">polys</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">as_expr</span><span class="p">())</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polys</span> <span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">opt</span><span class="o">.</span><span class="n">formal</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">non_sym</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">sym</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">polys</span><span class="p">),</span> <span class="n">non_sym</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">iterable</span><span class="p">:</span>
+        <span class="n">result</span><span class="p">,</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">opt</span><span class="o">.</span><span class="n">formal</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iterable</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="n">polys</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span> <span class="o">+</span> <span class="p">(</span><span class="n">polys</span><span class="p">,)</span>
+
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="horner"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.polyfuncs.horner">[docs]</a><span class="k">def</span> <span class="nf">horner</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rewrite a polynomial in Horner form.</span>
+
+<span class="sd">    Among other applications, evaluation of a polynomial at a point is optimal</span>
+<span class="sd">    when it is applied using the Horner scheme ([1]).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.polyfuncs import horner</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c, d, e</span>
+
+<span class="sd">    &gt;&gt;&gt; horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5)</span>
+<span class="sd">    x*(x*(x*(9*x + 8) + 7) + 6) + 5</span>
+
+<span class="sd">    &gt;&gt;&gt; horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)</span>
+<span class="sd">    e + x*(d + x*(c + x*(a*x + b)))</span>
+
+<span class="sd">    &gt;&gt;&gt; f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y</span>
+
+<span class="sd">    &gt;&gt;&gt; horner(f, wrt=x)</span>
+<span class="sd">    x*(x*y*(4*y + 2) + y*(2*y + 1))</span>
+
+<span class="sd">    &gt;&gt;&gt; horner(f, wrt=y)</span>
+<span class="sd">    y*(x*y*(4*x + 2) + x*(2*x + 1))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    [1] - http://en.wikipedia.org/wiki/Horner_scheme</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_flags</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">poly_from_expr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolificationFailed</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">expr</span>
+
+    <span class="n">form</span><span class="p">,</span> <span class="n">gen</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">gen</span>
+
+    <span class="k">if</span> <span class="n">F</span><span class="o">.</span><span class="n">is_univariate</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">():</span>
+            <span class="n">form</span> <span class="o">=</span> <span class="n">form</span><span class="o">*</span><span class="n">gen</span> <span class="o">+</span> <span class="n">coeff</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">,</span> <span class="n">gens</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">gen</span><span class="p">),</span> <span class="n">gens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">():</span>
+            <span class="n">form</span> <span class="o">=</span> <span class="n">form</span><span class="o">*</span><span class="n">gen</span> <span class="o">+</span> <span class="n">horner</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">form</span>
+
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="interpolate"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.polyfuncs.interpolate">[docs]</a><span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct an interpolating polynomial for the data points.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.polyfuncs import interpolate</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">    A list is interpreted as though it were paired with a range starting</span>
+<span class="sd">    from 1:</span>
+
+<span class="sd">    &gt;&gt;&gt; interpolate([1, 4, 9, 16], x)</span>
+<span class="sd">    x**2</span>
+
+<span class="sd">    This can be made explicit by giving a list of coordinates:</span>
+
+<span class="sd">    &gt;&gt;&gt; interpolate([(1, 1), (2, 4), (3, 9)], x)</span>
+<span class="sd">    x**2</span>
+
+<span class="sd">    The (x, y) coordinates can also be given as keys and values of a</span>
+<span class="sd">    dictionary (and the points need not be equispaced):</span>
+
+<span class="sd">    &gt;&gt;&gt; interpolate([(-1, 2), (1, 2), (2, 5)], x)</span>
+<span class="sd">    x**2 + 1</span>
+<span class="sd">    &gt;&gt;&gt; interpolate({-1: 2, 1: 2, 2: 5}, x)</span>
+<span class="sd">    x**2 + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">poly</span> <span class="o">=</span> <span class="n">interpolating_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">poly</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="viete"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.polyfuncs.viete">[docs]</a><span class="k">def</span> <span class="nf">viete</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">roots</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate Viete&#39;s formulas for ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.polyfuncs import viete</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; x, a, b, c, r1, r2 = symbols(&#39;x,a:c,r1:3&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; viete(a*x**2 + b*x + c, [r1, r2], x)</span>
+<span class="sd">    [(r1 + r2, -b/a), (r1*r2, c/a)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_flags</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">roots</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+        <span class="n">gens</span><span class="p">,</span> <span class="n">roots</span> <span class="o">=</span> <span class="p">(</span><span class="n">roots</span><span class="p">,)</span> <span class="o">+</span> <span class="n">gens</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">poly_from_expr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolificationFailed</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ComputationFailed</span><span class="p">(</span><span class="s">&#39;viete&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_multivariate</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MultivariatePolynomialError</span><span class="p">(</span>
+            <span class="s">&quot;multivariate polynomials are not allowed&quot;</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&quot;can&#39;t derive Viete&#39;s formulas for a constant polynomial&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">roots</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="n">numbered_symbols</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">roots</span> <span class="o">=</span> <span class="n">take</span><span class="p">(</span><span class="n">roots</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">roots</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;required </span><span class="si">%s</span><span class="s"> roots, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">roots</span><span class="p">)))</span>
+
+    <span class="n">lc</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">LC</span><span class="p">(),</span> <span class="n">f</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">()</span>
+    <span class="n">result</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="p">[],</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="n">poly</span> <span class="o">=</span> <span class="n">symmetric_poly</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">roots</span><span class="p">)</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="p">(</span><span class="n">coeff</span><span class="o">/</span><span class="n">lc</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">poly</span><span class="p">,</span> <span class="n">coeff</span><span class="p">))</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="n">sign</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

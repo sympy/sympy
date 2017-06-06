@@ -1,0 +1,1215 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Category Theory Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Differential Geometry Module" href="diffgeom.html" />
+    <link rel="prev" title="Particle in a Box" href="physics/quantum/piab.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="diffgeom.html" title="Differential Geometry Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="physics/quantum/piab.html" title="Particle in a Box"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="category-theory-module">
+<h1>Category Theory Module<a class="headerlink" href="#category-theory-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The category theory module for SymPy will allow manipulating diagrams
+within a single category, including drawing them in TikZ and deciding
+whether they are commutative or not.</p>
+<p>The general reference work this module tries to follow is</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>[JoyOfCats] J. Adamek, H. Herrlich. G. E. Strecker: Abstract and</dt>
+<dd>Concrete Categories. The Joy of Cats.</dd>
+</dl>
+</div></blockquote>
+<p>The latest version of this book should be available for free download
+from</p>
+<blockquote>
+<div>katmat.math.uni-bremen.de/acc/acc.pdf</div></blockquote>
+<p>The module is still in its pre-embryonic stage.</p>
+</div>
+<div class="section" id="module-sympy.categories">
+<span id="base-class-reference"></span><h2>Base Class Reference<a class="headerlink" href="#module-sympy.categories" title="Permalink to this headline">¶</a></h2>
+<p>This section lists the classes which implement some of the basic
+notions in category theory: objects, morphisms, categories, and
+diagrams.</p>
+<dl class="class">
+<dt id="sympy.categories.Object">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">Object</tt><a class="headerlink" href="#sympy.categories.Object" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for any kind of object in an abstract category.</p>
+<p>While technically any instance of <tt class="xref py py-class docutils literal"><span class="pre">Basic</span></tt> will do, this
+class is the recommended way to create abstract objects in
+abstract categories.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.Morphism">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">Morphism</tt><a class="headerlink" href="#sympy.categories.Morphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for any morphism in an abstract category.</p>
+<p>In abstract categories, a morphism is an arrow between two
+category objects.  The object where the arrow starts is called the
+domain, while the object where the arrow ends is called the
+codomain.</p>
+<p>Two morphisms between the same pair of objects are considered to
+be the same morphisms.  To distinguish between morphisms between
+the same objects use <a class="reference internal" href="#sympy.categories.NamedMorphism" title="sympy.categories.NamedMorphism"><tt class="xref py py-class docutils literal"><span class="pre">NamedMorphism</span></tt></a>.</p>
+<p>It is prohibited to instantiate this class.  Use one of the
+derived classes instead.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.IdentityMorphism" title="sympy.categories.IdentityMorphism"><tt class="xref py py-obj docutils literal"><span class="pre">IdentityMorphism</span></tt></a>, <a class="reference internal" href="#sympy.categories.NamedMorphism" title="sympy.categories.NamedMorphism"><tt class="xref py py-obj docutils literal"><span class="pre">NamedMorphism</span></tt></a>, <a class="reference internal" href="#sympy.categories.CompositeMorphism" title="sympy.categories.CompositeMorphism"><tt class="xref py py-obj docutils literal"><span class="pre">CompositeMorphism</span></tt></a></p>
+</div>
+<dl class="attribute">
+<dt id="sympy.categories.Morphism.codomain">
+<tt class="descname">codomain</tt><a class="headerlink" href="#sympy.categories.Morphism.codomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the codomain of the morphism.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">codomain</span>
+<span class="go">Object(&quot;B&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.categories.Morphism.compose">
+<tt class="descname">compose</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#sympy.categories.Morphism.compose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Composes self with the supplied morphism.</p>
+<p>The order of elements in the composition is the usual order,
+i.e., to construct <span class="math">\(g\circ f\)</span> use <tt class="docutils literal"><span class="pre">g.compose(f)</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span>
+<span class="go">CompositeMorphism((NamedMorphism(Object(&quot;A&quot;), Object(&quot;B&quot;), &quot;f&quot;),</span>
+<span class="go">NamedMorphism(Object(&quot;B&quot;), Object(&quot;C&quot;), &quot;g&quot;)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">Object(&quot;A&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">codomain</span>
+<span class="go">Object(&quot;C&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.Morphism.domain">
+<tt class="descname">domain</tt><a class="headerlink" href="#sympy.categories.Morphism.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the domain of the morphism.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">Object(&quot;A&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.NamedMorphism">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">NamedMorphism</tt><a class="headerlink" href="#sympy.categories.NamedMorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a morphism which has a name.</p>
+<p>Names are used to distinguish between morphisms which have the
+same domain and codomain: two named morphisms are equal if they
+have the same domains, codomains, and names.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.Morphism" title="sympy.categories.Morphism"><tt class="xref py py-obj docutils literal"><span class="pre">Morphism</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span>
+<span class="go">NamedMorphism(Object(&quot;A&quot;), Object(&quot;B&quot;), &quot;f&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;f&#39;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.categories.NamedMorphism.name">
+<tt class="descname">name</tt><a class="headerlink" href="#sympy.categories.NamedMorphism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the morphism.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;f&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.CompositeMorphism">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">CompositeMorphism</tt><a class="headerlink" href="#sympy.categories.CompositeMorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a morphism which is a composition of other morphisms.</p>
+<p>Two composite morphisms are equal if the morphisms they were
+obtained from (components) are the same and were listed in the
+same order.</p>
+<p>The arguments to the constructor for this class should be listed
+in diagram order: to obtain the composition <span class="math">\(g\circ f\)</span> from the
+instances of <a class="reference internal" href="#sympy.categories.Morphism" title="sympy.categories.Morphism"><tt class="xref py py-class docutils literal"><span class="pre">Morphism</span></tt></a> <tt class="docutils literal"><span class="pre">g</span></tt> and <tt class="docutils literal"><span class="pre">f</span></tt> use
+<tt class="docutils literal"><span class="pre">CompositeMorphism(f,</span> <span class="pre">g)</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">CompositeMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span>
+<span class="go">CompositeMorphism((NamedMorphism(Object(&quot;A&quot;), Object(&quot;B&quot;), &quot;f&quot;),</span>
+<span class="go">NamedMorphism(Object(&quot;B&quot;), Object(&quot;C&quot;), &quot;g&quot;)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CompositeMorphism</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">g</span> <span class="o">*</span> <span class="n">f</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.categories.CompositeMorphism.codomain">
+<tt class="descname">codomain</tt><a class="headerlink" href="#sympy.categories.CompositeMorphism.codomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the codomain of this composite morphism.</p>
+<p>The codomain of the composite morphism is the codomain of its
+last component.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">codomain</span>
+<span class="go">Object(&quot;C&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.CompositeMorphism.components">
+<tt class="descname">components</tt><a class="headerlink" href="#sympy.categories.CompositeMorphism.components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the components of this composite morphism.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">components</span>
+<span class="go">(NamedMorphism(Object(&quot;A&quot;), Object(&quot;B&quot;), &quot;f&quot;),</span>
+<span class="go">NamedMorphism(Object(&quot;B&quot;), Object(&quot;C&quot;), &quot;g&quot;))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.CompositeMorphism.domain">
+<tt class="descname">domain</tt><a class="headerlink" href="#sympy.categories.CompositeMorphism.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the domain of this composite morphism.</p>
+<p>The domain of the composite morphism is the domain of its
+first component.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span>
+<span class="go">Object(&quot;A&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.categories.CompositeMorphism.flatten">
+<tt class="descname">flatten</tt><big>(</big><em>new_name</em><big>)</big><a class="headerlink" href="#sympy.categories.CompositeMorphism.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forgets the composite structure of this morphism.</p>
+<p>If <tt class="docutils literal"><span class="pre">new_name</span></tt> is not empty, returns a <a class="reference internal" href="#sympy.categories.NamedMorphism" title="sympy.categories.NamedMorphism"><tt class="xref py py-class docutils literal"><span class="pre">NamedMorphism</span></tt></a>
+with the supplied name, otherwise returns a <a class="reference internal" href="#sympy.categories.Morphism" title="sympy.categories.Morphism"><tt class="xref py py-class docutils literal"><span class="pre">Morphism</span></tt></a>.
+In both cases the domain of the new morphism is the domain of
+this composite morphism and the codomain of the new morphism
+is the codomain of this composite morphism.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s">&quot;h&quot;</span><span class="p">)</span>
+<span class="go">NamedMorphism(Object(&quot;A&quot;), Object(&quot;C&quot;), &quot;h&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.IdentityMorphism">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">IdentityMorphism</tt><a class="headerlink" href="#sympy.categories.IdentityMorphism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an identity morphism.</p>
+<p>An identity morphism is a morphism with equal domain and codomain,
+which acts as an identity with respect to composition.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.Morphism" title="sympy.categories.Morphism"><tt class="xref py py-obj docutils literal"><span class="pre">Morphism</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">IdentityMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id_A</span> <span class="o">=</span> <span class="n">IdentityMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id_B</span> <span class="o">=</span> <span class="n">IdentityMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">*</span> <span class="n">id_A</span> <span class="o">==</span> <span class="n">f</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id_B</span> <span class="o">*</span> <span class="n">f</span> <span class="o">==</span> <span class="n">f</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.Category">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">Category</tt><a class="headerlink" href="#sympy.categories.Category" title="Permalink to this definition">¶</a></dt>
+<dd><p>An (abstract) category.</p>
+<p>A category [JoyOfCats] is a quadruple <span class="math">\(\mbox{K} = (O, \hom, id,
+\circ)\)</span> consisting of</p>
+<ul class="simple">
+<li>a (set-theoretical) class <span class="math">\(O\)</span>, whose members are called
+<span class="math">\(K\)</span>-objects,</li>
+<li>for each pair <span class="math">\((A, B)\)</span> of <span class="math">\(K\)</span>-objects, a set <span class="math">\(\hom(A, B)\)</span> whose
+members are called <span class="math">\(K\)</span>-morphisms from <span class="math">\(A\)</span> to <span class="math">\(B\)</span>,</li>
+<li>for a each <span class="math">\(K\)</span>-object <span class="math">\(A\)</span>, a morphism <span class="math">\(id:A\rightarrow A\)</span>,
+called the <span class="math">\(K\)</span>-identity of <span class="math">\(A\)</span>,</li>
+<li>a composition law <span class="math">\(\circ\)</span> associating with every <span class="math">\(K\)</span>-morphisms
+<span class="math">\(f:A\rightarrow B\)</span> and <span class="math">\(g:B\rightarrow C\)</span> a <span class="math">\(K\)</span>-morphism <span class="math">\(g\circ
+f:A\rightarrow C\)</span>, called the composite of <span class="math">\(f\)</span> and <span class="math">\(g\)</span>.</li>
+</ul>
+<p>Composition is associative, <span class="math">\(K\)</span>-identities are identities with
+respect to composition, and the sets <span class="math">\(\hom(A, B)\)</span> are pairwise
+disjoint.</p>
+<p>This class knows nothing about its objects and morphisms.
+Concrete cases of (abstract) categories should be implemented as
+classes derived from this one.</p>
+<p>Certain instances of <a class="reference internal" href="#sympy.categories.Diagram" title="sympy.categories.Diagram"><tt class="xref py py-class docutils literal"><span class="pre">Diagram</span></tt></a> can be asserted to be
+commutative in a <a class="reference internal" href="#sympy.categories.Category" title="sympy.categories.Category"><tt class="xref py py-class docutils literal"><span class="pre">Category</span></tt></a> by supplying the argument
+<tt class="docutils literal"><span class="pre">commutative_diagrams</span></tt> in the constructor.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.Diagram" title="sympy.categories.Diagram"><tt class="xref py py-obj docutils literal"><span class="pre">Diagram</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">Category</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span> <span class="o">=</span> <span class="n">Category</span><span class="p">(</span><span class="s">&quot;K&quot;</span><span class="p">,</span> <span class="n">commutative_diagrams</span><span class="o">=</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span><span class="o">.</span><span class="n">commutative_diagrams</span> <span class="o">==</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.categories.Category.commutative_diagrams">
+<tt class="descname">commutative_diagrams</tt><a class="headerlink" href="#sympy.categories.Category.commutative_diagrams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <tt class="xref py py-class docutils literal"><span class="pre">FiniteSet</span></tt> of diagrams which are known to
+be commutative in this category.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">Category</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span> <span class="o">=</span> <span class="n">Category</span><span class="p">(</span><span class="s">&quot;K&quot;</span><span class="p">,</span> <span class="n">commutative_diagrams</span><span class="o">=</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span><span class="o">.</span><span class="n">commutative_diagrams</span> <span class="o">==</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.Category.name">
+<tt class="descname">name</tt><a class="headerlink" href="#sympy.categories.Category.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of this category.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Category</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span> <span class="o">=</span> <span class="n">Category</span><span class="p">(</span><span class="s">&quot;K&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;K&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.Category.objects">
+<tt class="descname">objects</tt><a class="headerlink" href="#sympy.categories.Category.objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the class of objects of this category.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">Category</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span> <span class="o">=</span> <span class="n">Category</span><span class="p">(</span><span class="s">&quot;K&quot;</span><span class="p">,</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">K</span><span class="o">.</span><span class="n">objects</span>
+<span class="go">Class({Object(&quot;A&quot;), Object(&quot;B&quot;)})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.Diagram">
+<em class="property">class </em><tt class="descclassname">sympy.categories.</tt><tt class="descname">Diagram</tt><a class="headerlink" href="#sympy.categories.Diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a diagram in a certain category.</p>
+<p>Informally, a diagram is a collection of objects of a category and
+certain morphisms between them.  A diagram is still a monoid with
+respect to morphism composition; i.e., identity morphisms, as well
+as all composites of morphisms included in the diagram belong to
+the diagram.  For a more formal approach to this notion see
+[Pare1970].</p>
+<p>The components of composite morphisms are also added to the
+diagram.  No properties are assigned to such morphisms by default.</p>
+<p>A commutative diagram is often accompanied by a statement of the
+following kind: &#8220;if such morphisms with such properties exist,
+then such morphisms which such properties exist and the diagram is
+commutative&#8221;.  To represent this, an instance of <a class="reference internal" href="#sympy.categories.Diagram" title="sympy.categories.Diagram"><tt class="xref py py-class docutils literal"><span class="pre">Diagram</span></tt></a>
+includes a collection of morphisms which are the premises and
+another collection of conclusions.  <tt class="docutils literal"><span class="pre">premises</span></tt> and
+<tt class="docutils literal"><span class="pre">conclusions</span></tt> associate morphisms belonging to the corresponding
+categories with the <tt class="xref py py-class docutils literal"><span class="pre">FiniteSet</span></tt>&#8216;s of their properties.</p>
+<p>The set of properties of a composite morphism is the intersection
+of the sets of properties of its components.  The domain and
+codomain of a conclusion morphism should be among the domains and
+codomains of the morphisms listed as the premises of a diagram.</p>
+<p>No checks are carried out of whether the supplied object and
+morphisms do belong to one and the same category.</p>
+<p class="rubric">References</p>
+<p>[Pare1970] B. Pareigis: Categories and functors.  Academic Press,
+1970.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">default_sort_key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">premises_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">premises</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">premises_keys</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[g*f:A--&gt;C, id:A--&gt;A, id:B--&gt;B, id:C--&gt;C, f:A--&gt;B, g:B--&gt;C]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">premises</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">{g*f:A--&gt;C: EmptySet(), id:A--&gt;A: EmptySet(), id:B--&gt;B: EmptySet(), id:C--&gt;C:</span>
+<span class="go">EmptySet(), f:A--&gt;B: EmptySet(), g:B--&gt;C: EmptySet()}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">conclusions</span><span class="p">)</span>
+<span class="go">{g*f:A--&gt;C: {unique}}</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.categories.Diagram.conclusions">
+<tt class="descname">conclusions</tt><a class="headerlink" href="#sympy.categories.Diagram.conclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the conclusions of this diagram.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">IdentityMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">IdentityMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">premises</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">premises</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">conclusions</span><span class="p">[</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">]</span> <span class="o">==</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="s">&quot;unique&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.categories.Diagram.hom">
+<tt class="descname">hom</tt><big>(</big><em>A</em>, <em>B</em><big>)</big><a class="headerlink" href="#sympy.categories.Diagram.hom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a 2-tuple of sets of morphisms between objects A and
+B: one set of morphisms listed as premises, and the other set
+of morphisms listed as conclusions.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.Object" title="sympy.categories.Object"><tt class="xref py py-obj docutils literal"><span class="pre">Object</span></tt></a>, <a class="reference internal" href="#sympy.categories.Morphism" title="sympy.categories.Morphism"><tt class="xref py py-obj docutils literal"><span class="pre">Morphism</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pretty</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">pretty</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hom</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">({g*f:A--&gt;C}, {g*f:A--&gt;C})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.categories.Diagram.is_subdiagram">
+<tt class="descname">is_subdiagram</tt><big>(</big><em>diagram</em><big>)</big><a class="headerlink" href="#sympy.categories.Diagram.is_subdiagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether <tt class="docutils literal"><span class="pre">diagram</span></tt> is a subdiagram of <tt class="docutils literal"><span class="pre">self</span></tt>.
+Diagram <span class="math">\(D'\)</span> is a subdiagram of <span class="math">\(D\)</span> if all premises
+(conclusions) of <span class="math">\(D'\)</span> are contained in the premises
+(conclusions) of <span class="math">\(D\)</span>.  The morphisms contained
+both in <span class="math">\(D'\)</span> and <span class="math">\(D\)</span> should have the same properties for <span class="math">\(D'\)</span>
+to be a subdiagram of <span class="math">\(D\)</span>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">is_subdiagram</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span><span class="o">.</span><span class="n">is_subdiagram</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.Diagram.objects">
+<tt class="descname">objects</tt><a class="headerlink" href="#sympy.categories.Diagram.objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <tt class="xref py py-class docutils literal"><span class="pre">FiniteSet</span></tt> of objects that appear in this
+diagram.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">objects</span>
+<span class="go">{Object(&quot;A&quot;), Object(&quot;B&quot;), Object(&quot;C&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.Diagram.premises">
+<tt class="descname">premises</tt><a class="headerlink" href="#sympy.categories.Diagram.premises" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the premises of this diagram.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">IdentityMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pretty</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id_A</span> <span class="o">=</span> <span class="n">IdentityMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id_B</span> <span class="o">=</span> <span class="n">IdentityMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">pretty</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">premises</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">{id:A--&gt;A: EmptySet(), id:B--&gt;B: EmptySet(), f:A--&gt;B: EmptySet()}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.categories.Diagram.subdiagram_from_objects">
+<tt class="descname">subdiagram_from_objects</tt><big>(</big><em>objects</em><big>)</big><a class="headerlink" href="#sympy.categories.Diagram.subdiagram_from_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <tt class="docutils literal"><span class="pre">objects</span></tt> is a subset of the objects of <tt class="docutils literal"><span class="pre">self</span></tt>, returns
+a diagram which has as premises all those premises of <tt class="docutils literal"><span class="pre">self</span></tt>
+which have a domains and codomains in <tt class="docutils literal"><span class="pre">objects</span></tt>, likewise
+for conclusions.  Properties are preserved.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">,</span> <span class="n">g</span><span class="o">*</span><span class="n">f</span><span class="p">:</span> <span class="s">&quot;veryunique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">subdiagram_from_objects</span><span class="p">(</span><span class="n">FiniteSet</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">==</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">],</span> <span class="p">{</span><span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.categories.diagram_drawing">
+<span id="diagram-drawing"></span><h2>Diagram Drawing<a class="headerlink" href="#module-sympy.categories.diagram_drawing" title="Permalink to this headline">¶</a></h2>
+<p>This section lists the classes which allow automatic drawing of
+diagrams.</p>
+<dl class="class">
+<dt id="sympy.categories.diagram_drawing.DiagramGrid">
+<em class="property">class </em><tt class="descclassname">sympy.categories.diagram_drawing.</tt><tt class="descname">DiagramGrid</tt><big>(</big><em>diagram</em>, <em>groups=None</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#DiagramGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.DiagramGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs and holds the fitting of the diagram into a grid.</p>
+<p>The mission of this class is to analyse the structure of the
+supplied diagram and to place its objects on a grid such that,
+when the objects and the morphisms are actually drawn, the diagram
+would be &#8220;readable&#8221;, in the sense that there will not be many
+intersections of moprhisms.  This class does not perform any
+actual drawing.  It does strive nevertheless to offer sufficient
+metadata to draw a diagram.</p>
+<p>Consider the following simple diagram.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">DiagramGrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The simplest way to have a diagram laid out is the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+<span class="go">(2, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">A  B</span>
+
+<span class="go">   C</span>
+</pre></div>
+</div>
+<p>Sometimes one sees the diagram as consisting of logical groups.
+One can advise <tt class="docutils literal"><span class="pre">DiagramGrid</span></tt> as to such groups by employing the
+<tt class="docutils literal"><span class="pre">groups</span></tt> keyword argument.</p>
+<p>Consider the following diagram:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="s">&quot;h&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;k&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">k</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Lay it out with generic layout:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">A  B  D</span>
+
+<span class="go">   C</span>
+</pre></div>
+</div>
+<p>Now, we can group the objects <span class="math">\(A\)</span> and <span class="math">\(D\)</span> to have them near one
+another:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">D</span><span class="p">],</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">B     C</span>
+
+<span class="go">A  D</span>
+</pre></div>
+</div>
+<p>Note how the positioning of the other objects changes.</p>
+<p>Further indications can be supplied to the constructor of
+<a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a> using keyword arguments.  The currently
+supported hints are explained in the following paragraphs.</p>
+<p><a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a> does not automatically guess which layout
+would suit the supplied diagram better.  Consider, for example,
+the following linear diagram:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;E&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="s">&quot;h&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="s">&quot;i&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>When laid out with the generic layout, it does not get to look
+linear:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">A  B</span>
+
+<span class="go">   C  D</span>
+
+<span class="go">      E</span>
+</pre></div>
+</div>
+<p>To get it laid out in a line, use <tt class="docutils literal"><span class="pre">layout=&quot;sequential&quot;</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s">&quot;sequential&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">A  B  C  D  E</span>
+</pre></div>
+</div>
+<p>One may sometimes need to transpose the resulting layout.  While
+this can always be done by hand, <a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a> provides a
+hint for that purpose:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s">&quot;sequential&quot;</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="go">A</span>
+
+<span class="go">B</span>
+
+<span class="go">C</span>
+
+<span class="go">D</span>
+
+<span class="go">E</span>
+</pre></div>
+</div>
+<p>Separate hints can also be provided for each group.  For an
+example, refer to <tt class="docutils literal"><span class="pre">tests/test_drawing.py</span></tt>, and see the different
+ways in which the five lemma [FiveLemma] can be laid out.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Diagram</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<p>[FiveLemma] <a class="reference external" href="http://en.wikipedia.org/wiki/Five_lemma">http://en.wikipedia.org/wiki/Five_lemma</a></p>
+<dl class="attribute">
+<dt id="sympy.categories.diagram_drawing.DiagramGrid.height">
+<tt class="descname">height</tt><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#DiagramGrid.height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.DiagramGrid.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of rows in this diagram layout.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">DiagramGrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span><span class="o">.</span><span class="n">height</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.diagram_drawing.DiagramGrid.morphisms">
+<tt class="descname">morphisms</tt><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#DiagramGrid.morphisms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.DiagramGrid.morphisms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns those morphisms (and their properties) which are
+sufficiently meaningful to be drawn.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">DiagramGrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span><span class="o">.</span><span class="n">morphisms</span>
+<span class="go">{NamedMorphism(Object(&quot;A&quot;), Object(&quot;B&quot;), &quot;f&quot;): EmptySet(),</span>
+<span class="go">NamedMorphism(Object(&quot;B&quot;), Object(&quot;C&quot;), &quot;g&quot;): EmptySet()}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.categories.diagram_drawing.DiagramGrid.width">
+<tt class="descname">width</tt><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#DiagramGrid.width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.DiagramGrid.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of columns in this diagram layout.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Diagram</span><span class="p">,</span> <span class="n">DiagramGrid</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span><span class="o">.</span><span class="n">width</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.diagram_drawing.ArrowStringDescription">
+<em class="property">class </em><tt class="descclassname">sympy.categories.diagram_drawing.</tt><tt class="descname">ArrowStringDescription</tt><big>(</big><em>unit</em>, <em>curving</em>, <em>curving_amount</em>, <em>looping_start</em>, <em>looping_end</em>, <em>horizontal_direction</em>, <em>vertical_direction</em>, <em>label_position</em>, <em>label</em><big>)</big><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#ArrowStringDescription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.ArrowStringDescription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the information necessary for producing an Xy-pic
+description of an arrow.</p>
+<p>The principal goal of this class is to abstract away the string
+representation of an arrow and to also provide the functionality
+to produce the actual Xy-pic string.</p>
+<p><tt class="docutils literal"><span class="pre">unit</span></tt> sets the unit which will be used to specify the amount of
+curving and other distances.  <tt class="docutils literal"><span class="pre">horizontal_direction</span></tt> should be a
+string of <tt class="docutils literal"><span class="pre">&quot;r&quot;</span></tt> or <tt class="docutils literal"><span class="pre">&quot;l&quot;</span></tt> specifying the horizontal offset of the
+target cell of the arrow relatively to the current one.
+<tt class="docutils literal"><span class="pre">vertical_direction</span></tt> should  specify the vertical offset using a
+series of either <tt class="docutils literal"><span class="pre">&quot;d&quot;</span></tt> or <tt class="docutils literal"><span class="pre">&quot;u&quot;</span></tt>.  <tt class="docutils literal"><span class="pre">label_position</span></tt> should be
+either <tt class="docutils literal"><span class="pre">&quot;^&quot;</span></tt>, <tt class="docutils literal"><span class="pre">&quot;_&quot;</span></tt>,  or <tt class="docutils literal"><span class="pre">&quot;|&quot;</span></tt> to specify that the label should
+be positioned above the arrow, below the arrow or just over the arrow,
+in a break.  Note that the notions &#8220;above&#8221; and &#8220;below&#8221; are relative
+to arrow direction.  <tt class="docutils literal"><span class="pre">label</span></tt> stores the morphism label.</p>
+<p>This works as follows (disregard the yet unexplained arguments):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories.diagram_drawing</span> <span class="kn">import</span> <span class="n">ArrowStringDescription</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span> <span class="o">=</span> <span class="n">ArrowStringDescription</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">unit</span><span class="o">=</span><span class="s">&quot;mm&quot;</span><span class="p">,</span> <span class="n">curving</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">curving_amount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">looping_start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">looping_end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">horizontal_direction</span><span class="o">=</span><span class="s">&quot;d&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">vertical_direction</span><span class="o">=</span><span class="s">&quot;r&quot;</span><span class="p">,</span> <span class="n">label_position</span><span class="o">=</span><span class="s">&quot;_&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">astr</span><span class="p">))</span>
+<span class="go">\ar[dr]_{f}</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">curving</span></tt> should be one of <tt class="docutils literal"><span class="pre">&quot;^&quot;</span></tt>, <tt class="docutils literal"><span class="pre">&quot;_&quot;</span></tt> to specify in which
+direction the arrow is going to curve. <tt class="docutils literal"><span class="pre">curving_amount</span></tt> is a number
+describing how many <tt class="docutils literal"><span class="pre">unit</span></tt>&#8216;s the morphism is going to curve:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span> <span class="o">=</span> <span class="n">ArrowStringDescription</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">unit</span><span class="o">=</span><span class="s">&quot;mm&quot;</span><span class="p">,</span> <span class="n">curving</span><span class="o">=</span><span class="s">&quot;^&quot;</span><span class="p">,</span> <span class="n">curving_amount</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">looping_start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">looping_end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">horizontal_direction</span><span class="o">=</span><span class="s">&quot;d&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">vertical_direction</span><span class="o">=</span><span class="s">&quot;r&quot;</span><span class="p">,</span> <span class="n">label_position</span><span class="o">=</span><span class="s">&quot;_&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">astr</span><span class="p">))</span>
+<span class="go">\ar@/^12mm/[dr]_{f}</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">looping_start</span></tt> and <tt class="docutils literal"><span class="pre">looping_end</span></tt> are currently only used for
+loop morphisms, those which have the same domain and codomain.
+These two attributes should store a valid Xy-pic direction and
+specify, correspondingly, the direction the arrow gets out into
+and the direction the arrow gets back from:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span> <span class="o">=</span> <span class="n">ArrowStringDescription</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">unit</span><span class="o">=</span><span class="s">&quot;mm&quot;</span><span class="p">,</span> <span class="n">curving</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">curving_amount</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">looping_start</span><span class="o">=</span><span class="s">&quot;u&quot;</span><span class="p">,</span> <span class="n">looping_end</span><span class="o">=</span><span class="s">&quot;l&quot;</span><span class="p">,</span> <span class="n">horizontal_direction</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">vertical_direction</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">label_position</span><span class="o">=</span><span class="s">&quot;_&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">astr</span><span class="p">))</span>
+<span class="go">\ar@(u,l)[]_{f}</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">label_displacement</span></tt> controls how far the arrow label is from
+the ends of the arrow.  For example, to position the arrow label
+near the arrow head, use &#8220;&gt;&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span> <span class="o">=</span> <span class="n">ArrowStringDescription</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">unit</span><span class="o">=</span><span class="s">&quot;mm&quot;</span><span class="p">,</span> <span class="n">curving</span><span class="o">=</span><span class="s">&quot;^&quot;</span><span class="p">,</span> <span class="n">curving_amount</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">looping_start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">looping_end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">horizontal_direction</span><span class="o">=</span><span class="s">&quot;d&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">vertical_direction</span><span class="o">=</span><span class="s">&quot;r&quot;</span><span class="p">,</span> <span class="n">label_position</span><span class="o">=</span><span class="s">&quot;_&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span><span class="o">.</span><span class="n">label_displacement</span> <span class="o">=</span> <span class="s">&quot;&gt;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">astr</span><span class="p">))</span>
+<span class="go">\ar@/^12mm/[dr]_&gt;{f}</span>
+</pre></div>
+</div>
+<p>Finally, <tt class="docutils literal"><span class="pre">arrow_style</span></tt> is used to specify the arrow style.  To
+get a dashed arrow, for example, use &#8220;{&#8211;&gt;}&#8221; as arrow style:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span> <span class="o">=</span> <span class="n">ArrowStringDescription</span><span class="p">(</span>
+<span class="gp">... </span><span class="n">unit</span><span class="o">=</span><span class="s">&quot;mm&quot;</span><span class="p">,</span> <span class="n">curving</span><span class="o">=</span><span class="s">&quot;^&quot;</span><span class="p">,</span> <span class="n">curving_amount</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">looping_start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">looping_end</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">horizontal_direction</span><span class="o">=</span><span class="s">&quot;d&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">vertical_direction</span><span class="o">=</span><span class="s">&quot;r&quot;</span><span class="p">,</span> <span class="n">label_position</span><span class="o">=</span><span class="s">&quot;_&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">astr</span><span class="o">.</span><span class="n">arrow_style</span> <span class="o">=</span> <span class="s">&quot;{--&gt;}&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">astr</span><span class="p">))</span>
+<span class="go">\ar@/^12mm/@{--&gt;}[dr]_{f}</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer" title="sympy.categories.diagram_drawing.XypicDiagramDrawer"><tt class="xref py py-obj docutils literal"><span class="pre">XypicDiagramDrawer</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Instances of <a class="reference internal" href="#sympy.categories.diagram_drawing.ArrowStringDescription" title="sympy.categories.diagram_drawing.ArrowStringDescription"><tt class="xref py py-class docutils literal"><span class="pre">ArrowStringDescription</span></tt></a> will be constructed
+by <a class="reference internal" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer" title="sympy.categories.diagram_drawing.XypicDiagramDrawer"><tt class="xref py py-class docutils literal"><span class="pre">XypicDiagramDrawer</span></tt></a> and provided for further use in
+formatters.  The user is not expected to construct instances of
+<a class="reference internal" href="#sympy.categories.diagram_drawing.ArrowStringDescription" title="sympy.categories.diagram_drawing.ArrowStringDescription"><tt class="xref py py-class docutils literal"><span class="pre">ArrowStringDescription</span></tt></a> themselves.</p>
+<p>To be able to properly utilise this class, the reader is encouraged
+to checkout the Xy-pic user guide, available at [Xypic].</p>
+<p class="rubric">References</p>
+<p>[Xypic] <a class="reference external" href="http://www.tug.org/applications/Xy-pic/">http://www.tug.org/applications/Xy-pic/</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.categories.diagram_drawing.XypicDiagramDrawer">
+<em class="property">class </em><tt class="descclassname">sympy.categories.diagram_drawing.</tt><tt class="descname">XypicDiagramDrawer</tt><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#XypicDiagramDrawer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a <tt class="xref py py-class docutils literal"><span class="pre">Diagram</span></tt> and the corresponding
+<a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a>, produces the Xy-pic representation of the
+diagram.</p>
+<p>The most important method in this class is <tt class="docutils literal"><span class="pre">draw</span></tt>.  Consider the
+following triangle diagram:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">DiagramGrid</span><span class="p">,</span> <span class="n">XypicDiagramDrawer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>To draw this diagram, its objects need to be laid out with a
+<a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the drawing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">XypicDiagramDrawer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[d]_{g\circ f} \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>For further details see the docstring of this method.</p>
+<p>To control the appearance of the arrows, formatters are used.  The
+dictionary <tt class="docutils literal"><span class="pre">arrow_formatters</span></tt> maps morphisms to formatter
+functions.  A formatter is accepts an
+<a class="reference internal" href="#sympy.categories.diagram_drawing.ArrowStringDescription" title="sympy.categories.diagram_drawing.ArrowStringDescription"><tt class="xref py py-class docutils literal"><span class="pre">ArrowStringDescription</span></tt></a> and is allowed to modify any of
+the arrow properties exposed thereby.  For example, to have all
+morphisms with the property <tt class="docutils literal"><span class="pre">unique</span></tt> appear as dashed arrows,
+and to have their names prepended with <span class="math">\(\exists !\)</span>, the following
+should be done:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">formatter</span><span class="p">(</span><span class="n">astr</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">astr</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s">&quot;\exists !&quot;</span> <span class="o">+</span> <span class="n">astr</span><span class="o">.</span><span class="n">label</span>
+<span class="gp">... </span>  <span class="n">astr</span><span class="o">.</span><span class="n">arrow_style</span> <span class="o">=</span> <span class="s">&quot;{--&gt;}&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">arrow_formatters</span><span class="p">[</span><span class="s">&quot;unique&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar@{--&gt;}[d]_{\exists !g\circ f} \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>To modify the appearance of all arrows in the diagram, set
+<tt class="docutils literal"><span class="pre">default_arrow_formatter</span></tt>.  For example, to place all morphism
+labels a little bit farther from the arrow head so that they look
+more centred, do as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">default_formatter</span><span class="p">(</span><span class="n">astr</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">astr</span><span class="o">.</span><span class="n">label_displacement</span> <span class="o">=</span> <span class="s">&quot;(0.45)&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">default_arrow_formatter</span> <span class="o">=</span> <span class="n">default_formatter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar@{--&gt;}[d]_(0.45){\exists !g\circ f} \ar[r]^(0.45){f} &amp; B \ar[ld]^(0.45){g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>In some diagrams some morphisms are drawn as curved arrows.
+Consider the following diagram:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;E&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="s">&quot;h&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;k&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">k</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">XypicDiagramDrawer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[r]_{f} &amp; B \ar[d]^{g} &amp; D \ar[l]^{k} \ar@/_3mm/[ll]_{h} \\</span>
+<span class="go">&amp; C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>To control how far the morphisms are curved by default, one can
+use the <tt class="docutils literal"><span class="pre">unit</span></tt> and <tt class="docutils literal"><span class="pre">default_curving_amount</span></tt> attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="s">&quot;cm&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">default_curving_amount</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[r]_{f} &amp; B \ar[d]^{g} &amp; D \ar[l]^{k} \ar@/_1cm/[ll]_{h} \\</span>
+<span class="go">&amp; C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>In some diagrams, there are multiple curved morphisms between the
+same two objects.  To control by how much the curving changes
+between two such successive morphisms, use
+<tt class="docutils literal"><span class="pre">default_curving_step</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">default_curving_step</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h1</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="s">&quot;h1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">h1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[r]_{f} \ar@/^1cm/[rr]^{h_{1}} &amp; B \ar[d]^{g} &amp; D \ar[l]^{k} \ar@/_2cm/[ll]_{h} \\</span>
+<span class="go">&amp; C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>The default value of <tt class="docutils literal"><span class="pre">default_curving_step</span></tt> is 4 units.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer.draw" title="sympy.categories.diagram_drawing.XypicDiagramDrawer.draw"><tt class="xref py py-obj docutils literal"><span class="pre">draw</span></tt></a>, <a class="reference internal" href="#sympy.categories.diagram_drawing.ArrowStringDescription" title="sympy.categories.diagram_drawing.ArrowStringDescription"><tt class="xref py py-obj docutils literal"><span class="pre">ArrowStringDescription</span></tt></a></p>
+</div>
+<dl class="method">
+<dt id="sympy.categories.diagram_drawing.XypicDiagramDrawer.draw">
+<tt class="descname">draw</tt><big>(</big><em>diagram</em>, <em>grid</em>, <em>masked=None</em>, <em>diagram_format=''</em><big>)</big><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#XypicDiagramDrawer.draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer.draw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Xy-pic representation of <tt class="docutils literal"><span class="pre">diagram</span></tt> laid out in
+<tt class="docutils literal"><span class="pre">grid</span></tt>.</p>
+<p>Consider the following simple triangle diagram.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">DiagramGrid</span><span class="p">,</span> <span class="n">XypicDiagramDrawer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>To draw this diagram, its objects need to be laid out with a
+<a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">DiagramGrid</span><span class="p">(</span><span class="n">diagram</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the drawing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">XypicDiagramDrawer</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[d]_{g\circ f} \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>The argument <tt class="docutils literal"><span class="pre">masked</span></tt> can be used to skip morphisms in the
+presentation of the diagram:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="p">[</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">]))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<p>Finally, the <tt class="docutils literal"><span class="pre">diagram_format</span></tt> argument can be used to
+specify the format string of the diagram.  For example, to
+increase the spacing by 1 cm, proceeding as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">diagram</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">diagram_format</span><span class="o">=</span><span class="s">&quot;@+1cm&quot;</span><span class="p">))</span>
+<span class="go">\xymatrix@+1cm{</span>
+<span class="go">A \ar[d]_{g\circ f} \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.categories.diagram_drawing.xypic_draw_diagram">
+<tt class="descclassname">sympy.categories.diagram_drawing.</tt><tt class="descname">xypic_draw_diagram</tt><big>(</big><em>diagram</em>, <em>masked=None</em>, <em>diagram_format=''</em>, <em>groups=None</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#xypic_draw_diagram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.xypic_draw_diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides a shortcut combining <a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a> and
+<a class="reference internal" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer" title="sympy.categories.diagram_drawing.XypicDiagramDrawer"><tt class="xref py py-class docutils literal"><span class="pre">XypicDiagramDrawer</span></tt></a>.  Returns an Xy-pic presentation of
+<tt class="docutils literal"><span class="pre">diagram</span></tt>.  The argument <tt class="docutils literal"><span class="pre">masked</span></tt> is a list of morphisms which
+will be not be drawn.  The argument <tt class="docutils literal"><span class="pre">diagram_format</span></tt> is the
+format string inserted after &#8220;xymatrix&#8221;.  <tt class="docutils literal"><span class="pre">groups</span></tt> should be a
+set of logical groups.  The <tt class="docutils literal"><span class="pre">hints</span></tt> will be passed directly to
+the constructor of <a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a>.</p>
+<p>For more information about the arguments, see the docstrings of
+<a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-class docutils literal"><span class="pre">DiagramGrid</span></tt></a> and <tt class="docutils literal"><span class="pre">XypicDiagramDrawer.draw</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.categories.diagram_drawing.XypicDiagramDrawer" title="sympy.categories.diagram_drawing.XypicDiagramDrawer"><tt class="xref py py-obj docutils literal"><span class="pre">XypicDiagramDrawer</span></tt></a>, <a class="reference internal" href="#sympy.categories.diagram_drawing.DiagramGrid" title="sympy.categories.diagram_drawing.DiagramGrid"><tt class="xref py py-obj docutils literal"><span class="pre">DiagramGrid</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">xypic_draw_diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diagram</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">xypic_draw_diagram</span><span class="p">(</span><span class="n">diagram</span><span class="p">))</span>
+<span class="go">\xymatrix{</span>
+<span class="go">A \ar[d]_{g\circ f} \ar[r]^{f} &amp; B \ar[ld]^{g} \\</span>
+<span class="go">C &amp;</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.categories.diagram_drawing.preview_diagram">
+<tt class="descclassname">sympy.categories.diagram_drawing.</tt><tt class="descname">preview_diagram</tt><big>(</big><em>diagram</em>, <em>masked=None</em>, <em>diagram_format=''</em>, <em>groups=None</em>, <em>output='png'</em>, <em>viewer=None</em>, <em>euler=True</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../_modules/sympy/categories/diagram_drawing.html#preview_diagram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.categories.diagram_drawing.preview_diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines the functionality of <tt class="docutils literal"><span class="pre">xypic_draw_diagram</span></tt> and
+<tt class="docutils literal"><span class="pre">sympy.printing.preview</span></tt>.  The arguments <tt class="docutils literal"><span class="pre">masked</span></tt>,
+<tt class="docutils literal"><span class="pre">diagram_format</span></tt>, <tt class="docutils literal"><span class="pre">groups</span></tt>, and <tt class="docutils literal"><span class="pre">hints</span></tt> are passed to
+<tt class="docutils literal"><span class="pre">xypic_draw_diagram</span></tt>, while <tt class="docutils literal"><span class="pre">output</span></tt>, <tt class="docutils literal"><span class="pre">viewer,</span> <span class="pre">and</span> <span class="pre">``euler</span></tt>
+are passed to <tt class="docutils literal"><span class="pre">preview</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">xypic_diagram_drawer</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">Object</span><span class="p">,</span> <span class="n">NamedMorphism</span><span class="p">,</span> <span class="n">Diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.categories</span> <span class="kn">import</span> <span class="n">preview_diagram</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Object</span><span class="p">(</span><span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="s">&quot;f&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">NamedMorphism</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Diagram</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">],</span> <span class="p">{</span><span class="n">g</span> <span class="o">*</span> <span class="n">f</span><span class="p">:</span> <span class="s">&quot;unique&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preview_diagram</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Category Theory Module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#module-sympy.categories">Base Class Reference</a></li>
+<li><a class="reference internal" href="#module-sympy.categories.diagram_drawing">Diagram Drawing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="physics/quantum/piab.html"
+                        title="previous chapter">Particle in a Box</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="diffgeom.html"
+                        title="next chapter">Differential Geometry Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/categories.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="diffgeom.html" title="Differential Geometry Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="physics/quantum/piab.html" title="Particle in a Box"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

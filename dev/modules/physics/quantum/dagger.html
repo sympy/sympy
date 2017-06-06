@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dagger &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Inner Product" href="innerproduct.html" />
+    <link rel="prev" title="Constants" href="constants.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innerproduct.html" title="Inner Product"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Constants"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.dagger">
+<span id="dagger"></span><h1>Dagger<a class="headerlink" href="#module-sympy.physics.quantum.dagger" title="Permalink to this headline">¶</a></h1>
+<p>Hermitian conjugation.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.dagger.Dagger">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.dagger.</tt><tt class="descname">Dagger</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/dagger.html#Dagger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.dagger.Dagger" title="Permalink to this definition">¶</a></dt>
+<dd><p>General Hermitian conjugate operation.</p>
+<p>Take the Hermetian conjugate of an argument <a class="reference internal" href="#r220">[R220]</a>. For matrices this
+operation is equivalent to transpose and complex conjugate <a class="reference internal" href="#r221">[R221]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>arg</strong> : Expr</p>
+<blockquote class="last">
+<div><p>The sympy expression that we want to take the dagger of.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r220" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R220]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Hermitian_adjoint">http://en.wikipedia.org/wiki/Hermitian_adjoint</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r221" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R221]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Hermitian_transpose">http://en.wikipedia.org/wiki/Hermitian_transpose</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Daggering various quantum objects:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">Bra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Ket</span><span class="p">(</span><span class="s">&#39;psi&#39;</span><span class="p">))</span>
+<span class="go">&lt;psi|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Bra</span><span class="p">(</span><span class="s">&#39;phi&#39;</span><span class="p">))</span>
+<span class="go">|phi&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Operator</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">))</span>
+<span class="go">Dagger(A)</span>
+</pre></div>
+</div>
+<p>Inner and outer products:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">InnerProduct</span><span class="p">,</span> <span class="n">OuterProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">InnerProduct</span><span class="p">(</span><span class="n">Bra</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">),</span> <span class="n">Ket</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)))</span>
+<span class="go">&lt;b|a&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">OuterProduct</span><span class="p">(</span><span class="n">Ket</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">),</span> <span class="n">Bra</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)))</span>
+<span class="go">|b&gt;&lt;a|</span>
+</pre></div>
+</div>
+<p>Powers, sums and products:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Dagger(B)*Dagger(A)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">A</span><span class="o">+</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Dagger(A) + Dagger(B)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">A</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">Dagger(A)**2</span>
+</pre></div>
+</div>
+<p>Dagger also seamlessly handles complex numbers and matrices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="n">I</span><span class="p">],[</span><span class="mi">2</span><span class="p">,</span><span class="n">I</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, I],</span>
+<span class="go">[2, I]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[ 1,  2],</span>
+<span class="go">[-I, -I]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="constants.html"
+                        title="previous chapter">Constants</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="innerproduct.html"
+                        title="next chapter">Inner Product</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/dagger.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innerproduct.html" title="Inner Product"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Constants"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

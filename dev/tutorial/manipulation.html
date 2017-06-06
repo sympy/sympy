@@ -1,0 +1,613 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Advanced Expression Manipulation &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Gotchas and Pitfalls" href="../gotchas.html" />
+    <link rel="prev" title="Matrices" href="matrices.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../gotchas.html" title="Gotchas and Pitfalls"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="advanced-expression-manipulation">
+<span id="tutorial-manipulation"></span><h1>Advanced Expression Manipulation<a class="headerlink" href="#advanced-expression-manipulation" title="Permalink to this headline">¶</a></h1>
+<p>In this section, we discuss some ways that we can perform advanced
+manipulation of expressions.</p>
+<div class="section" id="understanding-expression-trees">
+<h2>Understanding Expression Trees<a class="headerlink" href="#understanding-expression-trees" title="Permalink to this headline">¶</a></h2>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last">To play with the <tt class="docutils literal"><span class="pre">srepr</span></tt> form of expressions in the SymPy Live shell,
+change the output format to <tt class="docutils literal"><span class="pre">Repr</span></tt> in the settings.</p>
+</div>
+<p>Before we can do this, we need to understand how expressions are represented
+in SymPy.  A mathematical expression is represented as a tree.  Let us take
+the expression <span class="math">\(x^2 + xy\)</span>, i.e., <tt class="docutils literal"><span class="pre">x**2</span> <span class="pre">+</span> <span class="pre">x*y</span></tt>.  We can see what this
+expression looks like internally by using <tt class="docutils literal"><span class="pre">srepr</span></tt></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">&quot;Add(Pow(Symbol(&#39;x&#39;), Integer(2)), Mul(Symbol(&#39;x&#39;), Symbol(&#39;y&#39;)))&quot;</span>
+</pre></div>
+</div>
+<p>The easiest way to tear this apart is to look at a diagram of the expression
+tree:</p>
+<p class="graphviz">
+digraph{
+
+# Graph style
+&quot;rankdir&quot;=&quot;TD&quot;
+
+#########
+# Nodes #
+#########
+
+&quot;Symbol(x)_(0, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Integer(2)_(1, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(2)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(y)_(0, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('y')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(x)_(1, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(Symbol(x), Symbol(y))_(0,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Pow(Symbol(x), Integer(2))_(1,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Pow&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Add&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+
+#########
+# Edges #
+#########
+
+&quot;Mul(Symbol(x), Symbol(y))_(0,)&quot; -&gt; &quot;Symbol(x)_(0, 0)&quot;;
+&quot;Mul(Symbol(x), Symbol(y))_(0,)&quot; -&gt; &quot;Symbol(y)_(0, 1)&quot;;
+&quot;Pow(Symbol(x), Integer(2))_(1,)&quot; -&gt; &quot;Symbol(x)_(1, 0)&quot;;
+&quot;Pow(Symbol(x), Integer(2))_(1,)&quot; -&gt; &quot;Integer(2)_(1, 1)&quot;;
+&quot;Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()&quot; -&gt; &quot;Mul(Symbol(x), Symbol(y))_(0,)&quot;;
+&quot;Add(Mul(Symbol(x), Symbol(y)), Pow(Symbol(x), Integer(2)))_()&quot; -&gt; &quot;Pow(Symbol(x), Integer(2))_(1,)&quot;;
+}</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The above diagram was made using <a class="reference external" href="http://www.graphviz.org/">Graphviz</a> and
+the <a class="reference internal" href="../modules/printing.html#sympy.printing.dot.dotprint" title="sympy.printing.dot.dotprint"><tt class="xref py py-meth docutils literal"><span class="pre">dotprint</span></tt></a> function.</p>
+</div>
+<p>First, let&#8217;s look at the leaves of this tree.  Symbols are instances of the
+class Symbol.  While we have been doing</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>we could have also done</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Either way, we get a Symbol with the name &#8220;x&#8221; <a class="footnote-reference" href="#symbols-fn" id="id1">[1]</a>.  For the number in the
+expression, 2, we got <tt class="docutils literal"><span class="pre">Integer(2)</span></tt>.  <tt class="docutils literal"><span class="pre">Integer</span></tt> is the SymPy class for
+integers.  It is similar to the Python built-in type <tt class="docutils literal"><span class="pre">int</span></tt>, except that
+<tt class="docutils literal"><span class="pre">Integer</span></tt> plays nicely with other SymPy types.</p>
+<p>When we write <tt class="docutils literal"><span class="pre">x**2</span></tt>, this creates a <tt class="docutils literal"><span class="pre">Pow</span></tt> object.  <tt class="docutils literal"><span class="pre">Pow</span></tt> is short for
+&#8220;power&#8221;.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&quot;Pow(Symbol(&#39;x&#39;), Integer(2))&quot;</span>
+</pre></div>
+</div>
+<p>We could have created the same object by calling <tt class="docutils literal"><span class="pre">Pow(x,</span> <span class="pre">2)</span></tt></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">x**2</span>
+</pre></div>
+</div>
+<p>Note that in the <tt class="docutils literal"><span class="pre">srepr</span></tt> output, we see <tt class="docutils literal"><span class="pre">Integer(2)</span></tt>, the SymPy version of
+integers, even though technically, we input <tt class="docutils literal"><span class="pre">2</span></tt>, a Python int.  In general,
+whenever you combine a SymPy object with a non-SymPy object via some function
+or operation, the non-SymPy object will be converted into a SymPy object.  The
+function that does this is <tt class="docutils literal"><span class="pre">sympify</span></tt> <a class="footnote-reference" href="#sympify-fn" id="id2">[2]</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;... &#39;int&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Integer&#39;&gt;</span>
+</pre></div>
+</div>
+<p>We have seen that <tt class="docutils literal"><span class="pre">x**2</span></tt> is represented as <tt class="docutils literal"><span class="pre">Pow(x,</span> <span class="pre">2)</span></tt>.  What about
+<tt class="docutils literal"><span class="pre">x*y</span></tt>?  As we might expect, this is the multiplication of <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt>.
+The SymPy class for multiplication is <tt class="docutils literal"><span class="pre">Mul</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="go">&quot;Mul(Symbol(&#39;x&#39;), Symbol(&#39;y&#39;))&quot;</span>
+</pre></div>
+</div>
+<p>Thus, we could have created the same object by writing <tt class="docutils literal"><span class="pre">Mul(x,</span> <span class="pre">y)</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">x*y</span>
+</pre></div>
+</div>
+<p>Now we get to our final expression, <tt class="docutils literal"><span class="pre">x**2</span> <span class="pre">+</span> <span class="pre">x*y</span></tt>.  This is the addition of
+our last two objects, <tt class="docutils literal"><span class="pre">Pow(x,</span> <span class="pre">2)</span></tt>, and <tt class="docutils literal"><span class="pre">Mul(x,</span> <span class="pre">y)</span></tt>.  The SymPy class for
+addition is <tt class="docutils literal"><span class="pre">Add</span></tt>, so, as you might expect, to create this object, we use
+<tt class="docutils literal"><span class="pre">Add(Pow(x,</span> <span class="pre">2),</span> <span class="pre">Mul(x,</span> <span class="pre">y)</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Add</span><span class="p">(</span><span class="n">Pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">Mul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="go">x**2 + x*y</span>
+</pre></div>
+</div>
+<p>SymPy expression trees can have many branches, and can be quite deep or quite
+broad.  Here is a more complicated example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">&quot;Add(Mul(Integer(-1), Pow(Symbol(&#39;x&#39;), Integer(2))), Mul(Rational(1, 2),</span>
+<span class="go">sin(Mul(Symbol(&#39;x&#39;), Symbol(&#39;y&#39;)))), Pow(Symbol(&#39;y&#39;), Integer(-1)))&quot;</span>
+</pre></div>
+</div>
+<p>Here is a diagram</p>
+<p class="graphviz">
+digraph{
+
+# Graph style
+&quot;rankdir&quot;=&quot;TD&quot;
+
+#########
+# Nodes #
+#########
+
+&quot;Half()_(0, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Rational(1, 2)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(y)_(2, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('y')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(x)_(1, 1, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Integer(2)_(1, 1, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(2)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;NegativeOne()_(2, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(-1)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;NegativeOne()_(1, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(-1)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(y)_(0, 1, 0, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('y')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(x)_(0, 1, 0, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Pow(Symbol(x), Integer(2))_(1, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Pow&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Pow(Symbol(y), NegativeOne())_(2,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Pow&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(Symbol(x), Symbol(y))_(0, 1, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;sin(Mul(Symbol(x), Symbol(y)))_(0, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;sin&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(Half(), sin(Mul(Symbol(x), Symbol(y))))_(0,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(NegativeOne(), Pow(Symbol(x), Integer(2)))_(1,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Add(Mul(Half(), sin(Mul(Symbol(x), Symbol(y)))), Mul(NegativeOne(), Pow(Symbol(x), Integer(2))), Pow(Symbol(y), NegativeOne()))_()&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Add&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+
+#########
+# Edges #
+#########
+
+&quot;Pow(Symbol(y), NegativeOne())_(2,)&quot; -&gt; &quot;Symbol(y)_(2, 0)&quot;;
+&quot;Pow(Symbol(x), Integer(2))_(1, 1)&quot; -&gt; &quot;Symbol(x)_(1, 1, 0)&quot;;
+&quot;Pow(Symbol(x), Integer(2))_(1, 1)&quot; -&gt; &quot;Integer(2)_(1, 1, 1)&quot;;
+&quot;Pow(Symbol(y), NegativeOne())_(2,)&quot; -&gt; &quot;NegativeOne()_(2, 1)&quot;;
+&quot;Mul(Symbol(x), Symbol(y))_(0, 1, 0)&quot; -&gt; &quot;Symbol(x)_(0, 1, 0, 0)&quot;;
+&quot;Mul(Symbol(x), Symbol(y))_(0, 1, 0)&quot; -&gt; &quot;Symbol(y)_(0, 1, 0, 1)&quot;;
+&quot;Mul(Half(), sin(Mul(Symbol(x), Symbol(y))))_(0,)&quot; -&gt; &quot;Half()_(0, 0)&quot;;
+&quot;Mul(NegativeOne(), Pow(Symbol(x), Integer(2)))_(1,)&quot; -&gt; &quot;NegativeOne()_(1, 0)&quot;;
+&quot;sin(Mul(Symbol(x), Symbol(y)))_(0, 1)&quot; -&gt; &quot;Mul(Symbol(x), Symbol(y))_(0, 1, 0)&quot;;
+&quot;Mul(NegativeOne(), Pow(Symbol(x), Integer(2)))_(1,)&quot; -&gt; &quot;Pow(Symbol(x), Integer(2))_(1, 1)&quot;;
+&quot;Mul(Half(), sin(Mul(Symbol(x), Symbol(y))))_(0,)&quot; -&gt; &quot;sin(Mul(Symbol(x), Symbol(y)))_(0, 1)&quot;;
+&quot;Add(Mul(Half(), sin(Mul(Symbol(x), Symbol(y)))), Mul(NegativeOne(), Pow(Symbol(x), Integer(2))), Pow(Symbol(y), NegativeOne()))_()&quot; -&gt; &quot;Pow(Symbol(y), NegativeOne())_(2,)&quot;;
+&quot;Add(Mul(Half(), sin(Mul(Symbol(x), Symbol(y)))), Mul(NegativeOne(), Pow(Symbol(x), Integer(2))), Pow(Symbol(y), NegativeOne()))_()&quot; -&gt; &quot;Mul(Half(), sin(Mul(Symbol(x), Symbol(y))))_(0,)&quot;;
+&quot;Add(Mul(Half(), sin(Mul(Symbol(x), Symbol(y)))), Mul(NegativeOne(), Pow(Symbol(x), Integer(2))), Pow(Symbol(y), NegativeOne()))_()&quot; -&gt; &quot;Mul(NegativeOne(), Pow(Symbol(x), Integer(2)))_(1,)&quot;;
+}</p>
+<p>This expression reveals some interesting things about SymPy expression
+trees. Let&#8217;s go through them one by one.</p>
+<p>Let&#8217;s first look at the term <tt class="docutils literal"><span class="pre">x**2</span></tt>.  As we expected, we see <tt class="docutils literal"><span class="pre">Pow(x,</span> <span class="pre">2)</span></tt>.
+One level up, we see we have <tt class="docutils literal"><span class="pre">Mul(-1,</span> <span class="pre">Pow(x,</span> <span class="pre">2))</span></tt>.  There is no subtraction
+class in SymPy.  <tt class="docutils literal"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">y</span></tt> is represented as <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">-y</span></tt>, or, more completely,
+<tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">-1*y</span></tt>, i.e., <tt class="docutils literal"><span class="pre">Add(x,</span> <span class="pre">Mul(-1,</span> <span class="pre">y))</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">&quot;Add(Symbol(&#39;x&#39;), Mul(Integer(-1), Symbol(&#39;y&#39;)))&quot;</span>
+</pre></div>
+</div>
+<p class="graphviz">
+digraph{
+
+# Graph style
+&quot;rankdir&quot;=&quot;TD&quot;
+
+#########
+# Nodes #
+#########
+
+&quot;Symbol(x)_(1,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(y)_(0, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('y')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;NegativeOne()_(0, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(-1)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(NegativeOne(), Symbol(y))_(0,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Add(Mul(NegativeOne(), Symbol(y)), Symbol(x))_()&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Add&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+
+#########
+# Edges #
+#########
+
+&quot;Mul(NegativeOne(), Symbol(y))_(0,)&quot; -&gt; &quot;Symbol(y)_(0, 1)&quot;;
+&quot;Mul(NegativeOne(), Symbol(y))_(0,)&quot; -&gt; &quot;NegativeOne()_(0, 0)&quot;;
+&quot;Add(Mul(NegativeOne(), Symbol(y)), Symbol(x))_()&quot; -&gt; &quot;Symbol(x)_(1,)&quot;;
+&quot;Add(Mul(NegativeOne(), Symbol(y)), Symbol(x))_()&quot; -&gt; &quot;Mul(NegativeOne(), Symbol(y))_(0,)&quot;;
+}</p>
+<p>Next, look at <tt class="docutils literal"><span class="pre">1/y</span></tt>.  We might expect to see something like <tt class="docutils literal"><span class="pre">Div(1,</span> <span class="pre">y)</span></tt>,
+but similar to subtraction, there is no class in SymPy for division.  Rather,
+division is represented by a power of -1.  Hence, we have <tt class="docutils literal"><span class="pre">Pow(y,</span> <span class="pre">-1)</span></tt>.
+What if we had divided something other than 1 by <tt class="docutils literal"><span class="pre">y</span></tt>, like <tt class="docutils literal"><span class="pre">x/y</span></tt>?  Let&#8217;s
+see.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">/</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srepr</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">&quot;Mul(Symbol(&#39;x&#39;), Pow(Symbol(&#39;y&#39;), Integer(-1)))&quot;</span>
+</pre></div>
+</div>
+<p class="graphviz">
+digraph{
+
+# Graph style
+&quot;rankdir&quot;=&quot;TD&quot;
+
+#########
+# Nodes #
+#########
+
+&quot;Symbol(x)_(0,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('x')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Symbol(y)_(1, 0)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Symbol('y')&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;NegativeOne()_(1, 1)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Integer(-1)&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Pow(Symbol(y), NegativeOne())_(1,)&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Pow&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+&quot;Mul(Symbol(x), Pow(Symbol(y), NegativeOne()))_()&quot; [&quot;color&quot;=&quot;black&quot;, &quot;label&quot;=&quot;Mul&quot;, &quot;shape&quot;=&quot;ellipse&quot;];
+
+#########
+# Edges #
+#########
+
+&quot;Pow(Symbol(y), NegativeOne())_(1,)&quot; -&gt; &quot;Symbol(y)_(1, 0)&quot;;
+&quot;Pow(Symbol(y), NegativeOne())_(1,)&quot; -&gt; &quot;NegativeOne()_(1, 1)&quot;;
+&quot;Mul(Symbol(x), Pow(Symbol(y), NegativeOne()))_()&quot; -&gt; &quot;Symbol(x)_(0,)&quot;;
+&quot;Mul(Symbol(x), Pow(Symbol(y), NegativeOne()))_()&quot; -&gt; &quot;Pow(Symbol(y), NegativeOne())_(1,)&quot;;
+}</p>
+<p>We see that <tt class="docutils literal"><span class="pre">x/y</span></tt> is represented as <tt class="docutils literal"><span class="pre">x*y**-1</span></tt>, i.e., <tt class="docutils literal"><span class="pre">Mul(x,</span> <span class="pre">Pow(y,</span>
+<span class="pre">-1))</span></tt>.</p>
+<p>Finally, let&#8217;s look at the <tt class="docutils literal"><span class="pre">sin(x*y)/2</span></tt> term.  Following the pattern of the
+previous example, we might expect to see <tt class="docutils literal"><span class="pre">Mul(sin(x*y),</span> <span class="pre">Pow(Integer(2),</span>
+<span class="pre">-1))</span></tt>.  But instead, we have <tt class="docutils literal"><span class="pre">Mul(Rational(1,</span> <span class="pre">2),</span> <span class="pre">sin(x*y))</span></tt>.  Rational
+numbers are always combined into a single term in a multiplication, so that
+when we divide by 2, it is represented as multiplying by 1/2.</p>
+<p>Finally, one last note.  You may have noticed that the order we entered our
+expression and the order that it came out from <tt class="docutils literal"><span class="pre">srepr</span></tt> or in the graph were
+different.  You may have also noticed this phenonemon earlier in the
+tutorial.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span>
+<span class="go">x + 1</span>
+</pre></div>
+</div>
+<p>This because in SymPy, the arguments of the commutative operations <tt class="docutils literal"><span class="pre">Add</span></tt> and
+<tt class="docutils literal"><span class="pre">Mul</span></tt> are stored in an arbitrary (but consistent!) order, which is
+independent of the order inputted (if you&#8217;re worried about noncommutative
+multiplication, don&#8217;t be.  In SymPy, you can create noncommutative Symbols
+using <tt class="docutils literal"><span class="pre">Symbol('A',</span> <span class="pre">commutative=False)</span></tt>, and the order of multiplication for
+noncommutative Symbols is kept the same as the input).  Furthermore, as we
+shall see in the next section, the printing order and the order in which
+things are stored internally need not be the same either.</p>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last">The way an expression is represented internally and the way it is printed
+are often not the same.</p>
+</div>
+<p>In general, an important thing to keep in mind when working with SymPy expression
+trees is this:  the internal representation of an expression and the way it is
+printed need not be the same.  The same is true for the input form.   If some
+expression manipulation algorithm is not working in the way you expected it
+to, chances are, the internal representation of the object is different from
+what you thought it was.</p>
+</div>
+<div class="section" id="recursing-through-an-expression-tree">
+<h2>Recursing through an Expression Tree<a class="headerlink" href="#recursing-through-an-expression-tree" title="Permalink to this headline">¶</a></h2>
+<p>Now that you know how expression trees work in SymPy, let&#8217;s look at how to dig
+our way through an expression tree.  Every object in SymPy has two very
+important attributes, <tt class="docutils literal"><span class="pre">func</span></tt>, and <tt class="docutils literal"><span class="pre">args</span></tt>.</p>
+<div class="section" id="func">
+<h3>func<a class="headerlink" href="#func" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">func</span></tt> is the head of the object. For example, <tt class="docutils literal"><span class="pre">(x*y).func</span></tt> is <tt class="docutils literal"><span class="pre">Mul</span></tt>.
+Usually it is the same as the class of the object (though there are exceptions
+to this rule).</p>
+<p>Two notes about <tt class="docutils literal"><span class="pre">func</span></tt>.  First, the class of an object need not be the same
+as the one used to create it.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">func</span>
+<span class="go">&lt;class &#39;sympy.core.mul.Mul&#39;&gt;</span>
+</pre></div>
+</div>
+<p>We created <tt class="docutils literal"><span class="pre">Add(x,</span> <span class="pre">x)</span></tt>, so we might expect <tt class="docutils literal"><span class="pre">expr.func</span></tt> to be <tt class="docutils literal"><span class="pre">Add</span></tt>, but
+instead we got <tt class="docutils literal"><span class="pre">Mul</span></tt>.  Why is that?  Let&#8217;s take a closer look at <tt class="docutils literal"><span class="pre">expr</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">2*x</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">Add(x,</span> <span class="pre">x)</span></tt>, i.e., <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">x</span></tt>, was automatically converted into <tt class="docutils literal"><span class="pre">Mul(2,</span>
+<span class="pre">x)</span></tt>, i.e., <tt class="docutils literal"><span class="pre">2*x</span></tt>, which is a <tt class="docutils literal"><span class="pre">Mul</span></tt>.   SymPy classes make heavy use of the
+<tt class="docutils literal"><span class="pre">__new__</span></tt> class constructor, which, unlike <tt class="docutils literal"><span class="pre">__init__</span></tt>, allows a different
+class to be returned from the constructor.</p>
+<p>Second, some classes are special-cased, usually for efficiency reasons
+<a class="footnote-reference" href="#singleton-fn" id="id3">[3]</a>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">func</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Integer&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">func</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Zero&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integer</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">func</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.NegativeOne&#39;&gt;</span>
+</pre></div>
+</div>
+<p>For the most part, these issues will not bother us.  The special classes
+<tt class="docutils literal"><span class="pre">Zero</span></tt>, <tt class="docutils literal"><span class="pre">One</span></tt>, <tt class="docutils literal"><span class="pre">NegativeOne</span></tt>, and so on are subclasses of <tt class="docutils literal"><span class="pre">Integer</span></tt>,
+so as long as you use <tt class="docutils literal"><span class="pre">isinstance</span></tt>, it will not be an issue.</p>
+</div>
+<div class="section" id="args">
+<h3>args<a class="headerlink" href="#args" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">args</span></tt> are the top-level arguments of the object.  <tt class="docutils literal"><span class="pre">(x*y).args</span></tt> would be
+<tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">y)</span></tt>.  Let&#8217;s look at some examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">func</span>
+<span class="go">&lt;class &#39;sympy.core.mul.Mul&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(3, x, y**2)</span>
+</pre></div>
+</div>
+<p>From this, we can see that <tt class="docutils literal"><span class="pre">expr</span> <span class="pre">==</span> <span class="pre">Mul(3,</span> <span class="pre">y**2,</span> <span class="pre">x)</span></tt>.  In fact, we can see
+that we can completely reconstruct <tt class="docutils literal"><span class="pre">expr</span></tt> from its <tt class="docutils literal"><span class="pre">func</span></tt> and its
+<tt class="docutils literal"><span class="pre">args</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+<span class="go">3*x*y**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">==</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Note that although we entered <tt class="docutils literal"><span class="pre">3*y**2*x</span></tt>, the <tt class="docutils literal"><span class="pre">args</span></tt> are <tt class="docutils literal"><span class="pre">(3,</span> <span class="pre">x,</span> <span class="pre">y**2)</span></tt>.
+In a <tt class="docutils literal"><span class="pre">Mul</span></tt>, the Rational coefficient will come first in the <tt class="docutils literal"><span class="pre">args</span></tt>, but
+other than that, the order of everything else follows no special pattern.  To
+be sure, though, there is an order.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(3, x, y**2)</span>
+</pre></div>
+</div>
+<p>Mul&#8217;s <tt class="docutils literal"><span class="pre">args</span></tt> are sorted, so that the same <tt class="docutils literal"><span class="pre">Mul</span></tt> will have the same
+<tt class="docutils literal"><span class="pre">args</span></tt>.  But the sorting is based on some criteria designed to make the
+sorting unique and efficient that has no mathematical significance.</p>
+<p>The <tt class="docutils literal"><span class="pre">srepr</span></tt> form of our <tt class="docutils literal"><span class="pre">expr</span></tt> is <tt class="docutils literal"><span class="pre">Mul(3,</span> <span class="pre">x,</span> <span class="pre">Pow(y,</span> <span class="pre">2))</span></tt>.  What if we
+want to get at the <tt class="docutils literal"><span class="pre">args</span></tt> of <tt class="docutils literal"><span class="pre">Pow(y,</span> <span class="pre">2)</span></tt>.  Notice that the <tt class="docutils literal"><span class="pre">y**2</span></tt> is in
+the third slot of <tt class="docutils literal"><span class="pre">expr.args</span></tt>, i.e., <tt class="docutils literal"><span class="pre">expr.args[2]</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">y**2</span>
+</pre></div>
+</div>
+<p>So to get the <tt class="docutils literal"><span class="pre">args</span></tt> of this, we call <tt class="docutils literal"><span class="pre">expr.args[2].args</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">args</span>
+<span class="go">(y, 2)</span>
+</pre></div>
+</div>
+<p>Now what if we try to go deeper.  What are the args of <tt class="docutils literal"><span class="pre">y</span></tt>.  Or <tt class="docutils literal"><span class="pre">2</span></tt>.
+Let&#8217;s see.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span><span class="o">.</span><span class="n">args</span>
+<span class="go">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+<span class="go">()</span>
+</pre></div>
+</div>
+<p>They both have empty <tt class="docutils literal"><span class="pre">args</span></tt>.  In SymPy, empty <tt class="docutils literal"><span class="pre">args</span></tt> signal that we have
+hit a leaf of the expression tree.</p>
+<p>So there are two possibilities for a SymPy expression. Either it has empty
+<tt class="docutils literal"><span class="pre">args</span></tt>, in which case it is a leaf node in any expression tree, or it has
+<tt class="docutils literal"><span class="pre">args</span></tt>, in which case, it is a branch node of any expression tree.  When it
+has <tt class="docutils literal"><span class="pre">args</span></tt>, it can be completely rebuilt from its <tt class="docutils literal"><span class="pre">func</span></tt> and its <tt class="docutils literal"><span class="pre">args</span></tt>.
+This is expressed in the key invariant.</p>
+<div class="topic">
+<p class="topic-title first">Key Invariant</p>
+<p>Every well-formed SymPy expression must either have empty <tt class="docutils literal"><span class="pre">args</span></tt> or
+satisfy <tt class="docutils literal"><span class="pre">expr</span> <span class="pre">==</span> <span class="pre">expr.func(*expr.args)</span></tt>.</p>
+</div>
+<p>(Recall that in Python if <tt class="docutils literal"><span class="pre">a</span></tt> is a tuple, then <tt class="docutils literal"><span class="pre">f(*a)</span></tt> means to call <tt class="docutils literal"><span class="pre">f</span></tt>
+with arguments from the elements of <tt class="docutils literal"><span class="pre">a</span></tt>, e.g., <tt class="docutils literal"><span class="pre">f(*(1,</span> <span class="pre">2,</span> <span class="pre">3))</span></tt> is the same
+as <tt class="docutils literal"><span class="pre">f(1,</span> <span class="pre">2,</span> <span class="pre">3)</span></tt>.)</p>
+<p>This key invariant allows us to write simple algorithms that walk expression
+trees, change them, and rebuild them into new expressions.</p>
+</div>
+<div class="section" id="walking-the-tree">
+<h3>Walking the Tree<a class="headerlink" href="#walking-the-tree" title="Permalink to this headline">¶</a></h3>
+<p>With this knowledge, let&#8217;s look at how we can recurse through an expression
+tree.  The nested nature of <tt class="docutils literal"><span class="pre">args</span></tt> is a perfect fit for recursive functions.
+The base case will be empty <tt class="docutils literal"><span class="pre">args</span></tt>.  Let&#8217;s write a simple function that goes
+through an expression and prints all the <tt class="docutils literal"><span class="pre">args</span></tt> at each level.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">pre</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">pre</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See how nice it is that <tt class="docutils literal"><span class="pre">()</span></tt> signals leaves in the expression tree.  We
+don&#8217;t even have to write a base case for our recursion; it is handled
+automatically by the for loop.</p>
+<p>Let&#8217;s test our function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pre</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">x*y + 1</span>
+<span class="go">1</span>
+<span class="go">x*y</span>
+<span class="go">x</span>
+<span class="go">y</span>
+</pre></div>
+</div>
+<p>Can you guess why we called our function <tt class="docutils literal"><span class="pre">pre</span></tt>?  We just wrote a pre-order
+traversal function for our expression tree.   See if you can write a
+post-order traversal function.</p>
+<p>Such traversals are so common in SymPy that the generator functions
+<tt class="docutils literal"><span class="pre">preorder_traversal</span></tt> and <tt class="docutils literal"><span class="pre">postorder_traversal</span></tt> are provided to make such
+traversals easy.  We could have also written our algorithm as</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="go">x*y + 1</span>
+<span class="go">1</span>
+<span class="go">x*y</span>
+<span class="go">x</span>
+<span class="go">y</span>
+</pre></div>
+</div>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="symbols-fn" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>We have been using <tt class="docutils literal"><span class="pre">symbols</span></tt> instead of <tt class="docutils literal"><span class="pre">Symbol</span></tt> because it
+automatically splits apart strings into multiple <tt class="docutils literal"><span class="pre">Symbol</span></tt>s.
+<tt class="docutils literal"><span class="pre">symbols('x</span> <span class="pre">y</span> <span class="pre">z')</span></tt> returns a tuple of three <tt class="docutils literal"><span class="pre">Symbol</span></tt>s.  <tt class="docutils literal"><span class="pre">Symbol('x</span> <span class="pre">y</span>
+<span class="pre">z')</span></tt> returns a single <tt class="docutils literal"><span class="pre">Symbol</span></tt> called <tt class="docutils literal"><span class="pre">x</span> <span class="pre">y</span> <span class="pre">z</span></tt>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="sympify-fn" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Technically, it is an internal function called <tt class="docutils literal"><span class="pre">_sympify</span></tt>,
+which differs from <tt class="docutils literal"><span class="pre">sympify</span></tt> in that it does not convert strings.  <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span>
+<span class="pre">'2'</span></tt> is not allowed.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="singleton-fn" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>Classes like <tt class="docutils literal"><span class="pre">One</span></tt> and <tt class="docutils literal"><span class="pre">Zero</span></tt> are singletonized, meaning
+that only one object is ever created, no matter how many times the class is
+called.  This is done for space efficiency, as these classes are very
+common.  For example, <tt class="docutils literal"><span class="pre">Zero</span></tt> might occur very often in a sparse matrix
+represented densely.  As we have seen, <tt class="docutils literal"><span class="pre">NegativeOne</span></tt> occurs any time we
+have <tt class="docutils literal"><span class="pre">-x</span></tt> or <tt class="docutils literal"><span class="pre">1/x</span></tt>.  It is also done for speed efficiency because
+singletonized objects can be compared by <tt class="docutils literal"><span class="pre">is</span></tt>.  The unique objects for
+each singletonized class can be accessed from the <tt class="docutils literal"><span class="pre">S</span></tt> object.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Advanced Expression Manipulation</a><ul>
+<li><a class="reference internal" href="#understanding-expression-trees">Understanding Expression Trees</a></li>
+<li><a class="reference internal" href="#recursing-through-an-expression-tree">Recursing through an Expression Tree</a><ul>
+<li><a class="reference internal" href="#func">func</a></li>
+<li><a class="reference internal" href="#args">args</a></li>
+<li><a class="reference internal" href="#walking-the-tree">Walking the Tree</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="previous chapter">Matrices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../gotchas.html"
+                        title="next chapter">Gotchas and Pitfalls</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/manipulation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../gotchas.html" title="Gotchas and Pitfalls"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

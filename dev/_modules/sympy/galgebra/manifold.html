@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.galgebra.manifold &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.galgebra.manifold</h1><div class="highlight"><pre>
+<span class="c"># sympy/galgebra/manifold.py</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">manifold.py defines the Manifold class which allows one to create a</span>
+<span class="sd">vector manifold (manifold defined by vector field of coordinates in</span>
+<span class="sd">embedding vector space) calculate the tangent vectors and derivatives</span>
+<span class="sd">of tangent vectors.</span>
+
+<span class="sd">Once manifold is created multivector fields can be constructed in the</span>
+<span class="sd">tangent space and all the geometric algebra products and derivatives</span>
+<span class="sd">of the multivector fields calculated.</span>
+
+<span class="sd">Note that all calculations are done in the embedding space.  Future</span>
+<span class="sd">versions of the code will allow manifolds defined purely in terms of</span>
+<span class="sd">a metric.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">system</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">trigsimp</span><span class="p">,</span> <span class="n">simplify</span>
+
+<span class="kn">from</span> <span class="nn">sympy.galgebra.ga</span> <span class="kn">import</span> <span class="n">MV</span>
+<span class="kn">from</span> <span class="nn">sympy.galgebra.debug</span> <span class="kn">import</span> <span class="n">oprint</span>
+<span class="kn">from</span> <span class="nn">sympy.galgebra.ncutil</span> <span class="kn">import</span> <span class="n">linear_expand</span>
+<span class="kn">from</span> <span class="nn">sympy.galgebra.printing</span> <span class="kn">import</span> <span class="n">find_executable</span>
+
+
+<span class="k">def</span> <span class="nf">fct_to_str</span><span class="p">(</span><span class="n">fct_names</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="n">current_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">file_str</span> <span class="o">=</span> <span class="n">current_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">current_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fct_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fct_names</span>
+
+    <span class="n">fcts_str</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">fct_name</span> <span class="ow">in</span> <span class="n">fct_names</span><span class="p">:</span>
+        <span class="n">start_def</span> <span class="o">=</span> <span class="n">file_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">def &#39;</span> <span class="o">+</span> <span class="n">fct_name</span><span class="p">)</span>
+        <span class="n">end_def</span> <span class="o">=</span> <span class="n">file_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">def &#39;</span><span class="p">,</span> <span class="n">start_def</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">start_class</span> <span class="o">=</span> <span class="n">file_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">class &#39;</span><span class="p">,</span> <span class="n">start_def</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">end_def</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">end_def</span><span class="p">,</span> <span class="n">start_class</span><span class="p">)</span>
+        <span class="n">fcts_str</span> <span class="o">+=</span> <span class="n">file_str</span><span class="p">[</span><span class="n">start_def</span><span class="p">:</span><span class="n">end_def</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">fcts_str</span>
+
+
+<span class="k">def</span> <span class="nf">VectorComponents</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">basis</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">linear_expand</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+        <span class="n">cdict</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">base</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coef</span>
+    <span class="n">comp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">cdict</span><span class="p">:</span>
+            <span class="n">comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cdict</span><span class="p">[</span><span class="n">base</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">comp</span>
+
+
+<span class="k">def</span> <span class="nf">FillTemplate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template</span><span class="p">):</span>
+    <span class="n">Nd</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">id_old</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">id_new</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="n">id_old</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">id_new</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">Nd</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">Nd</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">template</span><span class="p">[</span><span class="n">id_old</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">id_new</span><span class="p">])</span>
+        <span class="n">id_old</span> <span class="o">=</span> <span class="n">id_new</span>
+
+    <span class="n">var</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">var</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;$&#39;</span> <span class="o">+</span> <span class="n">v</span> <span class="o">+</span> <span class="s">&#39;$&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="s">&#39;self.&#39;</span> <span class="o">+</span> <span class="n">v</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">template</span>
+
+
+<div class="viewcode-block" id="Manifold"><a class="viewcode-back" href="../../../modules/galgebra/manifold.html#sympy.galgebra.manifold.Manifold">[docs]</a><span class="k">class</span> <span class="nc">Manifold</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">I</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        coords: list of coordinate variables</span>
+<span class="sd">        x: vector fuction of coordinate variables (parametric surface)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">I</span> <span class="o">=</span> <span class="n">I</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="n">coords</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedded_basis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
+            <span class="n">tv</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tv</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">linear_expand</span><span class="p">(</span><span class="n">tv</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+            <span class="n">tc</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+                <span class="n">str_base</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+                <span class="n">tc</span><span class="p">[</span><span class="n">str_base</span><span class="p">]</span> <span class="o">=</span> <span class="n">coef</span>
+                <span class="k">if</span> <span class="n">str_base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedded_basis</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">embedded_basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_base</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tc</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gij</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">base1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">base2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">:</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">trigsimp</span><span class="p">((</span><span class="n">base1</span> <span class="o">|</span> <span class="n">base2</span><span class="p">)</span><span class="o">.</span><span class="n">scalar</span><span class="p">())))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gij</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">tv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedded_basis</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tv</span><span class="p">:</span>
+                    <span class="n">tv</span><span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+
+        <span class="n">indexes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">[()]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">MFbasis</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MV</span><span class="o">.</span><span class="n">ONE</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">igrade</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="n">grade</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">iblade</span> <span class="ow">in</span> <span class="n">igrade</span><span class="p">:</span>
+                <span class="n">blade</span> <span class="o">=</span> <span class="n">MV</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;scalar&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ibasis</span> <span class="ow">in</span> <span class="n">iblade</span><span class="p">:</span>
+                    <span class="n">blade</span> <span class="o">^=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="n">ibasis</span><span class="p">]</span>
+                <span class="n">blade</span> <span class="o">=</span> <span class="n">blade</span><span class="o">.</span><span class="n">trigsimp</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">grade</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blade</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">MFbasis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grade</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MFbasis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span> <span class="o">=</span> <span class="n">trigsimp</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">)</span><span class="o">.</span><span class="n">scalar</span><span class="p">(),</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">duals</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MFbasis</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">duals</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">sgn</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dual</span> <span class="ow">in</span> <span class="n">duals</span><span class="p">:</span>
+            <span class="n">recpv</span> <span class="o">=</span> <span class="p">(</span><span class="n">sgn</span> <span class="o">*</span> <span class="n">dual</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">)</span><span class="o">.</span><span class="n">trigsimp</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recpv</span><span class="p">)</span>
+            <span class="n">sgn</span> <span class="o">=</span> <span class="o">-</span><span class="n">sgn</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbasis</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">:</span>
+            <span class="n">dbase</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span><span class="o">.</span><span class="n">trigsimp</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">dbase</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dbasis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dbase</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">linear_expand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">base</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coef</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">MV</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">is_grad</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">blade_rep</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">igrade</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">rcpr_bases_MV</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rbase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">rcpr_bases_MV</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rbase</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">rcpr_bases_MV</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">rcpr_bases_MV</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">oprint</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                   <span class="s">&#39;coords&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span>
+                   <span class="s">&#39;basis vectors&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">,</span>
+                   <span class="s">&#39;index&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                   <span class="s">&#39;basis blades&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">MFbasis</span><span class="p">,</span>
+                   <span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span>
+                   <span class="s">&#39;E**2&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span><span class="p">,</span>
+                   <span class="s">&#39;*basis&#39;</span><span class="p">,</span> <span class="n">duals</span><span class="p">,</span>
+                   <span class="s">&#39;rbasis&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span><span class="p">,</span>
+                   <span class="s">&#39;basis derivatives&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbasis</span><span class="p">,</span>
+                   <span class="s">&#39;surface&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface</span><span class="p">,</span>
+                   <span class="s">&#39;basis strings&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis_str</span><span class="p">,</span>
+                   <span class="s">&#39;embedding basis&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedded_basis</span><span class="p">,</span>
+                   <span class="s">&#39;metric tensor&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gij</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">Basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">Grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>  <span class="c"># Intrisic Derivative</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">rbase</span><span class="p">,</span> <span class="n">coord</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
+            <span class="n">dF</span> <span class="o">+=</span> <span class="n">rbase</span> <span class="o">*</span> <span class="n">F</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="n">dF</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="n">dF</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span>
+        <span class="k">return</span> <span class="n">dF</span>
+
+    <span class="k">def</span> <span class="nf">D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>  <span class="c"># Covariant Derivative</span>
+        <span class="n">dF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Grad</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">dF</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>  <span class="c"># Shape Tensor</span>
+
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">Proj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="n">PF</span> <span class="o">=</span> <span class="p">(</span><span class="n">F</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span>
+        <span class="n">PF</span> <span class="o">=</span> <span class="n">PF</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+        <span class="n">PF</span> <span class="o">=</span> <span class="n">PF</span><span class="o">.</span><span class="n">trigsimp</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">PF</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span><span class="p">)</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">Reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">F</span><span class="p">))</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">DD</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">opstr</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">mf_comp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rbasis</span><span class="p">:</span>
+            <span class="n">mf_comp</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span> <span class="o">|</span> <span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">E_sq</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">MV</span><span class="p">()</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="n">mf_comp</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">comp</span> <span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">coord</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">opstr</span><span class="p">:</span>
+                <span class="n">op</span> <span class="o">+=</span> <span class="s">&#39;(&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)D{&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;}+&#39;</span>
+        <span class="k">if</span> <span class="n">opstr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">op</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">Plot2DSurface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_range</span><span class="p">,</span> <span class="n">v_range</span><span class="p">,</span> <span class="n">surf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">tan</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">scalar_field</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">fct_def</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+        <span class="n">plot_template</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">from numpy import mgrid,shape,swapaxes,zeros,log,exp,sin,cos,tan</span>
+<span class="sd">$fct_def$</span>
+<span class="sd">eps = 1.0e-6</span>
+<span class="sd">u_r = $u_range$</span>
+<span class="sd">v_r = $v_range$</span>
+<span class="sd">$coords$ = mgrid[u_r[0]:u_r[1]+eps:(u_r[1]-u_r[0])/float(u_r[2]-1),\\</span>
+<span class="sd">                 v_r[0]:v_r[1]+eps:(v_r[1]-v_r[0])/float(v_r[2]-1)]</span>
+<span class="sd">X = $surface$</span>
+<span class="sd">scal_tan = $tan$</span>
+<span class="sd">x = X[&#39;ex&#39;]</span>
+<span class="sd">y = X[&#39;ey&#39;]</span>
+<span class="sd">z = X[&#39;ez&#39;]</span>
+<span class="sd">du = $basis_str[0]$</span>
+<span class="sd">dv = $basis_str[1]$</span>
+<span class="sd">Zero = zeros(shape(x))</span>
+<span class="sd">if scal_tan &gt; 0.0:</span>
+<span class="sd">    du_x = Zero+du[&#39;ex&#39;]</span>
+<span class="sd">    du_y = Zero+du[&#39;ey&#39;]</span>
+<span class="sd">    du_z = Zero+du[&#39;ez&#39;]</span>
+<span class="sd">    dv_x = Zero+dv[&#39;ex&#39;]</span>
+<span class="sd">    dv_y = Zero+dv[&#39;ey&#39;]</span>
+<span class="sd">    dv_z = Zero+dv[&#39;ez&#39;]</span>
+
+<span class="sd">f = $scalar_field$</span>
+<span class="sd">n = $n$</span>
+<span class="sd">skip = $skip$</span>
+<span class="sd">su = skip[0]</span>
+<span class="sd">sv = skip[1]</span>
+<span class="sd">if f[0] != None:</span>
+<span class="sd">    dn_x = f[0]*n[0]</span>
+<span class="sd">    dn_y = f[0]*n[1]</span>
+<span class="sd">    dn_z = f[0]*n[2]</span>
+
+<span class="sd">from mayavi.mlab import plot3d,quiver3d,mesh,figure</span>
+<span class="sd">figure(bgcolor=(1.0,1.0,1.0))</span>
+<span class="sd">if $surf$:</span>
+<span class="sd">    mesh(x,y,z,colormap=&quot;gist_earth&quot;)</span>
+<span class="sd">if $grid$:</span>
+<span class="sd">    for i in range(shape(u)[0]):</span>
+<span class="sd">        plot3d(x[i,],y[i,],z[i,],line_width=1.0,color=(0.0,0.0,0.0),tube_radius=None)</span>
+
+<span class="sd">    xr = swapaxes(x,0,1)</span>
+<span class="sd">    yr = swapaxes(y,0,1)</span>
+<span class="sd">    zr = swapaxes(z,0,1)</span>
+
+<span class="sd">    for i in range(shape(u)[1]):</span>
+<span class="sd">        plot3d(xr[i,],yr[i,],zr[i,],line_width=1.0,color=(0.0,0.0,0.0),tube_radius=None)</span>
+<span class="sd">if scal_tan &gt; 0.0:</span>
+<span class="sd">    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\</span>
+<span class="sd">             du_x[::su,::sv],du_y[::su,::sv],du_z[::su,::sv],scale_factor=scal_tan,\\</span>
+<span class="sd">             line_width=1.0,color=(0.0,0.0,0.0),scale_mode=&#39;vector&#39;,mode=&#39;arrow&#39;,resolution=16)</span>
+<span class="sd">    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\</span>
+<span class="sd">             dv_x[::su,::sv],dv_y[::su,::sv],dv_z[::su,::sv],scale_factor=scal_tan,\\</span>
+<span class="sd">             line_width=1.0,color=(0.0,0.0,0.0),scale_mode=&#39;vector&#39;,mode=&#39;arrow&#39;,resolution=16)</span>
+<span class="sd">if f[0] != None:</span>
+<span class="sd">    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\</span>
+<span class="sd">             dn_x[::su,::sv],dn_y[::su,::sv],dn_z[::su,::sv],\\</span>
+<span class="sd">             line_width=1.0,color=(0.0,0.0,0.0),scale_mode=&#39;none&#39;,mode=&#39;cone&#39;,\\</span>
+<span class="sd">             resolution=16,opacity=0.5)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip</span> <span class="o">=</span> <span class="n">skip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surf</span> <span class="o">=</span> <span class="n">surf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tan</span> <span class="o">=</span> <span class="n">tan</span>
+        <span class="k">if</span> <span class="n">fct_def</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fct_def</span> <span class="o">=</span> <span class="s">&#39; &#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fct_def</span> <span class="o">=</span> <span class="n">fct_to_str</span><span class="p">(</span><span class="n">fct_def</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_range</span> <span class="o">=</span> <span class="n">u_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_range</span> <span class="o">=</span> <span class="n">v_range</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scalar_field</span> <span class="o">=</span> <span class="p">[</span><span class="n">scalar_field</span><span class="p">]</span>
+
+        <span class="k">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">normal</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">VectorComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;ex&#39;</span><span class="p">,</span> <span class="s">&#39;ey&#39;</span><span class="p">,</span> <span class="s">&#39;ez&#39;</span><span class="p">])</span>
+
+        <span class="n">msurf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;manifold_surf.py&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">plot_template</span> <span class="o">=</span> <span class="n">FillTemplate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_template</span><span class="p">)</span>
+        <span class="n">msurf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">plot_template</span><span class="p">)</span>
+        <span class="n">msurf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">mayavi2</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s">&#39;mayavi2&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mayavi2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">system</span><span class="p">(</span><span class="n">mayavi2</span> <span class="o">+</span> <span class="s">&#39; manifold_surf.py &amp;&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

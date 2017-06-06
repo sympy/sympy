@@ -1,0 +1,210 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Inner Product &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Tensor Product" href="tensorproduct.html" />
+    <link rel="prev" title="Dagger" href="dagger.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensorproduct.html" title="Tensor Product"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dagger.html" title="Dagger"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.innerproduct">
+<span id="inner-product"></span><h1>Inner Product<a class="headerlink" href="#module-sympy.physics.quantum.innerproduct" title="Permalink to this headline">¶</a></h1>
+<p>Symbolic inner product.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.innerproduct.InnerProduct">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.innerproduct.</tt><tt class="descname">InnerProduct</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/innerproduct.html#InnerProduct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.innerproduct.InnerProduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unevaluated inner product between a Bra and a Ket [1].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>bra</strong> : BraBase or subclass</p>
+<blockquote>
+<div><p>The bra on the left side of the inner product.</p>
+</div></blockquote>
+<p><strong>ket</strong> : KetBase or subclass</p>
+<blockquote class="last">
+<div><p>The ket on the right side of the inner product.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r224" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R224]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Inner_product">http://en.wikipedia.org/wiki/Inner_product</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create an InnerProduct and check its properties:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">Bra</span><span class="p">,</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">InnerProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Bra</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">Ket</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span>
+<span class="go">&lt;b|k&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span><span class="o">.</span><span class="n">bra</span>
+<span class="go">&lt;b|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ip</span><span class="o">.</span><span class="n">ket</span>
+<span class="go">|k&gt;</span>
+</pre></div>
+</div>
+<p>In simple products of kets and bras inner products will be automatically
+identified and created:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">*</span><span class="n">k</span>
+<span class="go">&lt;b|k&gt;</span>
+</pre></div>
+</div>
+<p>But in more complex expressions, there is ambiguity in whether inner or
+outer products should be created:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">b</span>
+<span class="go">|k&gt;&lt;b|*|k&gt;*&lt;b|</span>
+</pre></div>
+</div>
+<p>A user can force the creation of a inner products in a complex expression
+by using parentheses to group the bra and ket:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">b</span>
+<span class="go">&lt;b|k&gt;*|k&gt;*&lt;b|</span>
+</pre></div>
+</div>
+<p>Notice how the inner product &lt;b|k&gt; moved to the left of the expression
+because inner products are commutative complex numbers.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dagger.html"
+                        title="previous chapter">Dagger</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tensorproduct.html"
+                        title="next chapter">Tensor Product</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/innerproduct.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensorproduct.html" title="Tensor Product"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dagger.html" title="Dagger"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

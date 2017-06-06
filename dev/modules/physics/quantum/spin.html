@@ -1,0 +1,930 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Spin &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="State" href="state.html" />
+    <link rel="prev" title="Represent" href="represent.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="state.html" title="State"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="represent.html" title="Represent"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.spin">
+<span id="spin"></span><h1>Spin<a class="headerlink" href="#module-sympy.physics.quantum.spin" title="Permalink to this headline">¶</a></h1>
+<p>Quantum mechanical angular momemtum.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.Rotation">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">Rotation</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#Rotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.Rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wigner D operator in terms of Euler angles.</p>
+<p>Defines the rotation operator in terms of the Euler angles defined by
+the z-y-z convention for a passive transformation. That is the coordinate
+axes are rotated first about the z-axis, giving the new x&#8217;-y&#8217;-z&#8217; axes. Then
+this new coordinate system is rotated about the new y&#8217;-axis, giving new
+x&#8217;&#8216;-y&#8217;&#8216;-z&#8217;&#8217; axes. Then this new coordinate system is rotated about the
+z&#8217;&#8216;-axis. Conventions follow those laid out in <a class="reference internal" href="#r228">[R228]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>alpha</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>First Euler Angle</p>
+</div></blockquote>
+<p><strong>beta</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>Second Euler angle</p>
+</div></blockquote>
+<p><strong>gamma</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Third Euler angle</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.WignerD" title="sympy.physics.quantum.spin.WignerD"><tt class="xref py py-obj docutils literal"><span class="pre">WignerD</span></tt></a></dt>
+<dd>Symbolic Wigner-D function</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.Rotation.D" title="sympy.physics.quantum.spin.Rotation.D"><tt class="xref py py-obj docutils literal"><span class="pre">D</span></tt></a></dt>
+<dd>Wigner-D function</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.Rotation.d" title="sympy.physics.quantum.spin.Rotation.d"><tt class="xref py py-obj docutils literal"><span class="pre">d</span></tt></a></dt>
+<dd>Wigner small-d function</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r228" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R228]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>A simple example rotation operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Rotation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rotation</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">R(pi,0,pi/2)</span>
+</pre></div>
+</div>
+<p>With symbolic Euler angles and calculating the inverse rotation operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b c&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rotation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="go">R(a,b,c)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rotation</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+<span class="go">R(-c,-b,-a)</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="sympy.physics.quantum.spin.Rotation.D">
+<em class="property">classmethod </em><tt class="descname">D</tt><big>(</big><em>j</em>, <em>m</em>, <em>mp</em>, <em>alpha</em>, <em>beta</em>, <em>gamma</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#Rotation.D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.Rotation.D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wigner D-function.</p>
+<p>Returns an instance of the WignerD class corresponding to the Wigner-D
+function specified by the parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : Number</p>
+<blockquote>
+<div><p>Total angular momentum</p>
+</div></blockquote>
+<p><strong>m</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along axis after rotation</p>
+</div></blockquote>
+<p><strong>mp</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along rotated axis</p>
+</div></blockquote>
+<p><strong>alpha</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>First Euler angle of rotation</p>
+</div></blockquote>
+<p><strong>beta</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>Second Euler angle of rotation</p>
+</div></blockquote>
+<p><strong>gamma</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Third Euler angle of rotation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.WignerD" title="sympy.physics.quantum.spin.WignerD"><tt class="xref py py-obj docutils literal"><span class="pre">WignerD</span></tt></a></dt>
+<dd>Symbolic Wigner-D function</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>Return the Wigner-D matrix element for a defined rotation, both
+numerical and symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Rotation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;alpha beta gamma&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rotation</span><span class="o">.</span><span class="n">D</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">WignerD(1, 1, 0, pi, pi/2, -pi)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.physics.quantum.spin.Rotation.d">
+<em class="property">classmethod </em><tt class="descname">d</tt><big>(</big><em>j</em>, <em>m</em>, <em>mp</em>, <em>beta</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#Rotation.d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.Rotation.d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wigner small-d function.</p>
+<p>Returns an instance of the WignerD class corresponding to the Wigner-D
+function specified by the parameters with the alpha and gamma angles
+given as 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : Number</p>
+<blockquote>
+<div><p>Total angular momentum</p>
+</div></blockquote>
+<p><strong>m</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along axis after rotation</p>
+</div></blockquote>
+<p><strong>mp</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along rotated axis</p>
+</div></blockquote>
+<p><strong>beta</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Second Euler angle of rotation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.WignerD" title="sympy.physics.quantum.spin.WignerD"><tt class="xref py py-obj docutils literal"><span class="pre">WignerD</span></tt></a></dt>
+<dd>Symbolic Wigner-D function</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>Return the Wigner-D matrix element for a defined rotation, both
+numerical and symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Rotation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beta</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;beta&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rotation</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">WignerD(1, 1, 0, 0, pi/2, 0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.WignerD">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">WignerD</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#WignerD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.WignerD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wigner-D function</p>
+<p>The Wigner D-function gives the matrix elements of the rotation
+operator in the jm-representation. For the Euler angles <span class="math">\(\alpha\)</span>,
+<span class="math">\(\beta\)</span>, <span class="math">\(\gamma\)</span>, the D-function is defined such that:</p>
+<div class="math">
+\[\begin{split}&lt;j,m| \mathcal{R}(\alpha, \beta, \gamma ) |j',m'&gt; = \delta_{jj'} D(j, m, m', \alpha, \beta, \gamma)\end{split}\]</div>
+<p>Where the rotation operator is as defined by the Rotation class <a class="reference internal" href="#r229">[R229]</a>.</p>
+<p>The Wigner D-function defined in this way gives:</p>
+<div class="math">
+\[D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}\]</div>
+<p>Where d is the Wigner small-d function, which is given by Rotation.d.</p>
+<p>The Wigner small-d function gives the component of the Wigner
+D-function that is determined by the second Euler angle. That is the
+Wigner D-function is:</p>
+<div class="math">
+\[D(j, m, m', \alpha, \beta, \gamma) = e^{-i m \alpha} d(j, m, m', \beta) e^{-i m' \gamma}\]</div>
+<p>Where d is the small-d function. The Wigner D-function is given by
+Rotation.D.</p>
+<p>Note that to evaluate the D-function, the j, m and mp parameters must
+be integer or half integer numbers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : Number</p>
+<blockquote>
+<div><p>Total angular momentum</p>
+</div></blockquote>
+<p><strong>m</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along axis after rotation</p>
+</div></blockquote>
+<p><strong>mp</strong> : Number</p>
+<blockquote>
+<div><p>Eigenvalue of angular momentum along rotated axis</p>
+</div></blockquote>
+<p><strong>alpha</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>First Euler angle of rotation</p>
+</div></blockquote>
+<p><strong>beta</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>Second Euler angle of rotation</p>
+</div></blockquote>
+<p><strong>gamma</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Third Euler angle of rotation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.Rotation" title="sympy.physics.quantum.spin.Rotation"><tt class="xref py py-obj docutils literal"><span class="pre">Rotation</span></tt></a></dt>
+<dd>Rotation operator</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r229" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R229]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Evaluate the Wigner-D matrix elements of a simple rotation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Rotation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span> <span class="o">=</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">D</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span>
+<span class="go">WignerD(1, 1, 0, pi, pi/2, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">sqrt(2)/2</span>
+</pre></div>
+</div>
+<p>Evaluate the Wigner-d matrix elements of a simple rotation</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span> <span class="o">=</span> <span class="n">Rotation</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span>
+<span class="go">WignerD(1, 1, 0, 0, pi/2, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rot</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-sqrt(2)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JxKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JxKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JxKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JxKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenket of Jx.</p>
+<p>See JzKet for the usage of spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Usage of spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JxBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JxBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JxBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JxBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenbra of Jx.</p>
+<p>See JzKet for the usage of spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Usage of spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JyKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JyKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JyKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JyKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenket of Jy.</p>
+<p>See JzKet for the usage of spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Usage of spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JyBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JyBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JyBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JyBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenbra of Jy.</p>
+<p>See JzKet for the usage of spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Usage of spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JzKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JzKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JzKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JzKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenket of Jz.</p>
+<p>Spin state which is an eigenstate of the Jz operator. Uncoupled states,
+that is states representing the interaction of multiple separate spin
+states, are defined as a tensor product of states.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>Total spin angular momentum</p>
+</div></blockquote>
+<p><strong>m</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Eigenvalue of the Jz spin operator</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Coupled eigenstates</dd>
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">TensorProduct</span></tt></dt>
+<dd>Used to specify uncoupled states</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.uncouple" title="sympy.physics.quantum.spin.uncouple"><tt class="xref py py-obj docutils literal"><span class="pre">uncouple</span></tt></a></dt>
+<dd>Uncouples states given coupling parameters</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.couple" title="sympy.physics.quantum.spin.couple"><tt class="xref py py-obj docutils literal"><span class="pre">couple</span></tt></a></dt>
+<dd>Couples uncoupled states</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p><em>Normal States:</em></p>
+<p>Defining simple spin states, both numerical and symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JzKet</span><span class="p">,</span> <span class="n">JxKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">|1,0&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;j m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKet</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="go">|j,m&gt;</span>
+</pre></div>
+</div>
+<p>Rewriting the JzKet in terms of eigenkets of the Jx operator:
+Note: that the resulting eigenstates are JxKet&#8217;s</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&quot;Jx&quot;</span><span class="p">)</span>
+<span class="go">|1,-1&gt;/2 - sqrt(2)*|1,0&gt;/2 + |1,1&gt;/2</span>
+</pre></div>
+</div>
+<p>Get the vector representation of a state in terms of the basis elements
+of the Jx operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">represent</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Jx</span><span class="p">,</span> <span class="n">Jz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">basis</span><span class="o">=</span><span class="n">Jx</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[      1/2],</span>
+<span class="go">[sqrt(2)/2],</span>
+<span class="go">[      1/2]])</span>
+</pre></div>
+</div>
+<p>Apply innerproducts between states:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.innerproduct</span> <span class="kn">import</span> <span class="n">InnerProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JxBra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">JxBra</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span>
+<span class="go">&lt;1,1|1,1&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">1/2</span>
+</pre></div>
+</div>
+<p><em>Uncoupled States:</em></p>
+<p>Define an uncoupled state as a TensorProduct between two Jz eigenkets:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.tensorproduct</span> <span class="kn">import</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j1</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">j2</span><span class="p">,</span><span class="n">m2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;j1 m1 j2 m2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">|1,0&gt;x|1,1&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span><span class="n">m1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="n">j2</span><span class="p">,</span><span class="n">m2</span><span class="p">))</span>
+<span class="go">|j1,m1&gt;x|j2,m2&gt;</span>
+</pre></div>
+</div>
+<p>A TensorProduct can be rewritten, in which case the eigenstates that make
+up the tensor product is rewritten to the new basis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">JxKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&#39;Jz&#39;</span><span class="p">)</span>
+<span class="go">|1,1&gt;x|1,-1&gt;/2 + sqrt(2)*|1,1&gt;x|1,0&gt;/2 + |1,1&gt;x|1,1&gt;/2</span>
+</pre></div>
+</div>
+<p>The represent method for TensorProduct&#8217;s gives the vector representation of
+the state. Note that the state in the product basis is the equivalent of the
+tensor product of the vector representation of the component eigenstates:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">Matrix([</span>
+<span class="go">[0],</span>
+<span class="go">[0],</span>
+<span class="go">[0],</span>
+<span class="go">[1],</span>
+<span class="go">[0],</span>
+<span class="go">[0],</span>
+<span class="go">[0],</span>
+<span class="go">[0],</span>
+<span class="go">[0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span><span class="n">JxKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">basis</span><span class="o">=</span><span class="n">Jz</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[      1/2],</span>
+<span class="go">[sqrt(2)/2],</span>
+<span class="go">[      1/2],</span>
+<span class="go">[        0],</span>
+<span class="go">[        0],</span>
+<span class="go">[        0],</span>
+<span class="go">[        0],</span>
+<span class="go">[        0],</span>
+<span class="go">[        0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JzBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JzBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JzBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JzBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eigenbra of Jz.</p>
+<p>See the JzKet for the usage of spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Usage of spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JxKetCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JxKetCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JxKetCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JxKetCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenket of Jx.</p>
+<p>See JzKetCoupled for the usage of coupled spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Usage of coupled spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JxBraCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JxBraCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JxBraCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JxBraCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenbra of Jx.</p>
+<p>See JzKetCoupled for the usage of coupled spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Usage of coupled spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JyKetCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JyKetCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JyKetCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JyKetCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenket of Jy.</p>
+<p>See JzKetCoupled for the usage of coupled spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Usage of coupled spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JyBraCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JyBraCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JyBraCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JyBraCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenbra of Jy.</p>
+<p>See JzKetCoupled for the usage of coupled spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Usage of coupled spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JzKetCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JzKetCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JzKetCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JzKetCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenket of Jz</p>
+<p>Spin state that is an eigenket of Jz which represents the coupling of
+separate spin spaces.</p>
+<p>The arguments for creating instances of JzKetCoupled are <tt class="docutils literal"><span class="pre">j</span></tt>, <tt class="docutils literal"><span class="pre">m</span></tt>,
+<tt class="docutils literal"><span class="pre">jn</span></tt> and an optional <tt class="docutils literal"><span class="pre">jcoupling</span></tt> argument. The <tt class="docutils literal"><span class="pre">j</span></tt> and <tt class="docutils literal"><span class="pre">m</span></tt> options
+are the total angular momentum quantum numbers, as used for normal states
+(e.g. JzKet).</p>
+<p>The other required parameter in <tt class="docutils literal"><span class="pre">jn</span></tt>, which is a tuple defining the <span class="math">\(j_n\)</span>
+angular momentum quantum numbers of the product spaces. So for example, if
+a state represented the coupling of the product basis state
+<span class="math">\(|j_1,m_1\rangle\times|j_2,m_2\rangle\)</span>, the <tt class="docutils literal"><span class="pre">jn</span></tt> for this state would be
+<tt class="docutils literal"><span class="pre">(j1,j2)</span></tt>.</p>
+<p>The final option is <tt class="docutils literal"><span class="pre">jcoupling</span></tt>, which is used to define how the spaces
+specified by <tt class="docutils literal"><span class="pre">jn</span></tt> are coupled, which includes both the order these spaces
+are coupled together and the quantum numbers that arise from these
+couplings. The <tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter itself is a list of lists, such that
+each of the sublists defines a single coupling between the spin spaces. If
+there are N coupled angular momentum spaces, that is <tt class="docutils literal"><span class="pre">jn</span></tt> has N elements,
+then there must be N-1 sublists. Each of these sublists making up the
+<tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter have length 3. The first two elements are the
+indicies of the product spaces that are considered to be coupled together.
+For example, if we want to couple <span class="math">\(j_1\)</span> and <span class="math">\(j_4\)</span>, the indicies would be 1
+and 4. If a state has already been coupled, it is referenced by the
+smallest index that is coupled, so if <span class="math">\(j_2\)</span> and <span class="math">\(j_4\)</span> has already been
+coupled to some <span class="math">\(j_{24}\)</span>, then this value can be coupled by referencing it
+with index 2. The final element of the sublist is the quantum number of the
+coupled state. So putting everything together, into a valid sublist for
+<tt class="docutils literal"><span class="pre">jcoupling</span></tt>, if <span class="math">\(j_1\)</span> and <span class="math">\(j_2\)</span> are coupled to an angular momentum space
+with quantum number <span class="math">\(j_{12}\)</span> with the value <tt class="docutils literal"><span class="pre">j12</span></tt>, the sublist would be
+<tt class="docutils literal"><span class="pre">(1,2,j12)</span></tt>, N-1 of these sublists are used in the list for
+<tt class="docutils literal"><span class="pre">jcoupling</span></tt>.</p>
+<p>Note the <tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter is optional, if it is not specified, the
+default coupling is taken. This default value is to coupled the spaces in
+order and take the quantum number of the coupling to be the maximum value.
+For example, if the spin spaces are <span class="math">\(j_1\)</span>, <span class="math">\(j_2\)</span>, <span class="math">\(j_3\)</span>, <span class="math">\(j_4\)</span>, then the
+default coupling couples <span class="math">\(j_1\)</span> and <span class="math">\(j_2\)</span> to <span class="math">\(j_{12}=j_1+j_2\)</span>, then,
+<span class="math">\(j_{12}\)</span> and <span class="math">\(j_3\)</span> are coupled to <span class="math">\(j_{123}=j_{12}+j_3\)</span>, and finally
+<span class="math">\(j_{123}\)</span> and <span class="math">\(j_4\)</span> to <span class="math">\(j=j_{123}+j_4\)</span>. The jcoupling value that would
+correspond to this is:</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">((1,2,j1+j2),(1,3,j1+j2+j3))</span></tt></div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The arguments that must be passed are <tt class="docutils literal"><span class="pre">j</span></tt>, <tt class="docutils literal"><span class="pre">m</span></tt>, <tt class="docutils literal"><span class="pre">jn</span></tt>, and
+<tt class="docutils literal"><span class="pre">jcoupling</span></tt>. The <tt class="docutils literal"><span class="pre">j</span></tt> value is the total angular momentum. The <tt class="docutils literal"><span class="pre">m</span></tt>
+value is the eigenvalue of the Jz spin operator. The <tt class="docutils literal"><span class="pre">jn</span></tt> list are
+the j values of argular momentum spaces coupled together. The
+<tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter is an optional parameter defining how the spaces
+are coupled together. See the above description for how these coupling
+parameters are defined.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKet" title="sympy.physics.quantum.spin.JzKet"><tt class="xref py py-obj docutils literal"><span class="pre">JzKet</span></tt></a></dt>
+<dd>Normal spin eigenstates</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.uncouple" title="sympy.physics.quantum.spin.uncouple"><tt class="xref py py-obj docutils literal"><span class="pre">uncouple</span></tt></a></dt>
+<dd>Uncoupling of coupling spin states</dd>
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.couple" title="sympy.physics.quantum.spin.couple"><tt class="xref py py-obj docutils literal"><span class="pre">couple</span></tt></a></dt>
+<dd>Coupling of uncoupled spin states</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>Defining simple spin states, both numerical and symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JzKetCoupled</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">|1,0,j1=1,j2=1&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">j1</span><span class="p">,</span> <span class="n">j2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;j m j1 j2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">))</span>
+<span class="go">|j,m,j1=j1,j2=j2&gt;</span>
+</pre></div>
+</div>
+<p>Defining coupled spin states for more than 2 coupled spaces with various
+coupling parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">|2,1,j1=1,j2=1,j3=1,j(1,2)=2&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span>
+<span class="go">|2,1,j1=1,j2=1,j3=1,j(1,2)=2&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span>
+<span class="go">|2,1,j1=1,j2=1,j3=1,j(2,3)=1&gt;</span>
+</pre></div>
+</div>
+<p>Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:
+Note: that the resulting eigenstates are JxKetCoupled</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&quot;Jx&quot;</span><span class="p">)</span>
+<span class="go">|1,-1,j1=1,j2=1&gt;/2 - sqrt(2)*|1,0,j1=1,j2=1&gt;/2 + |1,1,j1=1,j2=1&gt;/2</span>
+</pre></div>
+</div>
+<p>The rewrite method can be used to convert a coupled state to an uncoupled
+state. This is done by passing coupled=False to the rewrite function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&#39;Jz&#39;</span><span class="p">,</span> <span class="n">coupled</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">-sqrt(2)*|1,-1&gt;x|1,1&gt;/2 + sqrt(2)*|1,1&gt;x|1,-1&gt;/2</span>
+</pre></div>
+</div>
+<p>Get the vector representation of a state in terms of the basis elements
+of the Jx operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.represent</span> <span class="kn">import</span> <span class="n">represent</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">Jx</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">represent</span><span class="p">(</span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="n">basis</span><span class="o">=</span><span class="n">Jx</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[        0],</span>
+<span class="go">[      1/2],</span>
+<span class="go">[sqrt(2)/2],</span>
+<span class="go">[      1/2]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.spin.JzBraCoupled">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">JzBraCoupled</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#JzBraCoupled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.JzBraCoupled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Coupled eigenbra of Jz.</p>
+<p>See the JzKetCoupled for the usage of coupled spin eigenstates.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.spin.JzKetCoupled" title="sympy.physics.quantum.spin.JzKetCoupled"><tt class="xref py py-obj docutils literal"><span class="pre">JzKetCoupled</span></tt></a></dt>
+<dd>Usage of coupled spin states</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.spin.couple">
+<tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">couple</tt><big>(</big><em>expr</em>, <em>jcoupling_list=None</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#couple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.couple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Couple a tensor product of spin states</p>
+<p>This function can be used to couple an uncoupled tensor product of spin
+states. All of the eigenstates to be coupled must be of the same class. It
+will return a linear combination of eigenstates that are subclasses of
+CoupledSpinState determined by Clebsch-Gordan angular momentum coupling
+coefficients.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Expr</p>
+<blockquote>
+<div><p>An expression involving TensorProducts of spin states to be coupled.
+Each state must be a subclass of SpinState and they all must be the
+same class.</p>
+</div></blockquote>
+<p><strong>jcoupling_list</strong> : list or tuple</p>
+<blockquote class="last">
+<div><p>Elements of this list are sub-lists of length 2 specifying the order of
+the coupling of the spin spaces. The length of this must be N-1, where N
+is the number of states in the tensor product to be coupled. The
+elements of this sublist are the same as the first two elements of each
+sublist in the <tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter defined for JzKetCoupled. If this
+parameter is not specified, the default value is taken, which couples
+the first and second product basis spaces, then couples this new coupled
+space to the third product space, etc</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Couple a tensor product of numerical states for two spaces:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JzKet</span><span class="p">,</span> <span class="n">couple</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.tensorproduct</span> <span class="kn">import</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">couple</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">-sqrt(2)*|1,1,j1=1,j2=1&gt;/2 + sqrt(2)*|2,1,j1=1,j2=1&gt;/2</span>
+</pre></div>
+</div>
+<p>Numerical coupling of three spaces using the default coupling method, i.e.
+first and second spaces couple, then this couples to the third space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">couple</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)))</span>
+<span class="go">sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,2)=2&gt;/3 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,2)=2&gt;/3</span>
+</pre></div>
+</div>
+<p>Perform this same coupling, but we define the coupling to first couple
+the first and third spaces:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">couple</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span>
+<span class="go">sqrt(2)*|2,2,j1=1,j2=1,j3=1,j(1,3)=1&gt;/2 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,3)=2&gt;/6 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,3)=2&gt;/3</span>
+</pre></div>
+</div>
+<p>Couple a tensor product of symbolic states:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j1</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">j2</span><span class="p">,</span><span class="n">m2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;j1 m1 j2 m2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">couple</span><span class="p">(</span><span class="n">TensorProduct</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span><span class="n">m1</span><span class="p">),</span> <span class="n">JzKet</span><span class="p">(</span><span class="n">j2</span><span class="p">,</span><span class="n">m2</span><span class="p">)))</span>
+<span class="go">Sum(CG(j1, m1, j2, m2, j, m1 + m2)*|j,m1 + m2,j1=j1,j2=j2&gt;, (j, m1 + m2, j1 + j2))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.spin.uncouple">
+<tt class="descclassname">sympy.physics.quantum.spin.</tt><tt class="descname">uncouple</tt><big>(</big><em>expr</em>, <em>jn=None</em>, <em>jcoupling_list=None</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/spin.html#uncouple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.spin.uncouple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uncouple a coupled spin state</p>
+<p>Gives the uncoupled representation of a coupled spin state. Arguments must
+be either a spin state that is a subclass of CoupledSpinState or a spin
+state that is a subclass of SpinState and an array giving the j values
+of the spaces that are to be coupled</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Expr</p>
+<blockquote>
+<div><p>The expression containing states that are to be coupled. If the states
+are a subclass of SpinState, the <tt class="docutils literal"><span class="pre">jn</span></tt> and <tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameters
+must be defined. If the states are a subclass of CoupledSpinState,
+<tt class="docutils literal"><span class="pre">jn</span></tt> and <tt class="docutils literal"><span class="pre">jcoupling</span></tt> will be taken from the state.</p>
+</div></blockquote>
+<p><strong>jn</strong> : list or tuple</p>
+<blockquote>
+<div><p>The list of the j-values that are coupled. If state is a
+CoupledSpinState, this parameter is ignored. This must be defined if
+state is not a subclass of CoupledSpinState. The syntax of this
+parameter is the same as the <tt class="docutils literal"><span class="pre">jn</span></tt> parameter of JzKetCoupled.</p>
+</div></blockquote>
+<p><strong>jcoupling_list</strong> : list or tuple</p>
+<blockquote class="last">
+<div><p>The list defining how the j-values are coupled together. If state is a
+CoupledSpinState, this parameter is ignored. This must be defined if
+state is not a subclass of CoupledSpinState. The syntax of this
+parameter is the same as the <tt class="docutils literal"><span class="pre">jcoupling</span></tt> parameter of JzKetCoupled.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Uncouple a numerical state using a CoupledSpinState state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JzKetCoupled</span><span class="p">,</span> <span class="n">uncouple</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">sqrt(2)*|1/2,-1/2&gt;x|1/2,1/2&gt;/2 + sqrt(2)*|1/2,1/2&gt;x|1/2,-1/2&gt;/2</span>
+</pre></div>
+</div>
+<p>Perform the same calculation using a SpinState state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="n">JzKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">sqrt(2)*|1/2,-1/2&gt;x|1/2,1/2&gt;/2 + sqrt(2)*|1/2,1/2&gt;x|1/2,-1/2&gt;/2</span>
+</pre></div>
+</div>
+<p>Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="p">))</span>
+<span class="go">|1,-1&gt;x|1,1&gt;x|1,1&gt;/2 - |1,0&gt;x|1,0&gt;x|1,1&gt;/2 + |1,1&gt;x|1,0&gt;x|1,0&gt;/2 - |1,1&gt;x|1,1&gt;x|1,-1&gt;/2</span>
+</pre></div>
+</div>
+<p>Perform the same calculation using a SpinState state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="p">)</span>
+<span class="go">|1,-1&gt;x|1,1&gt;x|1,1&gt;/2 - |1,0&gt;x|1,0&gt;x|1,1&gt;/2 + |1,1&gt;x|1,0&gt;x|1,0&gt;/2 - |1,1&gt;x|1,1&gt;x|1,-1&gt;/2</span>
+</pre></div>
+</div>
+<p>Uncouple a symbolic state using a CoupledSpinState state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">j1</span><span class="p">,</span><span class="n">j2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;j m j1 j2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKetCoupled</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">)))</span>
+<span class="go">Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1&gt;x|j2,m2&gt;, (m1, -j1, j1), (m2, -j2, j2))</span>
+</pre></div>
+</div>
+<p>Perform the same calculation using a SpinState state</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">uncouple</span><span class="p">(</span><span class="n">JzKet</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span> <span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="p">))</span>
+<span class="go">Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1&gt;x|j2,m2&gt;, (m1, -j1, j1), (m2, -j2, j2))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="represent.html"
+                        title="previous chapter">Represent</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="state.html"
+                        title="next chapter">State</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/spin.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="state.html" title="State"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="represent.html" title="Represent"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

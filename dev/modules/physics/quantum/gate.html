@@ -1,0 +1,699 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gates &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Grover’s Algorithm" href="grover.html" />
+    <link rel="prev" title="Circuit Plot" href="circuitplot.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grover.html" title="Grover’s Algorithm"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="circuitplot.html" title="Circuit Plot"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.gate">
+<span id="gates"></span><h1>Gates<a class="headerlink" href="#module-sympy.physics.quantum.gate" title="Permalink to this headline">¶</a></h1>
+<p>An implementation of gates that act on qubits.</p>
+<p>Gates are unitary operators that act on the space of qubits.</p>
+<p>Medium Term Todo:</p>
+<ul class="simple">
+<li>Optimize Gate._apply_operators_Qubit to remove the creation of many
+intermediate Qubit objects.</li>
+<li>Add commutation relationships to all operators and use this in gate_sort.</li>
+<li>Fix gate_sort and gate_simp.</li>
+<li>Get multi-target UGates plotting properly.</li>
+<li>Get UGate to work with either sympy/numpy matrices and output either
+format. This should also use the matrix slots.</li>
+</ul>
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.Gate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">Gate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#Gate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.Gate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Non-controlled unitary gate operator that acts on qubits.</p>
+<p>This is a general abstract gate that needs to be subclassed to do anything
+useful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>label</strong> : tuple, int</p>
+<blockquote class="last">
+<div><p>A list of the target qubits (as ints) that the gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.Gate.get_target_matrix">
+<tt class="descname">get_target_matrix</tt><big>(</big><em>format='sympy'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#Gate.get_target_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.Gate.get_target_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The matrix rep. of the target part of the gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>format</strong> : str</p>
+<blockquote class="last">
+<div><p>The format string (&#8216;sympy&#8217;,&#8217;numpy&#8217;, etc.)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Gate.min_qubits">
+<tt class="descname">min_qubits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#Gate.min_qubits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.Gate.min_qubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimum number of qubits this gate needs to act on.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Gate.nqubits">
+<tt class="descname">nqubits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#Gate.nqubits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.Gate.nqubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of qubits this gate acts on.</p>
+<p>For controlled gate subclasses this includes both target and control
+qubits, so that, for examples the CNOT gate acts on 2 qubits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Gate.targets">
+<tt class="descname">targets</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#Gate.targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.Gate.targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of target qubits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.CGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">CGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general unitary gate with control qubits.</p>
+<p>A general control gate applies a target gate to a set of targets if all
+of the control qubits have a particular values (set by
+<tt class="docutils literal"><span class="pre">CGate.control_value</span></tt>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>label</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The label in this case has the form (controls, gate), where controls
+is a tuple/list of control qubits (as ints) and gate is a <tt class="docutils literal"><span class="pre">Gate</span></tt>
+instance that is the target operator.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CGate.controls">
+<tt class="descname">controls</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.controls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.controls" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of control qubits.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.CGate.decompose">
+<tt class="descname">decompose</tt><big>(</big><em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.decompose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.decompose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompose the controlled gate into CNOT and single qubits gates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.CGate.eval_controls">
+<tt class="descname">eval_controls</tt><big>(</big><em>qubit</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.eval_controls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.eval_controls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True/False to indicate if the controls are satisfied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CGate.gate">
+<tt class="descname">gate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.gate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.gate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The non-controlled gate that will be applied to the targets.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CGate.min_qubits">
+<tt class="descname">min_qubits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.min_qubits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.min_qubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimum number of qubits this gate needs to act on.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CGate.nqubits">
+<tt class="descname">nqubits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.nqubits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.nqubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of qubits this gate acts on.</p>
+<p>For controlled gate subclasses this includes both target and control
+qubits, so that, for examples the CNOT gate acts on 2 qubits.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.CGate.plot_gate">
+<tt class="descname">plot_gate</tt><big>(</big><em>circ_plot</em>, <em>gate_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.plot_gate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.plot_gate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the controlled gate. If <em>simplify_cgate</em> is true, simplify
+C-X and C-Z gates into their more familiar forms.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CGate.targets">
+<tt class="descname">targets</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGate.targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGate.targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of target qubits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.UGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">UGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#UGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.UGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>General gate specified by a set of targets and a target matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>label</strong> : tuple</p>
+<blockquote class="last">
+<div><p>A tuple of the form (targets, U), where targets is a tuple of the
+target qubits and U is a unitary matrix with dimension of
+len(targets).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.UGate.get_target_matrix">
+<tt class="descname">get_target_matrix</tt><big>(</big><em>format='sympy'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#UGate.get_target_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.UGate.get_target_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The matrix rep. of the target part of the gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>format</strong> : str</p>
+<blockquote class="last">
+<div><p>The format string (&#8216;sympy&#8217;,&#8217;numpy&#8217;, etc.)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.UGate.targets">
+<tt class="descname">targets</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#UGate.targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.UGate.targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of target qubits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.OneQubitGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">OneQubitGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#OneQubitGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.OneQubitGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single qubit unitary gate base class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.TwoQubitGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">TwoQubitGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#TwoQubitGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.TwoQubitGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>A two qubit unitary gate base class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.IdentityGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">IdentityGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#IdentityGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.IdentityGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit identity gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.HadamardGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">HadamardGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#HadamardGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.HadamardGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit Hadamard gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">HadamardGate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qapply</span><span class="p">(</span><span class="n">HadamardGate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">))</span>
+<span class="go">sqrt(2)*|0&gt;/2 - sqrt(2)*|1&gt;/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Hadamard on bell state, applied on 2 qubits.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psi</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;00&#39;</span><span class="p">)</span><span class="o">+</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;11&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qapply</span><span class="p">(</span><span class="n">HadamardGate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">HadamardGate</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">psi</span><span class="p">)</span>
+<span class="go">sqrt(2)*|00&gt;/2 + sqrt(2)*|11&gt;/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.XGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">XGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#XGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.XGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit X, or NOT, gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.YGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">YGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#YGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.YGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit Y gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.ZGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">ZGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#ZGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.ZGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit Z gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.TGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">TGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#TGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.TGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit pi/8 gate.</p>
+<p>This gate rotates the phase of the state by pi/4 if the state is <tt class="docutils literal"><span class="pre">|1&gt;</span></tt> and
+does nothing if the state is <tt class="docutils literal"><span class="pre">|0&gt;</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.PhaseGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">PhaseGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#PhaseGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.PhaseGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The single qubit phase, or S, gate.</p>
+<p>This gate rotates the phase of the state by pi/2 if the state is <tt class="docutils literal"><span class="pre">|1&gt;</span></tt> and
+does nothing if the state is <tt class="docutils literal"><span class="pre">|0&gt;</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>target</strong> : int</p>
+<blockquote class="last">
+<div><p>The target qubit this gate will apply to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.SwapGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">SwapGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#SwapGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.SwapGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two qubit SWAP gate.</p>
+<p>This gate swap the values of the two qubits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>label</strong> : tuple</p>
+<blockquote class="last">
+<div><p>A tuple of the form (target1, target2).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.quantum.gate.SwapGate.decompose">
+<tt class="descname">decompose</tt><big>(</big><em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#SwapGate.decompose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.SwapGate.decompose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompose the SWAP gate into CNOT gates.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.CNotGate">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">CNotGate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CNotGate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CNotGate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Two qubit controlled-NOT.</p>
+<p>This gate performs the NOT or X gate on the target qubit if the control
+qubits all have the value 1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>label</strong> : tuple</p>
+<blockquote class="last">
+<div><p>A tuple of the form (control, target).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">CNOT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">CNOT</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qapply</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">Qubit</span><span class="p">(</span><span class="s">&#39;10&#39;</span><span class="p">))</span> <span class="c"># note that qubits are indexed from right to left</span>
+<span class="go">|11&gt;</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CNotGate.controls">
+<tt class="descname">controls</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CNotGate.controls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CNotGate.controls" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of control qubits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CNotGate.gate">
+<tt class="descname">gate</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CNotGate.gate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CNotGate.gate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The non-controlled gate that will be applied to the targets.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CNotGate.min_qubits">
+<tt class="descname">min_qubits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CNotGate.min_qubits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CNotGate.min_qubits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimum number of qubits this gate needs to act on.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CNotGate.targets">
+<tt class="descname">targets</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CNotGate.targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CNotGate.targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>A tuple of target qubits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.CNOT">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">CNOT</tt><a class="headerlink" href="#sympy.physics.quantum.gate.CNOT" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.CNotGate" title="sympy.physics.quantum.gate.CNotGate"><tt class="xref py py-class docutils literal"><span class="pre">CNotGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.SWAP">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">SWAP</tt><a class="headerlink" href="#sympy.physics.quantum.gate.SWAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.SwapGate" title="sympy.physics.quantum.gate.SwapGate"><tt class="xref py py-class docutils literal"><span class="pre">SwapGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.H">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">H</tt><a class="headerlink" href="#sympy.physics.quantum.gate.H" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.HadamardGate" title="sympy.physics.quantum.gate.HadamardGate"><tt class="xref py py-class docutils literal"><span class="pre">HadamardGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.X">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">X</tt><a class="headerlink" href="#sympy.physics.quantum.gate.X" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.XGate" title="sympy.physics.quantum.gate.XGate"><tt class="xref py py-class docutils literal"><span class="pre">XGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Y">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">Y</tt><a class="headerlink" href="#sympy.physics.quantum.gate.Y" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.YGate" title="sympy.physics.quantum.gate.YGate"><tt class="xref py py-class docutils literal"><span class="pre">YGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Z">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">Z</tt><a class="headerlink" href="#sympy.physics.quantum.gate.Z" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.ZGate" title="sympy.physics.quantum.gate.ZGate"><tt class="xref py py-class docutils literal"><span class="pre">ZGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.T">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">T</tt><a class="headerlink" href="#sympy.physics.quantum.gate.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.TGate" title="sympy.physics.quantum.gate.TGate"><tt class="xref py py-class docutils literal"><span class="pre">TGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.S">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">S</tt><a class="headerlink" href="#sympy.physics.quantum.gate.S" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.PhaseGate" title="sympy.physics.quantum.gate.PhaseGate"><tt class="xref py py-class docutils literal"><span class="pre">PhaseGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.gate.Phase">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">Phase</tt><a class="headerlink" href="#sympy.physics.quantum.gate.Phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.quantum.gate.PhaseGate" title="sympy.physics.quantum.gate.PhaseGate"><tt class="xref py py-class docutils literal"><span class="pre">PhaseGate</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.gate.normalized">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">normalized</tt><big>(</big><em>normalize</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#normalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.normalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set flag controlling normalization of Hadamard gates by 1/sqrt(2).</p>
+<p>This is a global setting that can be used to simplify the look of various
+expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>normalize</strong> : bool</p>
+<blockquote class="last">
+<div><p>Should the Hadamard gate include the 1/sqrt(2) normalization factor?
+When True, the Hadamard gate will have the 1/sqrt(2). When False, the
+Hadamard gate will not have this factor.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.gate.gate_sort">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">gate_sort</tt><big>(</big><em>circuit</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#gate_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.gate_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts the gates while keeping track of commutation relations</p>
+<p>This function uses a bubble sort to rearrange the order of gate
+application. Keeps track of Quantum computations special commutation
+relations (e.g. things that apply to the same Qubit do not commute with
+each other)</p>
+<p>circuit is the Mul of gates that are to be sorted.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.gate.gate_simp">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">gate_simp</tt><big>(</big><em>circuit</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#gate_simp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.gate_simp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies gates symbolically</p>
+<p>It first sorts gates using gate_sort. It then applies basic
+simplification rules to the circuit, e.g., XGate**2 = Identity</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.gate.random_circuit">
+<tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">random_circuit</tt><big>(</big><em>ngates</em>, <em>nqubits</em>, <em>gate_space=(&lt;class 'sympy.physics.quantum.gate.XGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.YGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.ZGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.PhaseGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.TGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.HadamardGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.CNotGate'&gt;</em>, <em>&lt;class 'sympy.physics.quantum.gate.SwapGate'&gt;)</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#random_circuit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.random_circuit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random circuit of ngates and nqubits.</p>
+<p>This uses an equally weighted sample of (X, Y, Z, S, T, H, CNOT, SWAP)
+gates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>ngates</strong> : int</p>
+<blockquote>
+<div><p>The number of gates in the circuit.</p>
+</div></blockquote>
+<p><strong>nqubits</strong> : int</p>
+<blockquote>
+<div><p>The number of qubits in the circuit.</p>
+</div></blockquote>
+<p><strong>gate_space</strong> : tuple</p>
+<blockquote class="last">
+<div><p>A tuple of the gate classes that will be used in the circuit.
+Repeating gate classes multiple times in this tuple will increase
+the frequency they appear in the random circuit.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.gate.CGateS">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.gate.</tt><tt class="descname">CGateS</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/gate.html#CGateS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.gate.CGateS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Version of CGate that allows gate simplifications.
+I.e. cnot looks like an oplus, cphase has dots, etc.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="circuitplot.html"
+                        title="previous chapter">Circuit Plot</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="grover.html"
+                        title="next chapter">Grover&#8217;s Algorithm</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/gate.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grover.html" title="Grover’s Algorithm"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="circuitplot.html" title="Circuit Plot"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

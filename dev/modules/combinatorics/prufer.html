@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Prufer Sequences &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Subsets" href="subsets.html" />
+    <link rel="prev" title="Polyhedron" href="polyhedron.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="subsets.html" title="Subsets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="polyhedron.html" title="Polyhedron"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.prufer">
+<span id="prufer-sequences"></span><span id="combinatorics-prufer"></span><h1>Prufer Sequences<a class="headerlink" href="#module-sympy.combinatorics.prufer" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.combinatorics.prufer.Prufer">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.prufer.</tt><tt class="descname">Prufer</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Prufer correspondence is an algorithm that describes the
+bijection between labeled trees and the Prufer code. A Prufer
+code of a labeled tree is unique up to isomorphism and has
+a length of n - 2.</p>
+<p>Prufer sequences were first used by Heinz Prufer to give a
+proof of Cayley&#8217;s formula.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R11]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/LabeledTree.html">http://mathworld.wolfram.com/LabeledTree.html</a></td></tr>
+</tbody>
+</table>
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.prufer.Prufer.edges">
+<em class="property">static </em><tt class="descname">edges</tt><big>(</big><em>*runs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of edges and the number of nodes from the given runs
+that connect nodes in an integer-labelled tree.</p>
+<p>All node numbers will be shifted so that the minimum node is 0. It is
+not a problem if edges are repeated in the runs; only unique edges are
+returned. There is no assumption made about what the range of the node
+labels should be, but all nodes from the smallest through the largest
+must be present.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="o">.</span><span class="n">edges</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span> <span class="c"># a T</span>
+<span class="go">([[0, 1], [1, 2], [1, 3], [3, 4]], 5)</span>
+</pre></div>
+</div>
+<p>Duplicate edges are removed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="o">.</span><span class="n">edges</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span> <span class="c"># a K</span>
+<span class="go">([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.prufer.Prufer.next">
+<tt class="descname">next</tt><big>(</big><em>delta=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the Prufer sequence that is delta beyond the current one.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prufer_rank" title="sympy.combinatorics.prufer.Prufer.prufer_rank"><tt class="xref py py-obj docutils literal"><span class="pre">prufer_rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.rank" title="sympy.combinatorics.prufer.Prufer.rank"><tt class="xref py py-obj docutils literal"><span class="pre">rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prev" title="sympy.combinatorics.prufer.Prufer.prev"><tt class="xref py py-obj docutils literal"><span class="pre">prev</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.size" title="sympy.combinatorics.prufer.Prufer.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c"># == a.next()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tree_repr</span>
+<span class="go">[[0, 2], [0, 1], [1, 3]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.prufer.Prufer.nodes">
+<tt class="descname">nodes</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of nodes in the tree.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span><span class="o">.</span><span class="n">nodes</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">nodes</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.prufer.Prufer.prev">
+<tt class="descname">prev</tt><big>(</big><em>delta=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.prev"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.prev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the Prufer sequence that is -delta before the current one.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prufer_rank" title="sympy.combinatorics.prufer.Prufer.prufer_rank"><tt class="xref py py-obj docutils literal"><span class="pre">prufer_rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.rank" title="sympy.combinatorics.prufer.Prufer.rank"><tt class="xref py py-obj docutils literal"><span class="pre">rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.next" title="sympy.combinatorics.prufer.Prufer.next"><tt class="xref py py-obj docutils literal"><span class="pre">next</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.size" title="sympy.combinatorics.prufer.Prufer.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">36</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">Prufer([1, 2, 0])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">35</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.prufer.Prufer.prufer_rank">
+<tt class="descname">prufer_rank</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.prufer_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.prufer_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the rank of a Prufer sequence.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.rank" title="sympy.combinatorics.prufer.Prufer.rank"><tt class="xref py py-obj docutils literal"><span class="pre">rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.next" title="sympy.combinatorics.prufer.Prufer.next"><tt class="xref py py-obj docutils literal"><span class="pre">next</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prev" title="sympy.combinatorics.prufer.Prufer.prev"><tt class="xref py py-obj docutils literal"><span class="pre">prev</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.size" title="sympy.combinatorics.prufer.Prufer.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prufer_rank</span><span class="p">()</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.prufer.Prufer.prufer_repr">
+<tt class="descname">prufer_repr</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.prufer_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.prufer_repr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns Prufer sequence for the Prufer object.</p>
+<p>This sequence is found by removing the highest numbered vertex,
+recording the node it was attached to, and continuuing until only
+two verices remain. The Prufer sequence is the list of recorded nodes.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.to_prufer" title="sympy.combinatorics.prufer.Prufer.to_prufer"><tt class="xref py py-obj docutils literal"><span class="pre">to_prufer</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span><span class="o">.</span><span class="n">prufer_repr</span>
+<span class="go">[3, 3, 3, 4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">prufer_repr</span>
+<span class="go">[1, 0, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.prufer.Prufer.rank">
+<tt class="descname">rank</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rank of the Prufer sequence.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prufer_rank" title="sympy.combinatorics.prufer.Prufer.prufer_rank"><tt class="xref py py-obj docutils literal"><span class="pre">prufer_rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.next" title="sympy.combinatorics.prufer.Prufer.next"><tt class="xref py py-obj docutils literal"><span class="pre">next</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prev" title="sympy.combinatorics.prufer.Prufer.prev"><tt class="xref py py-obj docutils literal"><span class="pre">prev</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.size" title="sympy.combinatorics.prufer.Prufer.size"><tt class="xref py py-obj docutils literal"><span class="pre">size</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">778</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">779</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">777</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.prufer.Prufer.size">
+<tt class="descname">size</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of possible trees of this Prufer object.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prufer_rank" title="sympy.combinatorics.prufer.Prufer.prufer_rank"><tt class="xref py py-obj docutils literal"><span class="pre">prufer_rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.rank" title="sympy.combinatorics.prufer.Prufer.rank"><tt class="xref py py-obj docutils literal"><span class="pre">rank</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.next" title="sympy.combinatorics.prufer.Prufer.next"><tt class="xref py py-obj docutils literal"><span class="pre">next</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prev" title="sympy.combinatorics.prufer.Prufer.prev"><tt class="xref py py-obj docutils literal"><span class="pre">prev</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">Prufer</span><span class="p">([</span><span class="mi">6</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1296</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.prufer.Prufer.to_prufer">
+<em class="property">static </em><tt class="descname">to_prufer</tt><big>(</big><em>tree</em>, <em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.to_prufer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.to_prufer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Prufer sequence for a tree given as a list of edges where
+<tt class="docutils literal"><span class="pre">n</span></tt> is the number of nodes in the tree.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.prufer_repr" title="sympy.combinatorics.prufer.Prufer.prufer_repr"><tt class="xref py py-obj docutils literal"><span class="pre">prufer_repr</span></tt></a></dt>
+<dd>returns Prufer sequence of a Prufer object.</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">prufer_repr</span>
+<span class="go">[0, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="o">.</span><span class="n">to_prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[0, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.prufer.Prufer.to_tree">
+<em class="property">static </em><tt class="descname">to_tree</tt><big>(</big><em>prufer</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.to_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.to_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the tree (as a list of edges) of the given Prufer sequence.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.tree_repr" title="sympy.combinatorics.prufer.Prufer.tree_repr"><tt class="xref py py-obj docutils literal"><span class="pre">tree_repr</span></tt></a></dt>
+<dd>returns tree representation of a Prufer object.</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://hamberg.no/erlend/2010/11/06/prufer-sequence/">http://hamberg.no/erlend/2010/11/06/prufer-sequence/</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Prufer</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">tree_repr</span>
+<span class="go">[[0, 1], [0, 2], [2, 3]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="o">.</span><span class="n">to_tree</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">[[0, 1], [0, 2], [2, 3]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.prufer.Prufer.tree_repr">
+<tt class="descname">tree_repr</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.tree_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.tree_repr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the tree representation of the Prufer object.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.prufer.Prufer.to_tree" title="sympy.combinatorics.prufer.Prufer.to_tree"><tt class="xref py py-obj docutils literal"><span class="pre">to_tree</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span><span class="o">.</span><span class="n">tree_repr</span>
+<span class="go">[[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">tree_repr</span>
+<span class="go">[[1, 2], [0, 1], [0, 3], [0, 4]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.prufer.Prufer.unrank">
+<em class="property">classmethod </em><tt class="descname">unrank</tt><big>(</big><em>rank</em>, <em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/prufer.html#Prufer.unrank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.prufer.Prufer.unrank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the unranked Prufer sequence.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.prufer</span> <span class="kn">import</span> <span class="n">Prufer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Prufer</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">Prufer([0, 0])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="polyhedron.html"
+                        title="previous chapter">Polyhedron</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="subsets.html"
+                        title="next chapter">Subsets</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/prufer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="subsets.html" title="Subsets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="polyhedron.html" title="Polyhedron"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

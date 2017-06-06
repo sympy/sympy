@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Vector for Geometric Algebra &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Geometric Algebra Module" href="index.html" />
+    <link rel="next" title="Precedence for Geometric Algebra" href="precedence.html" />
+    <link rel="prev" title="Manifold for Geometric Algebra" href="manifold.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="precedence.html" title="Precedence for Geometric Algebra"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="manifold.html" title="Manifold for Geometric Algebra"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.galgebra.vector">
+<span id="vector-for-geometric-algebra"></span><h1>Vector for Geometric Algebra<a class="headerlink" href="#module-sympy.galgebra.vector" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="class-reference">
+<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.galgebra.vector.Vector">
+<em class="property">class </em><tt class="descclassname">sympy.galgebra.vector.</tt><tt class="descname">Vector</tt><big>(</big><em>basis_str=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/vector.html#Vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.vector.Vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vector class.</p>
+<p>Setup is done by defining a set of basis vectors in static function &#8216;Bases&#8217;.
+The linear combination of scalar (commutative) sympy quatities and the
+basis vectors form the vector space.  If the number of basis vectors
+is &#8216;n&#8217; the metric tensor is formed as an n by n sympy matrix of scalar
+symbols and represents the dot products of pairs of basis vectors.</p>
+<dl class="staticmethod">
+<dt id="sympy.galgebra.vector.Vector.basic_dot">
+<em class="property">static </em><tt class="descname">basic_dot</tt><big>(</big><em>v1</em>, <em>v2</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/vector.html#Vector.basic_dot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.vector.Vector.basic_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dot product of two basis vectors returns a Symbol</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.galgebra.vector.Vector.setup">
+<em class="property">static </em><tt class="descname">setup</tt><big>(</big><em>base</em>, <em>n=None</em>, <em>metric=None</em>, <em>coords=None</em>, <em>curv=(None</em>, <em>None)</em>, <em>debug=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/vector.html#Vector.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.vector.Vector.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate basis of vector space as tuple of vectors and
+associated metric tensor as Matrix.  See str_array(base,n) for
+usage of base and n and str_array(metric) for usage of metric.</p>
+<p>To overide elements in the default metric use the character &#8216;#&#8217;
+in the metric string.  For example if one wishes the diagonal
+elements of the metric tensor to be zero enter metric = &#8216;0 #,# 0&#8217;.</p>
+<p>If the basis vectors are e1 and e2 then the default metric -</p>
+<blockquote>
+<div>Vector.metric = ((dot(e1,e1),dot(e1,e2)),dot(e2,e1),dot(e2,e2))</div></blockquote>
+<p>becomes -</p>
+<blockquote>
+<div>Vector.metric = ((0,dot(e1,e2)),(dot(e2,e1),0)).</div></blockquote>
+<p>The function dot returns a Symbol and is symmetric.</p>
+<p>The functions &#8216;Bases&#8217; calculates the global quantities: -</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Vector.basis</dt>
+<dd>tuple of basis vectors</dd>
+<dt>Vector.base_to_index</dt>
+<dd>dictionary to convert base to base inded</dd>
+<dt>Vector.metric</dt>
+<dd>metric tensor represented as a matrix of symbols and numbers</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="function-reference">
+<h2>Function Reference<a class="headerlink" href="#function-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.galgebra.vector.flatten">
+<tt class="descclassname">sympy.galgebra.vector.</tt><tt class="descname">flatten</tt><big>(</big><em>lst</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/vector.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.vector.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.vector.TrigSimp">
+<tt class="descclassname">sympy.galgebra.vector.</tt><tt class="descname">TrigSimp</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/vector.html#TrigSimp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.vector.TrigSimp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Vector for Geometric Algebra</a><ul>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#function-reference">Function Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="manifold.html"
+                        title="previous chapter">Manifold for Geometric Algebra</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="precedence.html"
+                        title="next chapter">Precedence for Geometric Algebra</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/galgebra/vector.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="precedence.html" title="Precedence for Geometric Algebra"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="manifold.html" title="Manifold for Geometric Algebra"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

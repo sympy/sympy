@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.utilities.autowrap &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.utilities.autowrap</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Module for compiling codegen output, and wrap the binary for use in</span>
+<span class="sd">python.</span>
+
+<span class="sd">.. note:: To use the autowrap module it must first be imported</span>
+
+<span class="sd">   &gt;&gt;&gt; from sympy.utilities.autowrap import autowrap</span>
+
+<span class="sd">This module provides a common interface for different external backends, such</span>
+<span class="sd">as f2py, fwrap, Cython, SWIG(?) etc. (Currently only f2py and Cython are</span>
+<span class="sd">implemented) The goal is to provide access to compiled binaries of acceptable</span>
+<span class="sd">performance with a one-button user interface, i.e.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x,y</span>
+<span class="sd">    &gt;&gt;&gt; expr = ((x - y)**(25)).expand()</span>
+<span class="sd">    &gt;&gt;&gt; binary_callable = autowrap(expr)</span>
+<span class="sd">    &gt;&gt;&gt; binary_callable(1, 2)</span>
+<span class="sd">    -1.0</span>
+
+<span class="sd">The callable returned from autowrap() is a binary python function, not a</span>
+<span class="sd">SymPy object.  If it is desired to use the compiled function in symbolic</span>
+<span class="sd">expressions, it is better to use binary_function() which returns a SymPy</span>
+<span class="sd">Function object.  The binary callable is attached as the _imp_ attribute and</span>
+<span class="sd">invoked when a numerical evaluation is requested with evalf(), or with</span>
+<span class="sd">lambdify().</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.autowrap import binary_function</span>
+<span class="sd">    &gt;&gt;&gt; f = binary_function(&#39;f&#39;, expr)</span>
+<span class="sd">    &gt;&gt;&gt; 2*f(x, y) + y</span>
+<span class="sd">    y + 2*f(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})</span>
+<span class="sd">    0.e-110</span>
+
+<span class="sd">The idea is that a SymPy user will primarily be interested in working with</span>
+<span class="sd">mathematical expressions, and should not have to learn details about wrapping</span>
+<span class="sd">tools in order to evaluate expressions numerically, even if they are</span>
+<span class="sd">computationally expensive.</span>
+
+<span class="sd">When is this useful?</span>
+
+<span class="sd">    1) For computations on large arrays, Python iterations may be too slow,</span>
+<span class="sd">       and depending on the mathematical expression, it may be difficult to</span>
+<span class="sd">       exploit the advanced index operations provided by NumPy.</span>
+
+<span class="sd">    2) For *really* long expressions that will be called repeatedly, the</span>
+<span class="sd">       compiled binary should be significantly faster than SymPy&#39;s .evalf()</span>
+
+<span class="sd">    3) If you are generating code with the codegen utility in order to use</span>
+<span class="sd">       it in another project, the automatic python wrappers let you test the</span>
+<span class="sd">       binaries immediately from within SymPy.</span>
+
+<span class="sd">    4) To create customized ufuncs for use with numpy arrays.</span>
+<span class="sd">       See *ufuncify*.</span>
+
+<span class="sd">When is this module NOT the best approach?</span>
+
+<span class="sd">    1) If you are really concerned about speed or memory optimizations,</span>
+<span class="sd">       you will probably get better results by working directly with the</span>
+<span class="sd">       wrapper tools and the low level code.  However, the files generated</span>
+<span class="sd">       by this utility may provide a useful starting point and reference</span>
+<span class="sd">       code. Temporary files will be left intact if you supply the keyword</span>
+<span class="sd">       tempdir=&quot;path/to/files/&quot;.</span>
+
+<span class="sd">    2) If the array computation can be handled easily by numpy, and you</span>
+<span class="sd">       don&#39;t need the binaries for another project.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">_doctest_depends_on</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;exe&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;f2py&#39;</span><span class="p">,</span> <span class="s">&#39;gfortran&#39;</span><span class="p">),</span> <span class="s">&#39;modules&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">,)}</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">CalledProcessError</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">check_output</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.codegen</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_code_generator</span><span class="p">,</span> <span class="n">Routine</span><span class="p">,</span> <span class="n">OutputArgument</span><span class="p">,</span> <span class="n">InOutArgument</span><span class="p">,</span>
+    <span class="n">CodeGenArgumentListError</span><span class="p">,</span> <span class="n">Result</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">implemented_function</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">doctest_depends_on</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">C</span>
+
+
+<span class="k">class</span> <span class="nc">CodeWrapError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="CodeWrapper"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.CodeWrapper">[docs]</a><span class="k">class</span> <span class="nc">CodeWrapper</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base Class for code wrappers&quot;&quot;&quot;</span>
+    <span class="n">_filename</span> <span class="o">=</span> <span class="s">&quot;wrapped_code&quot;</span>
+    <span class="n">_module_basename</span> <span class="o">=</span> <span class="s">&quot;wrapper_module&quot;</span>
+    <span class="n">_module_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filename</span><span class="p">,</span> <span class="n">CodeWrapper</span><span class="o">.</span><span class="n">_module_counter</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">module_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_module_basename</span><span class="p">,</span> <span class="n">CodeWrapper</span><span class="o">.</span><span class="n">_module_counter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">generator</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="p">[],</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        generator -- the code generator to use</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="n">generator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">verbose</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">include_header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">include_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">main_routine</span><span class="p">,</span> <span class="n">routines</span><span class="p">):</span>
+        <span class="n">routines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">main_routine</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">routines</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_header</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">include_empty</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">wrap_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">,</span> <span class="n">helpers</span><span class="o">=</span><span class="p">[]):</span>
+
+        <span class="n">workdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="ow">or</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="s">&quot;_sympy_compile&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">F_OK</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+        <span class="n">oldwork</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_code</span><span class="p">(</span><span class="n">routine</span><span class="p">,</span> <span class="n">helpers</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_files</span><span class="p">(</span><span class="n">routine</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_files</span><span class="p">(</span><span class="n">routine</span><span class="p">)</span>
+            <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+            <span class="n">CodeWrapper</span><span class="o">.</span><span class="n">_module_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">oldwork</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_wrapped_function</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">):</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
+        <span class="n">command</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">retoutput</span> <span class="o">=</span> <span class="n">check_output</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">STDOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CodeWrapError</span><span class="p">(</span>
+                <span class="s">&quot;Error while executing command: </span><span class="si">%s</span><span class="s">. Command output is:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="s">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">retoutput</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="DummyWrapper"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.DummyWrapper">[docs]</a><span class="k">class</span> <span class="nc">DummyWrapper</span><span class="p">(</span><span class="n">CodeWrapper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class used for testing independent of backends &quot;&quot;&quot;</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;# dummy module for testing of SymPy</span>
+<span class="s">def </span><span class="si">%(name)s</span><span class="s">():</span>
+<span class="s">    return &quot;</span><span class="si">%(expr)s</span><span class="s">&quot;</span>
+<span class="si">%(name)s</span><span class="s">.args = &quot;</span><span class="si">%(args)s</span><span class="s">&quot;</span>
+<span class="si">%(name)s</span><span class="s">.returns = &quot;</span><span class="si">%(retvals)s</span><span class="s">&quot;</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_generate_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">,</span> <span class="n">helpers</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.py&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">printed</span> <span class="o">=</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">routine</span><span class="o">.</span><span class="n">result_variables</span><span class="p">])</span>
+            <span class="c"># convert OutputArguments to return value like f2py</span>
+            <span class="n">inargs</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">OutputArgument</span><span class="p">),</span> <span class="n">routine</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
+            <span class="n">retvals</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">routine</span><span class="o">.</span><span class="n">result_variables</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Result</span><span class="p">):</span>
+                    <span class="n">retvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;nameless&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">retvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">result_var</span><span class="p">)</span>
+
+            <span class="k">print</span><span class="p">(</span><span class="n">DummyWrapper</span><span class="o">.</span><span class="n">template</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">routine</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s">&#39;expr&#39;</span><span class="p">:</span> <span class="n">printed</span><span class="p">,</span>
+                <span class="s">&#39;args&#39;</span><span class="p">:</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">inargs</span><span class="p">]),</span>
+                <span class="s">&#39;retvals&#39;</span><span class="p">:</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">retvals</span><span class="p">])</span>
+            <span class="p">},</span> <span class="n">end</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_wrapped_function</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mod</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mod</span><span class="o">.</span><span class="n">autofunc</span>
+
+</div>
+<div class="viewcode-block" id="CythonCodeWrapper"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.CythonCodeWrapper">[docs]</a><span class="k">class</span> <span class="nc">CythonCodeWrapper</span><span class="p">(</span><span class="n">CodeWrapper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper that uses Cython&quot;&quot;&quot;</span>
+
+    <span class="n">setup_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">from distutils.core import setup</span>
+<span class="s">from distutils.extension import Extension</span>
+<span class="s">from Cython.Distutils import build_ext</span>
+
+<span class="s">setup(</span>
+<span class="s">    cmdclass = {&#39;build_ext&#39;: build_ext},</span>
+<span class="s">    ext_modules = [Extension(</span><span class="si">%(args)s</span><span class="s">)]</span>
+<span class="s">        )</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s">&quot;setup.py&quot;</span><span class="p">,</span> <span class="s">&quot;build_ext&quot;</span><span class="p">,</span> <span class="s">&quot;--inplace&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">command</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">):</span>
+        <span class="n">pyxfilename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span> <span class="o">+</span> <span class="s">&#39;.pyx&#39;</span>
+        <span class="n">codefilename</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">code_extension</span><span class="p">)</span>
+
+        <span class="c"># pyx</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pyxfilename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dump_pyx</span><span class="p">([</span><span class="n">routine</span><span class="p">],</span> <span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">include_header</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_empty</span><span class="p">)</span>
+
+        <span class="c"># setup.py</span>
+        <span class="n">ext_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">),</span> <span class="nb">repr</span><span class="p">([</span><span class="n">pyxfilename</span><span class="p">,</span> <span class="n">codefilename</span><span class="p">])]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;setup.py&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">CythonCodeWrapper</span><span class="o">.</span><span class="n">setup_template</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s">&#39;args&#39;</span><span class="p">:</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ext_args</span><span class="p">)},</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_wrapped_function</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mod</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mod</span><span class="o">.</span><span class="n">autofunc_c</span>
+
+<div class="viewcode-block" id="CythonCodeWrapper.dump_pyx"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.CythonCodeWrapper.dump_pyx">[docs]</a>    <span class="k">def</span> <span class="nf">dump_pyx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routines</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">empty</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write a Cython file with python wrappers</span>
+
+<span class="sd">           This file contains all the definitions of the routines in c code and</span>
+<span class="sd">           refers to the header file.</span>
+
+<span class="sd">           :Arguments:</span>
+
+<span class="sd">           routines</span>
+<span class="sd">                List of Routine instances</span>
+<span class="sd">           f</span>
+<span class="sd">                File-like object to write the file to</span>
+<span class="sd">           prefix</span>
+<span class="sd">                The filename prefix, used to refer to the proper header file.</span>
+<span class="sd">                Only the basename of the prefix is used.</span>
+<span class="sd">           empty</span>
+<span class="sd">                Optional. When True, empty lines are included to structure the</span>
+<span class="sd">                source files. [DEFAULT=True]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">routine</span> <span class="ow">in</span> <span class="n">routines</span><span class="p">:</span>
+            <span class="n">prototype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">get_prototype</span><span class="p">(</span><span class="n">routine</span><span class="p">)</span>
+
+            <span class="c"># declare</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;cdef extern from &quot;</span><span class="si">%s</span><span class="s">.h&quot;:&#39;</span> <span class="o">%</span> <span class="n">prefix</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;   </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">prototype</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c"># wrap</span>
+            <span class="n">ret</span><span class="p">,</span> <span class="n">args_py</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_retvals_inargs</span><span class="p">(</span><span class="n">routine</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
+            <span class="n">args_c</span> <span class="o">=</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">routine</span><span class="o">.</span><span class="n">arguments</span><span class="p">])</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;def </span><span class="si">%s</span><span class="s">_c(</span><span class="si">%s</span><span class="s">):&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">routine</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_declare_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args_py</span><span class="p">)),</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">args_py</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&quot;   cdef </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declare_arg</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">rets</span> <span class="o">=</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">routine</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+                <span class="n">call</span> <span class="o">=</span> <span class="s">&#39;   return </span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">routine</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args_c</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">rets</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="n">call</span> <span class="o">+</span> <span class="s">&#39;, &#39;</span> <span class="o">+</span> <span class="n">rets</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="n">call</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;   </span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">routine</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args_c</span><span class="p">),</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;   return </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">rets</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span></div>
+    <span class="n">dump_pyx</span><span class="o">.</span><span class="n">extension</span> <span class="o">=</span> <span class="s">&quot;pyx&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_split_retvals_inargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determines arguments and return values for python wrapper&quot;&quot;&quot;</span>
+        <span class="n">py_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">py_returns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">OutputArgument</span><span class="p">):</span>
+                <span class="n">py_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">InOutArgument</span><span class="p">):</span>
+                <span class="n">py_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="n">py_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">py_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">py_returns</span><span class="p">,</span> <span class="n">py_args</span>
+
+    <span class="k">def</span> <span class="nf">_declare_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">get_datatype</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> *</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="F2PyCodeWrapper"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.F2PyCodeWrapper">[docs]</a><span class="k">class</span> <span class="nc">F2PyCodeWrapper</span><span class="p">(</span><span class="n">CodeWrapper</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper that uses f2py&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">code_extension</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;f2py&quot;</span><span class="p">,</span> <span class="s">&quot;-m&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span><span class="p">,</span> <span class="s">&quot;-c&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">command</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">routine</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_wrapped_function</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mod</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mod</span><span class="o">.</span><span class="n">autofunc</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_code_wrapper_class</span><span class="p">(</span><span class="n">backend</span><span class="p">):</span>
+    <span class="n">wrappers</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;F2PY&#39;</span><span class="p">:</span> <span class="n">F2PyCodeWrapper</span><span class="p">,</span> <span class="s">&#39;CYTHON&#39;</span><span class="p">:</span> <span class="n">CythonCodeWrapper</span><span class="p">,</span>
+        <span class="s">&#39;DUMMY&#39;</span><span class="p">:</span> <span class="n">DummyWrapper</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">wrappers</span><span class="p">[</span><span class="n">backend</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+
+
+<span class="nd">@doctest_depends_on</span><span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;f2py&#39;</span><span class="p">,</span> <span class="s">&#39;gfortran&#39;</span><span class="p">),</span> <span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="autowrap"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.autowrap">[docs]</a><span class="k">def</span> <span class="nf">autowrap</span><span class="p">(</span>
+    <span class="n">expr</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s">&#39;F95&#39;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s">&#39;f2py&#39;</span><span class="p">,</span> <span class="n">tempdir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">helpers</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Generates python callable binaries based on the math expression.</span>
+
+<span class="sd">    expr</span>
+<span class="sd">        The SymPy expression that should be wrapped as a binary routine</span>
+
+<span class="sd">    :Optional arguments:</span>
+
+<span class="sd">    language</span>
+<span class="sd">        The programming language to use, currently &#39;C&#39; or &#39;F95&#39;</span>
+<span class="sd">    backend</span>
+<span class="sd">        The wrapper backend to use, currently f2py or Cython</span>
+<span class="sd">    tempdir</span>
+<span class="sd">        Path to directory for temporary files.  If this argument is supplied,</span>
+<span class="sd">        the generated code and the wrapper input files are left intact in the</span>
+<span class="sd">        specified path.</span>
+<span class="sd">    args</span>
+<span class="sd">        Sequence of the formal parameters of the generated code, if ommited the</span>
+<span class="sd">        function signature is determined by the code generator.</span>
+<span class="sd">    flags</span>
+<span class="sd">        Additional option flags that will be passed to the backend</span>
+<span class="sd">    verbose</span>
+<span class="sd">        If True, autowrap will not mute the command line backends.  This can be</span>
+<span class="sd">        helpful for debugging.</span>
+<span class="sd">    helpers</span>
+<span class="sd">        Used to define auxillary expressions needed for the main expr.  If the</span>
+<span class="sd">        main expression need to do call a specialized function it should be put</span>
+<span class="sd">        in the ``helpers`` list.  Autowrap will then make sure that the compiled</span>
+<span class="sd">        main expression can link to the helper routine.  Items should be tuples</span>
+<span class="sd">        with (&lt;funtion_name&gt;, &lt;sympy_expression&gt;, &lt;arguments&gt;).  It is</span>
+<span class="sd">        mandatory to supply an argument sequence to helper routines.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.autowrap import autowrap</span>
+<span class="sd">    &gt;&gt;&gt; expr = ((x - y + z)**(13)).expand()</span>
+<span class="sd">    &gt;&gt;&gt; binary_func = autowrap(expr)</span>
+<span class="sd">    &gt;&gt;&gt; binary_func(1, 4, 2)</span>
+<span class="sd">    -1.0</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">code_generator</span> <span class="o">=</span> <span class="n">get_code_generator</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="s">&quot;autowrap&quot;</span><span class="p">)</span>
+    <span class="n">CodeWrapperClass</span> <span class="o">=</span> <span class="n">_get_code_wrapper_class</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">code_wrapper</span> <span class="o">=</span> <span class="n">CodeWrapperClass</span><span class="p">(</span><span class="n">code_generator</span><span class="p">,</span> <span class="n">tempdir</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">routine</span> <span class="o">=</span> <span class="n">Routine</span><span class="p">(</span><span class="s">&#39;autofunc&#39;</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CodeGenArgumentListError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c"># if all missing arguments are for pure output, we simply attach them</span>
+        <span class="c"># at the end and try again, because the wrappers will silently convert</span>
+        <span class="c"># them to return values anyway.</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">missing</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">missing_args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">OutputArgument</span><span class="p">):</span>
+                <span class="k">raise</span>
+            <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">missing</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">routine</span> <span class="o">=</span> <span class="n">Routine</span><span class="p">(</span><span class="s">&#39;autofunc&#39;</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">args</span> <span class="o">+</span> <span class="n">new_args</span><span class="p">)</span>
+
+    <span class="n">helps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="n">helpers</span><span class="p">:</span>
+        <span class="n">helps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Routine</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">code_wrapper</span><span class="o">.</span><span class="n">wrap_code</span><span class="p">(</span><span class="n">routine</span><span class="p">,</span> <span class="n">helpers</span><span class="o">=</span><span class="n">helps</span><span class="p">)</span>
+
+</div>
+<span class="nd">@doctest_depends_on</span> <span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;f2py&#39;</span><span class="p">,</span> <span class="s">&#39;gfortran&#39;</span><span class="p">),</span> <span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="binary_function"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.binary_function">[docs]</a><span class="k">def</span> <span class="nf">binary_function</span><span class="p">(</span><span class="n">symfunc</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a sympy function with expr as binary implementation</span>
+
+<span class="sd">    This is a convenience function that automates the steps needed to</span>
+<span class="sd">    autowrap the SymPy expression and attaching it to a Function object</span>
+<span class="sd">    with implemented_function().</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.autowrap import binary_function</span>
+<span class="sd">    &gt;&gt;&gt; expr = ((x - y)**(25)).expand()</span>
+<span class="sd">    &gt;&gt;&gt; f = binary_function(&#39;f&#39;, expr)</span>
+<span class="sd">    &gt;&gt;&gt; type(f)</span>
+<span class="sd">    &lt;class &#39;sympy.core.function.UndefinedFunction&#39;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; 2*f(x, y)</span>
+<span class="sd">    2*f(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; f(x, y).evalf(2, subs={x: 1, y: 2})</span>
+<span class="sd">    -1.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">binary</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">implemented_function</span><span class="p">(</span><span class="n">symfunc</span><span class="p">,</span> <span class="n">binary</span><span class="p">)</span>
+</div>
+<span class="nd">@doctest_depends_on</span> <span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;f2py&#39;</span><span class="p">,</span> <span class="s">&#39;gfortran&#39;</span><span class="p">),</span> <span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="ufuncify"><a class="viewcode-back" href="../../../modules/utilities/autowrap.html#sympy.utilities.autowrap.ufuncify">[docs]</a><span class="k">def</span> <span class="nf">ufuncify</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a binary ufunc-like lambda function for numpy arrays</span>
+
+<span class="sd">    ``args``</span>
+<span class="sd">        Either a Symbol or a tuple of symbols. Specifies the argument sequence</span>
+<span class="sd">        for the ufunc-like function.</span>
+
+<span class="sd">    ``expr``</span>
+<span class="sd">        A SymPy expression that defines the element wise operation</span>
+
+<span class="sd">    ``kwargs``</span>
+<span class="sd">        Optional keyword arguments are forwarded to autowrap().</span>
+
+<span class="sd">    The returned function can only act on one array at a time, as only the</span>
+<span class="sd">    first argument accept arrays as input.</span>
+
+<span class="sd">    .. Note:: a *proper* numpy ufunc is required to support broadcasting, type</span>
+<span class="sd">       casting and more.  The function returned here, may not qualify for</span>
+<span class="sd">       numpy&#39;s definition of a ufunc.  That why we use the term ufunc-like.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.autowrap import ufuncify</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; f = ufuncify([x, y], y + x**2)</span>
+<span class="sd">    &gt;&gt;&gt; f([1, 2, 3], 2)</span>
+<span class="sd">    [ 3.  6.  11.]</span>
+<span class="sd">    &gt;&gt;&gt; a = f(np.arange(5), 3)</span>
+<span class="sd">    &gt;&gt;&gt; isinstance(a, np.ndarray)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; print a</span>
+<span class="sd">    [ 3. 4. 7. 12. 19.]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">IndexedBase</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">IndexedBase</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Idx</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">implemented_function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">Symbol</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c"># first argument accepts an array</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Equality</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

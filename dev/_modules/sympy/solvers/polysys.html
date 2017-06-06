@@ -1,0 +1,436 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.solvers.polysys &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.solvers.polysys</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Solvers of systems of polynomial equations. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">groebner</span><span class="p">,</span> <span class="n">roots</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polytools</span> <span class="kn">import</span> <span class="n">parallel_poly_from_expr</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ComputationFailed</span><span class="p">,</span>
+    <span class="n">PolificationFailed</span><span class="p">,</span> <span class="n">CoercionFailed</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">postfixes</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">rcollect</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span>
+
+
+<span class="k">class</span> <span class="nc">SolveFailed</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when solver&#39;s conditions weren&#39;t met. &quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="solve_poly_system"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.polysys.solve_poly_system">[docs]</a><span class="k">def</span> <span class="nf">solve_poly_system</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve a system of polynomial equations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import solve_poly_system</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    &gt;&gt;&gt; solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)</span>
+<span class="sd">    [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">polys</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">parallel_poly_from_expr</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolificationFailed</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ComputationFailed</span><span class="p">(</span><span class="s">&#39;solve_poly_system&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">polys</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">opt</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">polys</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">degree_list</span><span class="p">()</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">degree_list</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">solve_biquadratic</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SolveFailed</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">solve_generic</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">solve_biquadratic</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Solve a system of two bivariate quadratic polynomial equations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import Options, Poly</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.polysys import solve_biquadratic</span>
+<span class="sd">    &gt;&gt;&gt; NewOption = Options((x, y), {&#39;domain&#39;: &#39;ZZ&#39;})</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Poly(y**2 - 4 + x, y, x, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Poly(y*2 + 3*x - 7, y, x, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; solve_biquadratic(a, b, NewOption)</span>
+<span class="sd">    [(1/3, 3), (41/27, 11/9)]</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Poly(y + x**2 - 3, y, x, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Poly(-y + x - 4, y, x, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; solve_biquadratic(a, b, NewOption)</span>
+<span class="sd">    [(-sqrt(29)/2 + 7/2, -sqrt(29)/2 - 1/2), (sqrt(29)/2 + 7/2, -1/2 + \</span>
+<span class="sd">      sqrt(29)/2)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">groebner</span><span class="p">([</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_ground</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SolveFailed</span>
+
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">gens</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">ltrim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">p_roots</span> <span class="o">=</span> <span class="p">[</span> <span class="n">rcollect</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">]</span>
+    <span class="n">q_roots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">solutions</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">q_root</span> <span class="ow">in</span> <span class="n">q_roots</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">p_root</span> <span class="ow">in</span> <span class="n">p_roots</span><span class="p">:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_root</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">q_root</span><span class="p">),</span> <span class="n">q_root</span><span class="p">)</span>
+            <span class="n">solutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">solutions</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">solve_generic</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve a generic system of polynomial equations.</span>
+
+<span class="sd">    Returns all possible solutions over C[x_1, x_2, ..., x_m] of a</span>
+<span class="sd">    set F = { f_1, f_2, ..., f_n } of polynomial equations,  using</span>
+<span class="sd">    Groebner basis approach. For now only zero-dimensional systems</span>
+<span class="sd">    are supported, which means F can have at most a finite number</span>
+<span class="sd">    of solutions.</span>
+
+<span class="sd">    The algorithm works by the fact that, supposing G is the basis</span>
+<span class="sd">    of F with respect to an elimination order  (here lexicographic</span>
+<span class="sd">    order is used), G and F generate the same ideal, they have the</span>
+<span class="sd">    same set of solutions. By the elimination property,  if G is a</span>
+<span class="sd">    reduced, zero-dimensional Groebner basis, then there exists an</span>
+<span class="sd">    univariate polynomial in G (in its last variable). This can be</span>
+<span class="sd">    solved by computing its roots. Substituting all computed roots</span>
+<span class="sd">    for the last (eliminated) variable in other elements of G, new</span>
+<span class="sd">    polynomial system is generated. Applying the above procedure</span>
+<span class="sd">    recursively, a finite number of solutions can be found.</span>
+
+<span class="sd">    The ability of finding all solutions by this procedure depends</span>
+<span class="sd">    on the root finding algorithms. If no solutions were found, it</span>
+<span class="sd">    means only that roots() failed, but the system is solvable. To</span>
+<span class="sd">    overcome this difficulty use numerical algorithms instead.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [Buchberger01] B. Buchberger, Groebner Bases: A Short</span>
+<span class="sd">    Introduction for Systems Theorists, In: R. Moreno-Diaz,</span>
+<span class="sd">    B. Buchberger, J.L. Freire, Proceedings of EUROCAST&#39;01,</span>
+<span class="sd">    February, 2001</span>
+
+<span class="sd">    .. [Cox97] D. Cox, J. Little, D. O&#39;Shea, Ideals, Varieties</span>
+<span class="sd">    and Algorithms, Springer, Second Edition, 1997, pp. 112</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import Poly, Options</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.polysys import solve_generic</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; NewOption = Options((x, y), {&#39;domain&#39;: &#39;ZZ&#39;})</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Poly(x - y + 5, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Poly(x + y - 3, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; solve_generic([a, b], NewOption)</span>
+<span class="sd">    [(-1, 4)]</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Poly(x - 2*y + 5, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Poly(2*x - y - 3, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; solve_generic([a, b], NewOption)</span>
+<span class="sd">    [(11/3, 13/3)]</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Poly(x**2 + y, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Poly(x + y*4, x, y, domain=&#39;ZZ&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; solve_generic([a, b], NewOption)</span>
+<span class="sd">    [(0, 0), (1/4, -1/16)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_is_univariate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if &#39;f&#39; is univariate in its last variable. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">monom</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">monoms</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">monom</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_subs_root</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">gen</span><span class="p">,</span> <span class="n">zero</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replace generator with a root so that the result is nice. &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_expr</span><span class="p">({</span><span class="n">gen</span><span class="p">:</span> <span class="n">zero</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">def</span> <span class="nf">_solve_reduced_system</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively solves reduced polynomial systems. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">system</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">zeros</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">system</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">return</span> <span class="p">[</span> <span class="p">(</span><span class="n">zero</span><span class="p">,)</span> <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">zeros</span> <span class="p">]</span>
+
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">groebner</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">basis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_ground</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="n">univariate</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">_is_univariate</span><span class="p">,</span> <span class="n">basis</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">univariate</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">univariate</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;only zero-dimensional systems supported (finite number of solutions)&quot;</span><span class="p">)</span>
+
+        <span class="n">gens</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">gens</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">zeros</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">ltrim</span><span class="p">(</span><span class="n">gen</span><span class="p">))</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">zeros</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span> <span class="p">(</span><span class="n">zero</span><span class="p">,)</span> <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">zeros</span> <span class="p">]</span>
+
+        <span class="n">solutions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">zeros</span><span class="p">:</span>
+            <span class="n">new_system</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">new_gens</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">eq</span> <span class="o">=</span> <span class="n">_subs_root</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">gen</span><span class="p">,</span> <span class="n">zero</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">eq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                    <span class="n">new_system</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">solution</span> <span class="ow">in</span> <span class="n">_solve_reduced_system</span><span class="p">(</span><span class="n">new_system</span><span class="p">,</span> <span class="n">new_gens</span><span class="p">):</span>
+                <span class="n">solutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solution</span> <span class="o">+</span> <span class="p">(</span><span class="n">zero</span><span class="p">,))</span>
+
+        <span class="k">return</span> <span class="n">solutions</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">_solve_reduced_system</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">opt</span><span class="o">.</span><span class="n">gens</span><span class="p">,</span> <span class="n">entry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+
+<div class="viewcode-block" id="solve_triangulated"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.polysys.solve_triangulated">[docs]</a><span class="k">def</span> <span class="nf">solve_triangulated</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve a polynomial system using Gianni-Kalkbrenner algorithm.</span>
+
+<span class="sd">    The algorithm proceeds by computing one Groebner basis in the ground</span>
+<span class="sd">    domain and then by iteratively computing polynomial factorizations in</span>
+<span class="sd">    appropriately constructed algebraic extensions of the ground domain.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.polysys import solve_triangulated</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+
+<span class="sd">    &gt;&gt;&gt; F = [x**2 + y + z - 1, x + y**2 + z - 1, x + y + z**2 - 1]</span>
+
+<span class="sd">    &gt;&gt;&gt; solve_triangulated(F, x, y, z)</span>
+<span class="sd">    [(0, 0, 1), (0, 1, 0), (1, 0, 0)]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of</span>
+<span class="sd">    Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,</span>
+<span class="sd">    Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247--257, 1989</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">groebner</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;domain&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">set_domain</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="n">f</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ltrim</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">G</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">dom</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_domain</span><span class="p">()</span>
+
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">ground_roots</span><span class="p">()</span>
+    <span class="n">solutions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">zeros</span><span class="p">:</span>
+        <span class="n">solutions</span><span class="o">.</span><span class="n">add</span><span class="p">(((</span><span class="n">zero</span><span class="p">,),</span> <span class="n">dom</span><span class="p">))</span>
+
+    <span class="n">var_seq</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">gens</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">vars_seq</span> <span class="o">=</span> <span class="n">postfixes</span><span class="p">(</span><span class="n">gens</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="nb">vars</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">var_seq</span><span class="p">,</span> <span class="n">vars_seq</span><span class="p">):</span>
+        <span class="n">_solutions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+        <span class="k">for</span> <span class="n">values</span><span class="p">,</span> <span class="n">dom</span> <span class="ow">in</span> <span class="n">solutions</span><span class="p">:</span>
+            <span class="n">H</span><span class="p">,</span> <span class="n">mapping</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+                <span class="n">_vars</span> <span class="o">=</span> <span class="p">(</span><span class="n">var</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">vars</span>
+
+                <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">has_only_gens</span><span class="p">(</span><span class="o">*</span><span class="n">_vars</span><span class="p">)</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">h</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ltrim</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">mapping</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="o">==</span> <span class="n">h</span><span class="o">.</span><span class="n">degree</span><span class="p">():</span>
+                        <span class="n">H</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+            <span class="n">p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">h</span><span class="p">:</span> <span class="n">h</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+            <span class="n">zeros</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">ground_roots</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">zero</span> <span class="ow">in</span> <span class="n">zeros</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">zero</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                    <span class="n">dom_zero</span> <span class="o">=</span> <span class="n">dom</span><span class="o">.</span><span class="n">algebraic_field</span><span class="p">(</span><span class="n">zero</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dom_zero</span> <span class="o">=</span> <span class="n">dom</span>
+
+                <span class="n">_solutions</span><span class="o">.</span><span class="n">add</span><span class="p">(((</span><span class="n">zero</span><span class="p">,)</span> <span class="o">+</span> <span class="n">values</span><span class="p">,</span> <span class="n">dom_zero</span><span class="p">))</span>
+
+        <span class="n">solutions</span> <span class="o">=</span> <span class="n">_solutions</span>
+
+    <span class="n">solutions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">solutions</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">solutions</span><span class="p">):</span>
+        <span class="n">solutions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">solution</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">solutions</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

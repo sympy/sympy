@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Lambdify &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="Memoization" href="memoization.html" />
+    <link rel="prev" title="Iterables" href="iterables.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="memoization.html" title="Memoization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="iterables.html" title="Iterables"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.utilities.lambdify">
+<span id="lambdify"></span><h1>Lambdify<a class="headerlink" href="#module-sympy.utilities.lambdify" title="Permalink to this headline">¶</a></h1>
+<p>This module provides convenient functions to transform sympy expressions to
+lambda functions which can be used to calculate numerical values very fast.</p>
+<dl class="function">
+<dt id="sympy.utilities.lambdify.implemented_function">
+<tt class="descclassname">sympy.utilities.lambdify.</tt><tt class="descname">implemented_function</tt><big>(</big><em>symfunc</em>, <em>implementation</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/lambdify.html#implemented_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.lambdify.implemented_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add numerical <tt class="docutils literal"><span class="pre">implementation</span></tt> to function <tt class="docutils literal"><span class="pre">symfunc</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">symfunc</span></tt> can be an <tt class="docutils literal"><span class="pre">UndefinedFunction</span></tt> instance, or a name string.
+In the latter case we create an <tt class="docutils literal"><span class="pre">UndefinedFunction</span></tt> instance with that
+name.</p>
+<p>Be aware that this is a quick workaround, not a general method to create
+special symbolic functions. If you want to create a symbolic function to be
+used by all the machinery of sympy you should subclass the <tt class="docutils literal"><span class="pre">Function</span></tt>
+class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>symfunc</strong> : <tt class="docutils literal"><span class="pre">str</span></tt> or <tt class="docutils literal"><span class="pre">UndefinedFunction</span></tt> instance</p>
+<blockquote>
+<div><p>If <tt class="docutils literal"><span class="pre">str</span></tt>, then create new <tt class="docutils literal"><span class="pre">UndefinedFunction</span></tt> with this as
+name.  If <span class="math">\(symfunc\)</span> is a sympy function, attach implementation to it.</p>
+</div></blockquote>
+<p><strong>implementation</strong> : callable</p>
+<blockquote>
+<div><p>numerical implementation to be called by <tt class="docutils literal"><span class="pre">evalf()</span></tt> or <tt class="docutils literal"><span class="pre">lambdify</span></tt></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>afunc</strong> : sympy.FunctionClass instance</p>
+<blockquote class="last">
+<div><p>function with attached implementation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">lambdify</span><span class="p">,</span> <span class="n">implemented_function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">implemented_function</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lam_f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lam_f</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.lambdify.lambdastr">
+<tt class="descclassname">sympy.utilities.lambdify.</tt><tt class="descname">lambdastr</tt><big>(</big><em>args</em>, <em>expr</em>, <em>printer=None</em>, <em>dummify=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/lambdify.html#lambdastr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.lambdify.lambdastr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string that can be evaluated to a lambda function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">lambdastr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambdastr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&#39;lambda x: (x**2)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambdastr</span><span class="p">((</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">),</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">])</span>
+<span class="go">&#39;lambda x,y,z: ([z, y, x])&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.lambdify.lambdify">
+<tt class="descclassname">sympy.utilities.lambdify.</tt><tt class="descname">lambdify</tt><big>(</big><em>args</em>, <em>expr</em>, <em>modules=None</em>, <em>printer=None</em>, <em>use_imps=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/lambdify.html#lambdify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.lambdify.lambdify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a lambda function for fast calculation of numerical values.</p>
+<p>If not specified differently by the user, SymPy functions are replaced as
+far as possible by either python-math, numpy (if available) or mpmath
+functions - exactly in this order. To change this behavior, the &#8220;modules&#8221;
+argument can be used. It accepts:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the strings &#8220;math&#8221;, &#8220;mpmath&#8221;, &#8220;numpy&#8221;, &#8220;sympy&#8221;</li>
+<li>any modules (e.g. math)</li>
+<li>dictionaries that map names of sympy functions to arbitrary functions</li>
+<li>lists that contain a mix of the arguments above, with higher priority
+given to entries appearing first.</li>
+</ul>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">implemented_function</span><span class="p">,</span> <span class="n">lambdify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[3, 2, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">Matrix</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">Matrix([[1, 3]])</span>
+</pre></div>
+</div>
+<p>Functions present in <span class="math">\(expr\)</span> can also carry their own numerical
+implementations, in a callable attached to the <tt class="docutils literal"><span class="pre">_imp_</span></tt>
+attribute.  Usually you attach this using the
+<tt class="docutils literal"><span class="pre">implemented_function</span></tt> factory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">implemented_function</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">func</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">lambdify</span></tt> always prefers <tt class="docutils literal"><span class="pre">_imp_</span></tt> implementations to implementations
+in other namespaces, unless the <tt class="docutils literal"><span class="pre">use_imps</span></tt> input parameter is False.</p>
+<p class="rubric">Usage</p>
+<ol class="arabic">
+<li><p class="first">Use one of the provided modules:</p>
+<p>&gt;&gt; f = lambdify(x, sin(x), &#8220;math&#8221;)</p>
+<dl class="docutils">
+<dt>Attention: Functions that are not in the math module will throw a name</dt>
+<dd><p class="first last">error when the lambda function is evaluated! So this would
+be better:</p>
+</dd>
+</dl>
+<p>&gt;&gt; f = lambdify(x, sin(x)*gamma(x), (&#8220;math&#8221;, &#8220;mpmath&#8221;, &#8220;sympy&#8221;))</p>
+</li>
+<li><p class="first">Use some other module:</p>
+<p>&gt;&gt; import numpy
+&gt;&gt; f = lambdify((x,y), tan(x*y), numpy)</p>
+<dl class="docutils">
+<dt>Attention: There are naming differences between numpy and sympy. So if</dt>
+<dd><p class="first last">you simply take the numpy module, e.g. sympy.atan will not be
+translated to numpy.arctan. Use the modified module instead
+by passing the string &#8220;numpy&#8221;:</p>
+</dd>
+</dl>
+<p>&gt;&gt; f = lambdify((x,y), tan(x*y), &#8220;numpy&#8221;)
+&gt;&gt; f(1, 2)
+-2.18503986326
+&gt;&gt; from numpy import array
+&gt;&gt; f(array([1, 2, 3]), array([2, 3, 5]))
+[-2.18503986 -0.29100619 -0.8559934 ]</p>
+</li>
+<li><p class="first">Use own dictionaries:</p>
+<p>&gt;&gt; def my_cool_function(x): ...
+&gt;&gt; dic = {&#8220;sin&#8221; : my_cool_function}
+&gt;&gt; f = lambdify(x, sin(x), dic)</p>
+<p>Now f would look like:</p>
+<p>&gt;&gt; lambda x: my_cool_function(x)</p>
+</li>
+</ol>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="iterables.html"
+                        title="previous chapter">Iterables</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="memoization.html"
+                        title="next chapter">Memoization</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/lambdify.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="memoization.html" title="Memoization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="iterables.html" title="Iterables"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

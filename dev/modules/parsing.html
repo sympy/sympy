@@ -1,0 +1,472 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Parsing input &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Physics Module" href="physics/index.html" />
+    <link rel="prev" title="Timing Utilities" href="utilities/timeutils.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="physics/index.html" title="Physics Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="utilities/timeutils.html" title="Timing Utilities"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="parsing-input">
+<h1>Parsing input<a class="headerlink" href="#parsing-input" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="parsing-functions-reference">
+<h2>Parsing Functions Reference<a class="headerlink" href="#parsing-functions-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.parse_expr">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">parse_expr</tt><big>(</big><em>s</em>, <em>local_dict=None</em>, <em>transformations=(&lt;function auto_symbol at 0xe20fb18&gt;</em>, <em>&lt;function auto_number at 0xe20fc80&gt;</em>, <em>&lt;function factorial_notation at 0xe20fb90&gt;)</em>, <em>global_dict=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#parse_expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.parse_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the string <tt class="docutils literal"><span class="pre">s</span></tt> to a SymPy expression, in <tt class="docutils literal"><span class="pre">local_dict</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>s</strong> : str</p>
+<blockquote>
+<div><p>The string to parse.</p>
+</div></blockquote>
+<p><strong>local_dict</strong> : dict, optional</p>
+<blockquote>
+<div><p>A dictionary of local variables to use when parsing.</p>
+</div></blockquote>
+<p><strong>global_dict</strong> : dict, optional</p>
+<blockquote>
+<div><p>A dictionary of global variables. By default, this is initialized
+with <tt class="docutils literal"><span class="pre">from</span> <span class="pre">sympy</span> <span class="pre">import</span> <span class="pre">*</span></tt>; provide this parameter to override
+this behavior (for instance, to parse <tt class="docutils literal"><span class="pre">&quot;Q</span> <span class="pre">&amp;</span> <span class="pre">S&quot;</span></tt>).</p>
+</div></blockquote>
+<p><strong>transformations</strong> : tuple, optional</p>
+<blockquote class="last">
+<div><p>A tuple of transformation functions used to modify the tokens of the
+parsed expression before evaluation. The default transformations
+convert numeric literals into their SymPy equivalents, convert
+undefined variables into SymPy symbols, and allow the use of standard
+mathematical factorial notation (e.g. <tt class="docutils literal"><span class="pre">x!</span></tt>).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">stringify_expr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">eval_expr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">standard_transformations</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">implicit_multiplication_application</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="n">parse_expr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&quot;1/2&quot;</span><span class="p">)</span>
+<span class="go">1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Half&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="n">standard_transformations</span><span class="p">,</span>\
+<span class="gp">... </span><span class="n">implicit_multiplication_application</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformations</span> <span class="o">=</span> <span class="p">(</span><span class="n">standard_transformations</span> <span class="o">+</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">implicit_multiplication_application</span><span class="p">,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&quot;2x&quot;</span><span class="p">,</span> <span class="n">transformations</span><span class="o">=</span><span class="n">transformations</span><span class="p">)</span>
+<span class="go">2*x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.stringify_expr">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">stringify_expr</tt><big>(</big><em>s</em>, <em>local_dict</em>, <em>global_dict</em>, <em>transformations</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#stringify_expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.stringify_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the string <tt class="docutils literal"><span class="pre">s</span></tt> to Python code, in <tt class="docutils literal"><span class="pre">local_dict</span></tt></p>
+<p>Generally, <tt class="docutils literal"><span class="pre">parse_expr</span></tt> should be used.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.eval_expr">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">eval_expr</tt><big>(</big><em>code</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#eval_expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.eval_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate Python code generated by <tt class="docutils literal"><span class="pre">stringify_expr</span></tt>.</p>
+<p>Generally, <tt class="docutils literal"><span class="pre">parse_expr</span></tt> should be used.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.printtoken">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">printtoken</tt><big>(</big><em>type</em>, <em>token</em>, <em>srow_scol</em>, <em>erow_ecol</em>, <em>line</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#printtoken"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.printtoken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.tokenize">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">tokenize</tt><big>(</big><em>readline</em>, <em>tokeneater=&lt;function printtoken at 0xe244e60&gt;</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>The tokenize() function accepts two parameters: one representing the
+input stream, and one providing an output mechanism for tokenize().</p>
+<p>The first parameter, readline, must be a callable object which provides
+the same interface as the readline() method of built-in file objects.
+Each call to the function should return one line of input as a string.</p>
+<p>The second parameter, tokeneater, must also be a callable object. It is
+called once for each token, with five arguments, corresponding to the
+tuples generated by generate_tokens().</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.untokenize">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">untokenize</tt><big>(</big><em>iterable</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#untokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.untokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform tokens back into Python source code.</p>
+<p>Each element returned by the iterable must be a token sequence
+with at least two elements, a token number and token value.  If
+only two tokens are passed, the resulting output is poor.</p>
+<dl class="docutils">
+<dt>Round-trip invariant for full input:</dt>
+<dd>Untokenized source will match input source exactly</dd>
+</dl>
+<p>Round-trip invariant for limited intput:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Output text will tokenize the back to the input</span>
+<span class="n">t1</span> <span class="o">=</span> <span class="p">[</span><span class="n">tok</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">generate_tokens</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">)]</span>
+<span class="n">newcode</span> <span class="o">=</span> <span class="n">untokenize</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="n">readline</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">newcode</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">next</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="p">[</span><span class="n">tok</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">generate_tokens</span><span class="p">(</span><span class="n">readline</span><span class="p">)]</span>
+<span class="k">assert</span> <span class="n">t1</span> <span class="o">==</span> <span class="n">t2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.generate_tokens">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">generate_tokens</tt><big>(</big><em>readline</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#generate_tokens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.generate_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>The generate_tokens() generator requires one argment, readline, which
+must be a callable object which provides the same interface as the
+readline() method of built-in file objects. Each call to the function
+should return one line of input as a string.  Alternately, readline
+can be a callable function terminating with StopIteration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">readline</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">myfile</span><span class="p">)</span><span class="o">.</span><span class="n">next</span>    <span class="c"># Example of alternate readline</span>
+</pre></div>
+</div>
+<p>The generator produces 5-tuples with these members: the token type; the
+token string; a 2-tuple (srow, scol) of ints specifying the row and
+column where the token begins in the source; a 2-tuple (erow, ecol) of
+ints specifying the row and column where the token ends in the source;
+and the line on which the token was found. The line passed is the
+logical line; continuation lines are included.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.group">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">group</tt><big>(</big><em>*choices</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.any">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">any</tt><big>(</big><em>*choices</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#any"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.any" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_tokenize.maybe">
+<tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">maybe</tt><big>(</big><em>*choices</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#maybe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.maybe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.maxima.parse_maxima">
+<tt class="descclassname">sympy.parsing.maxima.</tt><tt class="descname">parse_maxima</tt><big>(</big><em>str</em>, <em>globals=None</em>, <em>name_dict={}</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/maxima.html#parse_maxima"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.maxima.parse_maxima" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.mathematica.mathematica">
+<tt class="descclassname">sympy.parsing.mathematica.</tt><tt class="descname">mathematica</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/mathematica.html#mathematica"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.mathematica.mathematica" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="parsing-exceptions-reference">
+<h2>Parsing Exceptions Reference<a class="headerlink" href="#parsing-exceptions-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.parsing.sympy_tokenize.TokenError">
+<em class="property">class </em><tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">TokenError</tt><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#TokenError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.TokenError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="sympy.parsing.sympy_tokenize.StopTokenizing">
+<em class="property">class </em><tt class="descclassname">sympy.parsing.sympy_tokenize.</tt><tt class="descname">StopTokenizing</tt><a class="reference internal" href="../_modules/sympy/parsing/sympy_tokenize.html#StopTokenizing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_tokenize.StopTokenizing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="parsing-transformations-reference">
+<h2>Parsing Transformations Reference<a class="headerlink" href="#parsing-transformations-reference" title="Permalink to this headline">¶</a></h2>
+<p>A transformation is a function that accepts the arguments <tt class="docutils literal"><span class="pre">tokens,</span>
+<span class="pre">local_dict,</span> <span class="pre">global_dict</span></tt> and returns a list of transformed tokens. They can
+be used by passing a list of functions to <tt class="xref py py-func docutils literal"><span class="pre">parse_expr()</span></tt> and are
+applied in the order given.</p>
+<dl class="data">
+<dt id="sympy.parsing.sympy_parser.standard_transformations">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">standard_transformations</tt><em class="property"> = (&lt;function auto_symbol at 0xe20fb18&gt;, &lt;function auto_number at 0xe20fc80&gt;, &lt;function factorial_notation at 0xe20fb90&gt;)</em><a class="headerlink" href="#sympy.parsing.sympy_parser.standard_transformations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard transformations for <tt class="xref py py-func docutils literal"><span class="pre">parse_expr()</span></tt>.
+Inserts calls to <tt class="xref py py-class docutils literal"><span class="pre">Symbol</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Integer</span></tt>, and other SymPy
+datatypes and allows the use of standard factorial notation (e.g. <tt class="docutils literal"><span class="pre">x!</span></tt>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.split_symbols">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">split_symbols</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="headerlink" href="#sympy.parsing.sympy_parser.split_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits symbol names for implicit multiplication.</p>
+<p>Intended to let expressions like <tt class="docutils literal"><span class="pre">xyz</span></tt> be parsed as <tt class="docutils literal"><span class="pre">x*y*z</span></tt>. Does not
+split Greek character names, so <tt class="docutils literal"><span class="pre">theta</span></tt> will <em>not</em> become
+<tt class="docutils literal"><span class="pre">t*h*e*t*a</span></tt>. Generally this should be used with
+<tt class="docutils literal"><span class="pre">implicit_multiplication</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.split_symbols_custom">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">split_symbols_custom</tt><big>(</big><em>predicate</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#split_symbols_custom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.split_symbols_custom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a transformation that splits symbol names.</p>
+<p><tt class="docutils literal"><span class="pre">predicate</span></tt> should return True if the symbol name is to be split.</p>
+<p>For instance, to retain the default behavior but avoid splitting certain
+symbol names, a predicate like this would work:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="p">(</span><span class="n">parse_expr</span><span class="p">,</span> <span class="n">_token_splittable</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">standard_transformations</span><span class="p">,</span> <span class="n">implicit_multiplication</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">split_symbols_custom</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">can_split</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;list&#39;</span><span class="p">,</span> <span class="s">&#39;of&#39;</span><span class="p">,</span> <span class="s">&#39;unsplittable&#39;</span><span class="p">,</span> <span class="s">&#39;names&#39;</span><span class="p">):</span>
+<span class="gp">... </span>            <span class="k">return</span> <span class="n">_token_splittable</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="bp">False</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformation</span> <span class="o">=</span> <span class="n">split_symbols_custom</span><span class="p">(</span><span class="n">can_split</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&#39;unsplittable&#39;</span><span class="p">,</span> <span class="n">transformations</span><span class="o">=</span><span class="n">standard_transformations</span> <span class="o">+</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">transformation</span><span class="p">,</span> <span class="n">implicit_multiplication</span><span class="p">))</span>
+<span class="go">unsplittable</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.implicit_multiplication">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">implicit_multiplication</tt><big>(</big><em>result</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#implicit_multiplication"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.implicit_multiplication" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the multiplication operator optional in most cases.</p>
+<p>Use this before <tt class="xref py py-func docutils literal"><span class="pre">implicit_application()</span></tt>, otherwise expressions like
+<tt class="docutils literal"><span class="pre">sin</span> <span class="pre">2x</span></tt> will be parsed as <tt class="docutils literal"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">sin(2)</span></tt> rather than <tt class="docutils literal"><span class="pre">sin(2*x)</span></tt>.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="p">(</span><span class="n">parse_expr</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">standard_transformations</span><span class="p">,</span> <span class="n">implicit_multiplication</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformations</span> <span class="o">=</span> <span class="n">standard_transformations</span> <span class="o">+</span> <span class="p">(</span><span class="n">implicit_multiplication</span><span class="p">,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&#39;3 x y&#39;</span><span class="p">,</span> <span class="n">transformations</span><span class="o">=</span><span class="n">transformations</span><span class="p">)</span>
+<span class="go">3*x*y</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.implicit_application">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">implicit_application</tt><big>(</big><em>result</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#implicit_application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.implicit_application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes parentheses optional in some cases for function calls.</p>
+<p>Use this after <tt class="xref py py-func docutils literal"><span class="pre">implicit_multiplication()</span></tt>, otherwise expressions
+like <tt class="docutils literal"><span class="pre">sin</span> <span class="pre">2x</span></tt> will be parsed as <tt class="docutils literal"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">sin(2)</span></tt> rather than
+<tt class="docutils literal"><span class="pre">sin(2*x)</span></tt>.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="p">(</span><span class="n">parse_expr</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">standard_transformations</span><span class="p">,</span> <span class="n">implicit_application</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformations</span> <span class="o">=</span> <span class="n">standard_transformations</span> <span class="o">+</span> <span class="p">(</span><span class="n">implicit_application</span><span class="p">,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&#39;cot z + csc z&#39;</span><span class="p">,</span> <span class="n">transformations</span><span class="o">=</span><span class="n">transformations</span><span class="p">)</span>
+<span class="go">csc(z) + cot(z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.function_exponentiation">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">function_exponentiation</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#function_exponentiation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.function_exponentiation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows functions to be exponentiated, e.g. <tt class="docutils literal"><span class="pre">cos**2(x)</span></tt>.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="p">(</span><span class="n">parse_expr</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">standard_transformations</span><span class="p">,</span> <span class="n">function_exponentiation</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transformations</span> <span class="o">=</span> <span class="n">standard_transformations</span> <span class="o">+</span> <span class="p">(</span><span class="n">function_exponentiation</span><span class="p">,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&#39;sin**4(x)&#39;</span><span class="p">,</span> <span class="n">transformations</span><span class="o">=</span><span class="n">transformations</span><span class="p">)</span>
+<span class="go">sin(x)**4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.implicit_multiplication_application">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">implicit_multiplication_application</tt><big>(</big><em>result</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#implicit_multiplication_application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.implicit_multiplication_application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows a slightly relaxed syntax.</p>
+<ul class="simple">
+<li>Parentheses for single-argument method calls are optional.</li>
+<li>Multiplication is implicit.</li>
+<li>Symbol names can be split (i.e. spaces are not needed between
+symbols).</li>
+<li>Functions can be exponentiated.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.parsing.sympy_parser</span> <span class="kn">import</span> <span class="p">(</span><span class="n">parse_expr</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">standard_transformations</span><span class="p">,</span> <span class="n">implicit_multiplication_application</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_expr</span><span class="p">(</span><span class="s">&quot;10sin**2 x**2 + 3xyz + tan theta&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">transformations</span><span class="o">=</span><span class="p">(</span><span class="n">standard_transformations</span> <span class="o">+</span>
+<span class="gp">... </span><span class="p">(</span><span class="n">implicit_multiplication_application</span><span class="p">,)))</span>
+<span class="go">3*x*y*z + 10*sin(x**2)**2 + tan(theta)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.rationalize">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">rationalize</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#rationalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.rationalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts floats into <tt class="docutils literal"><span class="pre">Rational</span></tt>. Run AFTER <tt class="docutils literal"><span class="pre">auto_number</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.convert_xor">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">convert_xor</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#convert_xor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.convert_xor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treats XOR, <tt class="docutils literal"><span class="pre">^</span></tt>, as exponentiation, <tt class="docutils literal"><span class="pre">**</span></tt>.</p>
+</dd></dl>
+
+<p>These are included in
+:data:<tt class="docutils literal"><span class="pre">sympy.parsing.sympy_parser.standard_transformations</span></tt> and generally
+don&#8217;t need to be manually added by the user.</p>
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.factorial_notation">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">factorial_notation</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#factorial_notation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.factorial_notation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows standard notation for factorial.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.auto_symbol">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">auto_symbol</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#auto_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.auto_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts calls to <tt class="docutils literal"><span class="pre">Symbol</span></tt> for undefined variables.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.parsing.sympy_parser.auto_number">
+<tt class="descclassname">sympy.parsing.sympy_parser.</tt><tt class="descname">auto_number</tt><big>(</big><em>tokens</em>, <em>local_dict</em>, <em>global_dict</em><big>)</big><a class="reference internal" href="../_modules/sympy/parsing/sympy_parser.html#auto_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.parsing.sympy_parser.auto_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts numeric literals to use SymPy equivalents.</p>
+<p>Complex numbers use <tt class="docutils literal"><span class="pre">I</span></tt>; integer literals use <tt class="docutils literal"><span class="pre">Integer</span></tt>, float
+literals use <tt class="docutils literal"><span class="pre">Float</span></tt>, and repeating decimals use <tt class="docutils literal"><span class="pre">Rational</span></tt>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Parsing input</a><ul>
+<li><a class="reference internal" href="#parsing-functions-reference">Parsing Functions Reference</a></li>
+<li><a class="reference internal" href="#parsing-exceptions-reference">Parsing Exceptions Reference</a></li>
+<li><a class="reference internal" href="#parsing-transformations-reference">Parsing Transformations Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="utilities/timeutils.html"
+                        title="previous chapter">Timing Utilities</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="physics/index.html"
+                        title="next chapter">Physics Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/parsing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="physics/index.html" title="Physics Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="utilities/timeutils.html" title="Timing Utilities"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

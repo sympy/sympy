@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Named Groups &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Utilities" href="util.html" />
+    <link rel="prev" title="Gray Code" href="graycode.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="Utilities"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="graycode.html" title="Gray Code"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.named_groups">
+<span id="named-groups"></span><span id="combinatorics-named-groups"></span><h1>Named Groups<a class="headerlink" href="#module-sympy.combinatorics.named_groups" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sympy.combinatorics.named_groups.SymmetricGroup">
+<tt class="descclassname">sympy.combinatorics.named_groups.</tt><tt class="descname">SymmetricGroup</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/named_groups.html#SymmetricGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.named_groups.SymmetricGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the symmetric group on <tt class="docutils literal"><span class="pre">n</span></tt> elements as a permutation group.</p>
+<p>The generators taken are the <tt class="docutils literal"><span class="pre">n</span></tt>-cycle
+<tt class="docutils literal"><span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">...</span> <span class="pre">n-1)</span></tt> and the transposition <tt class="docutils literal"><span class="pre">(0</span> <span class="pre">1)</span></tt> (in cycle notation).
+(See [1]). After the group is generated, some of its basic properties
+are set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.named_groups.CyclicGroup" title="sympy.combinatorics.named_groups.CyclicGroup"><tt class="xref py py-obj docutils literal"><span class="pre">CyclicGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.DihedralGroup" title="sympy.combinatorics.named_groups.DihedralGroup"><tt class="xref py py-obj docutils literal"><span class="pre">DihedralGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.AlternatingGroup" title="sympy.combinatorics.named_groups.AlternatingGroup"><tt class="xref py py-obj docutils literal"><span class="pre">AlternatingGroup</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p>[1] <a class="reference external" href="http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations">http://en.wikipedia.org/wiki/Symmetric_group#Generators_and_relations</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">SymmetricGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">SymmetricGroup</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_group</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">generate_schreier_sims</span><span class="p">(</span><span class="n">af</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 1, 2, 0], [0, 2, 3, 1],</span>
+<span class="go">[1, 3, 0, 2], [2, 0, 1, 3], [3, 2, 0, 1], [0, 3, 1, 2], [1, 0, 2, 3],</span>
+<span class="go">[2, 1, 3, 0], [3, 0, 1, 2], [0, 1, 3, 2], [1, 2, 0, 3], [2, 3, 1, 0],</span>
+<span class="go">[3, 1, 0, 2], [0, 2, 1, 3], [1, 3, 2, 0], [2, 0, 3, 1], [3, 2, 1, 0],</span>
+<span class="go">[0, 3, 2, 1], [1, 0, 3, 2], [2, 1, 0, 3], [3, 0, 2, 1]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.named_groups.CyclicGroup">
+<tt class="descclassname">sympy.combinatorics.named_groups.</tt><tt class="descname">CyclicGroup</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/named_groups.html#CyclicGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.named_groups.CyclicGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the cyclic group of order <tt class="docutils literal"><span class="pre">n</span></tt> as a permutation group.</p>
+<p>The generator taken is the <tt class="docutils literal"><span class="pre">n</span></tt>-cycle <tt class="docutils literal"><span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">...</span> <span class="pre">n-1)</span></tt>
+(in cycle notation). After the group is generated, some of its basic
+properties are set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.named_groups.SymmetricGroup" title="sympy.combinatorics.named_groups.SymmetricGroup"><tt class="xref py py-obj docutils literal"><span class="pre">SymmetricGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.DihedralGroup" title="sympy.combinatorics.named_groups.DihedralGroup"><tt class="xref py py-obj docutils literal"><span class="pre">DihedralGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.AlternatingGroup" title="sympy.combinatorics.named_groups.AlternatingGroup"><tt class="xref py py-obj docutils literal"><span class="pre">AlternatingGroup</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">CyclicGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">CyclicGroup</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_group</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">generate_schreier_sims</span><span class="p">(</span><span class="n">af</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[[0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 0], [2, 3, 4, 5, 0, 1],</span>
+<span class="go">[3, 4, 5, 0, 1, 2], [4, 5, 0, 1, 2, 3], [5, 0, 1, 2, 3, 4]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.named_groups.DihedralGroup">
+<tt class="descclassname">sympy.combinatorics.named_groups.</tt><tt class="descname">DihedralGroup</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/named_groups.html#DihedralGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.named_groups.DihedralGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the dihedral group <span class="math">\(D_n\)</span> as a permutation group.</p>
+<p>The dihedral group <span class="math">\(D_n\)</span> is the group of symmetries of the regular
+<tt class="docutils literal"><span class="pre">n</span></tt>-gon. The generators taken are the <tt class="docutils literal"><span class="pre">n</span></tt>-cycle <tt class="docutils literal"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">...</span> <span class="pre">n-1)</span></tt>
+(a rotation of the <tt class="docutils literal"><span class="pre">n</span></tt>-gon) and <tt class="docutils literal"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">(0</span> <span class="pre">n-1)(1</span> <span class="pre">n-2)...</span></tt>
+(a reflection of the <tt class="docutils literal"><span class="pre">n</span></tt>-gon) in cycle rotation. It is easy to see that
+these satisfy <tt class="docutils literal"><span class="pre">a**n</span> <span class="pre">=</span> <span class="pre">b**2</span> <span class="pre">=</span> <span class="pre">1</span></tt> and <tt class="docutils literal"><span class="pre">bab</span> <span class="pre">=</span> <span class="pre">~a</span></tt> so they indeed generate
+<span class="math">\(D_n\)</span> (See [1]). After the group is generated, some of its basic properties
+are set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.named_groups.SymmetricGroup" title="sympy.combinatorics.named_groups.SymmetricGroup"><tt class="xref py py-obj docutils literal"><span class="pre">SymmetricGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.CyclicGroup" title="sympy.combinatorics.named_groups.CyclicGroup"><tt class="xref py py-obj docutils literal"><span class="pre">CyclicGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.AlternatingGroup" title="sympy.combinatorics.named_groups.AlternatingGroup"><tt class="xref py py-obj docutils literal"><span class="pre">AlternatingGroup</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p>[1] <a class="reference external" href="http://en.wikipedia.org/wiki/Dihedral_group">http://en.wikipedia.org/wiki/Dihedral_group</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">DihedralGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">DihedralGroup</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_group</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">generate_dimino</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">perm</span><span class="o">.</span><span class="n">cyclic_form</span> <span class="k">for</span> <span class="n">perm</span> <span class="ow">in</span> <span class="n">a</span><span class="p">]</span>
+<span class="go">[[], [[0, 1, 2, 3, 4]], [[0, 2, 4, 1, 3]],</span>
+<span class="go">[[0, 3, 1, 4, 2]], [[0, 4, 3, 2, 1]], [[0, 4], [1, 3]],</span>
+<span class="go">[[1, 4], [2, 3]], [[0, 1], [2, 4]], [[0, 2], [3, 4]],</span>
+<span class="go">[[0, 3], [1, 2]]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.named_groups.AlternatingGroup">
+<tt class="descclassname">sympy.combinatorics.named_groups.</tt><tt class="descname">AlternatingGroup</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/named_groups.html#AlternatingGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.named_groups.AlternatingGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the alternating group on <tt class="docutils literal"><span class="pre">n</span></tt> elements as a permutation group.</p>
+<p>For <tt class="docutils literal"><span class="pre">n</span> <span class="pre">&gt;</span> <span class="pre">2</span></tt>, the generators taken are <tt class="docutils literal"><span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2),</span> <span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">...</span> <span class="pre">n-1)</span></tt> for
+<tt class="docutils literal"><span class="pre">n</span></tt> odd
+and <tt class="docutils literal"><span class="pre">(0</span> <span class="pre">1</span> <span class="pre">2),</span> <span class="pre">(1</span> <span class="pre">2</span> <span class="pre">...</span> <span class="pre">n-1)</span></tt> for <tt class="docutils literal"><span class="pre">n</span></tt> even (See [1], p.31, ex.6.9.).
+After the group is generated, some of its basic properties are set.
+The cases <tt class="docutils literal"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">2</span></tt> are handled separately.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.named_groups.SymmetricGroup" title="sympy.combinatorics.named_groups.SymmetricGroup"><tt class="xref py py-obj docutils literal"><span class="pre">SymmetricGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.CyclicGroup" title="sympy.combinatorics.named_groups.CyclicGroup"><tt class="xref py py-obj docutils literal"><span class="pre">CyclicGroup</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.named_groups.DihedralGroup" title="sympy.combinatorics.named_groups.DihedralGroup"><tt class="xref py py-obj docutils literal"><span class="pre">DihedralGroup</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p>[1] Armstrong, M. &#8220;Groups and Symmetry&#8221;</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">AlternatingGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">AlternatingGroup</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_group</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">generate_dimino</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">12</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">(</span><span class="n">perm</span><span class="o">.</span><span class="n">is_even</span> <span class="k">for</span> <span class="n">perm</span> <span class="ow">in</span> <span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.combinatorics.named_groups.AbelianGroup">
+<tt class="descclassname">sympy.combinatorics.named_groups.</tt><tt class="descname">AbelianGroup</tt><big>(</big><em>*cyclic_orders</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/named_groups.html#AbelianGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.named_groups.AbelianGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the direct product of cyclic groups with the given orders.</p>
+<p>According to the structure theorem for finite abelian groups ([1]),
+every finite abelian group can be written as the direct product of finitely
+many cyclic groups.
+[1] <a class="reference external" href="http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups">http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups</a></p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">DirectProduct</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Permutation</span><span class="o">.</span><span class="n">print_cyclic</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.named_groups</span> <span class="kn">import</span> <span class="n">AbelianGroup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AbelianGroup</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">PermutationGroup([</span>
+<span class="go">        Permutation(6)(0, 1, 2),</span>
+<span class="go">        Permutation(3, 4, 5, 6)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">is_group</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="graycode.html"
+                        title="previous chapter">Gray Code</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="util.html"
+                        title="next chapter">Utilities</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/named_groups.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="util.html" title="Utilities"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="graycode.html" title="Gray Code"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

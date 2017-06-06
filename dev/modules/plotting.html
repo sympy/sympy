@@ -1,0 +1,1067 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Plotting Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Assumptions module" href="assumptions/index.html" />
+    <link rel="prev" title="Printing System" href="printing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="assumptions/index.html" title="Assumptions module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing System"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.plotting.plot">
+<span id="plotting-module"></span><h1>Plotting Module<a class="headerlink" href="#module-sympy.plotting.plot" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The plotting module allows you to make 2-dimensional and 3-dimensional plots.
+Presently the plots are rendered using <tt class="docutils literal"><span class="pre">matplotlib</span></tt> as a backend. It is
+also possible to plot 2-dimensional plots using a <tt class="docutils literal"><span class="pre">TextBackend</span></tt> if you don&#8217;t
+have <tt class="docutils literal"><span class="pre">matplotlib</span></tt>.</p>
+<p>The plotting module has the following functions:</p>
+<ul class="simple">
+<li>plot: Plots 2D line plots.</li>
+<li>plot_parametric: Plots 2D parametric plots.</li>
+<li>plot_implicit: Plots 2D implicit and region plots.</li>
+<li>plot3d: Plots 3D plots of functions in two variables.</li>
+<li>plot3d_parametric_line: Plots 3D line plots, defined by a parameter.</li>
+<li>plot3d_parametric_surface: Plots 3D parametric surface plots.</li>
+</ul>
+<p>The above functions are only for convenience and ease of use. It is possible to
+plot any plot by passing the corresponding <tt class="docutils literal"><span class="pre">Series</span></tt> class to <tt class="docutils literal"><span class="pre">Plot</span></tt> as
+argument.</p>
+</div>
+<div class="section" id="plot-class">
+<h2>Plot Class<a class="headerlink" href="#plot-class" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.plotting.plot.Plot">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">Plot</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>The central class of the plotting module.</p>
+<p>For interactive work the function <tt class="docutils literal"><span class="pre">plot</span></tt> is better suited.</p>
+<p>This class permits the plotting of sympy expressions using numerous
+backends (matplotlib, textplot, the old pyglet module for sympy, Google
+charts api, etc).</p>
+<p>The figure can contain an arbitrary number of plots of sympy expressions,
+lists of coordinates of points, etc. Plot has a private attribute _series that
+contains all data series to be plotted (expressions for lines or surfaces,
+lists of points, etc (all subclasses of BaseSeries)). Those data series are
+instances of classes not imported by <tt class="docutils literal"><span class="pre">from</span> <span class="pre">sympy</span> <span class="pre">import</span> <span class="pre">*</span></tt>.</p>
+<p>The customization of the figure is on two levels. Global options that
+concern the figure as a whole (eg title, xlabel, scale, etc) and
+per-data series options (eg name) and aesthetics (eg. color, point shape,
+line type, etc.).</p>
+<p>The difference between options and aesthetics is that an aesthetic can be
+a function of the coordinates (or parameters in a parametric plot). The
+supported values for an aesthetic are:
+- None (the backend uses default values)
+- a constant
+- a function of one variable (the first coordinate or parameter)
+- a function of two variables (the first and second coordinate or
+parameters)
+- a function of three variables (only in nonparametric 3D plots)
+Their implementation depends on the backend so they may not work in some
+backends.</p>
+<p>If the plot is parametric and the arity of the aesthetic function permits
+it the aesthetic is calculated over parameters and not over coordinates.
+If the arity does not permit calculation over parameters the calculation is
+done over coordinates.</p>
+<p>Only cartesian coordinates are supported for the moment, but you can use
+the parametric plots to plot in polar, spherical and cylindrical
+coordinates.</p>
+<p>The arguments for the constructor Plot must be subclasses of BaseSeries.</p>
+<p>Any global option can be specified as a keyword argument.</p>
+<p>The global options for a figure are:</p>
+<ul class="simple">
+<li>title : str</li>
+<li>xlabel : str</li>
+<li>ylabel : str</li>
+<li>legend : bool</li>
+<li>xscale : {&#8216;linear&#8217;, &#8216;log&#8217;}</li>
+<li>yscale : {&#8216;linear&#8217;, &#8216;log&#8217;}</li>
+<li>axis : bool</li>
+<li>axis_center : tuple of two floats or {&#8216;center&#8217;, &#8216;auto&#8217;}</li>
+<li>xlim : tuple of two floats</li>
+<li>ylim : tuple of two floats</li>
+<li>aspect_ratio : tuple of two floats or {&#8216;auto&#8217;}</li>
+<li>autoscale : bool</li>
+<li>margin : float in [0, 1]</li>
+</ul>
+<p>The per data series options and aesthetics are:
+There are none in the base series. See below for options for subclasses.</p>
+<p>Some data series support additional aesthetics or options:</p>
+<p>ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries,
+Parametric3DLineSeries support the following:</p>
+<p>Aesthetics:</p>
+<ul class="simple">
+<li>line_color : function which returns a float.</li>
+</ul>
+<p>options:</p>
+<ul class="simple">
+<li>label : str</li>
+<li>steps : bool</li>
+<li>integers_only : bool</li>
+</ul>
+<p>SurfaceOver2DRangeSeries, ParametricSurfaceSeries support the following:</p>
+<p>aesthetics:</p>
+<ul class="simple">
+<li>surface_color : function which returns a float.</li>
+</ul>
+<dl class="method">
+<dt id="sympy.plotting.plot.Plot.append">
+<tt class="descname">append</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Plot.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Plot.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds one more graph to the figure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.plotting.plot.Plot.extend">
+<tt class="descname">extend</tt><big>(</big><em>arg</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Plot.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Plot.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the series from another plot or a list of series.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="plotting-function-reference">
+<h2>Plotting Function Reference<a class="headerlink" href="#plotting-function-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.plotting.plot.plot">
+<tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">plot</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a function of a single variable and returns an instance of
+the <tt class="docutils literal"><span class="pre">Plot</span></tt> class (also, see the description of the
+<tt class="docutils literal"><span class="pre">show</span></tt> keyword argument below).</p>
+<p>The plotting uses an adaptive algorithm which samples recursively to
+accurately plot the plot. The adaptive algorithm uses a random point near
+the midpoint of two points that has to be further sampled. Hence the same
+plots can appear slightly different.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.plotting.plot.Plot" title="sympy.plotting.plot.Plot"><tt class="xref py py-obj docutils literal"><span class="pre">Plot</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">LineOver1DRangeSeries.</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Single Plot</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian line: x**2 for x over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple plots with single range.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian line: x for x over (-5.0, 5.0)</span>
+<span class="go">[1]: cartesian line: x**2 for x over (-5.0, 5.0)</span>
+<span class="go">[2]: cartesian line: x**3 for x over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple plots with different ranges.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian line: x**2 for x over (-6.0, 6.0)</span>
+<span class="go">[1]: cartesian line: x for x over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>No adaptive sampling.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">adaptive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">nb_of_points</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian line: x**2 for x over (-10.0, 10.0)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p>Single Plot</p>
+<p><tt class="docutils literal"><span class="pre">plot(expr,</span> <span class="pre">range,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the range is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots with same range.</p>
+<p><tt class="docutils literal"><span class="pre">plot(expr1,</span> <span class="pre">expr2,</span> <span class="pre">...,</span> <span class="pre">range,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the range is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots with different ranges.</p>
+<p><tt class="docutils literal"><span class="pre">plot((expr1,</span> <span class="pre">range),</span> <span class="pre">(expr2,</span> <span class="pre">range),</span> <span class="pre">...,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>Range has to be specified for every expression.</p>
+<p>Default range may change in the future if a more advanced default range
+detection algorithm is implemented.</p>
+<p class="rubric">Arguments</p>
+<p><tt class="docutils literal"><span class="pre">expr</span></tt> : Expression representing the function of single variable</p>
+<p><tt class="docutils literal"><span class="pre">range</span></tt>: (x, 0, 5), A 3-tuple denoting the range of the free variable.</p>
+<p class="rubric">Keyword Arguments</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">plot</span></tt> function:</p>
+<p><tt class="docutils literal"><span class="pre">show</span></tt>: Boolean. The default value is set to <tt class="docutils literal"><span class="pre">True</span></tt>. Set show to
+<tt class="docutils literal"><span class="pre">False</span></tt> and the function will not display the plot. The returned
+instance of the <tt class="docutils literal"><span class="pre">Plot</span></tt> class can then be used to save or display
+the plot by calling the <tt class="docutils literal"><span class="pre">save()</span></tt> and <tt class="docutils literal"><span class="pre">show()</span></tt> methods
+respectively.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">LineOver1DRangeSeries</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">adaptive</span></tt>: Boolean. The default value is set to True. Set adaptive to False and
+specify <tt class="docutils literal"><span class="pre">nb_of_points</span></tt> if uniform sampling is required.</p>
+<p><tt class="docutils literal"><span class="pre">depth</span></tt>: int Recursion depth of the adaptive algorithm. A depth of value <tt class="docutils literal"><span class="pre">n</span></tt>
+samples a maximum of <span class="math">\(2^{n}\)</span> points.</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points</span></tt>: int. Used when the <tt class="docutils literal"><span class="pre">adaptive</span></tt> is set to False. The function
+is uniformly sampled at <tt class="docutils literal"><span class="pre">nb_of_points</span></tt> number of points.</p>
+<p>Aesthetics options:</p>
+<p><tt class="docutils literal"><span class="pre">line_color</span></tt>: float. Specifies the color for the plot.
+See <tt class="docutils literal"><span class="pre">Plot</span></tt> to see how to set color for the plots.</p>
+<p>If there are multiple plots, then the same series series are applied to
+all the plots. If you want to set these options separately, you can index
+the <tt class="docutils literal"><span class="pre">Plot</span></tt> object returned and set it.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Plot</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">title</span></tt> : str. Title of the plot. It is set to the latex representation of
+the expression, if the plot has only one expression.</p>
+<p><tt class="docutils literal"><span class="pre">xlabel</span></tt> : str. Label for the x - axis.</p>
+<p><tt class="docutils literal"><span class="pre">ylabel</span></tt> : str. Label for the y - axis.</p>
+<p><tt class="docutils literal"><span class="pre">xscale</span></tt>: {&#8216;linear&#8217;, &#8216;log&#8217;} Sets the scaling of the x - axis.</p>
+<p><tt class="docutils literal"><span class="pre">yscale</span></tt>: {&#8216;linear&#8217;, &#8216;log&#8217;} Sets the scaling if the y - axis.</p>
+<p><tt class="docutils literal"><span class="pre">axis_center</span></tt>: tuple of two floats denoting the coordinates of the center or
+{&#8216;center&#8217;, &#8216;auto&#8217;}</p>
+<p><tt class="docutils literal"><span class="pre">xlim</span></tt> : tuple of two floats, denoting the x - axis limits.</p>
+<p><tt class="docutils literal"><span class="pre">ylim</span></tt> : tuple of two floats, denoting the y - axis limits.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.plotting.plot.plot_parametric">
+<tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">plot_parametric</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#plot_parametric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.plot_parametric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a 2D parametric plot.</p>
+<p>The plotting uses an adaptive algorithm which samples recursively to
+accurately plot the plot. The adaptive algorithm uses a random point near
+the midpoint of two points that has to be further sampled. Hence the same
+plots can appear slightly different.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.plotting.plot.Plot" title="sympy.plotting.plot.Plot"><tt class="xref py py-obj docutils literal"><span class="pre">Plot</span></tt></a>, <a class="reference internal" href="#sympy.plotting.plot.Parametric2DLineSeries" title="sympy.plotting.plot.Parametric2DLineSeries"><tt class="xref py py-obj docutils literal"><span class="pre">Parametric2DLineSeries</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot_parametric</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Single Parametric plot</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot_parametric</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple parametric plot with single range.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot_parametric</span><span class="p">((</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">)),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)</span>
+<span class="go">[1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)</span>
+</pre></div>
+</div>
+<p>Multiple parametric plots.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot_parametric</span><span class="p">((</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)</span>
+<span class="go">[1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p>Single plot.</p>
+<p><tt class="docutils literal"><span class="pre">plot_parametric(expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">range,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the range is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots with same range.</p>
+<p><tt class="docutils literal"><span class="pre">plot_parametric((expr1_x,</span> <span class="pre">expr1_y),</span> <span class="pre">(expr2_x,</span> <span class="pre">expr2_y),</span> <span class="pre">range,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the range is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots with different ranges.</p>
+<p><tt class="docutils literal"><span class="pre">plot_parametric((expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">range),</span> <span class="pre">...,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>Range has to be specified for every expression.</p>
+<p>Default range may change in the future if a more advanced default range
+detection algorithm is implemented.</p>
+<p class="rubric">Arguments</p>
+<p><tt class="docutils literal"><span class="pre">expr_x</span></tt> : Expression representing the function along x.</p>
+<p><tt class="docutils literal"><span class="pre">expr_y</span></tt> : Expression representing the function along y.</p>
+<p><tt class="docutils literal"><span class="pre">range</span></tt>: (u, 0, 5), A 3-tuple denoting the range of the parameter
+variable.</p>
+<p class="rubric">Keyword Arguments</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Parametric2DLineSeries</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">adaptive</span></tt>: Boolean. The default value is set to True. Set adaptive to
+False and specify <tt class="docutils literal"><span class="pre">nb_of_points</span></tt> if uniform sampling is required.</p>
+<p><tt class="docutils literal"><span class="pre">depth</span></tt>: int Recursion depth of the adaptive algorithm. A depth of
+value <tt class="docutils literal"><span class="pre">n</span></tt> samples a maximum of <span class="math">\(2^{n}\)</span> points.</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points</span></tt>: int. Used when the <tt class="docutils literal"><span class="pre">adaptive</span></tt> is set to False. The
+function is uniformly sampled at <tt class="docutils literal"><span class="pre">nb_of_points</span></tt> number of points.</p>
+<p class="rubric">Aesthetics</p>
+<p><tt class="docutils literal"><span class="pre">line_color</span></tt>: function which returns a float. Specifies the color for the
+plot. See <tt class="docutils literal"><span class="pre">sympy.plotting.Plot</span></tt> for more details.</p>
+<p>If there are multiple plots, then the same Series arguments are applied to
+all the plots. If you want to set these options separately, you can index
+the returned <tt class="docutils literal"><span class="pre">Plot</span></tt> object and set it.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Plot</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">xlabel</span></tt> : str. Label for the x - axis.</p>
+<p><tt class="docutils literal"><span class="pre">ylabel</span></tt> : str. Label for the y - axis.</p>
+<p><tt class="docutils literal"><span class="pre">xscale</span></tt>: {&#8216;linear&#8217;, &#8216;log&#8217;} Sets the scaling of the x - axis.</p>
+<p><tt class="docutils literal"><span class="pre">yscale</span></tt>: {&#8216;linear&#8217;, &#8216;log&#8217;} Sets the scaling if the y - axis.</p>
+<p><tt class="docutils literal"><span class="pre">axis_center</span></tt>: tuple of two floats denoting the coordinates of the center
+or {&#8216;center&#8217;, &#8216;auto&#8217;}</p>
+<p><tt class="docutils literal"><span class="pre">xlim</span></tt> : tuple of two floats, denoting the x - axis limits.</p>
+<p><tt class="docutils literal"><span class="pre">ylim</span></tt> : tuple of two floats, denoting the y - axis limits.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.plotting.plot.plot3d">
+<tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">plot3d</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#plot3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.plot3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a 3D surface plot.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.plotting.plot.Plot" title="sympy.plotting.plot.Plot"><tt class="xref py py-obj docutils literal"><span class="pre">Plot</span></tt></a>, <a class="reference internal" href="#sympy.plotting.plot.SurfaceOver2DRangeSeries" title="sympy.plotting.plot.SurfaceOver2DRangeSeries"><tt class="xref py py-obj docutils literal"><span class="pre">SurfaceOver2DRangeSeries</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot3d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Single plot</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple plots with same range</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)</span>
+<span class="go">[1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple plots with different ranges.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)</span>
+<span class="go">[1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p>Single plot</p>
+<p><tt class="docutils literal"><span class="pre">plot3d(expr,</span> <span class="pre">range_x,</span> <span class="pre">range_y,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the ranges are not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plot with the same range.</p>
+<p><tt class="docutils literal"><span class="pre">plot3d(expr1,</span> <span class="pre">expr2,</span> <span class="pre">range_x,</span> <span class="pre">range_y,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the ranges are not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots with different ranges.</p>
+<p><tt class="docutils literal"><span class="pre">plot3d((expr1,</span> <span class="pre">range_x,</span> <span class="pre">range_y),</span> <span class="pre">(expr2,</span> <span class="pre">range_x,</span> <span class="pre">range_y),</span> <span class="pre">...,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>Ranges have to be specified for every expression.</p>
+<p>Default range may change in the future if a more advanced default range
+detection algorithm is implemented.</p>
+<p class="rubric">Arguments</p>
+<p><tt class="docutils literal"><span class="pre">expr</span></tt> : Expression representing the function along x.</p>
+<p><tt class="docutils literal"><span class="pre">range_x</span></tt>: (x, 0, 5), A 3-tuple denoting the range of the x
+variable.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">range_y</span></tt>: (y, 0, 5), A 3-tuple denoting the range of the y</dt>
+<dd>variable.</dd>
+</dl>
+<p class="rubric">Keyword Arguments</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">SurfaceOver2DRangeSeries</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points_x</span></tt>: int. The x range is sampled uniformly at
+<tt class="docutils literal"><span class="pre">nb_of_points_x</span></tt> of points.</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points_y</span></tt>: int. The y range is sampled uniformly at
+<tt class="docutils literal"><span class="pre">nb_of_points_y</span></tt> of points.</p>
+<p>Aesthetics:</p>
+<p><tt class="docutils literal"><span class="pre">surface_color</span></tt>: Function which returns a float. Specifies the color for
+the surface of the plot. See <tt class="docutils literal"><span class="pre">sympy.plotting.Plot</span></tt> for more details.</p>
+<p>If there are multiple plots, then the same series arguments are applied to
+all the plots. If you want to set these options separately, you can index
+the returned <tt class="docutils literal"><span class="pre">Plot</span></tt> object and set it.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Plot</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">title</span></tt> : str. Title of the plot.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.plotting.plot.plot3d_parametric_line">
+<tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">plot3d_parametric_line</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#plot3d_parametric_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.plot3d_parametric_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a 3D parametric line plot.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.plotting.plot.Plot" title="sympy.plotting.plot.Plot"><tt class="xref py py-obj docutils literal"><span class="pre">Plot</span></tt></a>, <a class="reference internal" href="#sympy.plotting.plot.Parametric3DLineSeries" title="sympy.plotting.plot.Parametric3DLineSeries"><tt class="xref py py-obj docutils literal"><span class="pre">Parametric3DLineSeries</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot3d_parametric_line</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Single plot.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d_parametric_line</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p>Multiple plots.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d_parametric_line</span><span class="p">((</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">u</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)</span>
+<span class="go">[1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p>Single plot:</p>
+<p><tt class="docutils literal"><span class="pre">plot3d_parametric_line(expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">expr_z,</span> <span class="pre">range,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the range is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots.</p>
+<p><tt class="docutils literal"><span class="pre">plot3d_parametric_line((expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">expr_z,</span> <span class="pre">range),</span> <span class="pre">...,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>Ranges have to be specified for every expression.</p>
+<p>Default range may change in the future if a more advanced default range
+detection algorithm is implemented.</p>
+<p class="rubric">Arguments</p>
+<p><tt class="docutils literal"><span class="pre">expr_x</span></tt> : Expression representing the function along x.</p>
+<p><tt class="docutils literal"><span class="pre">expr_y</span></tt> : Expression representing the function along y.</p>
+<p><tt class="docutils literal"><span class="pre">expr_z</span></tt> : Expression representing the function along z.</p>
+<p><tt class="docutils literal"><span class="pre">range</span></tt>: <tt class="docutils literal"><span class="pre">(u,</span> <span class="pre">0,</span> <span class="pre">5)</span></tt>, A 3-tuple denoting the range of the parameter
+variable.</p>
+<p class="rubric">Keyword Arguments</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Parametric3DLineSeries</span></tt> class.</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points</span></tt>: The range is uniformly sampled at <tt class="docutils literal"><span class="pre">nb_of_points</span></tt>
+number of points.</p>
+<p>Aesthetics:</p>
+<p><tt class="docutils literal"><span class="pre">line_color</span></tt>: function which returns a float. Specifies the color for the
+plot. See <tt class="docutils literal"><span class="pre">sympy.plotting.Plot</span></tt> for more details.</p>
+<p>If there are multiple plots, then the same series arguments are applied to
+all the plots. If you want to set these options separately, you can index
+the returned <tt class="docutils literal"><span class="pre">Plot</span></tt> object and set it.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Plot</span></tt> class.</p>
+<p><tt class="docutils literal"><span class="pre">title</span></tt> : str. Title of the plot.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.plotting.plot.plot3d_parametric_surface">
+<tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">plot3d_parametric_surface</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#plot3d_parametric_surface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.plot3d_parametric_surface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots a 3D parametric surface plot.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.plotting.plot.Plot" title="sympy.plotting.plot.Plot"><tt class="xref py py-obj docutils literal"><span class="pre">Plot</span></tt></a>, <a class="reference internal" href="#sympy.plotting.plot.ParametricSurfaceSeries" title="sympy.plotting.plot.ParametricSurfaceSeries"><tt class="xref py py-obj docutils literal"><span class="pre">ParametricSurfaceSeries</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.plotting</span> <span class="kn">import</span> <span class="n">plot3d_parametric_surface</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;u v&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Single plot.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">plot3d_parametric_surface</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">v</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">v</span><span class="p">),</span> <span class="n">u</span> <span class="o">-</span> <span class="n">v</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">Plot object containing:</span>
+<span class="go">[0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p>Single plot.</p>
+<p><tt class="docutils literal"><span class="pre">plot3d_parametric_surface(expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">expr_z,</span> <span class="pre">range_u,</span> <span class="pre">range_v,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>If the ranges is not specified, then a default range of (-10, 10) is used.</p>
+<p>Multiple plots.</p>
+<p><tt class="docutils literal"><span class="pre">plot3d_parametric_surface((expr_x,</span> <span class="pre">expr_y,</span> <span class="pre">expr_z,</span> <span class="pre">range_u,</span> <span class="pre">range_v),</span> <span class="pre">...,</span> <span class="pre">**kwargs)</span></tt></p>
+<p>Ranges have to be specified for every expression.</p>
+<p>Default range may change in the future if a more advanced default range
+detection algorithm is implemented.</p>
+<p class="rubric">Arguments</p>
+<p><tt class="docutils literal"><span class="pre">expr_x</span></tt>: Expression representing the function along <tt class="docutils literal"><span class="pre">x</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">expr_y</span></tt>: Expression representing the function along <tt class="docutils literal"><span class="pre">y</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">expr_z</span></tt>: Expression representing the function along <tt class="docutils literal"><span class="pre">z</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">range_u</span></tt>: <tt class="docutils literal"><span class="pre">(u,</span> <span class="pre">0,</span> <span class="pre">5)</span></tt>,  A 3-tuple denoting the range of the <tt class="docutils literal"><span class="pre">u</span></tt>
+variable.</p>
+<p><tt class="docutils literal"><span class="pre">range_v</span></tt>: <tt class="docutils literal"><span class="pre">(v,</span> <span class="pre">0,</span> <span class="pre">5)</span></tt>,  A 3-tuple denoting the range of the v
+variable.</p>
+<p class="rubric">Keyword Arguments</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">ParametricSurfaceSeries</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points_u</span></tt>: int. The <tt class="docutils literal"><span class="pre">u</span></tt> range is sampled uniformly at
+<tt class="docutils literal"><span class="pre">nb_of_points_v</span></tt> of points</p>
+<p><tt class="docutils literal"><span class="pre">nb_of_points_y</span></tt>: int. The <tt class="docutils literal"><span class="pre">v</span></tt> range is sampled uniformly at
+<tt class="docutils literal"><span class="pre">nb_of_points_y</span></tt> of points</p>
+<p>Aesthetics:</p>
+<p><tt class="docutils literal"><span class="pre">surface_color</span></tt>: Function which returns a float. Specifies the color for
+the surface of the plot. See <tt class="docutils literal"><span class="pre">sympy.plotting.Plot</span></tt> for more details.</p>
+<p>If there are multiple plots, then the same series arguments are applied for
+all the plots. If you want to set these options separately, you can index
+the returned <tt class="docutils literal"><span class="pre">Plot</span></tt> object and set it.</p>
+<p>Arguments for <tt class="docutils literal"><span class="pre">Plot</span></tt> class:</p>
+<p><tt class="docutils literal"><span class="pre">title</span></tt> : str. Title of the plot.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.plotting.plot_implicit.plot_implicit">
+<tt class="descclassname">sympy.plotting.plot_implicit.</tt><tt class="descname">plot_implicit</tt><big>(</big><em>expr</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot_implicit.html#plot_implicit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot_implicit.plot_implicit" title="Permalink to this definition">¶</a></dt>
+<dd><p>A plot function to plot implicit equations / inequalities.</p>
+<p class="rubric">Arguments</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">expr</span></tt> : The equation / inequality that is to be plotted.</li>
+<li><tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">xmin,</span> <span class="pre">xmax)</span></tt> optional, 3-tuple denoting the range of symbol
+<tt class="docutils literal"><span class="pre">x</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">(y,</span> <span class="pre">ymin,</span> <span class="pre">ymax)</span></tt> optional, 3-tuple denoting the range of symbol
+<tt class="docutils literal"><span class="pre">y</span></tt></li>
+</ul>
+<p>The following arguments can be passed as named parameters.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">adaptive</span></tt>. Boolean. The default value is set to True. It has to be</dt>
+<dd><p class="first last">set to False if you want to use a mesh grid.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">depth</span></tt> integer. The depth of recursion for adaptive mesh grid.</dt>
+<dd><p class="first last">Default value is 0. Takes value in the range (0, 4).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">points</span></tt> integer. The number of points if adaptive mesh grid is not</dt>
+<dd><p class="first last">used. Default value is 200.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">title</span></tt> string .The title for the plot.</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">xlabel</span></tt> string. The label for the x - axis</p>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">ylabel</span></tt> string. The label for the y - axis</p>
+</li>
+</ul>
+<p>plot_implicit, by default, uses interval arithmetic to plot functions. If
+the expression cannot be plotted using interval arithmetic, it defaults to
+a generating a contour using a mesh grid of fixed number of points. By
+setting adaptive to False, you can force plot_implicit to use the mesh
+grid. The mesh grid method can be effective when adaptive plotting using
+interval arithmetic, fails to plot with small line width.</p>
+<p class="rubric">Examples:</p>
+<p>Plot expressions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">plot_implicit</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">And</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Without any ranges for the symbols in the expression</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>With the range for the symbols</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>With depth of recursion as argument.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p3</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">depth</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using mesh grid and not using adaptive meshing.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p4</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">adaptive</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using mesh grid with number of points as input.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p5</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">adaptive</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Plotting regions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p6</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Plotting Using boolean conjunctions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p7</span> <span class="o">=</span> <span class="n">plot_implicit</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="series-classes">
+<h2>Series Classes<a class="headerlink" href="#series-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.plotting.plot.BaseSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">BaseSeries</tt><a class="reference internal" href="../_modules/sympy/plotting/plot.html#BaseSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.BaseSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for the data objects containing stuff to be plotted.</p>
+<p>The backend should check if it supports the data series that it&#8217;s given.
+(eg TextBackend supports only LineOver1DRange).
+It&#8217;s the backend responsibility to know how to use the class of
+data series that it&#8217;s given.</p>
+<p>Some data series classes are grouped (using a class attribute like is_2Dline)
+according to the api they present (based only on convention). The backend is
+not obliged to use that api (eg. The LineOver1DRange belongs to the
+is_2Dline group and presents the get_points method, but the
+TextBackend does not use the get_points method).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.Line2DBaseSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">Line2DBaseSeries</tt><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Line2DBaseSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Line2DBaseSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for 2D lines.</p>
+<ul class="simple">
+<li>adding the label, steps and only_integers options</li>
+<li>making is_2Dline true</li>
+<li>defining get_segments and get_color_array</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.LineOver1DRangeSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">LineOver1DRangeSeries</tt><big>(</big><em>expr</em>, <em>var_start_end</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#LineOver1DRangeSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.LineOver1DRangeSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a line consisting of a sympy expression over a range.</p>
+<dl class="method">
+<dt id="sympy.plotting.plot.LineOver1DRangeSeries.get_segments">
+<tt class="descname">get_segments</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#LineOver1DRangeSeries.get_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.LineOver1DRangeSeries.get_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adaptively gets segments for plotting.</p>
+<p>The adaptive sampling is done by recursively checking if three
+points are almost collinear. If they are not collinear, then more
+points are added between those points.</p>
+<p class="rubric">References</p>
+<dl class="docutils">
+<dt>[1] Adaptive polygonal approximation of parametric curves,</dt>
+<dd>Luiz Henrique de Figueiredo.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.Parametric2DLineSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">Parametric2DLineSeries</tt><big>(</big><em>expr_x</em>, <em>expr_y</em>, <em>var_start_end</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Parametric2DLineSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Parametric2DLineSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a line consisting of two parametric sympy expressions
+over a range.</p>
+<dl class="method">
+<dt id="sympy.plotting.plot.Parametric2DLineSeries.get_segments">
+<tt class="descname">get_segments</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Parametric2DLineSeries.get_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Parametric2DLineSeries.get_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adaptively gets segments for plotting.</p>
+<p>The adaptive sampling is done by recursively checking if three
+points are almost collinear. If they are not collinear, then more
+points are added between those points.</p>
+<p class="rubric">References</p>
+<dl class="docutils">
+<dt>[1] Adaptive polygonal approximation of parametric curves,</dt>
+<dd>Luiz Henrique de Figueiredo.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.Line3DBaseSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">Line3DBaseSeries</tt><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Line3DBaseSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Line3DBaseSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for 3D lines.</p>
+<p>Most of the stuff is derived from Line2DBaseSeries.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.Parametric3DLineSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">Parametric3DLineSeries</tt><big>(</big><em>expr_x</em>, <em>expr_y</em>, <em>expr_z</em>, <em>var_start_end</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#Parametric3DLineSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.Parametric3DLineSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a 3D line consisting of two parametric sympy
+expressions and a range.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.SurfaceBaseSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">SurfaceBaseSeries</tt><a class="reference internal" href="../_modules/sympy/plotting/plot.html#SurfaceBaseSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.SurfaceBaseSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for 3D surfaces.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.SurfaceOver2DRangeSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">SurfaceOver2DRangeSeries</tt><big>(</big><em>expr</em>, <em>var_start_end_x</em>, <em>var_start_end_y</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#SurfaceOver2DRangeSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.SurfaceOver2DRangeSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a 3D surface consisting of a sympy expression and 2D
+range.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot.ParametricSurfaceSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot.</tt><tt class="descname">ParametricSurfaceSeries</tt><big>(</big><em>expr_x</em>, <em>expr_y</em>, <em>expr_z</em>, <em>var_start_end_u</em>, <em>var_start_end_v</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot.html#ParametricSurfaceSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot.ParametricSurfaceSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a 3D surface consisting of three parametric sympy
+expressions and a range.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.plotting.plot_implicit.ImplicitSeries">
+<em class="property">class </em><tt class="descclassname">sympy.plotting.plot_implicit.</tt><tt class="descname">ImplicitSeries</tt><big>(</big><em>expr</em>, <em>var_start_end_x</em>, <em>var_start_end_y</em>, <em>has_equality</em>, <em>use_interval_math</em>, <em>depth</em>, <em>nb_of_points</em><big>)</big><a class="reference internal" href="../_modules/sympy/plotting/plot_implicit.html#ImplicitSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.plotting.plot_implicit.ImplicitSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for Implicit plot</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.plotting.pygletplot">
+<span id="pyglet-plotting-module"></span><h1>Pyglet Plotting Module<a class="headerlink" href="#module-sympy.plotting.pygletplot" title="Permalink to this headline">¶</a></h1>
+<p>This is the documentation for the old plotting module that uses pyglet.
+This module has some limitations and is not actively developed anymore.
+For an alternative you can look at the new plotting module.</p>
+<p>The pyglet plotting module can do nice 2D and 3D plots that can be
+controlled by console commands as well as keyboard and mouse, with
+the only dependency being <tt class="docutils literal"><span class="pre">pyglet</span></tt>.</p>
+<p>Here is the simplest usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">var</span><span class="p">,</span> <span class="n">Plot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="p">(</span><span class="s">&#39;x y z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To see lots of plotting examples, see <tt class="docutils literal"><span class="pre">examples/pyglet_plotting.py</span></tt> and try running
+it in interactive mode (python -i plotting.py):</p>
+<div class="highlight-python"><pre>$ python -i examples/pyglet_plotting.py</pre>
+</div>
+<p>And type for instance <tt class="docutils literal"><span class="pre">example(7)</span></tt> or <tt class="docutils literal"><span class="pre">example(11)</span></tt>.</p>
+<p>See also the <a class="reference external" href="https://github.com/sympy/sympy/wiki/Plotting-Module">Plotting Module</a>
+wiki page for screenshots.</p>
+<div class="section" id="plot-window-controls">
+<h2>Plot Window Controls<a class="headerlink" href="#plot-window-controls" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Camera</th>
+<th class="head">Keys</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Sensitivity Modifier</td>
+<td>SHIFT</td>
+</tr>
+<tr class="row-odd"><td>Zoom</td>
+<td>R and F, Page Up and Down, Numpad + and -</td>
+</tr>
+<tr class="row-even"><td>Rotate View X,Y axis</td>
+<td>Arrow Keys, A,S,D,W, Numpad 4,6,8,2</td>
+</tr>
+<tr class="row-odd"><td>Rotate View Z axis</td>
+<td>Q and E, Numpad 7 and 9</td>
+</tr>
+<tr class="row-even"><td>Rotate Ordinate Z axis</td>
+<td>Z and C, Numpad 1 and 3</td>
+</tr>
+<tr class="row-odd"><td>View XY</td>
+<td>F1</td>
+</tr>
+<tr class="row-even"><td>View XZ</td>
+<td>F2</td>
+</tr>
+<tr class="row-odd"><td>View YZ</td>
+<td>F3</td>
+</tr>
+<tr class="row-even"><td>View Perspective</td>
+<td>F4</td>
+</tr>
+<tr class="row-odd"><td>Reset</td>
+<td>X, Numpad 5</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="73%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Axes</th>
+<th class="head">Keys</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Toggle Visible</td>
+<td>F5</td>
+</tr>
+<tr class="row-odd"><td>Toggle Colors</td>
+<td>F6</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="docutils">
+<colgroup>
+<col width="73%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Window</th>
+<th class="head">Keys</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Close</td>
+<td>ESCAPE</td>
+</tr>
+<tr class="row-odd"><td>Screenshot</td>
+<td>F8</td>
+</tr>
+</tbody>
+</table>
+<p>The mouse can be used to rotate, zoom, and translate by dragging the left, middle, and right mouse buttons respectively.</p>
+</div>
+<div class="section" id="coordinate-modes">
+<h2>Coordinate Modes<a class="headerlink" href="#coordinate-modes" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">Plot</span></tt> supports several curvilinear coordinate modes, and they are independent
+for each plotted function. You can specify a coordinate mode explicitly with
+the &#8216;mode&#8217; named argument, but it can be automatically determined for cartesian
+or parametric plots, and therefore must only be specified for polar,
+cylindrical, and spherical modes.</p>
+<p>Specifically, <tt class="docutils literal"><span class="pre">Plot(function</span> <span class="pre">arguments)</span></tt> and <tt class="docutils literal"><span class="pre">Plot.__setitem__(i,</span> <span class="pre">function</span>
+<span class="pre">arguments)</span></tt> (accessed using array-index syntax on the <tt class="docutils literal"><span class="pre">Plot</span></tt> instance) will
+interpret your arguments as a cartesian plot if you provide one function and a
+parametric plot if you provide two or three functions. Similarly, the arguments
+will be interpreted as a curve is one variable is used, and a surface if two
+are used.</p>
+<p>Supported mode names by number of variables:</p>
+<ul class="simple">
+<li>1 (curves): parametric, cartesian, polar</li>
+<li>2 (surfaces): parametric, cartesian, cylindrical, spherical</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;mode=spherical; color=zfade4&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that function parameters are given as option strings of the form
+&#8220;key1=value1; key2 = value2&#8221; (spaces are truncated). Keyword arguments given
+directly to plot apply to the plot itself.</p>
+</div>
+<div class="section" id="specifying-intervals-for-variables">
+<h2>Specifying Intervals for Variables<a class="headerlink" href="#specifying-intervals-for-variables" title="Permalink to this headline">¶</a></h2>
+<p>The basic format for variable intervals is [var, min, max, steps]. However, the
+syntax is quite flexible, and arguments not specified are taken from the
+defaults for the current coordinate mode:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="c"># implies [x,-5,5,100]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[])</span> <span class="c"># [x,-1,1,40], [y,-1,1,40]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span> <span class="c"># [x,-1,1,100], [y,-1,1,100]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="mi">13</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">13</span><span class="p">,</span><span class="mi">13</span><span class="p">])</span> <span class="c"># [x,-13,13,100]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="mi">13</span><span class="p">,</span><span class="mi">13</span><span class="p">])</span> <span class="c"># [x,-13,13,100]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Plot</span><span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="s">&#39;mode=cylindrical&#39;</span><span class="p">)</span> <span class="c"># [unbound_theta,0,2*Pi,40], [x,-1,1,20]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-interactive-interface">
+<h2>Using the Interactive Interface<a class="headerlink" href="#using-the-interactive-interface" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
+<span class="go">[1]: x**2, &#39;mode=cartesian&#39;</span>
+<span class="go">[2]: 2*x, &#39;mode=cartesian&#39;</span>
+<span class="go">[3]: 2, &#39;mode=cartesian&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
+<span class="go">&lt;blank plot&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span>  <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s">&#39;solid&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s">&#39;wireframe&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s">&#39;both&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s">&#39;both&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-custom-color-functions">
+<h2>Using Custom Color Functions<a class="headerlink" href="#using-custom-color-functions" title="Permalink to this headline">¶</a></h2>
+<p>The following code plots a saddle and color it by the magnitude of its gradient:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fz</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fx</span><span class="p">,</span> <span class="n">Fy</span><span class="p">,</span> <span class="n">Fz</span> <span class="o">=</span> <span class="n">fz</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">fz</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">fz</span><span class="p">,</span> <span class="s">&#39;style=solid&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fz</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The coloring algorithm works like this:</p>
+<ol class="arabic simple">
+<li>Evaluate the color function(s) across the curve or surface.</li>
+<li>Find the minimum and maximum value of each component.</li>
+<li>Scale each component to the color gradient.</li>
+</ol>
+<p>When not specified explicitly, the default color gradient is
+f(0.0)=(0.4,0.4,0.4) -&gt; f(1.0)=(0.9,0.9,0.9). In our case, everything is
+gray-scale because we have applied the default color gradient uniformly for
+each color component. When defining a color scheme in this way, you might want
+to supply a color gradient as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fz</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here&#8217;s a color gradient with four steps:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gradient</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="mf">0.3</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span>
+<span class="gp">... </span>             <span class="mf">0.7</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">)</span> <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fz</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">gradient</span>
+</pre></div>
+</div>
+<p>The other way to specify a color scheme is to give a separate function for each
+component r, g, b. With this syntax, the default color scheme is defined:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">z</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.4</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.9</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This maps z-&gt;red, y-&gt;green, and x-&gt;blue. In some cases, you might prefer to use
+the following alternative syntax:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">z</span><span class="p">,(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="n">y</span><span class="p">,(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="n">x</span><span class="p">,(</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.9</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can still use multi-step gradients with three-function color schemes.</p>
+</div>
+<div class="section" id="plotting-geometric-entities">
+<h2>Plotting Geometric Entities<a class="headerlink" href="#plotting-geometric-entities" title="Permalink to this headline">¶</a></h2>
+<p>The plotting module is capable of plotting some 2D geometric entities like
+line, circle and ellipse. The following example plots a circle and a tangent
+line at a random point on the ellipse.</p>
+<div class="highlight-python"><pre>In [1]: p = Plot(axes='label_axes=True')
+
+In [2]: c = Circle(Point(0,0), 1)
+
+In [3]: t = c.tangent_line(c.random_point())
+
+In [4]: p[0] = c
+
+In [5]: p[1] = t</pre>
+</div>
+<p>Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported
+directly. However a polygon can be plotted through a loop as follows.</p>
+<div class="highlight-python"><pre>In [6]: p = Plot(axes='label_axes=True')
+
+In [7]: t = RegularPolygon(Point(0,0), 1, 5)
+
+In [8]: for i in range(len(t.sides)):
+   ....:    p[i] = t.sides[i]</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Plotting Module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#plot-class">Plot Class</a></li>
+<li><a class="reference internal" href="#plotting-function-reference">Plotting Function Reference</a></li>
+<li><a class="reference internal" href="#series-classes">Series Classes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.plotting.pygletplot">Pyglet Plotting Module</a><ul>
+<li><a class="reference internal" href="#plot-window-controls">Plot Window Controls</a></li>
+<li><a class="reference internal" href="#coordinate-modes">Coordinate Modes</a></li>
+<li><a class="reference internal" href="#specifying-intervals-for-variables">Specifying Intervals for Variables</a></li>
+<li><a class="reference internal" href="#using-the-interactive-interface">Using the Interactive Interface</a></li>
+<li><a class="reference internal" href="#using-custom-color-functions">Using Custom Color Functions</a></li>
+<li><a class="reference internal" href="#plotting-geometric-entities">Plotting Geometric Entities</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="printing.html"
+                        title="previous chapter">Printing System</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="assumptions/index.html"
+                        title="next chapter">Assumptions module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/plotting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="assumptions/index.html" title="Assumptions module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing System"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

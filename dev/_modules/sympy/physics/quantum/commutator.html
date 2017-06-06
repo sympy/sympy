@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.commutator &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.commutator</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The commutator: [A,B] = A*B - B*A.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Commutator&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Commutator</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Commutator"><a class="viewcode-back" href="../../../../modules/physics/quantum/commutator.html#sympy.physics.quantum.commutator.Commutator">[docs]</a><span class="k">class</span> <span class="nc">Commutator</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The standard commutator, in an unevaluated state.</span>
+
+<span class="sd">    Evaluating a commutator is defined [1]_ as: ``[A, B] = A*B - B*A``. This</span>
+<span class="sd">    class returns the commutator in an unevaluated form. To evaluate the</span>
+<span class="sd">    commutator, use the ``.doit()`` method.</span>
+
+<span class="sd">    Cannonical ordering of a commutator is ``[A, B]`` for ``A &lt; B``. The</span>
+<span class="sd">    arguments of the commutator are put into canonical order using ``__cmp__``.</span>
+<span class="sd">    If ``B &lt; A``, then ``[B, A]`` is returned as ``-[A, B]``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    A : Expr</span>
+<span class="sd">        The first argument of the commutator [A,B].</span>
+<span class="sd">    B : Expr</span>
+<span class="sd">        The second argument of the commutator [A,B].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import Commutator, Dagger, Operator</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; A = Operator(&#39;A&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; B = Operator(&#39;B&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; C = Operator(&#39;C&#39;)</span>
+
+<span class="sd">    Create a commutator and use ``.doit()`` to evaluate it:</span>
+
+<span class="sd">    &gt;&gt;&gt; comm = Commutator(A, B)</span>
+<span class="sd">    &gt;&gt;&gt; comm</span>
+<span class="sd">    [A,B]</span>
+<span class="sd">    &gt;&gt;&gt; comm.doit()</span>
+<span class="sd">    A*B - B*A</span>
+
+<span class="sd">    The commutator orders it arguments in canonical order:</span>
+
+<span class="sd">    &gt;&gt;&gt; comm = Commutator(B, A); comm</span>
+<span class="sd">    -[A,B]</span>
+
+<span class="sd">    Commutative constants are factored out:</span>
+
+<span class="sd">    &gt;&gt;&gt; Commutator(3*x*A, x*y*B)</span>
+<span class="sd">    3*x**2*y*[A,B]</span>
+
+<span class="sd">    Using ``.expand(commutator=True)``, the standard commutator expansion rules</span>
+<span class="sd">    can be applied:</span>
+
+<span class="sd">    &gt;&gt;&gt; Commutator(A+B, C).expand(commutator=True)</span>
+<span class="sd">    [A,C] + [B,C]</span>
+<span class="sd">    &gt;&gt;&gt; Commutator(A, B+C).expand(commutator=True)</span>
+<span class="sd">    [A,B] + [A,C]</span>
+<span class="sd">    &gt;&gt;&gt; Commutator(A*B, C).expand(commutator=True)</span>
+<span class="sd">    [A,C]*B + A*[B,C]</span>
+<span class="sd">    &gt;&gt;&gt; Commutator(A, B*C).expand(commutator=True)</span>
+<span class="sd">    [A,B]*C + B*[A,C]</span>
+
+<span class="sd">    Adjoint operations applied to the commutator are properly applied to the</span>
+<span class="sd">    arguments:</span>
+
+<span class="sd">    &gt;&gt;&gt; Dagger(Commutator(A, B))</span>
+<span class="sd">    -[Dagger(A),Dagger(B)]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Commutator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span> <span class="ow">and</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">or</span> <span class="n">b</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="c"># [xA,yB]  -&gt;  xy*[A,B]</span>
+        <span class="c"># from sympy.physics.qmul import QMul</span>
+        <span class="n">ca</span><span class="p">,</span> <span class="n">nca</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="n">cb</span><span class="p">,</span> <span class="n">ncb</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="n">c_part</span> <span class="o">=</span> <span class="n">ca</span> <span class="o">+</span> <span class="n">cb</span>
+        <span class="k">if</span> <span class="n">c_part</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">c_part</span><span class="p">),</span> <span class="n">cls</span><span class="p">(</span><span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">nca</span><span class="p">),</span> <span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">ncb</span><span class="p">)))</span>
+
+        <span class="c"># Canonical ordering of arguments</span>
+        <span class="c"># The Commutator [A, B] is in canonical form if A &lt; B.</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">*</span><span class="n">cls</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_commutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+            <span class="c"># [A + B, C]  -&gt;  [A, C] + [B, C]</span>
+            <span class="n">sargs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                    <span class="n">comm</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+                <span class="n">sargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comm</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">sargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+            <span class="c"># [A, B + C]  -&gt;  [A, B] + [A, C]</span>
+            <span class="n">sargs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">term</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                    <span class="n">comm</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+                <span class="n">sargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comm</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">sargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+            <span class="c"># [A*B, C] -&gt; A*[B, C] + [A, C]*B</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">B</span>
+            <span class="n">comm1</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">comm2</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm1</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                <span class="n">comm1</span> <span class="o">=</span> <span class="n">comm1</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm2</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                <span class="n">comm2</span> <span class="o">=</span> <span class="n">comm2</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">comm1</span><span class="p">)</span>
+            <span class="n">second</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="n">comm2</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+            <span class="c"># [A, B*C] -&gt; [A, B]*C + B*[A, C]</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">A</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">B</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">comm1</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="n">comm2</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm1</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                <span class="n">comm1</span> <span class="o">=</span> <span class="n">comm1</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comm2</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+                <span class="n">comm2</span> <span class="o">=</span> <span class="n">comm2</span><span class="o">.</span><span class="n">_eval_expand_commutator</span><span class="p">()</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="n">comm1</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">second</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">comm2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="c"># No changes, so return self</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Commutator.doit"><a class="viewcode-back" href="../../../../modules/physics/quantum/commutator.html#sympy.physics.quantum.commutator.Commutator.doit">[docs]</a>    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluate commutator &quot;&quot;&quot;</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">comm</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">_eval_commutator</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">comm</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">B</span><span class="o">.</span><span class="n">_eval_commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                    <span class="n">comm</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">comm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">comm</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">Dagger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">Dagger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;[</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">((</span><span class="n">prettyForm</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)))))</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">((</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">))))</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;[&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;]&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pform</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="se">\\</span><span class="s">left[</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="se">\\</span><span class="s">right]&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">([</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

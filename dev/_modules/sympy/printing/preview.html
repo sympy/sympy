@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.preview &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.preview</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">STDOUT</span><span class="p">,</span> <span class="n">CalledProcessError</span>
+    <span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">check_output</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">cStringIO</span> <span class="k">as</span> <span class="n">StringIO</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SymPyDeprecationWarning</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">find_executable</span>
+<span class="kn">from</span> <span class="nn">.latex</span> <span class="kn">import</span> <span class="n">latex</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">doctest_depends_on</span>
+
+<span class="nd">@doctest_depends_on</span><span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;dvipng&#39;</span><span class="p">),</span> <span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;pyglet&#39;</span><span class="p">,),</span>
+            <span class="n">disable_viewers</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;evince&#39;</span><span class="p">,</span> <span class="s">&#39;gimp&#39;</span><span class="p">,</span> <span class="s">&#39;superior-dvi-viewer&#39;</span><span class="p">))</span>
+<div class="viewcode-block" id="preview"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.preview.preview">[docs]</a><span class="k">def</span> <span class="nf">preview</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s">&#39;png&#39;</span><span class="p">,</span> <span class="n">viewer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">euler</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">packages</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">outputbuffer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">preamble</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dvioptions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">outputTexFile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">latex_settings</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.</span>
+
+<span class="sd">    If the expr argument is an expression, it will be exported to LaTeX and</span>
+<span class="sd">    then compiled using the available TeX distribution.  The first argument,</span>
+<span class="sd">    &#39;expr&#39;, may also be a LaTeX string.  The function will then run the</span>
+<span class="sd">    appropriate viewer for the given output format or use the user defined</span>
+<span class="sd">    one. By default png output is generated.</span>
+
+<span class="sd">    By default pretty Euler fonts are used for typesetting (they were used to</span>
+<span class="sd">    typeset the well known &quot;Concrete Mathematics&quot; book). For that to work, you</span>
+<span class="sd">    need the &#39;eulervm.sty&#39; LaTeX style (in Debian/Ubuntu, install the</span>
+<span class="sd">    texlive-fonts-extra package). If you prefer default AMS fonts or your</span>
+<span class="sd">    system lacks &#39;eulervm&#39; LaTeX package then unset the &#39;euler&#39; keyword</span>
+<span class="sd">    argument.</span>
+
+<span class="sd">    To use viewer auto-detection, lets say for &#39;png&#39; output, issue</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols, preview, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; x, y = symbols(&quot;x,y&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;png&#39;)</span>
+
+<span class="sd">    This will choose &#39;pyglet&#39; by default. To select a different one, do</span>
+
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;png&#39;, viewer=&#39;gimp&#39;)</span>
+
+<span class="sd">    The &#39;png&#39; format is considered special. For all other formats the rules</span>
+<span class="sd">    are slightly different. As an example we will take &#39;dvi&#39; output format. If</span>
+<span class="sd">    you would run</span>
+
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;dvi&#39;)</span>
+
+<span class="sd">    then &#39;view&#39; will look for available &#39;dvi&#39; viewers on your system</span>
+<span class="sd">    (predefined in the function, so it will try evince, first, then kdvi and</span>
+<span class="sd">    xdvi). If nothing is found you will need to set the viewer explicitly.</span>
+
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;dvi&#39;, viewer=&#39;superior-dvi-viewer&#39;)</span>
+
+<span class="sd">    This will skip auto-detection and will run user specified</span>
+<span class="sd">    &#39;superior-dvi-viewer&#39;. If &#39;view&#39; fails to find it on your system it will</span>
+<span class="sd">    gracefully raise an exception.</span>
+
+<span class="sd">    You may also enter &#39;file&#39; for the viewer argument. Doing so will cause</span>
+<span class="sd">    this function to return a file object in read-only mode, if &#39;filename&#39;</span>
+<span class="sd">    is unset. However, if it was set, then &#39;preview&#39; writes the genereted</span>
+<span class="sd">    file to this filename instead.</span>
+
+<span class="sd">    There is also support for writing to a StringIO like object, which needs</span>
+<span class="sd">    to be passed to the &#39;outputbuffer&#39; argument.</span>
+
+<span class="sd">    &gt;&gt;&gt; from StringIO import StringIO</span>
+<span class="sd">    &gt;&gt;&gt; obj = StringIO()</span>
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;png&#39;, viewer=&#39;StringIO&#39;,</span>
+<span class="sd">    ...         outputbuffer=obj)</span>
+
+<span class="sd">    The LaTeX preamble can be customized by setting the &#39;preamble&#39; keyword</span>
+<span class="sd">    argument. This can be used, e.g., to set a different font size, use a</span>
+<span class="sd">    custom documentclass or import certain set of LaTeX packages.</span>
+
+<span class="sd">    &gt;&gt;&gt; preamble = &quot;\\documentclass[10pt]{article}\n&quot; \</span>
+<span class="sd">    ...            &quot;\\usepackage{amsmath,amsfonts}\\begin{document}&quot;</span>
+<span class="sd">    &gt;&gt;&gt; preview(x + y, output=&#39;png&#39;, preamble=preamble)</span>
+
+<span class="sd">    If the value of &#39;output&#39; is different from &#39;dvi&#39; then command line</span>
+<span class="sd">    options can be set (&#39;dvioptions&#39; argument) for the execution of the</span>
+<span class="sd">    &#39;dvi&#39;+output conversion tool. These options have to be in the form of a</span>
+<span class="sd">    list of strings (see subprocess.Popen).</span>
+
+<span class="sd">    Additional keyword args will be passed to the latex call, e.g., the</span>
+<span class="sd">    symbol_names flag.</span>
+
+<span class="sd">    &gt;&gt;&gt; phidd = Symbol(&#39;phidd&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; preview(phidd, symbol_names={phidd:r&#39;\ddot{\varphi}&#39;})</span>
+
+<span class="sd">    For post-processing the generated TeX File can be written to a file by</span>
+<span class="sd">    passing the desired filename to the &#39;outputTexFile&#39; keyword</span>
+<span class="sd">    argument. To write the TeX code to a file named</span>
+<span class="sd">    &quot;sample.tex&quot; and run the default png viewer to display the resulting</span>
+<span class="sd">    bitmap, do</span>
+
+<span class="sd">    &gt;&gt;&gt; preview(x + y, outputTexFile=&quot;sample.tex&quot;)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">special</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&#39;pyglet&#39;</span> <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">viewer</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s">&quot;png&quot;</span><span class="p">:</span>
+            <span class="n">viewer</span> <span class="o">=</span> <span class="s">&quot;pyglet&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># sorted in order from most pretty to most ugly</span>
+            <span class="c"># very discussable, but indeed &#39;gv&#39; looks awful :)</span>
+            <span class="c"># TODO add candidates for windows to list</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&quot;dvi&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&quot;evince&quot;</span><span class="p">,</span> <span class="s">&quot;okular&quot;</span><span class="p">,</span> <span class="s">&quot;kdvi&quot;</span><span class="p">,</span> <span class="s">&quot;xdvi&quot;</span> <span class="p">],</span>
+                <span class="s">&quot;ps&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&quot;evince&quot;</span><span class="p">,</span> <span class="s">&quot;okular&quot;</span><span class="p">,</span> <span class="s">&quot;gsview&quot;</span><span class="p">,</span> <span class="s">&quot;gv&quot;</span> <span class="p">],</span>
+                <span class="s">&quot;pdf&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&quot;evince&quot;</span><span class="p">,</span> <span class="s">&quot;okular&quot;</span><span class="p">,</span> <span class="s">&quot;kpdf&quot;</span><span class="p">,</span> <span class="s">&quot;acroread&quot;</span><span class="p">,</span> <span class="s">&quot;xpdf&quot;</span><span class="p">,</span> <span class="s">&quot;gv&quot;</span> <span class="p">],</span>
+            <span class="p">}</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">[</span><span class="n">output</span><span class="p">]:</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">viewer</span> <span class="o">=</span> <span class="n">path</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span>
+                        <span class="s">&quot;No viewers found for &#39;</span><span class="si">%s</span><span class="s">&#39; output format.&quot;</span> <span class="o">%</span> <span class="n">output</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s">&quot;Invalid output format: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">viewer</span> <span class="o">==</span> <span class="s">&quot;file&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">SymPyDeprecationWarning</span><span class="p">(</span><span class="n">feature</span><span class="o">=</span><span class="s">&quot;Using viewer=</span><span class="se">\&quot;</span><span class="s">file</span><span class="se">\&quot;</span><span class="s"> without a &quot;</span>
+                    <span class="s">&quot;specified filename&quot;</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.3&quot;</span><span class="p">,</span>
+                    <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;viewer=</span><span class="se">\&quot;</span><span class="s">file</span><span class="se">\&quot;</span><span class="s"> and filename=</span><span class="se">\&quot;</span><span class="s">desiredname</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">,</span>
+                    <span class="n">issue</span><span class="o">=</span><span class="mi">3919</span><span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">viewer</span> <span class="o">==</span> <span class="s">&quot;StringIO&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">outputbuffer</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;outputbuffer has to be a StringIO &quot;</span>
+                                 <span class="s">&quot;compatible object if viewer=</span><span class="se">\&quot;</span><span class="s">StringIO</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">viewer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">special</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">find_executable</span><span class="p">(</span><span class="n">viewer</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s">&quot;Unrecognized viewer: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">viewer</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">preamble</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">actual_packages</span> <span class="o">=</span> <span class="n">packages</span> <span class="o">+</span> <span class="p">(</span><span class="s">&quot;amsmath&quot;</span><span class="p">,</span> <span class="s">&quot;amsfonts&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">euler</span><span class="p">:</span>
+            <span class="n">actual_packages</span> <span class="o">+=</span> <span class="p">(</span><span class="s">&quot;euler&quot;</span><span class="p">,)</span>
+        <span class="n">package_includes</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">usepackage{</span><span class="si">%s</span><span class="s">}&quot;</span> <span class="o">%</span> <span class="n">p</span>
+                                             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">actual_packages</span><span class="p">])</span>
+
+        <span class="n">preamble</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;\documentclass[12pt]{article}</span>
+<span class="s">\pagestyle{empty}</span>
+<span class="si">%s</span><span class="s"></span>
+
+<span class="s">\begin{document}</span>
+<span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">package_includes</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">packages</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;The </span><span class="se">\&quot;</span><span class="s">packages</span><span class="se">\&quot;</span><span class="s"> keyword must not be set if a &quot;</span>
+                             <span class="s">&quot;custom LaTeX preamble was specified&quot;</span><span class="p">)</span>
+    <span class="n">latex_main</span> <span class="o">=</span> <span class="n">preamble</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="s">r&quot;\end{document}&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">latex_string</span> <span class="o">=</span> <span class="n">expr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">latex_string</span> <span class="o">=</span> <span class="n">latex</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;inline&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">latex_settings</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">workdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="s">&#39;texput.tex&#39;</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">latex_main</span> <span class="o">%</span> <span class="n">latex_string</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">outputTexFile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="s">&#39;texput.tex&#39;</span><span class="p">),</span> <span class="n">outputTexFile</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">find_executable</span><span class="p">(</span><span class="s">&#39;latex&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;latex program is not installed&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">check_output</span><span class="p">([</span><span class="s">&#39;latex&#39;</span><span class="p">,</span> <span class="s">&#39;-halt-on-error&#39;</span><span class="p">,</span> <span class="s">&#39;-interaction=nonstopmode&#39;</span><span class="p">,</span>
+                          <span class="s">&#39;texput.tex&#39;</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">STDOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s">&quot;&#39;latex&#39; exited abnormally with the following output:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span> <span class="o">!=</span> <span class="s">&quot;dvi&quot;</span><span class="p">:</span>
+            <span class="n">defaultoptions</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&quot;ps&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&quot;pdf&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&quot;png&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;-T&quot;</span><span class="p">,</span> <span class="s">&quot;tight&quot;</span><span class="p">,</span> <span class="s">&quot;-z&quot;</span><span class="p">,</span> <span class="s">&quot;9&quot;</span><span class="p">,</span> <span class="s">&quot;--truecolor&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+
+            <span class="n">commandend</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&quot;ps&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="s">&quot;texput.ps&quot;</span><span class="p">,</span> <span class="s">&quot;texput.dvi&quot;</span><span class="p">],</span>
+                <span class="s">&quot;pdf&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;texput.dvi&quot;</span><span class="p">,</span> <span class="s">&quot;texput.pdf&quot;</span><span class="p">],</span>
+                <span class="s">&quot;png&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="s">&quot;texput.png&quot;</span><span class="p">,</span> <span class="s">&quot;texput.dvi&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+
+            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;dvi&quot;</span> <span class="o">+</span> <span class="n">output</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">find_executable</span><span class="p">(</span><span class="n">cmd</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is not installed&quot;</span> <span class="o">%</span> <span class="n">cmd</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">dvioptions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dvioptions</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">defaultoptions</span><span class="p">[</span><span class="n">output</span><span class="p">])</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">commandend</span><span class="p">[</span><span class="n">output</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s">&quot;Invalid output format: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">output</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">check_output</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">STDOUT</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; exited abnormally with the following output:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">),</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">))</span>
+
+        <span class="n">src</span> <span class="o">=</span> <span class="s">&quot;texput.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">viewer</span> <span class="o">==</span> <span class="s">&quot;file&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="nb">buffer</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">src</span><span class="p">),</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                    <span class="nb">buffer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="k">return</span> <span class="nb">buffer</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span><span class="n">src</span><span class="p">),</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">viewer</span> <span class="o">==</span> <span class="s">&quot;StringIO&quot;</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">src</span><span class="p">),</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="n">outputbuffer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">viewer</span> <span class="o">==</span> <span class="s">&quot;pyglet&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">pyglet</span> <span class="kn">import</span> <span class="n">window</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gl</span>
+                <span class="kn">from</span> <span class="nn">pyglet.window</span> <span class="kn">import</span> <span class="n">key</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;pyglet is required for preview.</span><span class="se">\n</span><span class="s"> visit http://www.pyglet.org/&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s">&quot;png&quot;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">pyglet.image.codecs.png</span> <span class="kn">import</span> <span class="n">PNGImageDecoder</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">src</span><span class="p">),</span> <span class="n">decoder</span><span class="o">=</span><span class="n">PNGImageDecoder</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s">&quot;pyglet preview works only for &#39;png&#39; files.&quot;</span><span class="p">)</span>
+
+            <span class="n">offset</span> <span class="o">=</span> <span class="mi">25</span>
+
+            <span class="n">win</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="p">(</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">offset</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">offset</span><span class="p">,</span>
+                <span class="n">caption</span><span class="o">=</span><span class="s">&quot;sympy&quot;</span><span class="p">,</span>
+                <span class="n">resizable</span><span class="o">=</span><span class="bp">False</span>
+            <span class="p">)</span>
+
+            <span class="n">win</span><span class="o">.</span><span class="n">set_vsync</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">on_close</span><span class="p">():</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">has_exit</span> <span class="o">=</span> <span class="bp">True</span>
+
+                <span class="n">win</span><span class="o">.</span><span class="n">on_close</span> <span class="o">=</span> <span class="n">on_close</span>
+
+                <span class="k">def</span> <span class="nf">on_key_press</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">modifiers</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">Q</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">ESCAPE</span><span class="p">]:</span>
+                        <span class="n">on_close</span><span class="p">()</span>
+
+                <span class="n">win</span><span class="o">.</span><span class="n">on_key_press</span> <span class="o">=</span> <span class="n">on_key_press</span>
+
+                <span class="k">def</span> <span class="nf">on_expose</span><span class="p">():</span>
+                    <span class="n">gl</span><span class="o">.</span><span class="n">glClearColor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="n">gl</span><span class="o">.</span><span class="n">glClear</span><span class="p">(</span><span class="n">gl</span><span class="o">.</span><span class="n">GL_COLOR_BUFFER_BIT</span><span class="p">)</span>
+
+                    <span class="n">img</span><span class="o">.</span><span class="n">blit</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">width</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">win</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="p">)</span>
+
+                <span class="n">win</span><span class="o">.</span><span class="n">on_expose</span> <span class="o">=</span> <span class="n">on_expose</span>
+
+                <span class="k">while</span> <span class="ow">not</span> <span class="n">win</span><span class="o">.</span><span class="n">has_exit</span><span class="p">:</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">dispatch_events</span><span class="p">()</span>
+                    <span class="n">win</span><span class="o">.</span><span class="n">flip</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="n">win</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">check_output</span><span class="p">([</span><span class="n">viewer</span><span class="p">,</span> <span class="n">src</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">STDOUT</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39; exited abnormally with the following output:</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">viewer</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span> <span class="c"># delete directory</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span> <span class="c"># code 2 - no such file or directory</span>
+                <span class="k">raise</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

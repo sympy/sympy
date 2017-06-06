@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.assumptions.ask &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.assumptions.ask</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Module for querying SymPy objects about assumptions.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">to_cnf</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Not</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">Implies</span><span class="p">,</span> <span class="n">Equivalent</span><span class="p">,</span> <span class="n">BooleanFunction</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.inference</span> <span class="kn">import</span> <span class="n">satisfiable</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions.assume</span> <span class="kn">import</span> <span class="p">(</span><span class="n">global_assumptions</span><span class="p">,</span> <span class="n">Predicate</span><span class="p">,</span>
+        <span class="n">AppliedPredicate</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Q"><a class="viewcode-back" href="../../../modules/assumptions/ask.html#sympy.assumptions.ask.Q">[docs]</a><span class="k">class</span> <span class="nc">Q</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Supported ask keys.&quot;&quot;&quot;</span>
+    <span class="n">antihermitian</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;antihermitian&#39;</span><span class="p">)</span>
+    <span class="n">bounded</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;bounded&#39;</span><span class="p">)</span>
+    <span class="n">commutative</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;commutative&#39;</span><span class="p">)</span>
+    <span class="nb">complex</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;complex&#39;</span><span class="p">)</span>
+    <span class="n">composite</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;composite&#39;</span><span class="p">)</span>
+    <span class="n">even</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;even&#39;</span><span class="p">)</span>
+    <span class="n">extended_real</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;extended_real&#39;</span><span class="p">)</span>
+    <span class="n">hermitian</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;hermitian&#39;</span><span class="p">)</span>
+    <span class="n">imaginary</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;imaginary&#39;</span><span class="p">)</span>
+    <span class="n">infinitesimal</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;infinitesimal&#39;</span><span class="p">)</span>
+    <span class="n">infinity</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;infinity&#39;</span><span class="p">)</span>
+    <span class="n">integer</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;integer&#39;</span><span class="p">)</span>
+    <span class="n">irrational</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;irrational&#39;</span><span class="p">)</span>
+    <span class="n">rational</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;rational&#39;</span><span class="p">)</span>
+    <span class="n">negative</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;negative&#39;</span><span class="p">)</span>
+    <span class="n">nonzero</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;nonzero&#39;</span><span class="p">)</span>
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;positive&#39;</span><span class="p">)</span>
+    <span class="n">prime</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;prime&#39;</span><span class="p">)</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;real&#39;</span><span class="p">)</span>
+    <span class="n">odd</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;odd&#39;</span><span class="p">)</span>
+    <span class="n">is_true</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;is_true&#39;</span><span class="p">)</span>
+    <span class="n">symmetric</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;symmetric&#39;</span><span class="p">)</span>
+    <span class="n">invertible</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;invertible&#39;</span><span class="p">)</span>
+    <span class="n">singular</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;singular&#39;</span><span class="p">)</span>
+    <span class="n">orthogonal</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;orthogonal&#39;</span><span class="p">)</span>
+    <span class="n">unitary</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;unitary&#39;</span><span class="p">)</span>
+    <span class="n">normal</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;normal&#39;</span><span class="p">)</span>
+    <span class="n">positive_definite</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;positive_definite&#39;</span><span class="p">)</span>
+    <span class="n">upper_triangular</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;upper_triangular&#39;</span><span class="p">)</span>
+    <span class="n">lower_triangular</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;lower_triangular&#39;</span><span class="p">)</span>
+    <span class="n">diagonal</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;diagonal&#39;</span><span class="p">)</span>
+    <span class="n">triangular</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;triangular&#39;</span><span class="p">)</span>
+    <span class="n">unit_triangular</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;unit_triangular&#39;</span><span class="p">)</span>
+    <span class="n">fullrank</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;fullrank&#39;</span><span class="p">)</span>
+    <span class="n">square</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;square&#39;</span><span class="p">)</span>
+    <span class="n">real_elements</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;real_elements&#39;</span><span class="p">)</span>
+    <span class="n">complex_elements</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;complex_elements&#39;</span><span class="p">)</span>
+    <span class="n">integer_elements</span> <span class="o">=</span> <span class="n">Predicate</span><span class="p">(</span><span class="s">&#39;integer_elements&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_extract_facts</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper for ask().</span>
+
+<span class="sd">    Extracts the facts relevant to the symbol from an assumption.</span>
+<span class="sd">    Returns None if there is nothing to extract.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">AppliedPredicate</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">arg</span> <span class="o">==</span> <span class="n">symbol</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">_extract_facts</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">And</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">arg</span> <span class="o">!=</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ask"><a class="viewcode-back" href="../../../modules/assumptions/index.html#sympy.assumptions.ask.ask">[docs]</a><span class="k">def</span> <span class="nf">ask</span><span class="p">(</span><span class="n">proposition</span><span class="p">,</span> <span class="n">assumptions</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">global_assumptions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for inferring properties about objects.</span>
+
+<span class="sd">    **Syntax**</span>
+
+<span class="sd">        * ask(proposition)</span>
+
+<span class="sd">        * ask(proposition, assumptions)</span>
+
+<span class="sd">            where ``proposition`` is any boolean expression</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import ask, Q, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; ask(Q.rational(pi))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; ask(Q.even(x*y), Q.even(x) &amp; Q.integer(y))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; ask(Q.prime(x*y), Q.integer(x) &amp;  Q.integer(y))</span>
+<span class="sd">    False</span>
+
+<span class="sd">    **Remarks**</span>
+<span class="sd">        Relations in assumptions are not implemented (yet), so the following</span>
+<span class="sd">        will not give a meaningful result.</span>
+
+<span class="sd">        &gt;&gt;&gt; ask(Q.positive(x), Q.is_true(x &gt; 0)) # doctest: +SKIP</span>
+
+<span class="sd">        It is however a work in progress.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proposition</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanFunction</span><span class="p">,</span> <span class="n">AppliedPredicate</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;proposition must be a valid logical expression&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">assumptions</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanFunction</span><span class="p">,</span> <span class="n">AppliedPredicate</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;assumptions must be a valid logical expression&quot;</span><span class="p">)</span>
+
+    <span class="n">assumptions</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">assumptions</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proposition</span><span class="p">,</span> <span class="n">AppliedPredicate</span><span class="p">):</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">proposition</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">sympify</span><span class="p">(</span><span class="n">proposition</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">is_true</span><span class="p">,</span> <span class="n">sympify</span><span class="p">(</span><span class="n">proposition</span><span class="p">)</span>
+
+    <span class="c"># direct resolution method, no logic</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">key</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_ask</span><span class="p">(</span><span class="n">assumptions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">if</span> <span class="n">assumptions</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">local_facts</span> <span class="o">=</span> <span class="n">_extract_facts</span><span class="p">(</span><span class="n">assumptions</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">local_facts</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">local_facts</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c"># See if there&#39;s a straight-forward conclusion we can make for the inference</span>
+    <span class="k">if</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">local_facts</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">Not</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">local_facts</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">elif</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">And</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">known_facts_dict</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">assum</span> <span class="ow">in</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">assum</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">assum</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">if</span> <span class="n">Not</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">assum</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">elif</span> <span class="n">assum</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span> <span class="ow">and</span> <span class="n">assum</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">assum</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">if</span> <span class="n">Not</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">assum</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Predicate</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">local_facts</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Not</span> <span class="ow">and</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">local_facts</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">known_facts_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c"># Failing all else, we do a full logical inference</span>
+    <span class="k">return</span> <span class="n">ask_full_inference</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">local_facts</span><span class="p">,</span> <span class="n">known_facts_cnf</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ask_full_inference"><a class="viewcode-back" href="../../../modules/assumptions/ask.html#sympy.assumptions.ask.ask_full_inference">[docs]</a><span class="k">def</span> <span class="nf">ask_full_inference</span><span class="p">(</span><span class="n">proposition</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">known_facts_cnf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for inferring properties about objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">satisfiable</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">known_facts_cnf</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">proposition</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">satisfiable</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">known_facts_cnf</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Not</span><span class="p">(</span><span class="n">proposition</span><span class="p">))):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="register_handler"><a class="viewcode-back" href="../../../modules/assumptions/index.html#sympy.assumptions.ask.register_handler">[docs]</a><span class="k">def</span> <span class="nf">register_handler</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Register a handler in the ask system. key must be a string and handler a</span>
+<span class="sd">    class inheriting from AskHandler::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.assumptions import register_handler, ask, Q</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.assumptions.handlers import AskHandler</span>
+<span class="sd">        &gt;&gt;&gt; class MersenneHandler(AskHandler):</span>
+<span class="sd">        ...     # Mersenne numbers are in the form 2**n + 1, n integer</span>
+<span class="sd">        ...     @staticmethod</span>
+<span class="sd">        ...     def Integer(expr, assumptions):</span>
+<span class="sd">        ...         import math</span>
+<span class="sd">        ...         return ask(Q.integer(math.log(expr + 1, 2)))</span>
+<span class="sd">        &gt;&gt;&gt; register_handler(&#39;mersenne&#39;, MersenneHandler)</span>
+<span class="sd">        &gt;&gt;&gt; ask(Q.mersenne(7))</span>
+<span class="sd">        True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Predicate</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">Predicate</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">handler</span><span class="p">]))</span>
+
+</div>
+<div class="viewcode-block" id="remove_handler"><a class="viewcode-back" href="../../../modules/assumptions/index.html#sympy.assumptions.ask.remove_handler">[docs]</a><span class="k">def</span> <span class="nf">remove_handler</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removes a handler from the ask system. Same syntax as register_handler&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Predicate</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span>
+    <span class="nb">getattr</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">remove_handler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">single_fact_lookup</span><span class="p">(</span><span class="n">known_facts_keys</span><span class="p">,</span> <span class="n">known_facts_cnf</span><span class="p">):</span>
+    <span class="c"># Compute the quick lookup for single facts</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">known_facts_keys</span><span class="p">:</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">key</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">other_key</span> <span class="ow">in</span> <span class="n">known_facts_keys</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other_key</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ask_full_inference</span><span class="p">(</span><span class="n">other_key</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">known_facts_cnf</span><span class="p">):</span>
+                    <span class="n">mapping</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">other_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mapping</span>
+
+
+<div class="viewcode-block" id="compute_known_facts"><a class="viewcode-back" href="../../../modules/assumptions/ask.html#sympy.assumptions.ask.compute_known_facts">[docs]</a><span class="k">def</span> <span class="nf">compute_known_facts</span><span class="p">(</span><span class="n">known_facts</span><span class="p">,</span> <span class="n">known_facts_keys</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the various forms of knowledge compilation used by the</span>
+<span class="sd">    assumptions system.</span>
+
+<span class="sd">    This function is typically applied to the variables</span>
+<span class="sd">    ``known_facts`` and ``known_facts_keys`` defined at the bottom of</span>
+<span class="sd">    this file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">dedent</span><span class="p">,</span> <span class="n">wrap</span>
+
+    <span class="n">fact_string</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s">    &quot;&quot;&quot;</span>
+<span class="s">    The contents of this file are the return value of</span>
+<span class="s">    ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually</span>
+<span class="s">    edit this file.</span>
+<span class="s">    &quot;&quot;&quot;</span>
+
+<span class="s">    from sympy.logic.boolalg import And, Not, Or</span>
+<span class="s">    from sympy.assumptions.ask import Q</span>
+
+<span class="s">    # -{ Known facts in CNF }-</span>
+<span class="s">    known_facts_cnf = And(</span>
+<span class="s">        </span><span class="si">%s</span><span class="s"></span>
+<span class="s">    )</span>
+
+<span class="s">    # -{ Known facts in compressed sets }-</span>
+<span class="s">    known_facts_dict = {</span>
+<span class="s">        </span><span class="si">%s</span><span class="s"></span>
+<span class="s">    }</span>
+<span class="s">    &#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="c"># Compute the known facts in CNF form for logical inference</span>
+    <span class="n">LINE</span> <span class="o">=</span> <span class="s">&quot;,</span><span class="se">\n</span><span class="s">    &quot;</span>
+    <span class="n">HANG</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="mi">8</span>
+    <span class="n">cnf</span> <span class="o">=</span> <span class="n">to_cnf</span><span class="p">(</span><span class="n">known_facts</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">LINE</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">cnf</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">single_fact_lookup</span><span class="p">(</span><span class="n">known_facts_keys</span><span class="p">,</span> <span class="n">cnf</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">LINE</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">wrap</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">item</span><span class="p">,</span>
+            <span class="n">subsequent_indent</span><span class="o">=</span><span class="n">HANG</span><span class="p">,</span>
+            <span class="n">break_long_words</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span> <span class="o">+</span> <span class="s">&#39;,&#39;</span>
+    <span class="k">return</span> <span class="n">fact_string</span> <span class="o">%</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+<span class="c"># handlers_dict tells us what ask handler we should use</span>
+<span class="c"># for a particular key</span></div>
+<span class="n">_val_template</span> <span class="o">=</span> <span class="s">&#39;sympy.assumptions.handlers.</span><span class="si">%s</span><span class="s">&#39;</span>
+<span class="n">_handlers</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s">&quot;antihermitian&quot;</span><span class="p">,</span>     <span class="s">&quot;sets.AskAntiHermitianHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;bounded&quot;</span><span class="p">,</span>           <span class="s">&quot;calculus.AskBoundedHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;commutative&quot;</span><span class="p">,</span>       <span class="s">&quot;AskCommutativeHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;complex&quot;</span><span class="p">,</span>           <span class="s">&quot;sets.AskComplexHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;composite&quot;</span><span class="p">,</span>         <span class="s">&quot;ntheory.AskCompositeHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;even&quot;</span><span class="p">,</span>              <span class="s">&quot;ntheory.AskEvenHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;extended_real&quot;</span><span class="p">,</span>     <span class="s">&quot;sets.AskExtendedRealHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;hermitian&quot;</span><span class="p">,</span>         <span class="s">&quot;sets.AskHermitianHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;imaginary&quot;</span><span class="p">,</span>         <span class="s">&quot;sets.AskImaginaryHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;infinitesimal&quot;</span><span class="p">,</span>     <span class="s">&quot;calculus.AskInfinitesimalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;integer&quot;</span><span class="p">,</span>           <span class="s">&quot;sets.AskIntegerHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;irrational&quot;</span><span class="p">,</span>        <span class="s">&quot;sets.AskIrrationalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;rational&quot;</span><span class="p">,</span>          <span class="s">&quot;sets.AskRationalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;negative&quot;</span><span class="p">,</span>          <span class="s">&quot;order.AskNegativeHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;nonzero&quot;</span><span class="p">,</span>           <span class="s">&quot;order.AskNonZeroHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;positive&quot;</span><span class="p">,</span>          <span class="s">&quot;order.AskPositiveHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;prime&quot;</span><span class="p">,</span>             <span class="s">&quot;ntheory.AskPrimeHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;real&quot;</span><span class="p">,</span>              <span class="s">&quot;sets.AskRealHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;odd&quot;</span><span class="p">,</span>               <span class="s">&quot;ntheory.AskOddHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;algebraic&quot;</span><span class="p">,</span>         <span class="s">&quot;sets.AskAlgebraicHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;is_true&quot;</span><span class="p">,</span>           <span class="s">&quot;TautologicalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;symmetric&quot;</span><span class="p">,</span>         <span class="s">&quot;matrices.AskSymmetricHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;invertible&quot;</span><span class="p">,</span>        <span class="s">&quot;matrices.AskInvertibleHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;orthogonal&quot;</span><span class="p">,</span>        <span class="s">&quot;matrices.AskOrthogonalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;unitary&quot;</span><span class="p">,</span>           <span class="s">&quot;matrices.AskUnitaryHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;positive_definite&quot;</span><span class="p">,</span> <span class="s">&quot;matrices.AskPositiveDefiniteHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;upper_triangular&quot;</span><span class="p">,</span>  <span class="s">&quot;matrices.AskUpperTriangularHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;lower_triangular&quot;</span><span class="p">,</span>  <span class="s">&quot;matrices.AskLowerTriangularHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;diagonal&quot;</span><span class="p">,</span>          <span class="s">&quot;matrices.AskDiagonalHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;fullrank&quot;</span><span class="p">,</span>          <span class="s">&quot;matrices.AskFullRankHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;square&quot;</span><span class="p">,</span>            <span class="s">&quot;matrices.AskSquareHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;integer_elements&quot;</span><span class="p">,</span>  <span class="s">&quot;matrices.AskIntegerElementsHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;real_elements&quot;</span><span class="p">,</span>     <span class="s">&quot;matrices.AskRealElementsHandler&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;complex_elements&quot;</span><span class="p">,</span>  <span class="s">&quot;matrices.AskComplexElementsHandler&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_handlers</span><span class="p">:</span>
+    <span class="n">register_handler</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_val_template</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+
+
+<span class="n">known_facts_keys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">Q</span><span class="o">.</span><span class="n">__dict__</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;__&#39;</span><span class="p">)]</span>
+<span class="n">known_facts</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">complex</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">odd</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">extended_real</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">real</span> <span class="o">|</span> <span class="n">Q</span><span class="o">.</span><span class="n">infinity</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">odd</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">prime</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span> <span class="o">&amp;</span> <span class="n">Q</span><span class="o">.</span><span class="n">positive</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">composite</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">complex</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">complex</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">,</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">real</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">irrational</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">rational</span> <span class="o">|</span> <span class="n">Q</span><span class="o">.</span><span class="n">irrational</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">positive</span> <span class="o">|</span> <span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">),</span>
+
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">orthogonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">positive_definite</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">orthogonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">unitary</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">unitary</span> <span class="o">&amp;</span> <span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">orthogonal</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">unitary</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">normal</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">unitary</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">normal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">square</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">normal</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive_definite</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">upper_triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">lower_triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">lower_triangular</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">upper_triangular</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">triangular</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">upper_triangular</span> <span class="o">|</span> <span class="n">Q</span><span class="o">.</span><span class="n">lower_triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">upper_triangular</span> <span class="o">&amp;</span> <span class="n">Q</span><span class="o">.</span><span class="n">lower_triangular</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">symmetric</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">unit_triangular</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">triangular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">fullrank</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">square</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">symmetric</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">square</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">fullrank</span> <span class="o">&amp;</span> <span class="n">Q</span><span class="o">.</span><span class="n">square</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">),</span>
+    <span class="n">Equivalent</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">,</span> <span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">singular</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer_elements</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">real_elements</span><span class="p">),</span>
+    <span class="n">Implies</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real_elements</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">complex_elements</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sympy.assumptions.ask_generated</span> <span class="kn">import</span> <span class="n">known_facts_dict</span><span class="p">,</span> <span class="n">known_facts_cnf</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

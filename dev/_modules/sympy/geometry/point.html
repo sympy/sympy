@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.point &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.point</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Geometrical Points.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">Point</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span>
+<span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">nsimplify</span>
+<span class="kn">from</span> <span class="nn">sympy.geometry.exceptions</span> <span class="kn">import</span> <span class="n">GeometryError</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Float</span>
+
+
+<div class="viewcode-block" id="Point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point">[docs]</a><span class="k">class</span> <span class="nc">Point</span><span class="p">(</span><span class="n">GeometryEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A point in a 2-dimensional Euclidean space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    coords : sequence of 2 coordinate values.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    x</span>
+<span class="sd">    y</span>
+<span class="sd">    length</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        When trying to create a point with more than two dimensions.</span>
+<span class="sd">        When `intersection` is called with object other than a Point.</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        When trying to add or subtract points with different dimensions.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    Currently only 2-dimensional points are supported.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.line.Segment : Connects two Points</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Point</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; Point(1, 2)</span>
+<span class="sd">    Point(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; Point([1, 2])</span>
+<span class="sd">    Point(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; Point(0, x)</span>
+<span class="sd">    Point(0, x)</span>
+
+<span class="sd">    Floats are automatically converted to Rational unless the</span>
+<span class="sd">    evaluate flag is False:</span>
+
+<span class="sd">    &gt;&gt;&gt; Point(0.5, 0.25)</span>
+<span class="sd">    Point(1/2, 1/4)</span>
+<span class="sd">    &gt;&gt;&gt; Point(0.5, 0.25, evaluate=False)</span>
+<span class="sd">    Point(0.5, 0.25)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&quot;Only two dimensional points currently supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;evaluate&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">simplify</span><span class="p">(</span><span class="n">nsimplify</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">rational</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">GeometryEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Point</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">ts</span><span class="p">,</span> <span class="n">to</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">to</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">item</span> <span class="o">==</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Point.x"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.x">[docs]</a>    <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the X coordinate of the Point.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; p = Point(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; p.x</span>
+<span class="sd">        0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Point.y"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.y">[docs]</a>    <span class="k">def</span> <span class="nf">y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the Y coordinate of the Point.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; p = Point(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; p.y</span>
+<span class="sd">        1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Point.length"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.length">[docs]</a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Treating a Point as a Line, this returns 0 for the length of a Point.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; p = Point(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; p.length</span>
+<span class="sd">        0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+</div>
+<div class="viewcode-block" id="Point.is_collinear"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.is_collinear">[docs]</a>    <span class="k">def</span> <span class="nf">is_collinear</span><span class="p">(</span><span class="o">*</span><span class="n">points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is a sequence of points collinear?</span>
+
+<span class="sd">        Test whether or not a set of points are collinear. Returns True if</span>
+<span class="sd">        the set of points are collinear, or False otherwise.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        points : sequence of Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        is_collinear : boolean</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        Slope is preserved everywhere on a line, so the slope between</span>
+<span class="sd">        any two points on the line should be the same. Take the first</span>
+<span class="sd">        two points, p1 and p2, and create a translated point v1</span>
+<span class="sd">        with p1 as the origin. Now for every other point we create</span>
+<span class="sd">        a translated point, vi with p1 also as the origin. Note that</span>
+<span class="sd">        these translations preserve slope since everything is</span>
+<span class="sd">        consistently translated to a new origin of p1. Since slope</span>
+<span class="sd">        is preserved then we have the following equality:</span>
+
+<span class="sd">              * v1_slope = vi_slope</span>
+<span class="sd">              * v1.y/v1.x = vi.y/vi.x (due to translation)</span>
+<span class="sd">              * v1.y*vi.x = vi.y*v1.x</span>
+<span class="sd">              * v1.y*vi.x - vi.y*v1.x = 0           (*)</span>
+
+<span class="sd">        Hence, if we have a vi such that the equality in (*) is False</span>
+<span class="sd">        then the points are not collinear. We do this test for every</span>
+<span class="sd">        point in the list, and if all pass then they are collinear.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.line.Line</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; p3, p4, p5 = Point(2, 2), Point(x, x), Point(1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; Point.is_collinear(p1, p2, p3, p4)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Point.is_collinear(p1, p2, p3, p5)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Coincident points are irrelevant and can confuse this algorithm.</span>
+        <span class="c"># Use only unique points.</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>  <span class="c"># two points always form a line</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+
+        <span class="c"># XXX Cross product is used now, but that only extends to three</span>
+        <span class="c">#     dimensions. If the concept needs to extend to greater</span>
+        <span class="c">#     dimensions then another method would have to be used</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">p2</span> <span class="o">-</span> <span class="n">p1</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">v1</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">p3</span> <span class="ow">in</span> <span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="p">(</span><span class="n">p3</span> <span class="o">-</span> <span class="n">p1</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">x1</span><span class="o">*</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="o">*</span><span class="n">x2</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">test</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="n">rv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">test</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">test</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Point.is_concyclic"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.is_concyclic">[docs]</a>    <span class="k">def</span> <span class="nf">is_concyclic</span><span class="p">(</span><span class="o">*</span><span class="n">points</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is a sequence of points concyclic?</span>
+
+<span class="sd">        Test whether or not a sequence of points are concyclic (i.e., they lie</span>
+<span class="sd">        on a circle).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        points : sequence of Points</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        is_concyclic : boolean</span>
+<span class="sd">            True if points are concyclic, False otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.ellipse.Circle</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        No points are not considered to be concyclic. One or two points</span>
+<span class="sd">        are definitely concyclic and three points are conyclic iff they</span>
+<span class="sd">        are not collinear.</span>
+
+<span class="sd">        For more than three points, create a circle from the first three</span>
+<span class="sd">        points. If the circle cannot be created (i.e., they are collinear)</span>
+<span class="sd">        then all of the points cannot be concyclic. If the circle is created</span>
+<span class="sd">        successfully then simply check the remaining points for containment</span>
+<span class="sd">        in the circle.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Point</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(-1, 0), Point(1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; p3, p4 = Point(0, 1), Point(-1, 2)</span>
+<span class="sd">        &gt;&gt;&gt; Point.is_concyclic(p1, p2, p3)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Point.is_concyclic(p1, p2, p3, p4)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="ow">not</span> <span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="o">*</span><span class="n">points</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.ellipse</span> <span class="kn">import</span> <span class="n">Circle</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">[</span><span class="mi">3</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">point</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="n">GeometryError</span><span class="p">:</span>
+            <span class="c"># Circle could not be created, because of collinearity of the</span>
+            <span class="c"># three points passed in, hence they are not concyclic.</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+<span class="c">#       &quot;&quot;&quot;</span>
+<span class="c">#       # This code is from Maple</span>
+<span class="c">#       def f(u):</span>
+<span class="c">#           dd = u[0]**2 + u[1]**2 + 1</span>
+<span class="c">#           u1 = 2*u[0] / dd</span>
+<span class="c">#           u2 = 2*u[1] / dd</span>
+<span class="c">#           u3 = (dd - 2) / dd</span>
+<span class="c">#           return u1,u2,u3</span>
+
+<span class="c">#       u1,u2,u3 = f(points[0])</span>
+<span class="c">#       v1,v2,v3 = f(points[1])</span>
+<span class="c">#       w1,w2,w3 = f(points[2])</span>
+<span class="c">#       p = [v1 - u1, v2 - u2, v3 - u3]</span>
+<span class="c">#       q = [w1 - u1, w2 - u2, w3 - u3]</span>
+<span class="c">#       r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]</span>
+<span class="c">#       for ind in xrange(3, len(points)):</span>
+<span class="c">#           s1,s2,s3 = f(points[ind])</span>
+<span class="c">#           test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))</span>
+<span class="c">#           if test != 0:</span>
+<span class="c">#               return False</span>
+<span class="c">#       return True</span>
+<span class="c">#       &quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="Point.distance"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.distance">[docs]</a>    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Euclidean distance from self to point p.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        distance : number or symbolic expression.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.line.Segment.length</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Point</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(1, 1), Point(4, 5)</span>
+<span class="sd">        &gt;&gt;&gt; p1.distance(p2)</span>
+<span class="sd">        5</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; p3 = Point(x, y)</span>
+<span class="sd">        &gt;&gt;&gt; p3.distance(Point(0, 0))</span>
+<span class="sd">        sqrt(x**2 + y**2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">([(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">)]))</span>
+</div>
+<div class="viewcode-block" id="Point.midpoint"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.midpoint">[docs]</a>    <span class="k">def</span> <span class="nf">midpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The midpoint between self and point p.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        midpoint : Point</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.line.Segment.midpoint</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Point</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(1, 1), Point(13, 5)</span>
+<span class="sd">        &gt;&gt;&gt; p1.midpoint(p2)</span>
+<span class="sd">        Point(7, 3)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">([</span><span class="n">simplify</span><span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">)])</span>
+</div>
+<div class="viewcode-block" id="Point.evalf"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.evalf">[docs]</a>    <span class="k">def</span> <span class="nf">evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the coordinates of the point.</span>
+
+<span class="sd">        This method will, where possible, create and return a new Point</span>
+<span class="sd">        where the coordinates are evaluated as floating point numbers to</span>
+<span class="sd">        the precision indicated (default=15).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        point : Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Rational</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(Rational(1, 2), Rational(3, 2))</span>
+<span class="sd">        &gt;&gt;&gt; p1</span>
+<span class="sd">        Point(1/2, 3/2)</span>
+<span class="sd">        &gt;&gt;&gt; p1.evalf()</span>
+<span class="sd">        Point(0.5, 1.5)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prec</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">evalf</span>
+
+<div class="viewcode-block" id="Point.intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection between this point and another point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        other : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        intersection : list of Points</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        The return value will either be an empty list if there is no</span>
+<span class="sd">        intersection, otherwise it will contain this point.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; p1.intersection(p2)</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; p1.intersection(p3)</span>
+<span class="sd">        [Point(0, 0)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">o</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Point.rotate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate ``angle`` radians counterclockwise about Point ``pt``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rotate, scale</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, pi</span>
+<span class="sd">        &gt;&gt;&gt; t = Point(1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; t.rotate(pi/2)</span>
+<span class="sd">        Point(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; t.rotate(pi/2, (2, 0))</span>
+<span class="sd">        Point(2, -1)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Point</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">-=</span> <span class="n">pt</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">s</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">+=</span> <span class="n">pt</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Point.scale"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scale the coordinates of the Point by multiplying by</span>
+<span class="sd">        ``x`` and ``y`` after subtracting ``pt`` -- default is (0, 0) --</span>
+<span class="sd">        and then adding ``pt`` back again (i.e. ``pt`` is the point of</span>
+<span class="sd">        reference for the scaling).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rotate, translate</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; t = Point(1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; t.scale(2)</span>
+<span class="sd">        Point(2, 1)</span>
+<span class="sd">        &gt;&gt;&gt; t.scale(2, 2)</span>
+<span class="sd">        Point(2, 2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Point.translate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shift the Point by adding x and y to the coordinates of the Point.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rotate, scale</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">        &gt;&gt;&gt; t = Point(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; t.translate(2)</span>
+<span class="sd">        Point(2, 1)</span>
+<span class="sd">        &gt;&gt;&gt; t.translate(2, 2)</span>
+<span class="sd">        Point(2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; t + Point(2, 2)</span>
+<span class="sd">        Point(2, 3)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Point.transform"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the point after applying the transformation described</span>
+<span class="sd">        by the 3x3 Matrix, ``matrix``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        geometry.entity.rotate</span>
+<span class="sd">        geometry.entity.scale</span>
+<span class="sd">        geometry.entity.translate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">Matrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">matrix</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Point.dot"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.point.Point.dot">[docs]</a>    <span class="k">def</span> <span class="nf">dot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return dot product of self with another Point.&quot;&quot;&quot;</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">return</span> <span class="n">x1</span><span class="o">*</span><span class="n">x2</span> <span class="o">+</span> <span class="n">y1</span><span class="o">*</span><span class="n">y2</span>
+</div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add other to self by incrementing self&#39;s coordinates by those of other.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.entity.translate</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">simplify</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span>
+                               <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">args</span><span class="p">)])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;Points must have the same number of dimensions&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Cannot add non-Point, </span><span class="si">%s</span><span class="s">, to a Point&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtract two points, or subtract a factor from this point&#39;s</span>
+<span class="sd">        coordinates.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiply point&#39;s coordinates by a factor.&quot;&quot;&quot;</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">factor</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">divisor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Divide point&#39;s coordinates by a factor.&quot;&quot;&quot;</span>
+        <span class="n">divisor</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">divisor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">([</span><span class="n">x</span><span class="o">/</span><span class="n">divisor</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Negate the point.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">([</span><span class="o">-</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the distance between this point and the origin.&quot;&quot;&quot;</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">Point</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1001 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tensor &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Tensor Module" href="index.html" />
+    <link rel="next" title="Utilities" href="../utilities/index.html" />
+    <link rel="prev" title="Methods" href="index_methods.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../utilities/index.html" title="Utilities"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index_methods.html" title="Methods"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Tensor Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.tensor.tensor">
+<span id="tensor"></span><span id="tensor-tensor"></span><h1>Tensor<a class="headerlink" href="#module-sympy.tensor.tensor" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.tensor.tensor._TensorManager">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">_TensorManager</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to manage tensor properties.</p>
+<p class="rubric">Notes</p>
+<p>Tensors belong to tensor commutation groups; each group has a label
+<tt class="docutils literal"><span class="pre">comm</span></tt>; there are predefined labels:</p>
+<p><tt class="docutils literal"><span class="pre">0</span></tt>   tensors commuting with any other tensor</p>
+<p><tt class="docutils literal"><span class="pre">1</span></tt>   tensors anticommuting among themselves</p>
+<p><tt class="docutils literal"><span class="pre">2</span></tt>   tensors not commuting, apart with those with <tt class="docutils literal"><span class="pre">comm=0</span></tt></p>
+<p>Other groups can be defined using <tt class="docutils literal"><span class="pre">set_comm</span></tt>; tensors in those
+groups commute with those with <tt class="docutils literal"><span class="pre">comm=0</span></tt>; by default they
+do not commute with any other group.</p>
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the TensorManager.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.comm_i2symbol">
+<tt class="descname">comm_i2symbol</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.comm_i2symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.comm_i2symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the symbol corresponding to the commutation group number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.comm_symbols2i">
+<tt class="descname">comm_symbols2i</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.comm_symbols2i"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.comm_symbols2i" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the commutation group number corresponding to <tt class="docutils literal"><span class="pre">i</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">i</span></tt> can be a symbol or a number or a string</p>
+<p>If <tt class="docutils literal"><span class="pre">i</span></tt> is not already defined its commutation group number
+is set.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.get_comm">
+<tt class="descname">get_comm</tt><big>(</big><em>i</em>, <em>j</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.get_comm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.get_comm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the commutation parameter for commutation group numbers <tt class="docutils literal"><span class="pre">i,</span> <span class="pre">j</span></tt></p>
+<p>see <tt class="docutils literal"><span class="pre">_TensorManager.set_comm</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.set_comm">
+<tt class="descname">set_comm</tt><big>(</big><em>i</em>, <em>j</em>, <em>c</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.set_comm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.set_comm" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the commutation parameter <tt class="docutils literal"><span class="pre">c</span></tt> for commutation groups <tt class="docutils literal"><span class="pre">i,</span> <span class="pre">j</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>i, j</strong> : symbols representing commutation groups</p>
+<p class="last"><strong>c</strong> :  group commutation number</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><tt class="docutils literal"><span class="pre">i,</span> <span class="pre">j</span></tt> can be symbols, strings or numbers,
+apart from <tt class="docutils literal"><span class="pre">0,</span> <span class="pre">1</span></tt> and <tt class="docutils literal"><span class="pre">2</span></tt> which are reserved respectively
+for commuting, anticommuting tensors and tensors not commuting
+with any other group apart with the commuting tensors.
+For the remaining cases, use this method to set the commutation rules;
+by default <tt class="docutils literal"><span class="pre">c=None</span></tt>.</p>
+<p>The group commutation number <tt class="docutils literal"><span class="pre">c</span></tt> is assigned in corrispondence
+to the group commutation symbols; it can be</p>
+<p>0        commuting</p>
+<p>1        anticommuting</p>
+<p>None     no commutation property</p>
+<p class="rubric">Examples</p>
+<p><tt class="docutils literal"><span class="pre">G</span></tt> and <tt class="docutils literal"><span class="pre">GH</span></tt> do not commute with themselves and commute with
+each other; A is commuting.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span><span class="p">,</span> <span class="n">TensorManager</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i0</span><span class="p">,</span><span class="n">i1</span><span class="p">,</span><span class="n">i2</span><span class="p">,</span><span class="n">i3</span><span class="p">,</span><span class="n">i4</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i0:5&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;G&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]],</span> <span class="s">&#39;Gcomm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GH</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;GH&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]],</span> <span class="s">&#39;GHcomm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TensorManager</span><span class="o">.</span><span class="n">set_comm</span><span class="p">(</span><span class="s">&#39;Gcomm&#39;</span><span class="p">,</span> <span class="s">&#39;GHcomm&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">GH</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span><span class="o">*</span><span class="n">G</span><span class="p">(</span><span class="n">i0</span><span class="p">))</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">G(i0)*GH(i1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">G</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span><span class="o">*</span><span class="n">G</span><span class="p">(</span><span class="n">i0</span><span class="p">))</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">G(i1)*G(i0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">G</span><span class="p">(</span><span class="n">i1</span><span class="p">)</span><span class="o">*</span><span class="n">A</span><span class="p">(</span><span class="n">i0</span><span class="p">))</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">A(i0)*G(i1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor._TensorManager.set_comms">
+<tt class="descname">set_comms</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#_TensorManager.set_comms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor._TensorManager.set_comms" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the commutation group numbers <tt class="docutils literal"><span class="pre">c</span></tt> for symbols <tt class="docutils literal"><span class="pre">i,</span> <span class="pre">j</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>args</strong> : sequence of <tt class="docutils literal"><span class="pre">(i,</span> <span class="pre">j,</span> <span class="pre">c)</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensorIndexType">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensorIndexType</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorIndexType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorIndexType" title="Permalink to this definition">¶</a></dt>
+<dd><p>A TensorIndexType is characterized by its name and its metric.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : name of the tensor type</p>
+<p><strong>metric</strong> : metric symmetry or metric object or <tt class="docutils literal"><span class="pre">None</span></tt></p>
+<p><strong>dim</strong> : dimension, it can be a symbol or an integer or <tt class="docutils literal"><span class="pre">None</span></tt></p>
+<p><strong>eps_dim</strong> : dimension of the epsilon tensor</p>
+<p class="last"><strong>dummy_fmt</strong> : name of the head of dummy indices</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The <tt class="docutils literal"><span class="pre">metric</span></tt> parameter can be:
+<tt class="docutils literal"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">False</span></tt> symmetric metric (in Riemannian geometry)</p>
+<p><tt class="docutils literal"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">True</span></tt> antisymmetric metric (for spinor calculus)</p>
+<p><tt class="docutils literal"><span class="pre">metric</span> <span class="pre">=</span> <span class="pre">None</span></tt>  there is no metric</p>
+<p><tt class="docutils literal"><span class="pre">metric</span></tt> can be an object having <tt class="docutils literal"><span class="pre">name</span></tt> and <tt class="docutils literal"><span class="pre">antisym</span></tt> attributes.</p>
+<p>If there is a metric the metric is used to raise and lower indices.</p>
+<p>In the case of antisymmetric metric, the following raising and
+lowering conventions will be adopted:</p>
+<p><tt class="docutils literal"><span class="pre">psi(a)</span> <span class="pre">=</span> <span class="pre">g(a,</span> <span class="pre">b)*psi(-b);</span> <span class="pre">chi(-a)</span> <span class="pre">=</span> <span class="pre">chi(b)*g(-b,</span> <span class="pre">-a)</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">g(-a,</span> <span class="pre">b)</span> <span class="pre">=</span> <span class="pre">delta(-a,</span> <span class="pre">b);</span> <span class="pre">g(b,</span> <span class="pre">-a)</span> <span class="pre">=</span> <span class="pre">-delta(a,</span> <span class="pre">-b)</span></tt></p>
+<p>where <tt class="docutils literal"><span class="pre">delta(-a,</span> <span class="pre">b)</span> <span class="pre">=</span> <span class="pre">delta(b,</span> <span class="pre">-a)</span></tt> is the <tt class="docutils literal"><span class="pre">Kronecker</span> <span class="pre">delta</span></tt>
+(see <tt class="docutils literal"><span class="pre">TensorIndex</span></tt> for the conventions on indices).</p>
+<p>If there is no metric it is not possible to raise or lower indices;
+e.g. the index of the defining representation of <tt class="docutils literal"><span class="pre">SU(N)</span></tt>
+is &#8216;covariant&#8217; and the conjugate representation is
+&#8216;contravariant&#8217;; for <tt class="docutils literal"><span class="pre">N</span> <span class="pre">&gt;</span> <span class="pre">2</span></tt> they are linearly independent.</p>
+<p><tt class="docutils literal"><span class="pre">eps_dim</span></tt> is by default equal to <tt class="docutils literal"><span class="pre">dim</span></tt>, if the latter is an integer;
+else it can be assigned (for use in naive dimensional regularization);
+if <tt class="docutils literal"><span class="pre">eps_dim</span></tt> is not an integer <tt class="docutils literal"><span class="pre">epsilon</span></tt> is <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span><span class="o">.</span><span class="n">metric</span>
+<span class="go">metric(Lorentz,Lorentz)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="55%" />
+<col width="16%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">name</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">metric_name</span></tt></td>
+<td>it is &#8216;metric&#8217; or metric.name</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">metric_antisym</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">metric</span></tt></td>
+<td>the metric tensor</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">delta</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">Kronecker</span> <span class="pre">delta</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">epsilon</span></tt></td>
+<td>the <tt class="docutils literal"><span class="pre">Levi-Civita</span> <span class="pre">epsilon</span></tt> tensor</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">dim</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">dim_eps</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">dummy_fmt</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensorIndex">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensorIndex</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an abstract tensor index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : name of the index</p>
+<p><strong>tensortype</strong> : <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> of the index</p>
+<p class="last"><strong>is_up</strong> :  flag for contravariant index</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Tensor indices are contracted with the Einstein summation convention.</p>
+<p>An index can be in contravariant or in covariant form; in the latter
+case it is represented prepending a <tt class="docutils literal"><span class="pre">-</span></tt> to the index name.</p>
+<p>Dummy indices have a name with head given by <tt class="docutils literal"><span class="pre">tensortype.dummy_fmt</span></tt></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">TensorIndex</span><span class="p">,</span> <span class="n">TensorSymmetry</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">,</span> <span class="n">get_symmetric_group_sgs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">TensorIndex</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">);</span> <span class="n">i</span>
+<span class="go">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sym1</span> <span class="o">=</span> <span class="n">TensorSymmetry</span><span class="p">(</span><span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span> <span class="o">=</span> <span class="n">TensorType</span><span class="p">([</span><span class="n">Lorentz</span><span class="p">],</span> <span class="n">sym1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">S1</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">)</span>
+<span class="go">A(L_0)*B(-L_0)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="58%" />
+<col width="42%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">name</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">tensortype</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">is_up</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.tensor.tensor_indices">
+<tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">tensor_indices</tt><big>(</big><em>s</em>, <em>typ</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#tensor_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.tensor_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of tensor indices given their names and their types</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>s</strong> : string of comma separated names of indices</p>
+<p class="last"><strong>typ</strong> : list of <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> of the indices</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;a,b,c,d&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensorSymmetry">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensorSymmetry</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorSymmetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorSymmetry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monoterm symmetry of a tensor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>bsgs</strong> : tuple <tt class="docutils literal"><span class="pre">(base,</span> <span class="pre">sgs)</span></tt> BSGS of the symmetry of the tensor</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../combinatorics/tensor_can.html#sympy.combinatorics.tensor_can.get_symmetric_group_sgs" title="sympy.combinatorics.tensor_can.get_symmetric_group_sgs"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.tensor_can.get_symmetric_group_sgs</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>A tensor can have an arbitrary monoterm symmetry provided by its BSGS.
+Multiterm symmetries, like the cyclic symmetry of the Riemann tensor,
+are not covered.</p>
+<p class="rubric">Examples</p>
+<p>Define a symmetric tensor</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">TensorSymmetry</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">,</span> <span class="n">get_symmetric_group_sgs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sym2</span> <span class="o">=</span> <span class="n">TensorSymmetry</span><span class="p">(</span><span class="n">get_symmetric_group_sgs</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span> <span class="o">=</span> <span class="n">TensorType</span><span class="p">([</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">sym2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="n">S2</span><span class="p">(</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="48%" />
+<col width="22%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">base</span></tt></td>
+<td>base of the BSGS</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">generators</span></tt></td>
+<td>generators of the BSGS</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">rank</span></tt></td>
+<td>rank of the tensor</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensorType">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensorType</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class of tensor types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>index_types</strong> : list of <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> of the tensor indices</p>
+<p class="last"><strong>symmetry</strong> : <tt class="docutils literal"><span class="pre">TensorSymmetry</span></tt> of the tensor</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Define a symmetric tensor</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensorsymmetry</span><span class="p">,</span> <span class="n">TensorType</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sym2</span> <span class="o">=</span> <span class="n">tensorsymmetry</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span> <span class="o">=</span> <span class="n">TensorType</span><span class="p">([</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">sym2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="n">S2</span><span class="p">(</span><span class="s">&#39;V&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="65%" />
+<col width="14%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">index_types</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">symmetry</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">types</span></tt></td>
+<td>list of <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> without repetitions</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensorHead">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensorHead</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorHead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorHead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tensor head of the tensor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : name of the tensor</p>
+<p><strong>typ</strong> : list of TensorIndexType</p>
+<p class="last"><strong>comm</strong> : commutation group number</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>A <tt class="docutils literal"><span class="pre">TensorHead</span></tt> belongs to a commutation group, defined by a
+symbol on number <tt class="docutils literal"><span class="pre">comm</span></tt> (see <tt class="docutils literal"><span class="pre">_TensorManager.set_comm</span></tt>);
+tensors in a commutation group have the same commutation properties;
+by default <tt class="docutils literal"><span class="pre">comm</span></tt> is <tt class="docutils literal"><span class="pre">0</span></tt>, the group of the commuting tensors.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensorsymmetry</span><span class="p">,</span> <span class="n">TensorType</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sym2</span> <span class="o">=</span> <span class="n">tensorsymmetry</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span> <span class="o">=</span> <span class="n">TensorType</span><span class="p">([</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">sym2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">S2</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="50%" />
+<col width="20%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">name</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">index_types</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">rank</span></tt></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">types</span></tt></td>
+<td>equal to <tt class="docutils literal"><span class="pre">typ.types</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">symmetry</span></tt></td>
+<td>equal to <tt class="docutils literal"><span class="pre">typ.symmetry</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">comm</span></tt></td>
+<td>commutation group</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensorHead.commutes_with">
+<tt class="descname">commutes_with</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensorHead.commutes_with"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensorHead.commutes_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns 0 (1) if self and other (anti)commute.</p>
+<p>Returns None if self and other do not (anti)commute.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensExpr">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensExpr</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensExpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for tensor expressions</p>
+<p class="rubric">Notes</p>
+<p>A tensor expression is an expression formed by tensors;
+currently the sums of tensors are distributed.</p>
+<p>A <tt class="docutils literal"><span class="pre">TensExpr</span></tt> can be a <tt class="docutils literal"><span class="pre">TensAdd</span></tt> or a <tt class="docutils literal"><span class="pre">TensMul</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">TensAdd</span></tt> objects are put in canonical form using the Butler-Portugal
+algorithm for canonicalization under monoterm symmetries.</p>
+<p><tt class="docutils literal"><span class="pre">TensMul</span></tt> objects are formed by products of component tensors,
+and include a coefficient, which is a SymPy expression.</p>
+<p>In the internal representation contracted indices are represented
+by <tt class="docutils literal"><span class="pre">(ipos1,</span> <span class="pre">ipos2,</span> <span class="pre">icomp1,</span> <span class="pre">icomp2)</span></tt>, where <tt class="docutils literal"><span class="pre">icomp1</span></tt> is the position
+of the component tensor with contravariant index, <tt class="docutils literal"><span class="pre">ipos1</span></tt> is the
+slot which the index occupies in that component tensor.</p>
+<p>Contracted indices are therefore nameless in the internal representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensAdd">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensAdd</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensAdd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensAdd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sum of tensors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>free_args</strong> : list of the free indices</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Sum of more than one tensor are put automatically in canonical form.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensorhead</span><span class="p">,</span> <span class="n">tensor_indices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="n">t</span>
+<span class="go">p(a) + q(a)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">p(b) + q(b)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="63%" />
+<col width="16%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">args</span></tt></td>
+<td>tuple of addends</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">rank</span></tt></td>
+<td>rank of the tensor</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">free_args</span></tt></td>
+<td>list of the free indices in sorted order</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensAdd.canon_bp">
+<tt class="descname">canon_bp</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensAdd.canon_bp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensAdd.canon_bp" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonicalize using the Butler-Portugal algorithm for canonicalization
+under monoterm symmetries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensAdd.contract_metric">
+<tt class="descname">contract_metric</tt><big>(</big><em>g</em>, <em>contract_all=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensAdd.contract_metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensAdd.contract_metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise or lower indices with the metric <tt class="docutils literal"><span class="pre">g</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>g</strong> :  metric</p>
+<p class="last"><strong>contract_all</strong> : if True, eliminate all <tt class="docutils literal"><span class="pre">g</span></tt> which are contracted</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>see the <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> docstring for the contraction conventions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensAdd.fun_eval">
+<tt class="descname">fun_eval</tt><big>(</big><em>*index_tuples</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensAdd.fun_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensAdd.fun_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tensor with free indices substituted according to <tt class="docutils literal"><span class="pre">index_tuples</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>index_types</strong> : list of tuples <tt class="docutils literal"><span class="pre">(old_index,</span> <span class="pre">new_index)</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i,j,k,l&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fun_eval</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">),(</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+<span class="go">A(k, L_0)*B(l, -L_0) + A(k, l)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensAdd.substitute_indices">
+<tt class="descname">substitute_indices</tt><big>(</big><em>*index_tuples</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensAdd.substitute_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensAdd.substitute_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tensor with free indices substituted according to <tt class="docutils literal"><span class="pre">index_tuples</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>index_types</strong> : list of tuples <tt class="docutils literal"><span class="pre">(old_index,</span> <span class="pre">new_index)</span></tt></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i,j,k,l&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">);</span> <span class="n">t</span>
+<span class="go">A(i, L_0)*B(-L_0, -j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">substitute_indices</span><span class="p">((</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="go">A(j, L_0)*B(-L_0, -k)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.tensor.tensor.TensMul">
+<em class="property">class </em><tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">TensMul</tt><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Product of tensors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>coeff</strong> : SymPy coefficient of the tensor</p>
+<p class="last"><strong>args</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><tt class="docutils literal"><span class="pre">args[0]</span></tt>   list of <tt class="docutils literal"><span class="pre">TensorHead</span></tt> of the component tensors.</p>
+<p><tt class="docutils literal"><span class="pre">args[1]</span></tt>   list of <tt class="docutils literal"><span class="pre">(ind,</span> <span class="pre">ipos,</span> <span class="pre">icomp)</span></tt>
+where <tt class="docutils literal"><span class="pre">ind</span></tt> is a free index, <tt class="docutils literal"><span class="pre">ipos</span></tt> is the slot position
+of <tt class="docutils literal"><span class="pre">ind</span></tt> in the <tt class="docutils literal"><span class="pre">icomp</span></tt>-th component tensor.</p>
+<p><tt class="docutils literal"><span class="pre">args[2]</span></tt> list of tuples representing dummy indices.
+<tt class="docutils literal"><span class="pre">(ipos1,</span> <span class="pre">ipos2,</span> <span class="pre">icomp1,</span> <span class="pre">icomp2)</span></tt> indicates that the contravariant
+dummy index is the <tt class="docutils literal"><span class="pre">ipos1</span></tt>-th slot position in the <tt class="docutils literal"><span class="pre">icomp1</span></tt>-th
+component tensor; the corresponding covariant index is
+in the <tt class="docutils literal"><span class="pre">ipos2</span></tt> slot position in the <tt class="docutils literal"><span class="pre">icomp2</span></tt>-th component tensor.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="68%" />
+<col width="13%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">_components</span></tt></td>
+<td>list of <tt class="docutils literal"><span class="pre">TensorHead</span></tt> of the component tensors</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">types</span></tt></td>
+<td>list of nonrepeated <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt></td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">free</span></tt></td>
+<td>list of <tt class="docutils literal"><span class="pre">(ind,</span> <span class="pre">ipos,</span> <span class="pre">icomp)</span></tt>, see Notes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">dum</span></tt></td>
+<td>list of <tt class="docutils literal"><span class="pre">(ipos1,</span> <span class="pre">ipos2,</span> <span class="pre">icomp1,</span> <span class="pre">icomp2)</span></tt>, see Notes</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">ext_rank</span></tt></td>
+<td>rank of the tensor counting the dummy indices</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">rank</span></tt></td>
+<td>rank of the tensor</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">coeff</span></tt></td>
+<td>SymPy coefficient of the tensor</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">free_args</span></tt></td>
+<td>list of the free indices in sorted order</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">is_canon_bp</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">True</span></tt> if the tensor in in canonical form</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.canon_args">
+<tt class="descname">canon_args</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.canon_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.canon_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <tt class="docutils literal"><span class="pre">(g,</span> <span class="pre">dummies,</span> <span class="pre">msym,</span> <span class="pre">v)</span></tt>, the entries of <tt class="docutils literal"><span class="pre">canonicalize</span></tt></p>
+<p>see <tt class="docutils literal"><span class="pre">canonicalize</span></tt> in <tt class="docutils literal"><span class="pre">tensor_can.py</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.canon_bp">
+<tt class="descname">canon_bp</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.canon_bp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.canon_bp" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonicalize using the Butler-Portugal algorithm for canonicalization
+under monoterm symmetries.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;m0,m1,m2&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">2</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span><span class="o">-</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">A</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span><span class="o">-</span><span class="n">m0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">-A(L_0, L_1)*A(-L_0, -L_1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span><span class="o">-</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">A</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span><span class="o">-</span><span class="n">m2</span><span class="p">)</span><span class="o">*</span><span class="n">A</span><span class="p">(</span><span class="n">m2</span><span class="p">,</span><span class="o">-</span><span class="n">m0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.contract_metric">
+<tt class="descname">contract_metric</tt><big>(</big><em>g</em>, <em>contract_all=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.contract_metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.contract_metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raise or lower indices with the metric <tt class="docutils literal"><span class="pre">g</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">g</span></tt>  metric</p>
+<p><tt class="docutils literal"><span class="pre">contract_all</span></tt> if True, eliminate all <tt class="docutils literal"><span class="pre">g</span></tt> which are contracted</p>
+<p class="rubric">Notes</p>
+<p>see the <tt class="docutils literal"><span class="pre">TensorIndexType</span></tt> docstring for the contraction conventions</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;m0,m1,m2&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Lorentz</span><span class="o">.</span><span class="n">metric</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">m0</span><span class="p">)</span><span class="o">*</span><span class="n">q</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="o">-</span><span class="n">m0</span><span class="p">,</span> <span class="o">-</span><span class="n">m1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">metric(L_0, L_1)*p(-L_0)*q(-L_1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">contract_metric</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">canon_bp</span><span class="p">()</span>
+<span class="go">p(L_0)*q(-L_0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.tensor.tensor.TensMul.from_indices">
+<em class="property">static </em><tt class="descname">from_indices</tt><big>(</big><em>*indices</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.from_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.from_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <tt class="docutils literal"><span class="pre">indices</span></tt> into <tt class="docutils literal"><span class="pre">free</span></tt>, <tt class="docutils literal"><span class="pre">dum</span></tt> for single component tensor</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">free</span></tt>     list of tuples <tt class="docutils literal"><span class="pre">(index,</span> <span class="pre">pos,</span> <span class="pre">0)</span></tt>,</dt>
+<dd>where <tt class="docutils literal"><span class="pre">pos</span></tt> is the position of index in
+the list of indices formed by the component tensors</dd>
+</dl>
+<p><tt class="docutils literal"><span class="pre">dum</span></tt>      list of tuples <tt class="docutils literal"><span class="pre">(pos_contr,</span> <span class="pre">pos_cov,</span> <span class="pre">0,</span> <span class="pre">0)</span></tt></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">TensMul</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;m0,m1,m2,m3&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TensMul</span><span class="o">.</span><span class="n">from_indices</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="o">-</span><span class="n">m1</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span>
+<span class="go">([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.fun_eval">
+<tt class="descname">fun_eval</tt><big>(</big><em>*index_tuples</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.fun_eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.fun_eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tensor with free indices substituted according to <tt class="docutils literal"><span class="pre">index_tuples</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">index_types</span></tt> list of tuples <tt class="docutils literal"><span class="pre">(old_index,</span> <span class="pre">new_index)</span></tt></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i,j,k,l&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">);</span> <span class="n">t</span>
+<span class="go">A(i, L_0)*B(-L_0, -j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fun_eval</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">),(</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+<span class="go">A(k, L_0)*B(-L_0, l)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.get_indices">
+<tt class="descname">get_indices</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.get_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.get_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of indices of the tensor</p>
+<p>The indices are listed in the order in which they appear in the
+component tensors.
+The dummy indices are given a name which does not collide with
+the names of the free indices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;m0,m1,m2&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Lorentz</span><span class="o">.</span><span class="n">metric</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">],</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">m0</span><span class="p">,</span><span class="n">m2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">get_indices</span><span class="p">()</span>
+<span class="go">[m1, m0, m2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.perm2tensor">
+<tt class="descname">perm2tensor</tt><big>(</big><em>g</em>, <em>canon_bp=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.perm2tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.perm2tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the tensor corresponding to the permutation <tt class="docutils literal"><span class="pre">g</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">g</span></tt>  permutation corrisponding to the tensor in the representation
+used in canonicalization</p>
+<p><tt class="docutils literal"><span class="pre">canon_bp</span></tt>   if True, then <tt class="docutils literal"><span class="pre">g</span></tt> is the permutation
+corresponding to the canonical form of the tensor</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.sorted_components">
+<tt class="descname">sorted_components</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.sorted_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.sorted_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tensor with sorted components</p>
+<p>The sorting is done taking into account the commutation group
+of the component tensors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.split">
+<tt class="descname">split</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of tensors, whose product is <tt class="docutils literal"><span class="pre">self</span></tt></p>
+<p>Dummy indices contracted among different tensor components
+become free indices with the same name as the one used to
+represent the dummy indices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;a,b,c,d&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span>
+<span class="go">A(a, L_0)*B(-L_0, c)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="go">[A(a, L_0), B(-L_0, c)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.tensor.tensor.TensMul.substitute_indices">
+<tt class="descname">substitute_indices</tt><big>(</big><em>*index_tuples</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#TensMul.substitute_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.TensMul.substitute_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tensor with free indices substituted according to <tt class="docutils literal"><span class="pre">index_tuples</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">index_types</span></tt> list of tuples <tt class="docutils literal"><span class="pre">(old_index,</span> <span class="pre">new_index)</span></tt></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i,j,k,l&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">B</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">);</span> <span class="n">t</span>
+<span class="go">A(i, L_0)*B(-L_0, -j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">substitute_indices</span><span class="p">((</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="go">A(j, L_0)*B(-L_0, -k)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.tensor.canon_bp">
+<tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">canon_bp</tt><big>(</big><em>p</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#canon_bp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.canon_bp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Butler-Portugal canonicalization</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.tensor.tensor_mul">
+<tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">tensor_mul</tt><big>(</big><em>*a</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#tensor_mul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.tensor_mul" title="Permalink to this definition">¶</a></dt>
+<dd><p>product of tensors</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.tensor.riemann_cyclic_replace">
+<tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">riemann_cyclic_replace</tt><big>(</big><em>t_r</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#riemann_cyclic_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.riemann_cyclic_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>replace Riemann tensor with an equivalent expression</p>
+<p><tt class="docutils literal"><span class="pre">R(m,n,p,q)</span> <span class="pre">-&gt;</span> <span class="pre">2/3*R(m,n,p,q)</span> <span class="pre">-</span> <span class="pre">1/3*R(m,q,n,p)</span> <span class="pre">+</span> <span class="pre">1/3*R(m,p,n,q)</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.tensor.riemann_cyclic">
+<tt class="descclassname">sympy.tensor.tensor.</tt><tt class="descname">riemann_cyclic</tt><big>(</big><em>t2</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/tensor.html#riemann_cyclic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.tensor.riemann_cyclic" title="Permalink to this definition">¶</a></dt>
+<dd><p>replace each Riemann tensor with an equivalent expression
+satisfying the cyclic identity.</p>
+<p>This trick is discussed in the reference guide to Cadabra.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.tensor</span> <span class="kn">import</span> <span class="n">TensorIndexType</span><span class="p">,</span> <span class="n">tensor_indices</span><span class="p">,</span> <span class="n">tensorhead</span><span class="p">,</span> <span class="n">riemann_cyclic</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lorentz</span> <span class="o">=</span> <span class="n">TensorIndexType</span><span class="p">(</span><span class="s">&#39;Lorentz&#39;</span><span class="p">,</span> <span class="n">dummy_fmt</span><span class="o">=</span><span class="s">&#39;L&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">tensor_indices</span><span class="p">(</span><span class="s">&#39;i,j,k,l&#39;</span><span class="p">,</span> <span class="n">Lorentz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">tensorhead</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">Lorentz</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">R</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">l</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">R</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">,</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="o">-</span><span class="n">k</span><span class="p">,</span><span class="o">-</span><span class="n">l</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">R</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">,</span><span class="o">-</span><span class="n">k</span><span class="p">,</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="o">-</span><span class="n">l</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemann_cyclic</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index_methods.html"
+                        title="previous chapter">Methods</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../utilities/index.html"
+                        title="next chapter">Utilities</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/tensor/tensor.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../utilities/index.html" title="Utilities"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index_methods.html" title="Methods"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Tensor Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

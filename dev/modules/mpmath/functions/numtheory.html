@@ -1,0 +1,1023 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Number-theoretical, combinatorial and integer functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="q-functions" href="qfunctions.html" />
+    <link rel="prev" title="Zeta functions, L-series and polylogarithms" href="zeta.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qfunctions.html" title="q-functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="zeta.html" title="Zeta functions, L-series and polylogarithms"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="number-theoretical-combinatorial-and-integer-functions">
+<h1>Number-theoretical, combinatorial and integer functions<a class="headerlink" href="#number-theoretical-combinatorial-and-integer-functions" title="Permalink to this headline">¶</a></h1>
+<p>For factorial-type functions, including binomial coefficients,
+double factorials, etc., see the separate
+section <a class="reference internal" href="gamma.html"><em>Factorials and gamma functions</em></a>.</p>
+<div class="section" id="fibonacci-numbers">
+<h2>Fibonacci numbers<a class="headerlink" href="#fibonacci-numbers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fibonacci-fib">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fibonacci()</span></tt>/<tt class="xref py py-func docutils literal"><span class="pre">fib()</span></tt><a class="headerlink" href="#fibonacci-fib" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fibonacci">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fibonacci</tt><big>(</big><em>n</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fibonacci" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">fibonacci(n)</span></tt> computes the <span class="math">\(n\)</span>-th Fibonacci number, <span class="math">\(F(n)\)</span>. The
+Fibonacci numbers are defined by the recurrence <span class="math">\(F(n) = F(n-1) + F(n-2)\)</span>
+with the initial values <span class="math">\(F(0) = 0\)</span>, <span class="math">\(F(1) = 1\)</span>. <a class="reference internal" href="#mpmath.fibonacci" title="mpmath.fibonacci"><tt class="xref py py-func docutils literal"><span class="pre">fibonacci()</span></tt></a>
+extends this definition to arbitrary real and complex arguments
+using the formula</p>
+<div class="math">
+\[F(z) = \frac{\phi^z - \cos(\pi z) \phi^{-z}}{\sqrt 5}\]</div>
+<p>where <span class="math">\(\phi\)</span> is the golden ratio. <a class="reference internal" href="#mpmath.fibonacci" title="mpmath.fibonacci"><tt class="xref py py-func docutils literal"><span class="pre">fibonacci()</span></tt></a> also uses this
+continuous formula to compute <span class="math">\(F(n)\)</span> for extremely large <span class="math">\(n\)</span>, where
+calculating the exact integer would be wasteful.</p>
+<p>For convenience, <tt class="xref py py-func docutils literal"><span class="pre">fib()</span></tt> is available as an alias for
+<a class="reference internal" href="#mpmath.fibonacci" title="mpmath.fibonacci"><tt class="xref py py-func docutils literal"><span class="pre">fibonacci()</span></tt></a>.</p>
+<p><strong>Basic examples</strong></p>
+<p>Some small Fibonacci numbers are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">0.0</span>
+<span class="go">1.0</span>
+<span class="go">1.0</span>
+<span class="go">2.0</span>
+<span class="go">3.0</span>
+<span class="go">5.0</span>
+<span class="go">8.0</span>
+<span class="go">13.0</span>
+<span class="go">21.0</span>
+<span class="go">34.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">12586269025.0</span>
+</pre></div>
+</div>
+<p>The recurrence for <span class="math">\(F(n)\)</span> extends backwards to negative <span class="math">\(n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">0.0</span>
+<span class="go">1.0</span>
+<span class="go">-1.0</span>
+<span class="go">2.0</span>
+<span class="go">-3.0</span>
+<span class="go">5.0</span>
+<span class="go">-8.0</span>
+<span class="go">13.0</span>
+<span class="go">-21.0</span>
+<span class="go">34.0</span>
+</pre></div>
+</div>
+<p>Large Fibonacci numbers will be computed approximately unless
+the precision is set high enough:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="go">2.8057117299251e+41</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">45</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="go">280571172992510140037611932413038677189525.0</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.fibonacci" title="mpmath.fibonacci"><tt class="xref py py-func docutils literal"><span class="pre">fibonacci()</span></tt></a> can compute approximate Fibonacci numbers
+of stupendous size:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">3.49052338550226e+2089876402499787337692720</span>
+</pre></div>
+</div>
+<p><strong>Real and complex arguments</strong></p>
+<p>The extended Fibonacci function is an analytic function. The
+property <span class="math">\(F(z) = F(z-1) + F(z-2)\)</span> holds for arbitrary <span class="math">\(z\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">2.1170270579161</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="n">pi</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fib</span><span class="p">(</span><span class="n">pi</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">2.1170270579161</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-5248.51130728372 - 14195.962288353j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="n">fib</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-5248.51130728372 - 14195.962288353j)</span>
+</pre></div>
+</div>
+<p>The Fibonacci function has infinitely many roots on the
+negative half-real axis. The first root is at 0, the second is
+close to -0.18, and then there are infinitely many roots that
+asymptotically approach <span class="math">\(-n+1/2\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="go">-0.183802359692956</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">-1.57077646820395</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="o">-</span><span class="mi">17</span><span class="p">)</span>
+<span class="go">-16.4999999596115</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">fib</span><span class="p">,</span> <span class="o">-</span><span class="mi">24</span><span class="p">)</span>
+<span class="go">-23.5000000000479</span>
+</pre></div>
+</div>
+<p><strong>Mathematical relationships</strong></p>
+<p>For large <span class="math">\(n\)</span>, <span class="math">\(F(n+1)/F(n)\)</span> approaches the golden ratio:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">101</span><span class="p">)</span><span class="o">/</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">1.6180339887498948482045868343656381177203127439638</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">phi</span>
+<span class="go">1.6180339887498948482045868343656381177203091798058</span>
+</pre></div>
+</div>
+<p>The sum of reciprocal Fibonacci numbers converges to an irrational
+number for which no closed form expression is known:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">3.35988566624318</span>
+</pre></div>
+</div>
+<p>Amazingly, however, the sum of odd-index reciprocal Fibonacci
+numbers can be expressed in terms of a Jacobi theta function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">fib</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">1.82451515740692</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">*</span><span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,(</span><span class="mi">3</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">4</span>
+<span class="go">1.82451515740692</span>
+</pre></div>
+</div>
+<p>Some related sums can be done in closed form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">fib</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">1.11803398874989</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">-</span> <span class="mf">0.5</span>
+<span class="go">1.11803398874989</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">k</span><span class="p">:(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">0.618033988749895</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span><span class="o">-</span><span class="mi">1</span>
+<span class="go">0.618033988749895</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://mathworld.wolfram.com/FibonacciNumber.html">http://mathworld.wolfram.com/FibonacciNumber.html</a></li>
+</ol>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="bernoulli-numbers-and-polynomials">
+<h2>Bernoulli numbers and polynomials<a class="headerlink" href="#bernoulli-numbers-and-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bernoulli">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">bernoulli()</span></tt><a class="headerlink" href="#bernoulli" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.bernoulli">
+<tt class="descclassname">mpmath.</tt><tt class="descname">bernoulli</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#mpmath.bernoulli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the nth Bernoulli number, <span class="math">\(B_n\)</span>, for any integer <span class="math">\(n \ge 0\)</span>.</p>
+<p>The Bernoulli numbers are rational numbers, but this function
+returns a floating-point approximation. To obtain an exact
+fraction, use <a class="reference internal" href="#mpmath.bernfrac" title="mpmath.bernfrac"><tt class="xref py py-func docutils literal"><span class="pre">bernfrac()</span></tt></a> instead.</p>
+<p><strong>Examples</strong></p>
+<p>Numerical values of the first few Bernoulli numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">bernoulli</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">0 1.0</span>
+<span class="go">1 -0.5</span>
+<span class="go">2 0.166666666666667</span>
+<span class="go">3 0.0</span>
+<span class="go">4 -0.0333333333333333</span>
+<span class="go">5 0.0</span>
+<span class="go">6 0.0238095238095238</span>
+<span class="go">7 0.0</span>
+<span class="go">8 -0.0333333333333333</span>
+<span class="go">9 0.0</span>
+<span class="go">10 0.0757575757575758</span>
+<span class="go">11 0.0</span>
+<span class="go">12 -0.253113553113553</span>
+<span class="go">13 0.0</span>
+<span class="go">14 1.16666666666667</span>
+</pre></div>
+</div>
+<p>Bernoulli numbers can be approximated with arbitrary precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">-2.8382249570693706959264156336481764738284680928013e+78</span>
+</pre></div>
+</div>
+<p>Arbitrarily large <span class="math">\(n\)</span> are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">20</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.09136296657021e+1876752564973863312327</span>
+</pre></div>
+</div>
+<p>The Bernoulli numbers are related to the Riemann zeta function
+at integer arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">8</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">fac</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+<span class="go">1.00407735619794</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zeta</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">1.00407735619794</span>
+</pre></div>
+</div>
+<p><strong>Algorithm</strong></p>
+<p>For small <span class="math">\(n\)</span> (<span class="math">\(n &lt; 3000\)</span>) <a class="reference internal" href="#mpmath.bernoulli" title="mpmath.bernoulli"><tt class="xref py py-func docutils literal"><span class="pre">bernoulli()</span></tt></a> uses a recurrence
+formula due to Ramanujan. All results in this range are cached,
+so sequential computation of small Bernoulli numbers is
+guaranteed to be fast.</p>
+<p>For larger <span class="math">\(n\)</span>, <span class="math">\(B_n\)</span> is evaluated in terms of the Riemann zeta
+function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="bernfrac">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">bernfrac()</span></tt><a class="headerlink" href="#bernfrac" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.bernfrac">
+<tt class="descclassname">mpmath.</tt><tt class="descname">bernfrac</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#mpmath.bernfrac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of integers <span class="math">\((p, q)\)</span> such that <span class="math">\(p/q = B_n\)</span> exactly,
+where <span class="math">\(B_n\)</span> denotes the <span class="math">\(n\)</span>-th Bernoulli number. The fraction is
+always reduced to lowest terms. Note that for <span class="math">\(n &gt; 1\)</span> and <span class="math">\(n\)</span> odd,
+<span class="math">\(B_n = 0\)</span>, and <span class="math">\((0, 1)\)</span> is returned.</p>
+<p><strong>Examples</strong></p>
+<p>The first few Bernoulli numbers are exactly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">bernfrac</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">0 1/1</span>
+<span class="go">1 -1/2</span>
+<span class="go">2 1/6</span>
+<span class="go">3 0/1</span>
+<span class="go">4 -1/30</span>
+<span class="go">5 0/1</span>
+<span class="go">6 1/42</span>
+<span class="go">7 0/1</span>
+<span class="go">8 -1/30</span>
+<span class="go">9 0/1</span>
+<span class="go">10 5/66</span>
+<span class="go">11 0/1</span>
+<span class="go">12 -691/2730</span>
+<span class="go">13 0/1</span>
+<span class="go">14 7/6</span>
+</pre></div>
+</div>
+<p>This function works for arbitrarily large <span class="math">\(n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">bernfrac</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">2338224387510</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
+<span class="go">27692</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">/</span> <span class="n">q</span><span class="p">)</span>
+<span class="go">-9.04942396360948e+27677</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">-9.04942396360948e+27677</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="#mpmath.bernoulli" title="mpmath.bernoulli"><tt class="xref py py-func docutils literal"><span class="pre">bernoulli()</span></tt></a> computes a floating-point approximation
+directly, without computing the exact fraction first.
+This is much faster for large <span class="math">\(n\)</span>.</p>
+</div>
+<p><strong>Algorithm</strong></p>
+<p><a class="reference internal" href="#mpmath.bernfrac" title="mpmath.bernfrac"><tt class="xref py py-func docutils literal"><span class="pre">bernfrac()</span></tt></a> works by computing the value of <span class="math">\(B_n\)</span> numerically
+and then using the von Staudt-Clausen theorem [1] to reconstruct
+the exact fraction. For large <span class="math">\(n\)</span>, this is significantly faster than
+computing <span class="math">\(B_1, B_2, \ldots, B_2\)</span> recursively with exact arithmetic.
+The implementation has been tested for <span class="math">\(n = 10^m\)</span> up to <span class="math">\(m = 6\)</span>.</p>
+<p>In practice, <a class="reference internal" href="#mpmath.bernfrac" title="mpmath.bernfrac"><tt class="xref py py-func docutils literal"><span class="pre">bernfrac()</span></tt></a> appears to be about three times
+slower than the specialized program calcbn.exe [2]</p>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li>MathWorld, von Staudt-Clausen Theorem:
+<a class="reference external" href="http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html">http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html</a></li>
+<li>The Bernoulli Number Page:
+<a class="reference external" href="http://www.bernoulli.org/">http://www.bernoulli.org/</a></li>
+</ol>
+</dd></dl>
+
+</div>
+<div class="section" id="bernpoly">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">bernpoly()</span></tt><a class="headerlink" href="#bernpoly" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.bernpoly">
+<tt class="descclassname">mpmath.</tt><tt class="descname">bernpoly</tt><big>(</big><em>n</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.bernpoly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Bernoulli polynomial <span class="math">\(B_n(z)\)</span>.</p>
+<p>The first few Bernoulli polynomials are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">bernpoly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[-0.5, 1.0]</span>
+<span class="go">[0.166667, -1.0, 1.0]</span>
+<span class="go">[0.0, 0.5, -1.5, 1.0]</span>
+<span class="go">[-0.0333333, 0.0, 1.0, -2.0, 1.0]</span>
+<span class="go">[0.0, -0.166667, 0.0, 1.66667, -2.5, 1.0]</span>
+</pre></div>
+</div>
+<p>At <span class="math">\(z = 0\)</span>, the Bernoulli polynomial evaluates to a
+Bernoulli number (see <a class="reference internal" href="#mpmath.bernoulli" title="mpmath.bernoulli"><tt class="xref py py-func docutils literal"><span class="pre">bernoulli()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bernpoly</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">bernoulli</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+<span class="go">(-0.253113553113553, -0.253113553113553)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernpoly</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">bernoulli</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="go">(0.0, 0.0)</span>
+</pre></div>
+</div>
+<p>Evaluation is accurate for large <span class="math">\(n\)</span> and small <span class="math">\(z\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernpoly</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">2.838224957069370695926416e+78</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernpoly</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mf">10.5</span><span class="p">)</span>
+<span class="go">5.318704469415522036482914e+1769</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="euler-numbers-and-polynomials">
+<h2>Euler numbers and polynomials<a class="headerlink" href="#euler-numbers-and-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="eulernum">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">eulernum()</span></tt><a class="headerlink" href="#eulernum" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.eulernum">
+<tt class="descclassname">mpmath.</tt><tt class="descname">eulernum</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#mpmath.eulernum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the <span class="math">\(n\)</span>-th Euler number, defined as the <span class="math">\(n\)</span>-th derivative of
+<span class="math">\(\mathrm{sech}(t) = 1/\cosh(t)\)</span> evaluated at <span class="math">\(t = 0\)</span>. Equivalently, the
+Euler numbers give the coefficients of the Taylor series</p>
+<div class="math">
+\[\mathrm{sech}(t) = \sum_{n=0}^{\infty} \frac{E_n}{n!} t^n.\]</div>
+<p>The Euler numbers are closely related to Bernoulli numbers
+and Bernoulli polynomials. They can also be evaluated in terms of
+Euler polynomials (see <a class="reference internal" href="#mpmath.eulerpoly" title="mpmath.eulerpoly"><tt class="xref py py-func docutils literal"><span class="pre">eulerpoly()</span></tt></a>) as <span class="math">\(E_n = 2^n E_n(1/2)\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Computing the first few Euler numbers and verifying that they
+agree with the Taylor series:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">eulernum</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)]</span>
+<span class="go">[1.0, 0.0, -1.0, 0.0, 5.0, 0.0, -61.0, 0.0, 1385.0, 0.0, -50521.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">diffs</span><span class="p">(</span><span class="n">sech</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">[1.0, 0.0, -1.0, 0.0, 5.0, 0.0, -61.0, 0.0, 1385.0, 0.0, -50521.0]</span>
+</pre></div>
+</div>
+<p>Euler numbers grow very rapidly. <a class="reference internal" href="#mpmath.eulernum" title="mpmath.eulernum"><tt class="xref py py-func docutils literal"><span class="pre">eulernum()</span></tt></a> efficiently
+computes numerical approximations for large indices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">-6.053285248188621896314384e+54</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">3.887561841253070615257336e+2371</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">4.346791453661149089338186e+1936958564106659551331</span>
+</pre></div>
+</div>
+<p>Comparing with an asymptotic formula for the Euler numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">e</span><span class="p">))</span><span class="o">**</span><span class="n">n</span>
+<span class="go">3.69919063017432362805663e+436961</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">3.699193712834466537941283e+436961</span>
+</pre></div>
+</div>
+<p>Pass <tt class="docutils literal"><span class="pre">exact=True</span></tt> to obtain exact values of Euler numbers as integers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">eulernum</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">-6053285248188621896314383785111649088103498225146815121</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">eulernum</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">1925859625</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="mi">1001</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="eulerpoly">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">eulerpoly()</span></tt><a class="headerlink" href="#eulerpoly" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.eulerpoly">
+<tt class="descclassname">mpmath.</tt><tt class="descname">eulerpoly</tt><big>(</big><em>n</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.eulerpoly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Euler polynomial <span class="math">\(E_n(z)\)</span>, defined by the generating function
+representation</p>
+<div class="math">
+\[\frac{2e^{zt}}{e^t+1} = \sum_{n=0}^\infty E_n(z) \frac{t^n}{n!}.\]</div>
+<p>The Euler polynomials may also be represented in terms of
+Bernoulli polynomials (see <a class="reference internal" href="#mpmath.bernpoly" title="mpmath.bernpoly"><tt class="xref py py-func docutils literal"><span class="pre">bernpoly()</span></tt></a>) using various formulas, for
+example</p>
+<div class="math">
+\[E_n(z) = \frac{2}{n+1} \left(
+    B_n(z)-2^{n+1}B_n\left(\frac{z}{2}\right)
+\right).\]</div>
+<p>Special values include the Euler numbers <span class="math">\(E_n = 2^n E_n(1/2)\)</span> (see
+<a class="reference internal" href="#mpmath.eulernum" title="mpmath.eulernum"><tt class="xref py py-func docutils literal"><span class="pre">eulernum()</span></tt></a>).</p>
+<p><strong>Examples</strong></p>
+<p>Computing the coefficients of the first few Euler polynomials:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">eulerpoly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">z</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[-0.5, 1.0]</span>
+<span class="go">[0.0, -1.0, 1.0]</span>
+<span class="go">[0.25, 0.0, -1.5, 1.0]</span>
+<span class="go">[0.0, 1.0, 0.0, -2.0, 1.0]</span>
+<span class="go">[-0.5, 0.0, 2.5, 0.0, -2.5, 1.0]</span>
+</pre></div>
+</div>
+<p>Evaluation for arbitrary <span class="math">\(z\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">6.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">423.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">35</span><span class="p">,</span> <span class="mi">11111111112</span><span class="p">)</span>
+<span class="go">3.994957561486776072734601e+351</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="o">+</span><span class="mi">20</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-47990.0 - 235980.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;-3.5e-5&#39;</span><span class="p">)</span>
+<span class="go">0.000035001225</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">55</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="o">**</span><span class="mi">80</span><span class="p">)</span>
+<span class="go">-1.0e+4400</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>Computing Euler numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">**</span><span class="mi">26</span> <span class="o">*</span> <span class="n">eulerpoly</span><span class="p">(</span><span class="mi">26</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">-4087072509293123892361.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulernum</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>
+<span class="go">-4087072509293123892361.0</span>
+</pre></div>
+</div>
+<p>Evaluation is accurate for large <span class="math">\(n\)</span> and small <span class="math">\(z\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">2.29047999988194114177943e+108</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mf">10.5</span><span class="p">)</span>
+<span class="go">3.628120031122876847764566e+2070</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eulerpoly</span><span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mf">10.5</span><span class="p">)</span>
+<span class="go">1.149364285543783412210773e+30688</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="bell-numbers-and-polynomials">
+<h2>Bell numbers and polynomials<a class="headerlink" href="#bell-numbers-and-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bell">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">bell()</span></tt><a class="headerlink" href="#bell" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.bell">
+<tt class="descclassname">mpmath.</tt><tt class="descname">bell</tt><big>(</big><em>n</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.bell" title="Permalink to this definition">¶</a></dt>
+<dd><p>For <span class="math">\(n\)</span> a nonnegative integer, <tt class="docutils literal"><span class="pre">bell(n,x)</span></tt> evaluates the Bell
+polynomial <span class="math">\(B_n(x)\)</span>, the first few of which are</p>
+<div class="math">
+\[B_0(x) = 1\]\[B_1(x) = x\]\[B_2(x) = x^2+x\]\[B_3(x) = x^3+3x^2+x\]</div>
+<p>If <span class="math">\(x = 1\)</span> or <a class="reference internal" href="#mpmath.bell" title="mpmath.bell"><tt class="xref py py-func docutils literal"><span class="pre">bell()</span></tt></a> is called with only one argument, it
+gives the <span class="math">\(n\)</span>-th Bell number <span class="math">\(B_n\)</span>, which is the number of
+partitions of a set with <span class="math">\(n\)</span> elements. By setting the precision to
+at least <span class="math">\(\log_{10} B_n\)</span> digits, <a class="reference internal" href="#mpmath.bell" title="mpmath.bell"><tt class="xref py py-func docutils literal"><span class="pre">bell()</span></tt></a> provides fast
+calculation of exact Bell numbers.</p>
+<p>In general, <a class="reference internal" href="#mpmath.bell" title="mpmath.bell"><tt class="xref py py-func docutils literal"><span class="pre">bell()</span></tt></a> computes</p>
+<div class="math">
+\[B_n(x) = e^{-x} \left(\mathrm{sinc}(\pi n) + E_n(x)\right)\]</div>
+<p>where <span class="math">\(E_n(x)\)</span> is the generalized exponential function implemented
+by <a class="reference internal" href="zeta.html#mpmath.polyexp" title="mpmath.polyexp"><tt class="xref py py-func docutils literal"><span class="pre">polyexp()</span></tt></a>. This is an extension of Dobinski&#8217;s formula [1],
+where the modification is the sinc term ensuring that <span class="math">\(B_n(x)\)</span> is
+continuous in <span class="math">\(n\)</span>; <a class="reference internal" href="#mpmath.bell" title="mpmath.bell"><tt class="xref py py-func docutils literal"><span class="pre">bell()</span></tt></a> can thus be evaluated,
+differentiated, etc for arbitrary complex arguments.</p>
+<p><strong>Examples</strong></p>
+<p>Simple evaluations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="go">2.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+<span class="go">8.75</span>
+</pre></div>
+</div>
+<p>Evaluation for arbitrary complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mf">5.75</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="o">-</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-10767.71345136587098445143 - 15449.55065599872579097221j)</span>
+</pre></div>
+</div>
+<p>The first few Bell polynomials:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">bell</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">[1.0]</span>
+<span class="go">[0.0, 1.0]</span>
+<span class="go">[0.0, 1.0, 1.0]</span>
+<span class="go">[0.0, 1.0, 3.0, 1.0]</span>
+<span class="go">[0.0, 1.0, 7.0, 6.0, 1.0]</span>
+<span class="go">[0.0, 1.0, 15.0, 25.0, 10.0, 1.0]</span>
+<span class="go">[0.0, 1.0, 31.0, 90.0, 65.0, 15.0, 1.0]</span>
+</pre></div>
+</div>
+<p>The first few Bell numbers and complementary Bell numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">bell</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="go">[1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">bell</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="go">[1, -1, 0, 1, 1, -2, -9, -9, 50, 267]</span>
+</pre></div>
+</div>
+<p>Large Bell numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">185724268771078270438257767181908917499221852770.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-29113173035759403920216141265491160286912.0</span>
+</pre></div>
+</div>
+<p>Some even larger values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1.237132026969293954162816e+1869</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">2.989901335682408421480422e+1927</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">6.591553486811969380442171e+1987</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mf">100.5</span><span class="p">)</span>
+<span class="go">9.101014101401543575679639e+2529</span>
+</pre></div>
+</div>
+<p>A determinant identity satisfied by Bell numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">det</span><span class="p">([[</span><span class="n">bell</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)])</span>
+<span class="go">125411328000.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">superfac</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">125411328000.0</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://mathworld.wolfram.com/DobinskisFormula.html">http://mathworld.wolfram.com/DobinskisFormula.html</a></li>
+</ol>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="prime-counting-functions">
+<h2>Prime counting functions<a class="headerlink" href="#prime-counting-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="primepi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">primepi()</span></tt><a class="headerlink" href="#primepi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.primepi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">primepi</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.primepi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the prime counting function, <span class="math">\(\pi(x)\)</span>, which gives
+the number of primes less than or equal to <span class="math">\(x\)</span>. The argument
+<span class="math">\(x\)</span> may be fractional.</p>
+<p>The prime counting function is very expensive to evaluate
+precisely for large <span class="math">\(x\)</span>, and the present implementation is
+not optimized in any way. For numerical approximation of the
+prime counting function, it is better to use <a class="reference internal" href="#mpmath.primepi2" title="mpmath.primepi2"><tt class="xref py py-func docutils literal"><span class="pre">primepi2()</span></tt></a>
+or <a class="reference internal" href="#mpmath.riemannr" title="mpmath.riemannr"><tt class="xref py py-func docutils literal"><span class="pre">riemannr()</span></tt></a>.</p>
+<p>Some values of the prime counting function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">primepi</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">)]</span>
+<span class="go">[0, 0, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 8]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi</span><span class="p">(</span><span class="mi">100000</span><span class="p">)</span>
+<span class="go">9592</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="primepi2">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">primepi2()</span></tt><a class="headerlink" href="#primepi2" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.primepi2">
+<tt class="descclassname">mpmath.</tt><tt class="descname">primepi2</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.primepi2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an interval (as an <tt class="docutils literal"><span class="pre">mpi</span></tt> instance) providing bounds
+for the value of the prime counting function <span class="math">\(\pi(x)\)</span>. For small
+<span class="math">\(x\)</span>, <a class="reference internal" href="#mpmath.primepi2" title="mpmath.primepi2"><tt class="xref py py-func docutils literal"><span class="pre">primepi2()</span></tt></a> returns an exact interval based on
+the output of <a class="reference internal" href="#mpmath.primepi" title="mpmath.primepi"><tt class="xref py py-func docutils literal"><span class="pre">primepi()</span></tt></a>. For <span class="math">\(x &gt; 2656\)</span>, a loose interval
+based on Schoenfeld&#8217;s inequality</p>
+<div class="math">
+\[\begin{split}|\pi(x) - \mathrm{li}(x)| &lt; \frac{\sqrt x \log x}{8 \pi}\end{split}\]</div>
+<p>is returned. This estimate is rigorous assuming the truth of
+the Riemann hypothesis, and can be computed very quickly.</p>
+<p><strong>Examples</strong></p>
+<p>Exact values of the prime counting function for small <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">[4.0, 4.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">[25.0, 25.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">[168.0, 168.0]</span>
+</pre></div>
+</div>
+<p>Loose intervals are generated for moderately large <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">10000</span><span class="p">),</span> <span class="n">primepi</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>
+<span class="go">([1209.0, 1283.0], 1229)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">50000</span><span class="p">),</span> <span class="n">primepi</span><span class="p">(</span><span class="mi">50000</span><span class="p">)</span>
+<span class="go">([5070.0, 5263.0], 5133)</span>
+</pre></div>
+</div>
+<p>As <span class="math">\(x\)</span> increases, the absolute error gets worse while the relative
+error improves. The exact value of <span class="math">\(\pi(10^{23})\)</span> is
+1925320391606803968923, and <a class="reference internal" href="#mpmath.primepi2" title="mpmath.primepi2"><tt class="xref py py-func docutils literal"><span class="pre">primepi2()</span></tt></a> gives 9 significant
+digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">primepi2</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">23</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
+<span class="go">[1.9253203909477020467e+21, 1.925320392280406229e+21]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">mpf</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+<span class="go">6.9219865355293e-10</span>
+</pre></div>
+</div>
+<p>A more precise, nonrigorous estimate for <span class="math">\(\pi(x)\)</span> can be
+obtained using the Riemann R function (<a class="reference internal" href="#mpmath.riemannr" title="mpmath.riemannr"><tt class="xref py py-func docutils literal"><span class="pre">riemannr()</span></tt></a>).
+For large enough <span class="math">\(x\)</span>, the value returned by <a class="reference internal" href="#mpmath.primepi2" title="mpmath.primepi2"><tt class="xref py py-func docutils literal"><span class="pre">primepi2()</span></tt></a>
+essentially amounts to a small perturbation of the value returned by
+<a class="reference internal" href="#mpmath.riemannr" title="mpmath.riemannr"><tt class="xref py py-func docutils literal"><span class="pre">riemannr()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">primepi2</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">[4.3619719871407024816e+97, 4.3619719871407032404e+97]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">4.3619719871407e+97</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="riemannr">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">riemannr()</span></tt><a class="headerlink" href="#riemannr" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.riemannr">
+<tt class="descclassname">mpmath.</tt><tt class="descname">riemannr</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.riemannr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Riemann R function, a smooth approximation of the
+prime counting function <span class="math">\(\pi(x)\)</span> (see <a class="reference internal" href="#mpmath.primepi" title="mpmath.primepi"><tt class="xref py py-func docutils literal"><span class="pre">primepi()</span></tt></a>). The Riemann
+R function gives a fast numerical approximation useful e.g. to
+roughly estimate the number of primes in a given interval.</p>
+<p>The Riemann R function is computed using the rapidly convergent Gram
+series,</p>
+<div class="math">
+\[R(x) = 1 + \sum_{k=1}^{\infty}
+    \frac{\log^k x}{k k! \zeta(k+1)}.\]</div>
+<p>From the Gram series, one sees that the Riemann R function is a
+well-defined analytic function (except for a branch cut along
+the negative real half-axis); it can be evaluated for arbitrary
+real or complex arguments.</p>
+<p>The Riemann R function gives a very accurate approximation
+of the prime counting function. For example, it is wrong by at
+most 2 for <span class="math">\(x &lt; 1000\)</span>, and for <span class="math">\(x = 10^9\)</span> differs from the exact
+value of <span class="math">\(\pi(x)\)</span> by 79, or less than two parts in a million.
+It is about 10 times more accurate than the logarithmic integral
+estimate (see <a class="reference internal" href="expintegrals.html#mpmath.li" title="mpmath.li"><tt class="xref py py-func docutils literal"><span class="pre">li()</span></tt></a>), which however is even faster to evaluate.
+It is orders of magnitude more accurate than the extremely
+fast <span class="math">\(x/\log x\)</span> estimate.</p>
+<p><strong>Examples</strong></p>
+<p>For small arguments, the Riemann R function almost exactly
+gives the prime counting function if rounded to the nearest
+integer:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="n">riemannr</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">(15, 14.9757023241462)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">primepi</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">riemannr</span><span class="p">(</span><span class="n">n</span><span class="p">))))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">primepi</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">riemannr</span><span class="p">(</span><span class="n">n</span><span class="p">))))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">300</span><span class="p">))</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>The Riemann R function can be evaluated for arguments far too large
+for exact determination of <span class="math">\(\pi(x)\)</span> to be computationally
+feasible with any presently known algorithm:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">1.46923988977204e+28</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">4.3619719871407e+97</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">4.3448325764012e+996</span>
+</pre></div>
+</div>
+<p>A comparison of the Riemann R function and logarithmic integral estimates
+for <span class="math">\(\pi(x)\)</span> using exact values of <span class="math">\(\pi(10^n)\)</span> up to <span class="math">\(n = 9\)</span>.
+The fractional error is shown in parentheses:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exact</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">168</span><span class="p">,</span><span class="mi">1229</span><span class="p">,</span><span class="mi">9592</span><span class="p">,</span><span class="mi">78498</span><span class="p">,</span><span class="mi">664579</span><span class="p">,</span><span class="mi">5761455</span><span class="p">,</span><span class="mi">50847534</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exact</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="gp">... </span>    <span class="n">r</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">riemannr</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">n</span><span class="p">),</span> <span class="n">li</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">rerr</span><span class="p">,</span> <span class="n">lerr</span> <span class="o">=</span> <span class="n">nstr</span><span class="p">((</span><span class="n">r</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="n">p</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">nstr</span><span class="p">((</span><span class="n">l</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="n">p</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%i</span><span class="s"> </span><span class="si">%i</span><span class="s"> </span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">) </span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">rerr</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">lerr</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">1 4 4.56458314100509(0.141) 6.1655995047873(0.541)</span>
+<span class="go">2 25 25.6616332669242(0.0265) 30.1261415840796(0.205)</span>
+<span class="go">3 168 168.359446281167(0.00214) 177.609657990152(0.0572)</span>
+<span class="go">4 1229 1226.93121834343(-0.00168) 1246.13721589939(0.0139)</span>
+<span class="go">5 9592 9587.43173884197(-0.000476) 9629.8090010508(0.00394)</span>
+<span class="go">6 78498 78527.3994291277(0.000375) 78627.5491594622(0.00165)</span>
+<span class="go">7 664579 664667.447564748(0.000133) 664918.405048569(0.000511)</span>
+<span class="go">8 5761455 5761551.86732017(1.68e-5) 5762209.37544803(0.000131)</span>
+<span class="go">9 50847534 50847455.4277214(-1.55e-6) 50849234.9570018(3.35e-5)</span>
+</pre></div>
+</div>
+<p>The derivative of the Riemann R function gives the approximate
+probability for a number of magnitude <span class="math">\(x\)</span> to be prime:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">riemannr</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="go">0.141903028110784</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="n">primepi</span><span class="p">(</span><span class="mi">1050</span><span class="p">)</span> <span class="o">-</span> <span class="n">primepi</span><span class="p">(</span><span class="mi">950</span><span class="p">))</span> <span class="o">/</span> <span class="mi">100</span>
+<span class="go">0.15</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for arbitrary arguments and at arbitrary
+precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="mf">7.5</span><span class="p">)</span>
+<span class="go">3.72934743264966261918857135136</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">riemannr</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.551002208155486427591793957644 + 2.16966398138119450043195899746j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="cyclotomic-polynomials">
+<h2>Cyclotomic polynomials<a class="headerlink" href="#cyclotomic-polynomials" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cyclotomic">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">cyclotomic()</span></tt><a class="headerlink" href="#cyclotomic" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.cyclotomic">
+<tt class="descclassname">mpmath.</tt><tt class="descname">cyclotomic</tt><big>(</big><em>n</em>, <em>x</em><big>)</big><a class="headerlink" href="#mpmath.cyclotomic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the cyclotomic polynomial <span class="math">\(\Phi_n(x)\)</span>, defined by</p>
+<div class="math">
+\[\Phi_n(x) = \prod_{\zeta} (x - \zeta)\]</div>
+<p>where <span class="math">\(\zeta\)</span> ranges over all primitive <span class="math">\(n\)</span>-th roots of unity
+(see <a class="reference internal" href="powers.html#mpmath.unitroots" title="mpmath.unitroots"><tt class="xref py py-func docutils literal"><span class="pre">unitroots()</span></tt></a>). An equivalent representation, used
+for computation, is</p>
+<div class="math">
+\[\Phi_n(x) = \prod_{d\mid n}(x^d-1)^{\mu(n/d)} = \Phi_n(x)\]</div>
+<p>where <span class="math">\(\mu(m)\)</span> denotes the Moebius function. The cyclotomic
+polynomials are integer polynomials, the first of which can be
+written explicitly as</p>
+<div class="math">
+\[\Phi_0(x) = 1\]\[\Phi_1(x) = x - 1\]\[\Phi_2(x) = x + 1\]\[\Phi_3(x) = x^3 + x^2 + 1\]\[\Phi_4(x) = x^2 + 1\]\[\Phi_5(x) = x^4 + x^3 + x^2 + x + 1\]\[\Phi_6(x) = x^2 - x + 1\]</div>
+<p><strong>Examples</strong></p>
+<p>The coefficients of low-order cyclotomic polynomials can be recovered
+using Taylor expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">p</span> <span class="o">=</span> <span class="n">chop</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cyclotomic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nstr</span><span class="p">(</span><span class="n">p</span><span class="p">[:</span><span class="mi">10</span><span class="o">+</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="mi">1</span><span class="p">)])))</span>
+<span class="gp">...</span>
+<span class="go">0 [1.0]</span>
+<span class="go">1 [-1.0, 1.0]</span>
+<span class="go">2 [1.0, 1.0]</span>
+<span class="go">3 [1.0, 1.0, 1.0]</span>
+<span class="go">4 [1.0, 0.0, 1.0]</span>
+<span class="go">5 [1.0, 1.0, 1.0, 1.0, 1.0]</span>
+<span class="go">6 [1.0, -1.0, 1.0]</span>
+<span class="go">7 [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]</span>
+<span class="go">8 [1.0, 0.0, 0.0, 0.0, 1.0]</span>
+</pre></div>
+</div>
+<p>The definition as a product over primitive roots may be checked
+by computing the product explicitly (for a real argument, this
+method will generally introduce numerical noise in the imaginary
+part):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cyclotomic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">(-419.0 - 360.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fprod</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">unitroots</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">(-419.0 - 360.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cyclotomic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">61.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fprod</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">unitroots</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">(61.0 - 3.146045605088568607055454e-25j)</span>
+</pre></div>
+</div>
+<p>Up to permutation, the roots of a given cyclotomic polynomial
+can be checked to agree with the list of primitive roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cyclotomic</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="n">x</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">polyroots</span><span class="p">(</span><span class="n">p</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">(0.5 - 0.8660254037844386467637232j)</span>
+<span class="go">(0.5 + 0.8660254037844386467637232j)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">unitroots</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">(0.5 + 0.8660254037844386467637232j)</span>
+<span class="go">(0.5 - 0.8660254037844386467637232j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="arithmetic-functions">
+<h2>Arithmetic functions<a class="headerlink" href="#arithmetic-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mangoldt">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">mangoldt()</span></tt><a class="headerlink" href="#mangoldt" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.mangoldt">
+<tt class="descclassname">mpmath.</tt><tt class="descname">mangoldt</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#mpmath.mangoldt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the von Mangoldt function <span class="math">\(\Lambda(n) = \log p\)</span>
+if <span class="math">\(n = p^k\)</span> a power of a prime, and <span class="math">\(\Lambda(n) = 0\)</span> otherwise.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">mangoldt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[0.0, 0.0, 0.0, 0.0, 0.6931471805599453094172321]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mangoldt</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mangoldt</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">1.945910149055313305105353</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mangoldt</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">0.6931471805599453094172321</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsum</span><span class="p">(</span><span class="n">mangoldt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">))</span>
+<span class="go">94.04531122935739224600493</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsum</span><span class="p">(</span><span class="n">mangoldt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10001</span><span class="p">))</span>
+<span class="go">10013.39669326311478372032</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Number-theoretical, combinatorial and integer functions</a><ul>
+<li><a class="reference internal" href="#fibonacci-numbers">Fibonacci numbers</a><ul>
+<li><a class="reference internal" href="#fibonacci-fib"><tt class="docutils literal"><span class="pre">fibonacci()</span></tt>/<tt class="docutils literal"><span class="pre">fib()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bernoulli-numbers-and-polynomials">Bernoulli numbers and polynomials</a><ul>
+<li><a class="reference internal" href="#bernoulli"><tt class="docutils literal"><span class="pre">bernoulli()</span></tt></a></li>
+<li><a class="reference internal" href="#bernfrac"><tt class="docutils literal"><span class="pre">bernfrac()</span></tt></a></li>
+<li><a class="reference internal" href="#bernpoly"><tt class="docutils literal"><span class="pre">bernpoly()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#euler-numbers-and-polynomials">Euler numbers and polynomials</a><ul>
+<li><a class="reference internal" href="#eulernum"><tt class="docutils literal"><span class="pre">eulernum()</span></tt></a></li>
+<li><a class="reference internal" href="#eulerpoly"><tt class="docutils literal"><span class="pre">eulerpoly()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bell-numbers-and-polynomials">Bell numbers and polynomials</a><ul>
+<li><a class="reference internal" href="#bell"><tt class="docutils literal"><span class="pre">bell()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prime-counting-functions">Prime counting functions</a><ul>
+<li><a class="reference internal" href="#primepi"><tt class="docutils literal"><span class="pre">primepi()</span></tt></a></li>
+<li><a class="reference internal" href="#primepi2"><tt class="docutils literal"><span class="pre">primepi2()</span></tt></a></li>
+<li><a class="reference internal" href="#riemannr"><tt class="docutils literal"><span class="pre">riemannr()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cyclotomic-polynomials">Cyclotomic polynomials</a><ul>
+<li><a class="reference internal" href="#cyclotomic"><tt class="docutils literal"><span class="pre">cyclotomic()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#arithmetic-functions">Arithmetic functions</a><ul>
+<li><a class="reference internal" href="#mangoldt"><tt class="docutils literal"><span class="pre">mangoldt()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="zeta.html"
+                        title="previous chapter">Zeta functions, L-series and polylogarithms</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="qfunctions.html"
+                        title="next chapter">q-functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/numtheory.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qfunctions.html" title="q-functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="zeta.html" title="Zeta functions, L-series and polylogarithms"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.agca.ideals &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.agca.ideals</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Computations with ideals of polynomial rings.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">CoercionFailed</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+
+
+<div class="viewcode-block" id="Ideal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal">[docs]</a><span class="k">class</span> <span class="nc">Ideal</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for ideals.</span>
+
+<span class="sd">    Do not instantiate - use explicit constructors in the ring class instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x+1)</span>
+<span class="sd">    &lt;x + 1&gt;</span>
+
+<span class="sd">    Attributes</span>
+
+<span class="sd">    - ring - the ring this ideal belongs to</span>
+
+<span class="sd">    Non-implemented methods:</span>
+
+<span class="sd">    - _contains_elem</span>
+<span class="sd">    - _contains_ideal</span>
+<span class="sd">    - _quotient</span>
+<span class="sd">    - _intersect</span>
+<span class="sd">    - _union</span>
+<span class="sd">    - _product</span>
+<span class="sd">    - is_whole_ring</span>
+<span class="sd">    - is_zero</span>
+<span class="sd">    - is_prime, is_maximal, is_primary, is_radical</span>
+<span class="sd">    - is_principal</span>
+<span class="sd">    - height, depth</span>
+<span class="sd">    - radical</span>
+
+<span class="sd">    Methods that likely should be overridden in subclasses:</span>
+
+<span class="sd">    - reduce_element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_contains_elem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of element containment.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_contains_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">I</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ideal containment.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ideal quotient.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ideal intersection.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="Ideal.is_whole_ring"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_whole_ring">[docs]</a>    <span class="k">def</span> <span class="nf">is_whole_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is the whole ring.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is the zero ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="k">def</span> <span class="nf">_equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of ideal equality.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains_ideal</span><span class="p">(</span><span class="n">J</span><span class="p">)</span> <span class="ow">and</span> <span class="n">J</span><span class="o">.</span><span class="n">_contains_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ideal.is_prime"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_prime">[docs]</a>    <span class="k">def</span> <span class="nf">is_prime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is a prime ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.is_maximal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_maximal">[docs]</a>    <span class="k">def</span> <span class="nf">is_maximal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is a maximal ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.is_radical"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_radical">[docs]</a>    <span class="k">def</span> <span class="nf">is_radical</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is a radical ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.is_primary"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_primary">[docs]</a>    <span class="k">def</span> <span class="nf">is_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is a primary ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.is_principal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.is_principal">[docs]</a>    <span class="k">def</span> <span class="nf">is_principal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``self`` is a principal ideal.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.radical"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.radical">[docs]</a>    <span class="k">def</span> <span class="nf">radical</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the radical of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.depth"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.depth">[docs]</a>    <span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the depth of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Ideal.height"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.height">[docs]</a>    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the height of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c"># TODO more</span>
+
+    <span class="c"># non-implemented methods end here</span>
+</div>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">ring</span>
+
+    <span class="k">def</span> <span class="nf">_check_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper to check ``J`` is an ideal of our ring.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">)</span> <span class="ow">or</span> <span class="n">J</span><span class="o">.</span><span class="n">ring</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;J must be an ideal of </span><span class="si">%s</span><span class="s">, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="n">J</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Ideal.contains"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``elem`` is an element of this ideal.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x+1, x-1).contains(3)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x**2, x**3).contains(x)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains_elem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Ideal.subset"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.subset">[docs]</a>    <span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if ``other`` is is a subset of ``self``.</span>
+
+<span class="sd">        Here ``other`` may be an ideal.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; I = QQ.old_poly_ring(x).ideal(x+1)</span>
+<span class="sd">        &gt;&gt;&gt; I.subset([x**2 - 1, x**2 + 2*x + 1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; I.subset([x**2 + 1, x + 1])</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; I.subset(QQ.old_poly_ring(x).ideal(x**2 - 1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains_ideal</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_contains_elem</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ideal.quotient"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.quotient">[docs]</a>    <span class="k">def</span> <span class="nf">quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the ideal quotient of ``self`` by ``J``.</span>
+
+<span class="sd">        That is, if ``self`` is the ideal `I`, compute the set</span>
+<span class="sd">        `I : J = \{x \in R | xJ \subset I \}`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; R = QQ.old_poly_ring(x, y)</span>
+<span class="sd">        &gt;&gt;&gt; R.ideal(x*y).quotient(R.ideal(x))</span>
+<span class="sd">        &lt;y&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quotient</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ideal.intersect"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.intersect">[docs]</a>    <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the intersection of self with ideal J.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; R = QQ.old_poly_ring(x, y)</span>
+<span class="sd">        &gt;&gt;&gt; R.ideal(x).intersect(R.ideal(y))</span>
+<span class="sd">        &lt;x*y&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intersect</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ideal.saturate"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.saturate">[docs]</a>    <span class="k">def</span> <span class="nf">saturate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the ideal saturation of ``self`` by ``J``.</span>
+
+<span class="sd">        That is, if ``self`` is the ideal `I`, compute the set</span>
+<span class="sd">        `I : J^\infty = \{x \in R | xJ^n \subset I \text{ for some } n\}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="c"># Note this can be implemented using repeated quotient</span>
+</div>
+<div class="viewcode-block" id="Ideal.union"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the ideal generated by the union of ``self`` and ``J``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x**2 - 1).union(QQ.old_poly_ring(x).ideal((x+1)**2)) == QQ.old_poly_ring(x).ideal(x+1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_union</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ideal.product"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.product">[docs]</a>    <span class="k">def</span> <span class="nf">product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the ideal product of ``self`` and ``J``.</span>
+
+<span class="sd">        That is, compute the ideal generated by products `xy`, for `x` an element</span>
+<span class="sd">        of ``self`` and `y \in J`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x, y).ideal(x).product(QQ.old_poly_ring(x, y).ideal(y))</span>
+<span class="sd">        &lt;x*y&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_product</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ideal.reduce_element"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.ideals.Ideal.reduce_element">[docs]</a>    <span class="k">def</span> <span class="nf">reduce_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduce the element ``x`` of our ring modulo the ideal ``self``.</span>
+
+<span class="sd">        Here &quot;reduce&quot; has no specific meaning: it could return a unique normal</span>
+<span class="sd">        form, simplify the expression a bit, or just do nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span>
+</div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">):</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">quotient_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">e</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">R</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">R</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">__radd__</span> <span class="o">=</span> <span class="n">__add__</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ideal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__mul__</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">exp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="c"># TODO exponentiate by squaring</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span><span class="o">*</span><span class="n">exp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">)</span> <span class="ow">or</span> <span class="n">e</span><span class="o">.</span><span class="n">ring</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_equals</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">e</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">ModuleImplementedIdeal</span><span class="p">(</span><span class="n">Ideal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ideal implementation relying on the modules code.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - _module - the underlying module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="n">Ideal</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module</span> <span class="o">=</span> <span class="n">module</span>
+
+    <span class="k">def</span> <span class="nf">_contains_elem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">contains</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_contains_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">ModuleImplementedIdeal</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_module</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">ModuleImplementedIdeal</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_module</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">ModuleImplementedIdeal</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">module_quotient</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_module</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">ModuleImplementedIdeal</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_module</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return generators for ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; list(QQ.old_poly_ring(x, y).ideal(x, y, x**2 + y).gens)</span>
+<span class="sd">        [x, y, x**2 + y]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is the zero ideal.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x).is_zero()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal().is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">is_whole_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is the whole ring, i.e. one generator is a unit.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ, ilex</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(x).is_whole_ring()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).ideal(3).is_whole_ring()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x, order=ilex).ideal(2 + x).is_whole_ring()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;&#39;</span> <span class="o">+</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sstr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;&gt;&#39;</span>
+
+    <span class="c"># NOTE this is the only method using the fact that the module is a SubModule</span>
+    <span class="k">def</span> <span class="nf">_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">ModuleImplementedIdeal</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[[</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">]</span> <span class="k">for</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">gens</span> <span class="k">for</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">in</span> <span class="n">J</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">gens</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Express ``e`` in terms of the generators of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)</span>
+<span class="sd">        &gt;&gt;&gt; I.in_terms_of_generators(1)</span>
+<span class="sd">        [1, -x]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">in_terms_of_generators</span><span class="p">([</span><span class="n">e</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">reduce_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">reduce_element</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

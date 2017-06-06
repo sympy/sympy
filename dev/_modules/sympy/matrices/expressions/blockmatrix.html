@@ -1,0 +1,562 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.matrices.expressions.blockmatrix &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy.matrices.expressions" href="../expressions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../expressions.html" accesskey="U">sympy.matrices.expressions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.matrices.expressions.blockmatrix</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ask</span><span class="p">,</span> <span class="n">Q</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">sympy.strategies</span> <span class="kn">import</span> <span class="n">typed</span><span class="p">,</span> <span class="n">exhaust</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">debug</span><span class="p">,</span> <span class="n">do_one</span><span class="p">,</span> <span class="n">unpack</span><span class="p">,</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">sympy.strategies.traverse</span> <span class="kn">import</span> <span class="n">bottom_up</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">sift</span>
+
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.matexpr</span> <span class="kn">import</span> <span class="n">MatrixExpr</span><span class="p">,</span> <span class="n">ZeroMatrix</span><span class="p">,</span> <span class="n">Identity</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.matmul</span> <span class="kn">import</span> <span class="n">MatMul</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.matadd</span> <span class="kn">import</span> <span class="n">MatAdd</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.matpow</span> <span class="kn">import</span> <span class="n">MatPow</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.transpose</span> <span class="kn">import</span> <span class="n">Transpose</span><span class="p">,</span> <span class="n">transpose</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.trace</span> <span class="kn">import</span> <span class="n">Trace</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.determinant</span> <span class="kn">import</span> <span class="n">det</span><span class="p">,</span> <span class="n">Determinant</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.slice</span> <span class="kn">import</span> <span class="n">MatrixSlice</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions.inverse</span> <span class="kn">import</span> <span class="n">Inverse</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">eye</span><span class="p">,</span> <span class="n">ShapeError</span>
+
+
+<div class="viewcode-block" id="BlockMatrix"><a class="viewcode-back" href="../../../../modules/matrices/expressions.html#sympy.matrices.expressions.blockmatrix.BlockMatrix">[docs]</a><span class="k">class</span> <span class="nc">BlockMatrix</span><span class="p">(</span><span class="n">MatrixExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A BlockMatrix is a Matrix composed of other smaller, submatrices</span>
+
+<span class="sd">    The submatrices are stored in a SymPy Matrix object but accessed as part of</span>
+<span class="sd">    a Matrix Expression</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import (MatrixSymbol, BlockMatrix, symbols,</span>
+<span class="sd">    ...     Identity, ZeroMatrix, block_collapse)</span>
+<span class="sd">    &gt;&gt;&gt; n,m,l = symbols(&#39;n m l&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; X = MatrixSymbol(&#39;X&#39;, n, n)</span>
+<span class="sd">    &gt;&gt;&gt; Y = MatrixSymbol(&#39;Y&#39;, m ,m)</span>
+<span class="sd">    &gt;&gt;&gt; Z = MatrixSymbol(&#39;Z&#39;, n, m)</span>
+<span class="sd">    &gt;&gt;&gt; B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])</span>
+<span class="sd">    &gt;&gt;&gt; print(B)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [X, Z],</span>
+<span class="sd">    [0, Y]])</span>
+
+<span class="sd">    &gt;&gt;&gt; C = BlockMatrix([[Identity(n), Z]])</span>
+<span class="sd">    &gt;&gt;&gt; print(C)</span>
+<span class="sd">    Matrix([[I, Z]])</span>
+
+<span class="sd">    &gt;&gt;&gt; print(block_collapse(C*B))</span>
+<span class="sd">    Matrix([[X, Z*Y + Z]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices.immutable</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">ImmutableMatrix</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">numrows</span> <span class="o">=</span> <span class="n">numcols</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">numrows</span> <span class="o">+=</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">numcols</span> <span class="o">+=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">numrows</span><span class="p">,</span> <span class="n">numcols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blockshape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rowblocksizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rows</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">colblocksizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cols</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+    <span class="k">def</span> <span class="nf">structurally_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">blockshape</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rowblocksizes</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">colblocksizes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_blockmul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rowblocksizes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">*</span><span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">_blockadd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">structurally_equal</span><span class="p">(</span><span class="n">other</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Flip all the individual matrices</span>
+        <span class="n">matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">transpose</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">]</span>
+        <span class="c"># Make a copy</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">matrices</span><span class="p">)</span>
+        <span class="c"># Transpose the block structure</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowblocksizes</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&quot;Can&#39;t perform trace of irregular blockshape&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_determinant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span>
+             <span class="p">[</span><span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">det</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">*</span><span class="n">det</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="n">C</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">invertible</span><span class="p">(</span><span class="n">D</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">det</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">*</span><span class="n">det</span><span class="p">(</span><span class="n">A</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">C</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Determinant</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BlockMatrix.transpose"><a class="viewcode-back" href="../../../../modules/matrices/expressions.html#sympy.matrices.expressions.blockmatrix.BlockMatrix.transpose">[docs]</a>    <span class="k">def</span> <span class="nf">transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return transpose of matrix.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import l, m, n</span>
+<span class="sd">        &gt;&gt;&gt; X = MatrixSymbol(&#39;X&#39;, n, n)</span>
+<span class="sd">        &gt;&gt;&gt; Y = MatrixSymbol(&#39;Y&#39;, m ,m)</span>
+<span class="sd">        &gt;&gt;&gt; Z = MatrixSymbol(&#39;Z&#39;, n, m)</span>
+<span class="sd">        &gt;&gt;&gt; B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])</span>
+<span class="sd">        &gt;&gt;&gt; B.transpose()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [X&#39;,  0],</span>
+<span class="sd">        [Z&#39;, Y&#39;]])</span>
+<span class="sd">        &gt;&gt;&gt; _.transpose()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [X, Z],</span>
+<span class="sd">        [0, Y]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_transpose</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="c"># Find row entry</span>
+        <span class="k">for</span> <span class="n">row_block</span><span class="p">,</span> <span class="n">numrows</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rowblocksizes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">numrows</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">-=</span> <span class="n">numrows</span>
+        <span class="k">for</span> <span class="n">col_block</span><span class="p">,</span> <span class="n">numcols</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">numcols</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">j</span> <span class="o">-=</span> <span class="n">numcols</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">row_block</span><span class="p">,</span> <span class="n">col_block</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_Identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="n">j</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">is_Identity</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">!=</span><span class="n">j</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">is_ZeroMatrix</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_structurally_symmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rowblocksizes</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span>
+
+    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BlockDiagMatrix"><a class="viewcode-back" href="../../../../modules/matrices/expressions.html#sympy.matrices.expressions.blockmatrix.BlockDiagMatrix">[docs]</a><span class="k">class</span> <span class="nc">BlockDiagMatrix</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity</span>
+<span class="sd">    &gt;&gt;&gt; n,m,l = symbols(&#39;n m l&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; X = MatrixSymbol(&#39;X&#39;, n, n)</span>
+<span class="sd">    &gt;&gt;&gt; Y = MatrixSymbol(&#39;Y&#39;, m ,m)</span>
+<span class="sd">    &gt;&gt;&gt; BlockDiagMatrix(X, Y)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [X, 0],</span>
+<span class="sd">    [0, Y]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">mats</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">BlockDiagMatrix</span><span class="p">,</span> <span class="o">*</span><span class="n">mats</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">diag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices.immutable</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+        <span class="n">mats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="n">mats</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span> <span class="k">else</span> <span class="n">ZeroMatrix</span><span class="p">(</span><span class="n">mats</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">mats</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mats</span><span class="p">))]</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mats</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="n">ImmutableMatrix</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">rows</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">),</span>
+                <span class="nb">sum</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">cols</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">blockshape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rowblocksizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">rows</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">colblocksizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">cols</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s">&#39;ignored&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BlockDiagMatrix</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">mat</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_blockmul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockDiagMatrix</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rowblocksizes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">BlockDiagMatrix</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">a</span><span class="o">*</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">args</span><span class="p">)])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="o">.</span><span class="n">_blockmul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_blockadd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockDiagMatrix</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">blockshape</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rowblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rowblocksizes</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">colblocksizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">colblocksizes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">BlockDiagMatrix</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">args</span><span class="p">)])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="o">.</span><span class="n">_blockadd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="block_collapse"><a class="viewcode-back" href="../../../../modules/matrices/expressions.html#sympy.matrices.expressions.blockmatrix.block_collapse">[docs]</a><span class="k">def</span> <span class="nf">block_collapse</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluates a block matrix expression</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import MatrixSymbol, BlockMatrix, symbols, \</span>
+<span class="sd">                          Identity, Matrix, ZeroMatrix, block_collapse</span>
+<span class="sd">    &gt;&gt;&gt; n,m,l = symbols(&#39;n m l&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; X = MatrixSymbol(&#39;X&#39;, n, n)</span>
+<span class="sd">    &gt;&gt;&gt; Y = MatrixSymbol(&#39;Y&#39;, m ,m)</span>
+<span class="sd">    &gt;&gt;&gt; Z = MatrixSymbol(&#39;Z&#39;, n, m)</span>
+<span class="sd">    &gt;&gt;&gt; B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])</span>
+<span class="sd">    &gt;&gt;&gt; print(B)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [X, Z],</span>
+<span class="sd">    [0, Y]])</span>
+
+<span class="sd">    &gt;&gt;&gt; C = BlockMatrix([[Identity(n), Z]])</span>
+<span class="sd">    &gt;&gt;&gt; print(C)</span>
+<span class="sd">    Matrix([[I, Z]])</span>
+
+<span class="sd">    &gt;&gt;&gt; print(block_collapse(C*B))</span>
+<span class="sd">    Matrix([[X, Z*Y + Z]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hasbm</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">MatrixExpr</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">)</span>
+    <span class="n">rule</span> <span class="o">=</span> <span class="n">exhaust</span><span class="p">(</span>
+        <span class="n">bottom_up</span><span class="p">(</span><span class="n">exhaust</span><span class="p">(</span><span class="n">condition</span><span class="p">(</span><span class="n">hasbm</span><span class="p">,</span> <span class="n">typed</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">MatAdd</span><span class="p">:</span> <span class="n">do_one</span><span class="p">(</span><span class="n">bc_matadd</span><span class="p">,</span> <span class="n">bc_block_plus_ident</span><span class="p">),</span>
+             <span class="n">MatMul</span><span class="p">:</span> <span class="n">do_one</span><span class="p">(</span><span class="n">bc_matmul</span><span class="p">,</span> <span class="n">bc_dist</span><span class="p">),</span>
+             <span class="n">Transpose</span><span class="p">:</span> <span class="n">bc_transpose</span><span class="p">,</span>
+             <span class="n">Inverse</span><span class="p">:</span> <span class="n">bc_inverse</span><span class="p">,</span>
+             <span class="n">BlockMatrix</span><span class="p">:</span> <span class="n">do_one</span><span class="p">(</span><span class="n">bc_unpack</span><span class="p">,</span> <span class="n">deblock</span><span class="p">)})))))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<span class="k">def</span> <span class="nf">bc_unpack</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+<span class="k">def</span> <span class="nf">bc_matadd</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">sift</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">M</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">))</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="bp">True</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">nonblocks</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="bp">False</span><span class="p">]</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">_blockadd</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nonblocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MatAdd</span><span class="p">(</span><span class="o">*</span><span class="n">nonblocks</span><span class="p">)</span> <span class="o">+</span> <span class="n">block</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">block</span>
+
+<span class="k">def</span> <span class="nf">bc_block_plus_ident</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="n">idents</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Identity</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">idents</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">blocks</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">structurally_equal</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">)</span>
+               <span class="ow">and</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_structurally_symmetric</span><span class="p">):</span>
+        <span class="n">block_id</span> <span class="o">=</span> <span class="n">BlockDiagMatrix</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Identity</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rowblocksizes</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">MatAdd</span><span class="p">(</span><span class="n">block_id</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">idents</span><span class="p">),</span> <span class="o">*</span><span class="n">blocks</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">expr</span>
+
+<span class="k">def</span> <span class="nf">bc_dist</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Turn  a*[X, Y] into [a*X, a*Y] &quot;&quot;&quot;</span>
+    <span class="n">factor</span><span class="p">,</span> <span class="n">mat</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_coeff_mmul</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">factor</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unpack</span><span class="p">(</span><span class="n">mat</span><span class="p">),</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span><span class="o">.</span><span class="n">blocks</span>
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">factor</span> <span class="o">*</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">cols</span><span class="p">)]</span>
+                                              <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">rows</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">bc_matmul</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="n">factor</span><span class="p">,</span> <span class="n">matrices</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_coeff_matrices</span><span class="p">()</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrices</span><span class="p">)):</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">matrices</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+            <span class="n">matrices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">_blockmul</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+            <span class="n">matrices</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+            <span class="n">matrices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">_blockmul</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">B</span><span class="p">]]))</span>
+            <span class="n">matrices</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+            <span class="n">matrices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">A</span><span class="p">]])</span><span class="o">.</span><span class="n">_blockmul</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+            <span class="n">matrices</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">MatMul</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="o">*</span><span class="n">matrices</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">bc_transpose</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">block_collapse</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">applyfunc</span><span class="p">(</span><span class="n">transpose</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">bc_inverse</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="n">expr2</span> <span class="o">=</span> <span class="n">blockinverse_1x1</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expr</span> <span class="o">!=</span> <span class="n">expr2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr2</span>
+    <span class="k">return</span> <span class="n">blockinverse_2x2</span><span class="p">(</span><span class="n">Inverse</span><span class="p">(</span><span class="n">reblock_2x2</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="p">)))</span>
+
+<span class="k">def</span> <span class="nf">blockinverse_1x1</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inverse</span><span class="p">()]])</span>
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+<span class="k">def</span> <span class="nf">blockinverse_2x2</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">blockshape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="c"># Cite: The Matrix Cookbook Section 9.1.3</span>
+        <span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span>
+         <span class="p">[</span><span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]]</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">arg</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">([[</span> <span class="p">(</span><span class="n">A</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">D</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>  <span class="p">(</span><span class="o">-</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">B</span><span class="o">*</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="n">C</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="p">],</span>
+                            <span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="n">C</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">C</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>     <span class="p">(</span><span class="n">D</span> <span class="o">-</span> <span class="n">C</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+<span class="k">def</span> <span class="nf">deblock</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Flatten a BlockMatrix of BlockMatrices &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">B</span>
+    <span class="n">wrap</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">x</span><span class="p">]])</span>
+    <span class="n">bb</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">applyfunc</span><span class="p">(</span><span class="n">wrap</span><span class="p">)</span>  <span class="c"># everything is a block</span>
+
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">MM</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">bb</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">bb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">bb</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">bb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">bb</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+            <span class="n">MM</span> <span class="o">=</span> <span class="n">MM</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">MM</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ShapeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">B</span>
+
+
+
+<span class="k">def</span> <span class="nf">reblock_2x2</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Reblock a BlockMatrix so that it has 2x2 blocks of block matrices &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">d</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">B</span>
+
+    <span class="n">BM</span> <span class="o">=</span> <span class="n">BlockMatrix</span>  <span class="c"># for brevity&#39;s sake</span>
+    <span class="k">return</span> <span class="n">BM</span><span class="p">([[</span>   <span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>  <span class="n">BM</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">:])],</span>
+               <span class="p">[</span><span class="n">BM</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">BM</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])]])</span>
+
+
+<span class="k">def</span> <span class="nf">bounds</span><span class="p">(</span><span class="n">sizes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert sequence of numbers into pairs of low-high pairs</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices.expressions.blockmatrix import bounds</span>
+<span class="sd">    &gt;&gt;&gt; bounds((1, 10, 50))</span>
+<span class="sd">    [(0, 1), (1, 11), (11, 61)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">:</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">low</span><span class="p">,</span> <span class="n">low</span> <span class="o">+</span> <span class="n">size</span><span class="p">))</span>
+        <span class="n">low</span> <span class="o">+=</span> <span class="n">size</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+<span class="k">def</span> <span class="nf">blockcut</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">rowsizes</span><span class="p">,</span> <span class="n">colsizes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Cut a matrix expression into Blocks</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import ImmutableMatrix, blockcut</span>
+<span class="sd">    &gt;&gt;&gt; M = ImmutableMatrix(4, 4, range(16))</span>
+<span class="sd">    &gt;&gt;&gt; B = blockcut(M, (1, 3), (1, 3))</span>
+<span class="sd">    &gt;&gt;&gt; type(B).__name__</span>
+<span class="sd">    &#39;BlockMatrix&#39;</span>
+<span class="sd">    &gt;&gt;&gt; ImmutableMatrix(B.blocks[0, 1])</span>
+<span class="sd">    Matrix([[1, 2, 3]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rowbounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">(</span><span class="n">rowsizes</span><span class="p">)</span>
+    <span class="n">colbounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">(</span><span class="n">colsizes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">MatrixSlice</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">rowbound</span><span class="p">,</span> <span class="n">colbound</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">colbound</span> <span class="ow">in</span> <span class="n">colbounds</span><span class="p">]</span>
+                         <span class="k">for</span> <span class="n">rowbound</span> <span class="ow">in</span> <span class="n">rowbounds</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../expressions.html" >sympy.matrices.expressions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

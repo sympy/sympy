@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.stats &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="sympy" href="../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.stats</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SymPy statistics module</span>
+
+<span class="sd">Introduces a random variable type into the SymPy language.</span>
+
+<span class="sd">Random variables may be declared using prebuilt functions such as</span>
+<span class="sd">Normal, Exponential, Coin, Die, etc...  or built with functions like FiniteRV.</span>
+
+<span class="sd">Queries on random expressions can be made using the functions</span>
+
+<span class="sd">========================= =============================</span>
+<span class="sd">    Expression                    Meaning</span>
+<span class="sd">------------------------- -----------------------------</span>
+<span class="sd"> ``P(condition)``          Probability</span>
+<span class="sd"> ``E(expression)``         Expected value</span>
+<span class="sd"> ``variance(expression)``  Variance</span>
+<span class="sd"> ``density(expression)``   Probability Density Function</span>
+<span class="sd"> ``sample(expression)``    Produce a realization</span>
+<span class="sd"> ``where(condition)``      Where the condition is true</span>
+<span class="sd">========================= =============================</span>
+
+<span class="sd">Examples</span>
+<span class="sd">========</span>
+
+<span class="sd">&gt;&gt;&gt; from sympy.stats import P, E, variance, Die, Normal</span>
+<span class="sd">&gt;&gt;&gt; from sympy import Eq, simplify</span>
+<span class="sd">&gt;&gt;&gt; X, Y = Die(&#39;X&#39;, 6), Die(&#39;Y&#39;, 6) # Define two six sided dice</span>
+<span class="sd">&gt;&gt;&gt; Z = Normal(&#39;Z&#39;, 0, 1) # Declare a Normal random variable with mean 0, std 1</span>
+<span class="sd">&gt;&gt;&gt; P(X&gt;3) # Probability X is greater than 3</span>
+<span class="sd">1/2</span>
+<span class="sd">&gt;&gt;&gt; E(X+Y) # Expectation of the sum of two dice</span>
+<span class="sd">7</span>
+<span class="sd">&gt;&gt;&gt; variance(X+Y) # Variance of the sum of two dice</span>
+<span class="sd">35/6</span>
+<span class="sd">&gt;&gt;&gt; simplify(P(Z&gt;1)) # Probability of Z being greater than 1</span>
+<span class="sd">-erf(sqrt(2)/2)/2 + 1/2</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">rv_interface</span>
+<span class="kn">from</span> <span class="nn">.rv_interface</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">cdf</span><span class="p">,</span> <span class="n">covariance</span><span class="p">,</span> <span class="n">density</span><span class="p">,</span> <span class="n">dependent</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">given</span><span class="p">,</span> <span class="n">independent</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">pspace</span><span class="p">,</span>
+    <span class="n">random_symbols</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">sample_iter</span><span class="p">,</span> <span class="n">skewness</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span>
+    <span class="n">correlation</span><span class="p">,</span> <span class="n">moment</span><span class="p">,</span> <span class="n">cmoment</span><span class="p">,</span> <span class="n">smoment</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rv_interface</span><span class="o">.</span><span class="n">__all__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">frv_types</span>
+<span class="kn">from</span> <span class="nn">.frv_types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Bernoulli</span><span class="p">,</span> <span class="n">Binomial</span><span class="p">,</span> <span class="n">Coin</span><span class="p">,</span> <span class="n">Die</span><span class="p">,</span> <span class="n">DiscreteUniform</span><span class="p">,</span> <span class="n">FiniteRV</span><span class="p">,</span> <span class="n">Hypergeometric</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">frv_types</span><span class="o">.</span><span class="n">__all__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">crv_types</span>
+<span class="kn">from</span> <span class="nn">.crv_types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ContinuousRV</span><span class="p">,</span>
+    <span class="n">Arcsin</span><span class="p">,</span> <span class="n">Benini</span><span class="p">,</span> <span class="n">Beta</span><span class="p">,</span> <span class="n">BetaPrime</span><span class="p">,</span> <span class="n">Cauchy</span><span class="p">,</span> <span class="n">Chi</span><span class="p">,</span> <span class="n">ChiNoncentral</span><span class="p">,</span> <span class="n">ChiSquared</span><span class="p">,</span>
+    <span class="n">Dagum</span><span class="p">,</span> <span class="n">Erlang</span><span class="p">,</span> <span class="n">Exponential</span><span class="p">,</span> <span class="n">FDistribution</span><span class="p">,</span> <span class="n">FisherZ</span><span class="p">,</span> <span class="n">Frechet</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span>
+    <span class="n">GammaInverse</span><span class="p">,</span> <span class="n">Kumaraswamy</span><span class="p">,</span> <span class="n">Laplace</span><span class="p">,</span> <span class="n">Logistic</span><span class="p">,</span> <span class="n">LogNormal</span><span class="p">,</span> <span class="n">Maxwell</span><span class="p">,</span>
+    <span class="n">Nakagami</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Pareto</span><span class="p">,</span> <span class="n">QuadraticU</span><span class="p">,</span> <span class="n">RaisedCosine</span><span class="p">,</span> <span class="n">Rayleigh</span><span class="p">,</span>
+    <span class="n">StudentT</span><span class="p">,</span> <span class="n">Triangular</span><span class="p">,</span> <span class="n">Uniform</span><span class="p">,</span> <span class="n">UniformSum</span><span class="p">,</span> <span class="n">VonMises</span><span class="p">,</span> <span class="n">Weibull</span><span class="p">,</span>
+    <span class="n">WignerSemicircle</span>
+<span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">crv_types</span><span class="o">.</span><span class="n">__all__</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">drv_types</span>
+<span class="kn">from</span> <span class="nn">.drv_types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Geometric</span><span class="p">,</span> <span class="n">Poisson</span><span class="p">)</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">drv_types</span><span class="o">.</span><span class="n">__all__</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

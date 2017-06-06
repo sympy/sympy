@@ -1,0 +1,1160 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Solvers &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Tensor Module" href="../tensor/index.html" />
+    <link rel="prev" title="PDE" href="pde.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tensor/index.html" title="Tensor Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pde.html" title="PDE"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.solvers">
+<span id="solvers"></span><h1>Solvers<a class="headerlink" href="#module-sympy.solvers" title="Permalink to this headline">¶</a></h1>
+<p>The <em>solvers</em> module in SymPy implements methods for solving equations.</p>
+<div class="section" id="algebraic-equations">
+<h2>Algebraic equations<a class="headerlink" href="#algebraic-equations" title="Permalink to this headline">¶</a></h2>
+<p>Use <tt class="xref py py-func docutils literal"><span class="pre">solve()</span></tt> to solve algebraic equations. We suppose all equations are equaled to 0,
+so solving x**2 == 1 translates into the following code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[-1, 1]</span>
+</pre></div>
+</div>
+<p>The first argument for <tt class="xref py py-func docutils literal"><span class="pre">solve()</span></tt> is an equation (equaled to zero) and the second argument
+is the symbol that we want to solve the equation for.</p>
+<dl class="function">
+<dt id="sympy.solvers.solvers.solve">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">solve</tt><big>(</big><em>f</em>, <em>*symbols</em>, <em>**flags</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Algebraically solves equations and systems of equations.</p>
+<dl class="docutils">
+<dt>Currently supported are:</dt>
+<dd><ul class="first last simple">
+<li>univariate polynomial,</li>
+<li>transcendental</li>
+<li>piecewise combinations of the above</li>
+<li>systems of linear and polynomial equations</li>
+<li>sytems containing relational expressions.</li>
+</ul>
+</dd>
+</dl>
+<p>Input is formed as:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>f</dt>
+<dd><ul class="first last simple">
+<li>a single Expr or Poly that must be zero,</li>
+<li>an Equality</li>
+<li>a Relational expression or boolean</li>
+<li>iterable of one or more of the above</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>symbols (object(s) to solve for) specified as</dt>
+<dd><ul class="first last simple">
+<li>none given (other non-numeric objects will be used)</li>
+<li>single symbol</li>
+<li>denested list of symbols
+e.g. solve(f, x, y)</li>
+<li>ordered iterable of symbols
+e.g. solve(f, [x, y])</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>flags</dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;dict&#8217;=True (default is False)</dt>
+<dd><p class="first last">return list (perhaps empty) of solution mappings</p>
+</dd>
+<dt>&#8216;set&#8217;=True (default is False)</dt>
+<dd><p class="first last">return list of symbols and set of tuple(s) of solution(s)</p>
+</dd>
+<dt>&#8216;exclude=[] (default)&#8217;</dt>
+<dd><p class="first last">don&#8217;t try to solve for any of the free symbols in exclude;
+if expressions are given, the free symbols in them will
+be extracted automatically.</p>
+</dd>
+<dt>&#8216;check=True (default)&#8217;</dt>
+<dd><p class="first last">If False, don&#8217;t do any testing of solutions. This can be
+useful if one wants to include solutions that make any
+denominator zero.</p>
+</dd>
+<dt>&#8216;numerical=True (default)&#8217;</dt>
+<dd><p class="first last">do a fast numerical check if <tt class="docutils literal"><span class="pre">f</span></tt> has only one symbol.</p>
+</dd>
+<dt>&#8216;minimal=True (default is False)&#8217;</dt>
+<dd><p class="first last">a very fast, minimal testing.</p>
+</dd>
+<dt>&#8216;warning=True (default is False)&#8217;</dt>
+<dd><p class="first last">show a warning if checksol() could not conclude.</p>
+</dd>
+<dt>&#8216;simplify=True (default)&#8217;</dt>
+<dd><p class="first last">simplify all but cubic and quartic solutions before
+returning them and (if check is not False) use the
+general simplify function on the solutions and the
+expression obtained when they are substituted into the
+function which should be zero</p>
+</dd>
+<dt>&#8216;force=True (default is False)&#8217;</dt>
+<dd><p class="first last">make positive all symbols without assumptions regarding sign.</p>
+</dd>
+<dt>&#8216;rational=True (default)&#8217;</dt>
+<dd><p class="first last">recast Floats as Rational; if this option is not used, the
+system containing floats may fail to solve because of issues
+with polys. If rational=None, Floats will be recast as
+rationals but the answer will be recast as Floats. If the
+flag is False then nothing will be done to the Floats.</p>
+</dd>
+<dt>&#8216;manual=True (default is False)&#8217;</dt>
+<dd><p class="first last">do not use the polys/matrix method to solve a system of
+equations, solve them one at a time as you might &#8220;manually&#8221;.</p>
+</dd>
+<dt>&#8216;implicit=True (default is False)&#8217;</dt>
+<dd><p class="first last">allows solve to return a solution for a pattern in terms of
+other functions that contain that pattern; this is only
+needed if the pattern is inside of some invertible function
+like cos, exp, ....</p>
+</dd>
+<dt>&#8216;minimal=True (default is False)&#8217;</dt>
+<dd><p class="first last">instructs solve to try to find a particular solution to a linear
+system with as many zeros as possible; this is very expensive</p>
+</dd>
+<dt>&#8216;quick=True (default is False)&#8217;</dt>
+<dd><p class="first last">when using minimal=True, use a fast heuristic instead to find a
+solution with many zeros (instead of using the very slow method
+guaranteed to find the largest number of zeros possible)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ul>
+<p class="rubric">Notes</p>
+<p>assumptions aren&#8217;t checked when <span class="math">\(solve()\)</span> input involves
+relationals or bools.</p>
+<p>When the solutions are checked, those that make any denominator zero
+are automatically excluded. If you do not want to exclude such solutions
+then use the check=False option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">limit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>  <span class="c"># 0 is excluded</span>
+<span class="go">[pi]</span>
+</pre></div>
+</div>
+<p>If check=False then a solution to the numerator being zero is found: x = 0.
+In this case, this is a spurious solution since sin(x)/x has the well known
+limit (without dicontinuity) of 1 at x = 0:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[0, pi]</span>
+</pre></div>
+</div>
+<p>In the following case, however, the limit exists and is equal to the the
+value of x = 0 that is excluded when check=True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;+&#39;</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<p>The output varies according to the input and can be seen by example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">solve</span><span class="p">,</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">boolean or univariate Relational</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">And(im(x) == 0, re(x) &lt; 3)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">to always get a list of solution mappings, use flag dict=True</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[{x: 3}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[{x: 3, y: 1}]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">to get a list of symbols and set of solution(s) use flag set=True</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([x, y], set([(-sqrt(3), 1), (sqrt(3), 1)]))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">single expression and single symbol that is in the expression</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[y]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">Poly</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([x], set([(-y,), (y,)]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([x], set([(-1,), (1,), (-I,), (I,)]))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">single expression with no symbol that is in the expression</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">single expression with no symbol given</p>
+<blockquote>
+<div><p>In this case, all free symbols will be selected as potential
+symbols to solve for. If the equation is univariate then a list
+of solutions is returned; otherwise &#8211; as is the case when symbols are
+given as an iterable of length &gt; 1 &#8211; a list of mappings will be returned.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">[3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[{x: -y}, {x: y}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[{x: -y}, {x: y}, {z: 0}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[{x: y**2}, {z: 0}]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">when an object other than a Symbol is given as a symbol, it is
+isolated algebraically and an implicit solution may be obtained.
+This is mostly provided as a convenience to save one from replacing
+the object with a Symbol and solving for that Symbol. It will only
+work if the specified object can be replaced with a Symbol using the
+subs method.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">[x]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">[x + f(x)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">[-x + Derivative(f(x), x)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Indexed</span><span class="p">,</span> <span class="n">IndexedBase</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">IndexedBase</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eqs</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">A</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span> <span class="n">eqs</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Indexed</span><span class="p">))</span>
+<span class="go">{A[1]: 1, A[2]: 2}</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">To solve for a <em>symbol</em> implicitly, use &#8216;implicit=True&#8217;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[-LambertW(1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">implicit</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[-exp(x)]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">It is possible to solve for anything that can be targeted with
+subs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">[-sqrt(3)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">y</span><span class="p">),</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">{y: -2 + sqrt(3), x + 2: -sqrt(3)}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Nothing heroic is done in this implicit solving so you may end up
+with a symbol still in the solution:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eqs</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">{y: -sqrt(3)/(x + 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">eqs</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{x: -y - 4, x*y: -3*y - sqrt(3)}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">if you attempt to solve for a number remember that the number
+you have obtained does not necessarily mean that the value is
+equivalent to the expression obtained:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">[sqrt(2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c"># /!\ -1 is targeted, too</span>
+<span class="go">[x/(y - 1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">_</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">solve</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="go">[-x + y]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">To solve for a function within a derivative, use dsolve.</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">single expression and more than 1 symbol</p>
+<blockquote>
+<div><ul>
+<li><p class="first">when there is a linear solution</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[{x: y**2}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[{y: x**2}]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">when undetermined coefficients are identified</p>
+<blockquote>
+<div><ul>
+<li><p class="first">that are linear</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">{a: -2, b: 2}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">that are nonlinear</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">if there is no linear solution then the first successful
+attempt for a nonlinear solution will be returned</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[{x: -y}, {x: y}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[{x: 2*LambertW(y/2)}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">[{y: -x*exp(x/2)}, {y: x*exp(x/2)}]</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">iterable of one or more of the above</p>
+<blockquote>
+<div><ul>
+<li><p class="first">involving relationals or bools</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">And(im(x) == 0, re(x) == 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">when the system is linear</p>
+<blockquote>
+<div><ul>
+<li><p class="first">with a solution</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{x: 3}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">6</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">15</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">{x: -3, y: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">6</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">15</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">{x: -3, y: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">6</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">{x: -5*y + 2, z: 21*y - 6}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">without a solution</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">when the system is not linear</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">([x, y], set([(-2, -2), (0, 2), (2, -2)]))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">if no symbols are given, all free symbols will be selected and a list
+of mappings returned</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="p">])</span>
+<span class="go">[{x: 2, y: -4}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span> <span class="nb">set</span><span class="p">([</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">]))</span>
+<span class="go">[{x: 2, f(x): -4}]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">if any equation doesn&#8217;t depend on the symbol(s) given it will be
+eliminated from the equation set and an answer may be given
+implicitly in terms of variables that were not of interest</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">([</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">3</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{x: y}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.solve_linear">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">solve_linear</tt><big>(</big><em>lhs</em>, <em>rhs=0</em>, <em>symbols=</em><span class="optional">[</span><span class="optional">]</span>, <em>exclude=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#solve_linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.solve_linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple derived from f = lhs - rhs that is either:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>(numerator, denominator) of <tt class="docutils literal"><span class="pre">f</span></tt></dt>
+<dd><p class="first">If this comes back as (0, 1) it means
+that <tt class="docutils literal"><span class="pre">f</span></tt> is independent of the symbols in <tt class="docutils literal"><span class="pre">symbols</span></tt>, e.g:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">*</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>If it comes back as (0, 0) there is no solution to the equation
+amongst the symbols given.</p>
+<p class="last">If the numerator is not zero then the function is guaranteed
+to be dependent on a symbol in <tt class="docutils literal"><span class="pre">symbols</span></tt>.</p>
+</dd>
+</dl>
+<p>or</p>
+<p>(symbol, solution) where symbol appears linearly in the numerator of
+<tt class="docutils literal"><span class="pre">f</span></tt>, is in <tt class="docutils literal"><span class="pre">symbols</span></tt> (if given) and is not in <tt class="docutils literal"><span class="pre">exclude</span></tt> (if given).</p>
+<p>No simplification is done to <tt class="docutils literal"><span class="pre">f</span></tt> other than and mul=True expansion,
+so the solution will correspond strictly to a unique solution.</p>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.solvers</span> <span class="kn">import</span> <span class="n">solve_linear</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</pre></div>
+</div>
+<p>These are linear in x and 1/x:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(x, -y**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(x, y**(-2))</span>
+</pre></div>
+</div>
+<p>When not linear in x or y then the numerator and denominator are returned.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(x**2 - 3*y**2, y**2)</span>
+</pre></div>
+</div>
+<p>If the numerator is a symbol then (0, 0) is returned if the solution for
+that symbol would have set any denominator to 0:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">(0, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span> <span class="c"># to SymPy, this looks like x ...</span>
+<span class="go">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">))</span> <span class="c"># so a solution is given</span>
+<span class="go">(x, 0)</span>
+</pre></div>
+</div>
+<p>If x is allowed to cancel, then this appears linear, but this sort of
+cancellation is not done so the solution will always satisfy the original
+expression without causing a division by zero error.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">x</span><span class="p">))</span>
+<span class="go">(x**2*(-z**2 + 1), x)</span>
+</pre></div>
+</div>
+<p>You can give a list of what you prefer for x candidates:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+<span class="go">(y, -x - z)</span>
+</pre></div>
+</div>
+<p>You can also indicate what variables you don&#8217;t want to consider:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+<span class="go">(y, -x - z)</span>
+</pre></div>
+</div>
+<p>If only x was excluded then a solution for y or z might be obtained.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.solve_linear_system">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">solve_linear_system</tt><big>(</big><em>system</em>, <em>*symbols</em>, <em>**flags</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#solve_linear_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.solve_linear_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve system of N linear equations with M variables, which means
+both under- and overdetermined systems are supported. The possible
+number of solutions is zero, one or infinite. Respectively, this
+procedure will return None or a dictionary with solutions. In the
+case of underdetermined systems, all arbitrary parameters are skipped.
+This may cause a situation in which an empty dictionary is returned.
+In that case, all symbols can be assigned arbitrary values.</p>
+<p>Input to this functions is a Nx(M+1) matrix, which means it has
+to be in augmented form. If you prefer to enter N equations and M
+unknowns then use <span class="math">\(solve(Neqs, *Msymbols)\)</span> instead. Note: a local
+copy of the matrix is made by this routine so the matrix that is
+passed will not be modified.</p>
+<p>The algorithm used here is fraction-free Gaussian elimination,
+which results, after elimination, in an upper-triangular matrix.
+Then solutions are found using back-substitution. This approach
+is more efficient and compact than the Gauss-Jordan method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">solve_linear_system</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<p>Solve the following system:</p>
+<div class="highlight-python"><pre>   x + 4 y ==  2
+-2 x +   y == 14</pre>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">((</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">14</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear_system</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">{x: -6, y: 2}</span>
+</pre></div>
+</div>
+<p>A degenerate system returns an empty dictionary.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">((</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear_system</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.solve_linear_system_LU">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">solve_linear_system_LU</tt><big>(</big><em>matrix</em>, <em>syms</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#solve_linear_system_LU"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.solve_linear_system_LU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the augmented matrix system using LUsolve and returns a dictionary
+in which solutions are keyed to the symbols of syms <em>as ordered</em>.</p>
+<p>The matrix must be invertible.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.matrices.LUsolve</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.solvers</span> <span class="kn">import</span> <span class="n">solve_linear_system_LU</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_linear_system_LU</span><span class="p">(</span><span class="n">Matrix</span><span class="p">([</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]),</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span>
+<span class="go">{x: 1/2, y: 1/4, z: -1/2}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.solve_undetermined_coeffs">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">solve_undetermined_coeffs</tt><big>(</big><em>equ</em>, <em>coeffs</em>, <em>sym</em>, <em>**flags</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#solve_undetermined_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.solve_undetermined_coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
+p, q are univariate polynomials and f depends on k parameters.
+The result of this functions is a dictionary with symbolic
+values of those parameters with respect to coefficients in q.</p>
+<p>This functions accepts both Equations class instances and ordinary
+SymPy expressions. Specification of parameters and variable is
+obligatory for efficiency and simplicity reason.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Eq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve_undetermined_coeffs</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_undetermined_coeffs</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{a: 1/2, b: -1/2}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_undetermined_coeffs</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{a: 1/c, b: -1/c}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.tsolve">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">tsolve</tt><big>(</big><em>eq</em>, <em>sym</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#tsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.tsolve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.nsolve">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">nsolve</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#nsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.nsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a nonlinear equation system numerically:</p>
+<div class="highlight-python"><pre>nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)</pre>
+</div>
+<p>f is a vector function of symbolic expressions representing the system.
+args are the variables. If there is only one variable, this argument can
+be omitted.
+x0 is a starting vector close to a solution.</p>
+<p>Use the modules keyword to specify which modules should be used to
+evaluate the function and the Jacobian matrix. Make sure to use a module
+that supports matrices. For more information on the syntax, please see the
+docstring of lambdify.</p>
+<p>Overdetermined systems are supported.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">nsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sympy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sympy</span><span class="o">.</span><span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x1</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x2</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f1</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x2</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f2</span> <span class="o">=</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x2</span> <span class="o">-</span> <span class="mi">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">nsolve</span><span class="p">((</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">),</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="go">[-1.19287309935246]</span>
+<span class="go">[ 1.27844411169911]</span>
+</pre></div>
+</div>
+<p>For one-dimensional functions the syntax is simplified:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">nsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsolve</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.14159265358979</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsolve</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.14159265358979</span>
+</pre></div>
+</div>
+<p>mpmath.findroot is used, you can find there more extensive documentation,
+especially concerning keyword parameters and available solvers.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.check_assumptions">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">check_assumptions</tt><big>(</big><em>expr</em>, <em>**assumptions</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#check_assumptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.check_assumptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether expression <span class="math">\(expr\)</span> satisfies all assumptions.</p>
+<p><span class="math">\(assumptions\)</span> is a dict of assumptions: {&#8216;assumption&#8217;: True|False, ...}.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.solvers</span> <span class="kn">import</span> <span class="n">check_assumptions</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">7</span><span class="p">),</span> <span class="n">real</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">5</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p><span class="math">\(None\)</span> is returned if check_assumptions() could not conclude.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_assumptions</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.solvers.checksol">
+<tt class="descclassname">sympy.solvers.solvers.</tt><tt class="descname">checksol</tt><big>(</big><em>f</em>, <em>symbol</em>, <em>sol=None</em>, <em>**flags</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/solvers.html#checksol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.solvers.checksol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether sol is a solution of equation f == 0.</p>
+<p>Input can be either a single symbol and corresponding value
+or a dictionary of symbols and values. <tt class="docutils literal"><span class="pre">f</span></tt> can be a single
+equation or an iterable of equations. A solution must satisfy
+all equations in <tt class="docutils literal"><span class="pre">f</span></tt> to be considered valid; if a solution
+does not satisfy any equation, False is returned; if one or
+more checks are inconclusive (and none are False) then None
+is returned.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">checksol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">checksol</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">checksol</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">checksol</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">5</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>To check if an expression is zero using checksol, pass it
+as <tt class="docutils literal"><span class="pre">f</span></tt> and send an empty dictionary for <tt class="docutils literal"><span class="pre">symbol</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">checksol</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">{})</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>None is returned if checksol() could not conclude.</p>
+<dl class="docutils">
+<dt>flags:</dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;numerical=True (default)&#8217;</dt>
+<dd>do a fast numerical check if <tt class="docutils literal"><span class="pre">f</span></tt> has only one symbol.</dd>
+<dt>&#8216;minimal=True (default is False)&#8217;</dt>
+<dd>a very fast, minimal testing.</dd>
+<dt>&#8216;warn=True (default is False)&#8217;</dt>
+<dd>show a warning if checksol() could not conclude.</dd>
+<dt>&#8216;simplify=True (default)&#8217;</dt>
+<dd>simplify solution before substituting into function and
+simplify the function before trying specific simplifications</dd>
+<dt>&#8216;force=True (default is False)&#8217;</dt>
+<dd>make positive all symbols without assumptions regarding sign.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="ordinary-differential-equations-odes">
+<h2>Ordinary Differential equations (ODEs)<a class="headerlink" href="#ordinary-differential-equations-odes" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="ode.html#ode-docs"><em>ODE</em></a>.</p>
+</div>
+<div class="section" id="partial-differential-equations-pdes">
+<h2>Partial Differential Equations (PDEs)<a class="headerlink" href="#partial-differential-equations-pdes" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="pde.html#pde-docs"><em>PDE</em></a>.</p>
+</div>
+<div class="section" id="deutils-utilities-for-solving-ode-s-and-pde-s">
+<h2>Deutils (Utilities for solving ODE&#8217;s and PDE&#8217;s)<a class="headerlink" href="#deutils-utilities-for-solving-ode-s-and-pde-s" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.solvers.deutils.ode_order">
+<tt class="descclassname">sympy.solvers.deutils.</tt><tt class="descname">ode_order</tt><big>(</big><em>expr</em>, <em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/deutils.html#ode_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.deutils.ode_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the order of a given differential
+equation with respect to func.</p>
+<p>This function is implemented recursively.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.deutils</span> <span class="kn">import</span> <span class="n">ode_order</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;f&#39;</span><span class="p">,</span> <span class="s">&#39;g&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ode_order</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+<span class="gp">... </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ode_order</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ode_order</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.solvers.recurr">
+<span id="recurrence-equations"></span><h2>Recurrence Equations<a class="headerlink" href="#module-sympy.solvers.recurr" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.solvers.recurr.rsolve">
+<tt class="descclassname">sympy.solvers.recurr.</tt><tt class="descname">rsolve</tt><big>(</big><em>f</em>, <em>y</em>, <em>init=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/recurr.html#rsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.recurr.rsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve univariate recurrence with rational coefficients.</p>
+<p>Given <span class="math">\(k\)</span>-th order linear recurrence <span class="math">\(\operatorname{L} y = f\)</span>,
+or equivalently:</p>
+<div class="math">
+\[a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +
+\dots + a_{0}(n) y(n) = f(n)\]</div>
+<p>where <span class="math">\(a_{i}(n)\)</span>, for <span class="math">\(i=0, \dots, k\)</span>, are polynomials or rational
+functions in <span class="math">\(n\)</span>, and <span class="math">\(f\)</span> is a hypergeometric function or a sum
+of a fixed number of pairwise dissimilar hypergeometric terms in
+<span class="math">\(n\)</span>, finds all solutions or returns <tt class="docutils literal"><span class="pre">None</span></tt>, if none were found.</p>
+<p>Initial conditions can be given as a dictionary in two forms:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><tt class="docutils literal"><span class="pre">{</span>&nbsp;&nbsp; <span class="pre">n_0</span>&nbsp; <span class="pre">:</span> <span class="pre">v_0,</span>&nbsp;&nbsp; <span class="pre">n_1</span>&nbsp; <span class="pre">:</span> <span class="pre">v_1,</span> <span class="pre">...,</span>&nbsp;&nbsp; <span class="pre">n_m</span>&nbsp; <span class="pre">:</span> <span class="pre">v_m</span> <span class="pre">}</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">{</span> <span class="pre">y(n_0)</span> <span class="pre">:</span> <span class="pre">v_0,</span> <span class="pre">y(n_1)</span> <span class="pre">:</span> <span class="pre">v_1,</span> <span class="pre">...,</span> <span class="pre">y(n_m)</span> <span class="pre">:</span> <span class="pre">v_m</span> <span class="pre">}</span></tt></li>
+</ol>
+</div></blockquote>
+<p>or as a list <tt class="docutils literal"><span class="pre">L</span></tt> of values:</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">[</span> <span class="pre">v_0,</span> <span class="pre">v_1,</span> <span class="pre">...,</span> <span class="pre">v_m</span> <span class="pre">]</span></tt></div></blockquote>
+<p>where <tt class="docutils literal"><span class="pre">L[i]</span> <span class="pre">=</span> <span class="pre">v_i</span></tt>, for <span class="math">\(i=0, \dots, m\)</span>, maps to <span class="math">\(y(n_i)\)</span>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.solvers.recurr.rsolve_poly" title="sympy.solvers.recurr.rsolve_poly"><tt class="xref py py-obj docutils literal"><span class="pre">rsolve_poly</span></tt></a>, <a class="reference internal" href="#sympy.solvers.recurr.rsolve_ratio" title="sympy.solvers.recurr.rsolve_ratio"><tt class="xref py py-obj docutils literal"><span class="pre">rsolve_ratio</span></tt></a>, <a class="reference internal" href="#sympy.solvers.recurr.rsolve_hyper" title="sympy.solvers.recurr.rsolve_hyper"><tt class="xref py py-obj docutils literal"><span class="pre">rsolve_hyper</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<p>Lets consider the following recurrence:</p>
+<div class="math">
+\[(n - 1) y(n + 2) - (n^2 + 3 n - 2) y(n + 1) +
+2 n (n + 1) y(n) = 0\]</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">rsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">y</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+<span class="go">2**n*C0 + C1*factorial(n)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="p">{</span> <span class="n">y</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span><span class="mi">3</span> <span class="p">})</span>
+<span class="go">3*2**n - 3*factorial(n)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.recurr.rsolve_poly">
+<tt class="descclassname">sympy.solvers.recurr.</tt><tt class="descname">rsolve_poly</tt><big>(</big><em>coeffs</em>, <em>f</em>, <em>n</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/recurr.html#rsolve_poly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.recurr.rsolve_poly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given linear recurrence operator <span class="math">\(\operatorname{L}\)</span> of order
+<span class="math">\(k\)</span> with polynomial coefficients and inhomogeneous equation
+<span class="math">\(\operatorname{L} y = f\)</span>, where <span class="math">\(f\)</span> is a polynomial, we seek for
+all polynomial solutions over field <span class="math">\(K\)</span> of characteristic zero.</p>
+<p>The algorithm performs two basic steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Compute degree <span class="math">\(N\)</span> of the general polynomial solution.</li>
+<li>Find all polynomials of degree <span class="math">\(N\)</span> or less
+of <span class="math">\(\operatorname{L} y = f\)</span>.</li>
+</ol>
+</div></blockquote>
+<p>There are two methods for computing the polynomial solutions.
+If the degree bound is relatively small, i.e. it&#8217;s smaller than
+or equal to the order of the recurrence, then naive method of
+undetermined coefficients is being used. This gives system
+of algebraic equations with <span class="math">\(N+1\)</span> unknowns.</p>
+<p>In the other case, the algorithm performs transformation of the
+initial equation to an equivalent one, for which the system of
+algebraic equations has only <span class="math">\(r\)</span> indeterminates. This method is
+quite sophisticated (in comparison with the naive one) and was
+invented together by Abramov, Bronstein and Petkovsek.</p>
+<p>It is possible to generalize the algorithm implemented here to
+the case of linear q-difference and differential equations.</p>
+<p>Lets say that we would like to compute <span class="math">\(m\)</span>-th Bernoulli polynomial
+up to a constant. For this we can use <span class="math">\(b(n+1) - b(n) = m n^{m-1}\)</span>
+recurrence, which has solution <span class="math">\(b(n) = B_m + C\)</span>. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">rsolve_poly</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve_poly</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">C0 + n**4 - 2*n**3 + n**2</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r234" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R234]</a></td><td>S. A. Abramov, M. Bronstein and M. Petkovsek, On polynomial
+solutions of linear operator equations, in: T. Levelt, ed.,
+Proc. ISSAC &#8216;95, ACM Press, New York, 1995, 290-296.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r235" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R235]</a></td><td>M. Petkovsek, Hypergeometric solutions of linear recurrences
+with polynomial coefficients, J. Symbolic Computation,
+14 (1992), 243-264.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r236" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R236]</a></td><td><ol class="first last upperalpha simple" start="13">
+<li>Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.recurr.rsolve_ratio">
+<tt class="descclassname">sympy.solvers.recurr.</tt><tt class="descname">rsolve_ratio</tt><big>(</big><em>coeffs</em>, <em>f</em>, <em>n</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/recurr.html#rsolve_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.recurr.rsolve_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given linear recurrence operator <span class="math">\(\operatorname{L}\)</span> of order <span class="math">\(k\)</span>
+with polynomial coefficients and inhomogeneous equation
+<span class="math">\(\operatorname{L} y = f\)</span>, where <span class="math">\(f\)</span> is a polynomial, we seek
+for all rational solutions over field <span class="math">\(K\)</span> of characteristic zero.</p>
+<p>This procedure accepts only polynomials, however if you are
+interested in solving recurrence with rational coefficients
+then use <tt class="docutils literal"><span class="pre">rsolve</span></tt> which will pre-process the given equation
+and run this procedure with polynomial arguments.</p>
+<p>The algorithm performs two basic steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Compute polynomial <span class="math">\(v(n)\)</span> which can be used as universal
+denominator of any rational solution of equation
+<span class="math">\(\operatorname{L} y = f\)</span>.</li>
+<li>Construct new linear difference equation by substitution
+<span class="math">\(y(n) = u(n)/v(n)\)</span> and solve it for <span class="math">\(u(n)\)</span> finding all its
+polynomial solutions. Return <tt class="docutils literal"><span class="pre">None</span></tt> if none were found.</li>
+</ol>
+</div></blockquote>
+<p>Algorithm implemented here is a revised version of the original
+Abramov&#8217;s algorithm, developed in 1989. The new approach is much
+simpler to implement and has better overall efficiency. This
+method can be easily adapted to q-difference equations case.</p>
+<p>Besides finding rational solutions alone, this functions is
+an important part of Hyper algorithm were it is used to find
+particular solution of inhomogeneous part of a recurrence.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.solvers.recurr.rsolve_hyper" title="sympy.solvers.recurr.rsolve_hyper"><tt class="xref py py-obj docutils literal"><span class="pre">rsolve_hyper</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r237" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R237]</a></td><td>S. A. Abramov, Rational solutions of linear difference
+and q-difference equations with polynomial coefficients,
+in: T. Levelt, ed., Proc. ISSAC &#8216;95, ACM Press, New York,
+1995, 285-289</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.recurr</span> <span class="kn">import</span> <span class="n">rsolve_ratio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve_ratio</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">6</span><span class="o">*</span><span class="n">x</span><span class="p">,</span>
+<span class="gp">... </span><span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">11</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">18</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">13</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">22</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">8</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">C2*(2*x - 3)/(2*(x**2 - 1))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.recurr.rsolve_hyper">
+<tt class="descclassname">sympy.solvers.recurr.</tt><tt class="descname">rsolve_hyper</tt><big>(</big><em>coeffs</em>, <em>f</em>, <em>n</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/recurr.html#rsolve_hyper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.recurr.rsolve_hyper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given linear recurrence operator <span class="math">\(\operatorname{L}\)</span> of order <span class="math">\(k\)</span>
+with polynomial coefficients and inhomogeneous equation
+<span class="math">\(\operatorname{L} y = f\)</span> we seek for all hypergeometric solutions
+over field <span class="math">\(K\)</span> of characteristic zero.</p>
+<p>The inhomogeneous part can be either hypergeometric or a sum
+of a fixed number of pairwise dissimilar hypergeometric terms.</p>
+<p>The algorithm performs three basic steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Group together similar hypergeometric terms in the
+inhomogeneous part of <span class="math">\(\operatorname{L} y = f\)</span>, and find
+particular solution using Abramov&#8217;s algorithm.</li>
+<li>Compute generating set of <span class="math">\(\operatorname{L}\)</span> and find basis
+in it, so that all solutions are linearly independent.</li>
+<li>Form final solution with the number of arbitrary
+constants equal to dimension of basis of <span class="math">\(\operatorname{L}\)</span>.</li>
+</ol>
+</div></blockquote>
+<p>Term <span class="math">\(a(n)\)</span> is hypergeometric if it is annihilated by first order
+linear difference equations with polynomial coefficients or, in
+simpler words, if consecutive term ratio is a rational function.</p>
+<p>The output of this procedure is a linear combination of fixed
+number of hypergeometric terms. However the underlying method
+can generate larger class of solutions - D&#8217;Alembertian terms.</p>
+<p>Note also that this method not only computes the kernel of the
+inhomogeneous equation, but also reduces in to a basis so that
+solutions generated by this procedure are linearly independent</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r238" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R238]</a></td><td>M. Petkovsek, Hypergeometric solutions of linear recurrences
+with polynomial coefficients, J. Symbolic Computation,
+14 (1992), 243-264.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r239" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[R239]</a></td><td><ol class="first last upperalpha simple" start="13">
+<li>Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">rsolve_hyper</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve_hyper</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">C0*(1/2 + sqrt(5)/2)**x + C1*(-sqrt(5)/2 + 1/2)**x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rsolve_hyper</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">C0 + x*(x + 1)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="systems-of-polynomial-equations">
+<h2>Systems of Polynomial Equations<a class="headerlink" href="#systems-of-polynomial-equations" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.solvers.polysys.solve_poly_system">
+<tt class="descclassname">sympy.solvers.polysys.</tt><tt class="descname">solve_poly_system</tt><big>(</big><em>seq</em>, <em>*gens</em>, <em>**args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/polysys.html#solve_poly_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.polysys.solve_poly_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a system of polynomial equations.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">solve_poly_system</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_poly_system</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">[(0, 0), (2, -sqrt(2)), (2, sqrt(2))]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.solvers.polysys.solve_triangulated">
+<tt class="descclassname">sympy.solvers.polysys.</tt><tt class="descname">solve_triangulated</tt><big>(</big><em>polys</em>, <em>*gens</em>, <em>**args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/polysys.html#solve_triangulated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.polysys.solve_triangulated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a polynomial system using Gianni-Kalkbrenner algorithm.</p>
+<p>The algorithm proceeds by computing one Groebner basis in the ground
+domain and then by iteratively computing polynomial factorizations in
+appropriately constructed algebraic extensions of the ground domain.</p>
+<p class="rubric">References</p>
+<p>1. Patrizia Gianni, Teo Mora, Algebraic Solution of System of
+Polynomial Equations using Groebner Bases, AAECC-5 on Applied Algebra,
+Algebraic Algorithms and Error-Correcting Codes, LNCS 356 247&#8211;257, 1989</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.polysys</span> <span class="kn">import</span> <span class="n">solve_triangulated</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_triangulated</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">[(0, 0, 1), (0, 1, 0), (1, 0, 0)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Solvers</a><ul>
+<li><a class="reference internal" href="#algebraic-equations">Algebraic equations</a></li>
+<li><a class="reference internal" href="#ordinary-differential-equations-odes">Ordinary Differential equations (ODEs)</a></li>
+<li><a class="reference internal" href="#partial-differential-equations-pdes">Partial Differential Equations (PDEs)</a></li>
+<li><a class="reference internal" href="#deutils-utilities-for-solving-ode-s-and-pde-s">Deutils (Utilities for solving ODE&#8217;s and PDE&#8217;s)</a></li>
+<li><a class="reference internal" href="#module-sympy.solvers.recurr">Recurrence Equations</a></li>
+<li><a class="reference internal" href="#systems-of-polynomial-equations">Systems of Polynomial Equations</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pde.html"
+                        title="previous chapter">PDE</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../tensor/index.html"
+                        title="next chapter">Tensor Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/solvers/solvers.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../tensor/index.html" title="Tensor Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pde.html" title="PDE"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

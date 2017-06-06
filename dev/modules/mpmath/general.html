@@ -1,0 +1,1562 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Utility functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="index.html" />
+    <link rel="next" title="Plotting" href="plotting.html" />
+    <link rel="prev" title="Contexts" href="contexts.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="contexts.html" title="Contexts"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="utility-functions">
+<h1>Utility functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h1>
+<p>This page lists functions that perform basic operations
+on numbers or aid general programming.</p>
+<div class="section" id="conversion-and-printing">
+<h2>Conversion and printing<a class="headerlink" href="#conversion-and-printing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mpmathify-convert">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">mpmathify()</span></tt> / <tt class="xref py py-func docutils literal"><span class="pre">convert()</span></tt><a class="headerlink" href="#mpmathify-convert" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.mpmathify">
+<tt class="descclassname">mpmath.</tt><tt class="descname">mpmathify</tt><big>(</big><em>x</em>, <em>strings=True</em><big>)</big><a class="headerlink" href="#mpmath.mpmathify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts <em>x</em> to an <tt class="docutils literal"><span class="pre">mpf</span></tt> or <tt class="docutils literal"><span class="pre">mpc</span></tt>. If <em>x</em> is of type <tt class="docutils literal"><span class="pre">mpf</span></tt>,
+<tt class="docutils literal"><span class="pre">mpc</span></tt>, <tt class="docutils literal"><span class="pre">int</span></tt>, <tt class="docutils literal"><span class="pre">float</span></tt>, <tt class="docutils literal"><span class="pre">complex</span></tt>, the conversion
+will be performed losslessly.</p>
+<p>If <em>x</em> is a string, the result will be rounded to the present
+working precision. Strings representing fractions or complex
+numbers are permitted.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmathify</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmathify</span><span class="p">(</span><span class="s">&#39;2.1&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;2.1000000000000001&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmathify</span><span class="p">(</span><span class="s">&#39;3/4&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.75&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmathify</span><span class="p">(</span><span class="s">&#39;2+3j&#39;</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;2.0&#39;, imag=&#39;3.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nstr">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">nstr()</span></tt><a class="headerlink" href="#nstr" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.nstr">
+<tt class="descclassname">mpmath.</tt><tt class="descname">nstr</tt><big>(</big><em>x</em>, <em>n=6</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.nstr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an <tt class="docutils literal"><span class="pre">mpf</span></tt> or <tt class="docutils literal"><span class="pre">mpc</span></tt> to a decimal string literal with <em>n</em>
+significant digits. The small default value for <em>n</em> is chosen to
+make this function useful for printing collections of numbers
+(lists, matrices, etc).</p>
+<p>If <em>x</em> is a list or tuple, <a class="reference internal" href="#mpmath.nstr" title="mpmath.nstr"><tt class="xref py py-func docutils literal"><span class="pre">nstr()</span></tt></a> is applied recursively
+to each element. For unrecognized classes, <a class="reference internal" href="#mpmath.nstr" title="mpmath.nstr"><tt class="xref py py-func docutils literal"><span class="pre">nstr()</span></tt></a>
+simply returns <tt class="docutils literal"><span class="pre">str(x)</span></tt>.</p>
+<p>The companion function <a class="reference internal" href="#mpmath.nprint" title="mpmath.nprint"><tt class="xref py py-func docutils literal"><span class="pre">nprint()</span></tt></a> prints the result
+instead of returning it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nstr</span><span class="p">([</span><span class="o">+</span><span class="n">pi</span><span class="p">,</span> <span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">500</span><span class="p">)])</span>
+<span class="go">&#39;[3.14159, 3.05494e-151]&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">([</span><span class="o">+</span><span class="n">pi</span><span class="p">,</span> <span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">500</span><span class="p">)])</span>
+<span class="go">[3.14159, 3.05494e-151]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nprint">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">nprint()</span></tt><a class="headerlink" href="#nprint" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.nprint">
+<tt class="descclassname">mpmath.</tt><tt class="descname">nprint</tt><big>(</big><em>x</em>, <em>n=6</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.nprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to <tt class="docutils literal"><span class="pre">print(nstr(x,</span> <span class="pre">n))</span></tt>.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="arithmetic-operations">
+<h2>Arithmetic operations<a class="headerlink" href="#arithmetic-operations" title="Permalink to this headline">¶</a></h2>
+<p>See also <a class="reference internal" href="functions/powers.html#mpmath.sqrt" title="mpmath.sqrt"><tt class="xref py py-func docutils literal"><span class="pre">mpmath.sqrt()</span></tt></a>, <a class="reference internal" href="functions/powers.html#mpmath.exp" title="mpmath.exp"><tt class="xref py py-func docutils literal"><span class="pre">mpmath.exp()</span></tt></a> etc., listed
+in <a class="reference internal" href="functions/powers.html"><em>Powers and logarithms</em></a></p>
+<div class="section" id="fadd">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt><a class="headerlink" href="#fadd" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fadd">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fadd</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>y</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fadd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the numbers <em>x</em> and <em>y</em>, giving a floating-point result,
+optionally using a custom precision and rounding mode.</p>
+<p>The default precision is the working precision of the context.
+You can specify a custom precision in bits by passing the <em>prec</em> keyword
+argument, or by providing an equivalent decimal precision with the <em>dps</em>
+keyword argument. If the precision is set to <tt class="docutils literal"><span class="pre">+inf</span></tt>, or if the flag
+<em>exact=True</em> is passed, an exact addition with no rounding is performed.</p>
+<p>When the precision is finite, the optional <em>rounding</em> keyword argument
+specifies the direction of rounding. Valid options are <tt class="docutils literal"><span class="pre">'n'</span></tt> for
+nearest (default), <tt class="docutils literal"><span class="pre">'f'</span></tt> for floor, <tt class="docutils literal"><span class="pre">'c'</span></tt> for ceiling, <tt class="docutils literal"><span class="pre">'d'</span></tt>
+for down, <tt class="docutils literal"><span class="pre">'u'</span></tt> for up.</p>
+<p><strong>Examples</strong></p>
+<p>Using <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a> with precision and rounding control:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">)</span>
+<span class="go">mpf(&#39;2.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;2.0000000000000004&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">2.00000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">25</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">2.00000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">2.00000000000000000001</span>
+</pre></div>
+</div>
+<p>Exact addition avoids cancellation errors, enforcing familiar laws
+of numbers such as <span class="math">\(x+y-x = y\)</span>, which don&#8217;t hold in floating-point
+arithmetic with finite precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">mpf</span><span class="p">(</span><span class="s">&#39;1e-1000&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">inf</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">1.0e-1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">1.0e-1000</span>
+</pre></div>
+</div>
+<p>Exact addition can be inefficient and may be impossible to perform
+with large magnitude differences:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fadd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;1e-100000000000000000000&#39;</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">inf</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">the exact result does not fit in memory</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fsub">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fsub()</span></tt><a class="headerlink" href="#fsub" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fsub">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fsub</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>y</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fsub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtracts the numbers <em>x</em> and <em>y</em>, giving a floating-point result,
+optionally using a custom precision and rounding mode.</p>
+<p>See the documentation of <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a> for a detailed description
+of how to specify precision and rounding.</p>
+<p><strong>Examples</strong></p>
+<p>Using <a class="reference internal" href="#mpmath.fsub" title="mpmath.fsub"><tt class="xref py py-func docutils literal"><span class="pre">fsub()</span></tt></a> with precision and rounding control:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">)</span>
+<span class="go">mpf(&#39;2.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;1.9999999999999998&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">1.99999999999999999999</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">25</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">1.99999999999999999999</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">25</span><span class="p">)</span>
+<span class="go">1.99999999999999999999</span>
+</pre></div>
+</div>
+<p>Exact subtraction avoids cancellation errors, enforcing familiar laws
+of numbers such as <span class="math">\(x-y+y = x\)</span>, which don&#8217;t hold in floating-point
+arithmetic with finite precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">mpf</span><span class="p">(</span><span class="s">&#39;1e1000&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">inf</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fsub</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p>Exact addition can be inefficient and may be impossible to perform
+with large magnitude differences:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fsub</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;1e-100000000000000000000&#39;</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">inf</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">the exact result does not fit in memory</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fneg">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fneg()</span></tt><a class="headerlink" href="#fneg" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fneg">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fneg</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fneg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negates the number <em>x</em>, giving a floating-point result, optionally
+using a custom precision and rounding mode.</p>
+<p>See the documentation of <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a> for a detailed description
+of how to specify precision and rounding.</p>
+<p><strong>Examples</strong></p>
+<p>An mpmath number is returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fneg</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;-2.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fneg</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;5.0&#39;, imag=&#39;-2.0&#39;)</span>
+</pre></div>
+</div>
+<p>Precise control over rounding is possible:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">fadd</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1e-100</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fneg</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">mpf(&#39;-2.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fneg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;-2.0000000000000004&#39;)</span>
+</pre></div>
+</div>
+<p>Negating with and without roundoff:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">200000000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">mpf</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+<span class="go">-200000000000000016777216</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+<span class="go">-200000000000000016777216</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">-200000000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">-200000000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="n">inf</span><span class="p">)))</span>
+<span class="go">-200000000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="n">inf</span><span class="p">)))</span>
+<span class="go">-200000000000000000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fneg</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+<span class="go">-200000000000000000000001</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fmul">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fmul()</span></tt><a class="headerlink" href="#fmul" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fmul">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fmul</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>y</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fmul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiplies the numbers <em>x</em> and <em>y</em>, giving a floating-point result,
+optionally using a custom precision and rounding mode.</p>
+<p>See the documentation of <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a> for a detailed description
+of how to specify precision and rounding.</p>
+<p><strong>Examples</strong></p>
+<p>The result is an mpmath number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmul</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)</span>
+<span class="go">mpf(&#39;10.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmul</span><span class="p">(</span><span class="mf">0.5</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;0.0&#39;, imag=&#39;0.25&#39;)</span>
+</pre></div>
+</div>
+<p>Avoiding roundoff:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">15</span><span class="o">+</span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="go">10000000001000010000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">mpf</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">1.0000000001e+25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">mpf</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+<span class="go">10000000001000011026399232</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+<span class="go">10000000001000011026399232</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">25</span><span class="p">)))</span>
+<span class="go">10000000001000010000000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+<span class="go">10000000001000010000000001</span>
+</pre></div>
+</div>
+<p>Exact multiplication with complex numbers can be inefficient and may
+be impossible to perform with large magnitude differences between
+real and imaginary parts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">mpc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;1e-100000000000000000000&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;2.0&#39;, imag=&#39;4.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;2.0&#39;, imag=&#39;4.0000000000000009&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">the exact result does not fit in memory</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fdiv">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fdiv()</span></tt><a class="headerlink" href="#fdiv" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fdiv">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fdiv</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>y</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.fdiv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Divides the numbers <em>x</em> and <em>y</em>, giving a floating-point result,
+optionally using a custom precision and rounding mode.</p>
+<p>See the documentation of <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a> for a detailed description
+of how to specify precision and rounding.</p>
+<p><strong>Examples</strong></p>
+<p>The result is an mpmath number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">mpf(&#39;1.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.66666666666666663&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;4.0&#39;, imag=&#39;8.0&#39;)</span>
+</pre></div>
+</div>
+<p>The rounding direction and precision can be controlled:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>    <span class="c"># Should be accurate to at least 3 digits</span>
+<span class="go">mpf(&#39;0.6666259765625&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.66666666666666663&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.66666666666666667&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">rounding</span><span class="o">=</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.66666666666666674&#39;)</span>
+</pre></div>
+</div>
+<p>Checking the error of a division by performing it at higher precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">mpf(&#39;-3.7007434154172148e-17&#39;)</span>
+</pre></div>
+</div>
+<p>Unlike <a class="reference internal" href="#mpmath.fadd" title="mpmath.fadd"><tt class="xref py py-func docutils literal"><span class="pre">fadd()</span></tt></a>, <a class="reference internal" href="#mpmath.fmul" title="mpmath.fmul"><tt class="xref py py-func docutils literal"><span class="pre">fmul()</span></tt></a>, etc., exact division is not
+allowed since the quotient of two floating-point numbers generally
+does not have an exact floating-point representation. (In the
+future this might be changed to allow the case where the division
+is actually exact.)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fdiv</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">division is not an exact operation</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fmod">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fmod()</span></tt><a class="headerlink" href="#fmod" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fmod">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fmod</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#mpmath.fmod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts <span class="math">\(x\)</span> and <span class="math">\(y\)</span> to mpmath numbers and returns <span class="math">\(x \mod y\)</span>.
+For mpmath numbers, this is equivalent to <tt class="docutils literal"><span class="pre">x</span> <span class="pre">%</span> <span class="pre">y</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmod</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
+<span class="go">2.61062773871641</span>
+</pre></div>
+</div>
+<p>You can use <a class="reference internal" href="#mpmath.fmod" title="mpmath.fmod"><tt class="xref py py-func docutils literal"><span class="pre">fmod()</span></tt></a> to compute fractional parts of numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fmod</span><span class="p">(</span><span class="mf">10.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.25</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fsum">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fsum()</span></tt><a class="headerlink" href="#fsum" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fsum">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fsum</tt><big>(</big><em>terms</em>, <em>absolute=False</em>, <em>squared=False</em><big>)</big><a class="headerlink" href="#mpmath.fsum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a sum containing a finite number of terms (for infinite
+series, see <a class="reference internal" href="calculus/sums_limits.html#mpmath.nsum" title="mpmath.nsum"><tt class="xref py py-func docutils literal"><span class="pre">nsum()</span></tt></a>). The terms will be converted to
+mpmath numbers. For len(terms) &gt; 2, this function is generally
+faster and produces more accurate results than the builtin
+Python function <tt class="xref py py-func docutils literal"><span class="pre">sum()</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+<span class="go">mpf(&#39;10.5&#39;)</span>
+</pre></div>
+</div>
+<p>With squared=True each term is squared, and with absolute=True
+the absolute value of each term is used.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="fprod">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fprod()</span></tt><a class="headerlink" href="#fprod" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fprod">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fprod</tt><big>(</big><em>factors</em><big>)</big><a class="headerlink" href="#mpmath.fprod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates a product containing a finite number of factors (for
+infinite products, see <a class="reference internal" href="calculus/sums_limits.html#mpmath.nprod" title="mpmath.nprod"><tt class="xref py py-func docutils literal"><span class="pre">nprod()</span></tt></a>). The factors will be
+converted to mpmath numbers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fprod</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+<span class="go">mpf(&#39;7.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fdot">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fdot()</span></tt><a class="headerlink" href="#fdot" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fdot">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fdot</tt><big>(</big><em>A</em>, <em>B=None</em>, <em>conjugate=False</em><big>)</big><a class="headerlink" href="#mpmath.fdot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the dot product of the iterables <span class="math">\(A\)</span> and <span class="math">\(B\)</span>,</p>
+<div class="math">
+\[\sum_{k=0} A_k B_k.\]</div>
+<p>Alternatively, <a class="reference internal" href="#mpmath.fdot" title="mpmath.fdot"><tt class="xref py py-func docutils literal"><span class="pre">fdot()</span></tt></a> accepts a single iterable of pairs.
+In other words, <tt class="docutils literal"><span class="pre">fdot(A,B)</span></tt> and <tt class="docutils literal"><span class="pre">fdot(zip(A,B))</span></tt> are equivalent.
+The elements are automatically converted to mpmath numbers.</p>
+<p>With <tt class="docutils literal"><span class="pre">conjugate=True</span></tt>, the elements in the second vector
+will be conjugated:</p>
+<div class="math">
+\[\sum_{k=0} A_k \overline{B_k}\]</div>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">mpf(&#39;6.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+<span class="go">[(2, 1), (1.5, -1), (3, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdot</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">mpf(&#39;6.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">3</span><span class="n">j</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">j</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;9.5&#39;, imag=&#39;-1.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fdot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">conjugate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;3.5&#39;, imag=&#39;-5.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="complex-components">
+<h2>Complex components<a class="headerlink" href="#complex-components" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fabs">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fabs()</span></tt><a class="headerlink" href="#fabs" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fabs">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fabs</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.fabs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the absolute value of <span class="math">\(x\)</span>, <span class="math">\(|x|\)</span>. Unlike <tt class="xref py py-func docutils literal"><span class="pre">abs()</span></tt>,
+<a class="reference internal" href="#mpmath.fabs" title="mpmath.fabs"><tt class="xref py py-func docutils literal"><span class="pre">fabs()</span></tt></a> converts non-mpmath numbers (such as <tt class="docutils literal"><span class="pre">int</span></tt>)
+into mpmath numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fabs</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fabs</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fabs</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpf(&#39;5.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sign">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sign()</span></tt><a class="headerlink" href="#sign" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sign">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sign</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.sign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sign of <span class="math">\(x\)</span>, defined as <span class="math">\(\mathrm{sign}(x) = x / |x|\)</span>
+(with the special case <span class="math">\(\mathrm{sign}(0) = 0\)</span>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">mpf(&#39;1.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">mpf(&#39;-1.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.0&#39;)</span>
+</pre></div>
+</div>
+<p>Note that the sign function is also defined for complex numbers,
+for which it gives the projection onto the unit circle:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sign</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.707106781186547 + 0.707106781186547j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="re">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">re()</span></tt><a class="headerlink" href="#re" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.re">
+<tt class="descclassname">mpmath.</tt><tt class="descname">re</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.re" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the real part of <span class="math">\(x\)</span>, <span class="math">\(\Re(x)\)</span>. Unlike <tt class="docutils literal"><span class="pre">x.real</span></tt>,
+<a class="reference internal" href="#mpmath.re" title="mpmath.re"><tt class="xref py py-func docutils literal"><span class="pre">re()</span></tt></a> converts <span class="math">\(x\)</span> to a mpmath number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpf(&#39;-1.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="im">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">im()</span></tt><a class="headerlink" href="#im" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.im">
+<tt class="descclassname">mpmath.</tt><tt class="descname">im</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.im" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the imaginary part of <span class="math">\(x\)</span>, <span class="math">\(\Im(x)\)</span>. Unlike <tt class="docutils literal"><span class="pre">x.imag</span></tt>,
+<a class="reference internal" href="#mpmath.im" title="mpmath.im"><tt class="xref py py-func docutils literal"><span class="pre">im()</span></tt></a> converts <span class="math">\(x\)</span> to a mpmath number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">im</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="arg">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">arg()</span></tt><a class="headerlink" href="#arg" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.arg">
+<tt class="descclassname">mpmath.</tt><tt class="descname">arg</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.arg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the complex argument (phase) of <span class="math">\(x\)</span>, defined as the
+signed angle between the positive real axis and <span class="math">\(x\)</span> in the
+complex plane:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">0.785398163397448</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">1.5707963267949</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3.14159265358979</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arg</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">-1.5707963267949</span>
+</pre></div>
+</div>
+<p>The angle is defined to satisfy <span class="math">\(-\pi &lt; \arg(x) \le \pi\)</span> and
+with the sign convention that a nonnegative imaginary part
+results in a nonnegative argument.</p>
+<p>The value returned by <a class="reference internal" href="#mpmath.arg" title="mpmath.arg"><tt class="xref py py-func docutils literal"><span class="pre">arg()</span></tt></a> is an <tt class="docutils literal"><span class="pre">mpf</span></tt> instance.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="conj">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">conj()</span></tt><a class="headerlink" href="#conj" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.conj">
+<tt class="descclassname">mpmath.</tt><tt class="descname">conj</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.conj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the complex conjugate of <span class="math">\(x\)</span>, <span class="math">\(\overline{x}\)</span>. Unlike
+<tt class="docutils literal"><span class="pre">x.conjugate()</span></tt>, <a class="reference internal" href="#mpmath.im" title="mpmath.im"><tt class="xref py py-func docutils literal"><span class="pre">im()</span></tt></a> converts <span class="math">\(x\)</span> to a mpmath number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conj</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conj</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;-1.0&#39;, imag=&#39;-4.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="polar">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">polar()</span></tt><a class="headerlink" href="#polar" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.polar">
+<tt class="descclassname">mpmath.</tt><tt class="descname">polar</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.polar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the polar representation of the complex number <span class="math">\(z\)</span>
+as a pair <span class="math">\((r, \phi)\)</span> such that <span class="math">\(z = r e^{i \phi}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(2.0, 3.14159265358979)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="p">(</span><span class="mi">3</span><span class="o">-</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(5.0, -0.927295218001612)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="rect">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">rect()</span></tt><a class="headerlink" href="#rect" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.rect">
+<tt class="descclassname">mpmath.</tt><tt class="descname">rect</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.rect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the complex number represented by polar
+coordinates <span class="math">\((r, \phi)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">rect</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="p">))</span>
+<span class="go">-2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">(1.0 - 1.0j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="integer-and-fractional-parts">
+<h2>Integer and fractional parts<a class="headerlink" href="#integer-and-fractional-parts" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="floor">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">floor()</span></tt><a class="headerlink" href="#floor" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.floor">
+<tt class="descclassname">mpmath.</tt><tt class="descname">floor</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.floor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the floor of <span class="math">\(x\)</span>, <span class="math">\(\lfloor x \rfloor\)</span>, defined as
+the largest integer less than or equal to <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="#mpmath.floor" title="mpmath.floor"><tt class="xref py py-func docutils literal"><span class="pre">floor()</span></tt></a>, <a class="reference internal" href="#mpmath.ceil" title="mpmath.ceil"><tt class="xref py py-func docutils literal"><span class="pre">ceil()</span></tt></a> and <a class="reference internal" href="#mpmath.nint" title="mpmath.nint"><tt class="xref py py-func docutils literal"><span class="pre">nint()</span></tt></a> return a
+floating-point number, not a Python <tt class="docutils literal"><span class="pre">int</span></tt>. If <span class="math">\(\lfloor x \rfloor\)</span> is
+too large to be represented exactly at the present working precision,
+the result will be rounded, not necessarily in the direction
+implied by the mathematical definition of the function.</p>
+</div>
+<p>To avoid rounding, use <em>prec=0</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">30</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">1000000000000000019884624838656</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">30</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+<span class="go">1000000000000000000000000000001</span>
+</pre></div>
+</div>
+<p>The floor function is defined for complex numbers and
+acts on the real and imaginary parts separately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">floor</span><span class="p">(</span><span class="mf">3.25</span><span class="o">+</span><span class="mf">4.75</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;3.0&#39;, imag=&#39;4.0&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ceil">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ceil()</span></tt><a class="headerlink" href="#ceil" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ceil">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ceil</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.ceil" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the ceiling of <span class="math">\(x\)</span>, <span class="math">\(\lceil x \rceil\)</span>, defined as
+the smallest integer greater than or equal to <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ceil</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+</pre></div>
+</div>
+<p>The ceiling function is defined for complex numbers and
+acts on the real and imaginary parts separately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ceil</span><span class="p">(</span><span class="mf">3.25</span><span class="o">+</span><span class="mf">4.75</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;4.0&#39;, imag=&#39;5.0&#39;)</span>
+</pre></div>
+</div>
+<p>See notes about rounding for <a class="reference internal" href="#mpmath.floor" title="mpmath.floor"><tt class="xref py py-func docutils literal"><span class="pre">floor()</span></tt></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="nint">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">nint()</span></tt><a class="headerlink" href="#nint" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.nint">
+<tt class="descclassname">mpmath.</tt><tt class="descname">nint</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.nint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the nearest integer function, <span class="math">\(\mathrm{nint}(x)\)</span>.
+This gives the nearest integer to <span class="math">\(x\)</span>; on a tie, it
+gives the nearest even integer:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nint</span><span class="p">(</span><span class="mf">3.2</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nint</span><span class="p">(</span><span class="mf">3.8</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nint</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nint</span><span class="p">(</span><span class="mf">4.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+</pre></div>
+</div>
+<p>The nearest integer function is defined for complex numbers and
+acts on the real and imaginary parts separately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nint</span><span class="p">(</span><span class="mf">3.25</span><span class="o">+</span><span class="mf">4.75</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;3.0&#39;, imag=&#39;5.0&#39;)</span>
+</pre></div>
+</div>
+<p>See notes about rounding for <a class="reference internal" href="#mpmath.floor" title="mpmath.floor"><tt class="xref py py-func docutils literal"><span class="pre">floor()</span></tt></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="frac">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">frac()</span></tt><a class="headerlink" href="#frac" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.frac">
+<tt class="descclassname">mpmath.</tt><tt class="descname">frac</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.frac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the fractional part of <span class="math">\(x\)</span>, defined as
+<span class="math">\(\mathrm{frac}(x) = x - \lfloor x \rfloor\)</span> (see <a class="reference internal" href="#mpmath.floor" title="mpmath.floor"><tt class="xref py py-func docutils literal"><span class="pre">floor()</span></tt></a>).
+In effect, this computes <span class="math">\(x\)</span> modulo 1, or <span class="math">\(x+n\)</span> where
+<span class="math">\(n \in \mathbb{Z}\)</span> is such that <span class="math">\(x+n \in [0,1)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frac</span><span class="p">(</span><span class="mf">1.25</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.25&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frac</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frac</span><span class="p">(</span><span class="o">-</span><span class="mf">1.25</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.75&#39;)</span>
+</pre></div>
+</div>
+<p>For a complex number, the fractional part function applies to
+the real and imaginary parts separately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">frac</span><span class="p">(</span><span class="mf">2.25</span><span class="o">+</span><span class="mf">3.75</span><span class="n">j</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;0.25&#39;, imag=&#39;0.75&#39;)</span>
+</pre></div>
+</div>
+<p>Plotted, the fractional part function gives a sawtooth
+wave. The Fourier series coefficients have a simple
+form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fourier</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">frac</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">([0.0, 0.0, 0.0, 0.0, 0.0], [0.0, -0.31831, -0.159155, -0.106103, -0.0795775])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">)])</span>
+<span class="go">[-0.31831, -0.159155, -0.106103, -0.0795775]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The fractional part is sometimes defined as a symmetric
+function, i.e. returning <span class="math">\(-\mathrm{frac}(-x)\)</span> if <span class="math">\(x &lt; 0\)</span>.
+This convention is used, for instance, by Mathematica&#8217;s
+<tt class="docutils literal"><span class="pre">FractionalPart</span></tt>.</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="tolerances-and-approximate-comparisons">
+<h2>Tolerances and approximate comparisons<a class="headerlink" href="#tolerances-and-approximate-comparisons" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="chop">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">chop()</span></tt><a class="headerlink" href="#chop" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.chop">
+<tt class="descclassname">mpmath.</tt><tt class="descname">chop</tt><big>(</big><em>x</em>, <em>tol=None</em><big>)</big><a class="headerlink" href="#mpmath.chop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chops off small real or imaginary parts, or converts
+numbers close to zero to exact zeros. The input can be a
+single number or an iterable:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="mi">5</span><span class="o">+</span><span class="mf">1e-10</span><span class="n">j</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
+<span class="go">mpf(&#39;5.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">chop</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e-20</span><span class="p">,</span> <span class="mi">3</span><span class="o">+</span><span class="mf">1e-18</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">[1.0, 0.0, 3.0, -4.0, 2.0]</span>
+</pre></div>
+</div>
+<p>The tolerance defaults to <tt class="docutils literal"><span class="pre">100*eps</span></tt>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="almosteq">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">almosteq()</span></tt><a class="headerlink" href="#almosteq" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.almosteq">
+<tt class="descclassname">mpmath.</tt><tt class="descname">almosteq</tt><big>(</big><em>s</em>, <em>t</em>, <em>rel_eps=None</em>, <em>abs_eps=None</em><big>)</big><a class="headerlink" href="#mpmath.almosteq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether the difference between <span class="math">\(s\)</span> and <span class="math">\(t\)</span> is smaller
+than a given epsilon, either relatively or absolutely.</p>
+<p>Both a maximum relative difference and a maximum difference
+(&#8216;epsilons&#8217;) may be specified. The absolute difference is
+defined as <span class="math">\(|s-t|\)</span> and the relative difference is defined
+as <span class="math">\(|s-t|/\max(|s|, |t|)\)</span>.</p>
+<p>If only one epsilon is given, both are set to the same value.
+If none is given, both epsilons are set to <span class="math">\(2^{-p+m}\)</span> where
+<span class="math">\(p\)</span> is the current working precision and <span class="math">\(m\)</span> is a small
+integer. The default setting typically allows <a class="reference internal" href="#mpmath.almosteq" title="mpmath.almosteq"><tt class="xref py py-func docutils literal"><span class="pre">almosteq()</span></tt></a>
+to be used to check for mathematical equality
+in the presence of small rounding errors.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">almosteq</span><span class="p">(</span><span class="mf">3.141592653589793</span><span class="p">,</span> <span class="mf">3.141592653589790</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">almosteq</span><span class="p">(</span><span class="mf">3.141592653589793</span><span class="p">,</span> <span class="mf">3.141592653589700</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">almosteq</span><span class="p">(</span><span class="mf">3.141592653589793</span><span class="p">,</span> <span class="mf">3.141592653589700</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">almosteq</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">,</span> <span class="mf">2e-20</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">almosteq</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">,</span> <span class="mf">2e-20</span><span class="p">,</span> <span class="n">rel_eps</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">abs_eps</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="properties-of-numbers">
+<h2>Properties of numbers<a class="headerlink" href="#properties-of-numbers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="isinf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">isinf()</span></tt><a class="headerlink" href="#isinf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.isinf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">isinf</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.isinf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <em>True</em> if the absolute value of <em>x</em> is infinite;
+otherwise return <em>False</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">inf</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isinf</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="isnan">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">isnan()</span></tt><a class="headerlink" href="#isnan" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.isnan">
+<tt class="descclassname">mpmath.</tt><tt class="descname">isnan</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.isnan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <em>True</em> if <em>x</em> is a NaN (not-a-number), or for a complex
+number, whether either the real or complex part is NaN;
+otherwise return <em>False</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnan</span><span class="p">(</span><span class="mf">3.14</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnan</span><span class="p">(</span><span class="n">nan</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnan</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mf">3.14</span><span class="p">,</span><span class="mf">2.72</span><span class="p">))</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnan</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mf">3.14</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="isnormal">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">isnormal()</span></tt><a class="headerlink" href="#isnormal" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.isnormal">
+<tt class="descclassname">mpmath.</tt><tt class="descname">isnormal</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.isnormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether <em>x</em> is &#8220;normal&#8221; in the sense of floating-point
+representation; that is, return <em>False</em> if <em>x</em> is zero, an
+infinity or NaN; otherwise return <em>True</em>. By extension, a
+complex number <em>x</em> is considered &#8220;normal&#8221; if its magnitude is
+normal:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="n">inf</span><span class="p">);</span> <span class="n">isnormal</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">);</span> <span class="n">isnormal</span><span class="p">(</span><span class="n">nan</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="go">False</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="mi">0</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isnormal</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">nan</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="isint">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">isint()</span></tt><a class="headerlink" href="#isint" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.isint">
+<tt class="descclassname">mpmath.</tt><tt class="descname">isint</tt><big>(</big><em>x</em>, <em>gaussian=False</em><big>)</big><a class="headerlink" href="#mpmath.isint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <em>True</em> if <em>x</em> is integer-valued; otherwise return
+<em>False</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="mf">3.2</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Optionally, Gaussian integers can be checked for:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">0</span><span class="n">j</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isint</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">,</span> <span class="n">gaussian</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ldexp">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ldexp()</span></tt><a class="headerlink" href="#ldexp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ldexp">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ldexp</tt><big>(</big><em>x</em>, <em>n</em><big>)</big><a class="headerlink" href="#mpmath.ldexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes <span class="math">\(x 2^n\)</span> efficiently. No rounding is performed.
+The argument <span class="math">\(x\)</span> must be a real floating-point number (or
+possible to convert into one) and <span class="math">\(n\)</span> must be a Python <tt class="docutils literal"><span class="pre">int</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">mpf(&#39;1024.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.125&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="frexp">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">frexp()</span></tt><a class="headerlink" href="#frexp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.frexp">
+<tt class="descclassname">mpmath.</tt><tt class="descname">frexp</tt><big>(</big><em>x</em>, <em>n</em><big>)</big><a class="headerlink" href="#mpmath.frexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a real number <span class="math">\(x\)</span>, returns <span class="math">\((y, n)\)</span> with <span class="math">\(y \in [0.5, 1)\)</span>,
+<span class="math">\(n\)</span> a Python integer, and such that <span class="math">\(x = y 2^n\)</span>. No rounding is
+performed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frexp</span><span class="p">(</span><span class="mf">7.5</span><span class="p">)</span>
+<span class="go">(mpf(&#39;0.9375&#39;), 3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="mag">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">mag()</span></tt><a class="headerlink" href="#mag" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.mag">
+<tt class="descclassname">mpmath.</tt><tt class="descname">mag</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.mag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quick logarithmic magnitude estimate of a number. Returns an
+integer or infinity <span class="math">\(m\)</span> such that <span class="math">\(|x| &lt;= 2^m\)</span>. It is not
+guaranteed that <span class="math">\(m\)</span> is an optimal bound, but it will never
+be too large by more than 2 (and probably not more than 1).</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="mf">10.0</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">10</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">(4, 4, 4, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span><span class="p">(</span><span class="mi">10</span><span class="n">j</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="mi">10</span><span class="o">+</span><span class="mi">10</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(4, 5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span><span class="p">(</span><span class="mf">0.01</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">(-6, -6)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="n">inf</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">),</span> <span class="n">mag</span><span class="p">(</span><span class="n">nan</span><span class="p">)</span>
+<span class="go">(-inf, +inf, +inf, nan)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="nint-distance">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">nint_distance()</span></tt><a class="headerlink" href="#nint-distance" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.nint_distance">
+<tt class="descclassname">mpmath.</tt><tt class="descname">nint_distance</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.nint_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <span class="math">\((n,d)\)</span> where <span class="math">\(n\)</span> is the nearest integer to <span class="math">\(x\)</span> and <span class="math">\(d\)</span> is
+an estimate of <span class="math">\(\log_2(|x-n|)\)</span>. If <span class="math">\(d &lt; 0\)</span>, <span class="math">\(-d\)</span> gives the precision
+(measured in bits) lost to cancellation when computing <span class="math">\(x-n\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mf">5.00000001</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">-26</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mf">4.99999999</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">-26</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">nint_distance</span><span class="p">(</span><span class="n">mpc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mf">0.000001</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">n</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="go">-19</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="number-generation">
+<h2>Number generation<a class="headerlink" href="#number-generation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fraction">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">fraction()</span></tt><a class="headerlink" href="#fraction" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.fraction">
+<tt class="descclassname">mpmath.</tt><tt class="descname">fraction</tt><big>(</big><em>p</em>, <em>q</em><big>)</big><a class="headerlink" href="#mpmath.fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given Python integers <span class="math">\((p, q)\)</span>, returns a lazy <tt class="docutils literal"><span class="pre">mpf</span></tt> representing
+the fraction <span class="math">\(p/q\)</span>. The value is updated with the precision.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">0.01</span>
+<span class="go">0.01</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>      <span class="c"># a will be accurate</span>
+<span class="go">0.01</span>
+<span class="go">0.0100000000000000002081668171172</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="rand">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">rand()</span></tt><a class="headerlink" href="#rand" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.rand">
+<tt class="descclassname">mpmath.</tt><tt class="descname">rand</tt><big>(</big><big>)</big><a class="headerlink" href="#mpmath.rand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an <tt class="docutils literal"><span class="pre">mpf</span></tt> with value chosen randomly from <span class="math">\([0, 1)\)</span>.
+The number of randomly generated bits in the mantissa is equal
+to the working precision.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="arange">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">arange()</span></tt><a class="headerlink" href="#arange" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.arange">
+<tt class="descclassname">mpmath.</tt><tt class="descname">arange</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#mpmath.arange" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a generalized version of Python&#8217;s <tt class="xref py py-func docutils literal"><span class="pre">range()</span></tt> function
+that accepts fractional endpoints and step sizes and
+returns a list of <tt class="docutils literal"><span class="pre">mpf</span></tt> instances. Like <tt class="xref py py-func docutils literal"><span class="pre">range()</span></tt>,
+<a class="reference internal" href="#mpmath.arange" title="mpmath.arange"><tt class="xref py py-func docutils literal"><span class="pre">arange()</span></tt></a> can be called with 1, 2 or 3 arguments:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">arange(b)</span></tt></dt>
+<dd><span class="math">\([0, 1, 2, \ldots, x]\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">arange(a,</span> <span class="pre">b)</span></tt></dt>
+<dd><span class="math">\([a, a+1, a+2, \ldots, x]\)</span></dd>
+<dt><tt class="docutils literal"><span class="pre">arange(a,</span> <span class="pre">b,</span> <span class="pre">h)</span></tt></dt>
+<dd><span class="math">\([a, a+h, a+h, \ldots, x]\)</span></dd>
+</dl>
+<p>where <span class="math">\(b-1 \le x &lt; b\)</span> (in the third case, <span class="math">\(b-h \le x &lt; b\)</span>).</p>
+<p>Like Python&#8217;s <tt class="xref py py-func docutils literal"><span class="pre">range()</span></tt>, the endpoint is not included. To
+produce ranges where the endpoint is included, <a class="reference internal" href="#mpmath.linspace" title="mpmath.linspace"><tt class="xref py py-func docutils literal"><span class="pre">linspace()</span></tt></a>
+is more convenient.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">[mpf(&#39;0.0&#39;), mpf(&#39;1.0&#39;), mpf(&#39;2.0&#39;), mpf(&#39;3.0&#39;)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">[mpf(&#39;1.0&#39;), mpf(&#39;1.25&#39;), mpf(&#39;1.5&#39;), mpf(&#39;1.75&#39;)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">[mpf(&#39;1.0&#39;), mpf(&#39;0.25&#39;), mpf(&#39;-0.5&#39;)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="linspace">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">linspace()</span></tt><a class="headerlink" href="#linspace" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.linspace">
+<tt class="descclassname">mpmath.</tt><tt class="descname">linspace</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.linspace" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">linspace(a,</span> <span class="pre">b,</span> <span class="pre">n)</span></tt> returns a list of <span class="math">\(n\)</span> evenly spaced
+samples from <span class="math">\(a\)</span> to <span class="math">\(b\)</span>. The syntax <tt class="docutils literal"><span class="pre">linspace(mpi(a,b),</span> <span class="pre">n)</span></tt>
+is also valid.</p>
+<p>This function is often more convenient than <a class="reference internal" href="#mpmath.arange" title="mpmath.arange"><tt class="xref py py-func docutils literal"><span class="pre">arange()</span></tt></a>
+for partitioning an interval into subintervals, since
+the endpoint is included:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[mpf(&#39;1.0&#39;), mpf(&#39;2.0&#39;), mpf(&#39;3.0&#39;), mpf(&#39;4.0&#39;)]</span>
+</pre></div>
+</div>
+<p>You may also provide the keyword argument <tt class="docutils literal"><span class="pre">endpoint=False</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[mpf(&#39;1.0&#39;), mpf(&#39;1.75&#39;), mpf(&#39;2.5&#39;), mpf(&#39;3.25&#39;)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="precision-management">
+<h2>Precision management<a class="headerlink" href="#precision-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="autoprec">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">autoprec()</span></tt><a class="headerlink" href="#autoprec" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.autoprec">
+<tt class="descclassname">mpmath.</tt><tt class="descname">autoprec</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>maxprec=None</em>, <em>catch=()</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#mpmath.autoprec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a wrapped copy of <em>f</em> that repeatedly evaluates <em>f</em>
+with increasing precision until the result converges to the
+full precision used at the point of the call.</p>
+<p>This heuristically protects against rounding errors, at the cost of
+roughly a 2x slowdown compared to manually setting the optimal
+precision. This method can, however, easily be fooled if the results
+from <em>f</em> depend &#8220;discontinuously&#8221; on the precision, for instance
+if catastrophic cancellation can occur. Therefore, <a class="reference internal" href="#mpmath.autoprec" title="mpmath.autoprec"><tt class="xref py py-func docutils literal"><span class="pre">autoprec()</span></tt></a>
+should be used judiciously.</p>
+<p><strong>Examples</strong></p>
+<p>Many functions are sensitive to perturbations of the input arguments.
+If the arguments are decimal numbers, they may have to be converted
+to binary at a much higher precision. If the amount of required
+extra precision is unknown, <a class="reference internal" href="#mpmath.autoprec" title="mpmath.autoprec"><tt class="xref py py-func docutils literal"><span class="pre">autoprec()</span></tt></a> is convenient:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselj</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">125</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">28</span><span class="p">)</span>    <span class="c"># Exact input</span>
+<span class="go">-8.03284785591801e-17</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">besselj</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;1.25e30&#39;</span><span class="p">)</span>   <span class="c"># Bad</span>
+<span class="go">7.12954868316652e-16</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">autoprec</span><span class="p">(</span><span class="n">besselj</span><span class="p">)(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;1.25e30&#39;</span><span class="p">)</span>   <span class="c"># Good</span>
+<span class="go">-8.03284785591801e-17</span>
+</pre></div>
+</div>
+<p>The following fails to converge because <span class="math">\(\sin(\pi) = 0\)</span> whereas all
+finite-precision approximations of <span class="math">\(\pi\)</span> give nonzero values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">autoprec</span><span class="p">(</span><span class="n">sin</span><span class="p">)(</span><span class="n">pi</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">NoConvergence: autoprec</span>: <span class="n">prec increased to 2910 without convergence</span>
+</pre></div>
+</div>
+<p>As the following example shows, <a class="reference internal" href="#mpmath.autoprec" title="mpmath.autoprec"><tt class="xref py py-func docutils literal"><span class="pre">autoprec()</span></tt></a> can protect against
+cancellation, but is fooled by too severe cancellation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">expm1</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="n">autoprec</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1.00000008274037e-10</span>
+<span class="go">1.00000000005e-10</span>
+<span class="go">1.00000000005e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">1e-50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="n">expm1</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="n">autoprec</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="go">1.0e-50</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>With <em>catch</em>, an exception or list of exceptions to intercept
+may be specified. The raised exception is interpreted
+as signaling insufficient precision. This permits, for example,
+evaluating a function where a too low precision results in a
+division by zero:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">1e-30</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ZeroDivisionError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">autoprec</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">catch</span><span class="o">=</span><span class="ne">ZeroDivisionError</span><span class="p">)(</span><span class="mf">1e-30</span><span class="p">)</span>
+<span class="go">1.0e+30</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="workprec">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">workprec()</span></tt><a class="headerlink" href="#workprec" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.workprec">
+<tt class="descclassname">mpmath.</tt><tt class="descname">workprec</tt><big>(</big><em>ctx</em>, <em>n</em>, <em>normalize_output=False</em><big>)</big><a class="headerlink" href="#mpmath.workprec" title="Permalink to this definition">¶</a></dt>
+<dd><p>The block</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>with workprec(n):</dt>
+<dd>&lt;code&gt;</dd>
+</dl>
+</div></blockquote>
+<p>sets the precision to n bits, executes &lt;code&gt;, and then restores
+the precision.</p>
+<p>workprec(n)(f) returns a decorated version of the function f
+that sets the precision to n bits before execution,
+and restores the precision afterwards. With normalize_output=True,
+it rounds the return value to the parent precision.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="workdps">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">workdps()</span></tt><a class="headerlink" href="#workdps" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.workdps">
+<tt class="descclassname">mpmath.</tt><tt class="descname">workdps</tt><big>(</big><em>ctx</em>, <em>n</em>, <em>normalize_output=False</em><big>)</big><a class="headerlink" href="#mpmath.workdps" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is analogous to workprec (see documentation)
+but changes the decimal precision instead of the number of bits.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="extraprec">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">extraprec()</span></tt><a class="headerlink" href="#extraprec" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.extraprec">
+<tt class="descclassname">mpmath.</tt><tt class="descname">extraprec</tt><big>(</big><em>ctx</em>, <em>n</em>, <em>normalize_output=False</em><big>)</big><a class="headerlink" href="#mpmath.extraprec" title="Permalink to this definition">¶</a></dt>
+<dd><p>The block</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>with extraprec(n):</dt>
+<dd>&lt;code&gt;</dd>
+</dl>
+</div></blockquote>
+<p>increases the precision n bits, executes &lt;code&gt;, and then
+restores the precision.</p>
+<p>extraprec(n)(f) returns a decorated version of the function f
+that increases the working precision by n bits before execution,
+and restores the parent precision afterwards. With
+normalize_output=True, it rounds the return value to the parent
+precision.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="extradps">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">extradps()</span></tt><a class="headerlink" href="#extradps" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.extradps">
+<tt class="descclassname">mpmath.</tt><tt class="descname">extradps</tt><big>(</big><em>ctx</em>, <em>n</em>, <em>normalize_output=False</em><big>)</big><a class="headerlink" href="#mpmath.extradps" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is analogous to extraprec (see documentation)
+but changes the decimal precision instead of the number of bits.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="performance-and-debugging">
+<h2>Performance and debugging<a class="headerlink" href="#performance-and-debugging" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="memoize">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">memoize()</span></tt><a class="headerlink" href="#memoize" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.memoize">
+<tt class="descclassname">mpmath.</tt><tt class="descname">memoize</tt><big>(</big><em>ctx</em>, <em>f</em><big>)</big><a class="headerlink" href="#mpmath.memoize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a wrapped copy of <em>f</em> that caches computed values, i.e.
+a memoized copy of <em>f</em>. Values are only reused if the cached precision
+is equal to or higher than the working precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">memoize</span><span class="p">(</span><span class="n">maxcalls</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.909297426825682</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.909297426825682</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">NoConvergence: maxcalls</span>: <span class="n">function evaluated 1 times</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="maxcalls">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">maxcalls()</span></tt><a class="headerlink" href="#maxcalls" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.maxcalls">
+<tt class="descclassname">mpmath.</tt><tt class="descname">maxcalls</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>N</em><big>)</big><a class="headerlink" href="#mpmath.maxcalls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a wrapped copy of <em>f</em> that raises <tt class="docutils literal"><span class="pre">NoConvergence</span></tt> when <em>f</em>
+has been called more than <em>N</em> times:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">maxcalls</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span>
+<span class="go">1.95520948210738</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">NoConvergence: maxcalls</span>: <span class="n">function evaluated 10 times</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="monitor">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">monitor()</span></tt><a class="headerlink" href="#monitor" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.monitor">
+<tt class="descclassname">mpmath.</tt><tt class="descname">monitor</tt><big>(</big><em>f</em>, <em>input='print'</em>, <em>output='print'</em><big>)</big><a class="headerlink" href="#mpmath.monitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a wrapped copy of <em>f</em> that monitors evaluation by calling
+<em>input</em> with every input (<em>args</em>, <em>kwargs</em>) passed to <em>f</em> and
+<em>output</em> with every value returned from <em>f</em>. The default action
+(specify using the special string value <tt class="docutils literal"><span class="pre">'print'</span></tt>) is to print
+inputs and outputs to stdout, along with the total evaluation
+count:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">monitor</span><span class="p">(</span><span class="n">exp</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>   <span class="c"># diff will eval f(x-h) and f(x+h)</span>
+<span class="go">in  0 (mpf(&#39;0.99999999906867742538452148&#39;),) {}</span>
+<span class="go">out 0 mpf(&#39;2.7182818259274480055282064&#39;)</span>
+<span class="go">in  1 (mpf(&#39;1.0000000009313225746154785&#39;),) {}</span>
+<span class="go">out 1 mpf(&#39;2.7182818309906424675501024&#39;)</span>
+<span class="go">mpf(&#39;2.7182808&#39;)</span>
+</pre></div>
+</div>
+<p>To disable either the input or the output handler, you may
+pass <em>None</em> as argument.</p>
+<p>Custom input and output handlers may be used e.g. to store
+results for later analysis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">monitor</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">append</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">),</span> <span class="mf">3.0</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.1415926535897932&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c"># Count number of evaluations</span>
+<span class="go">9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span> <span class="k">print</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">((mpf(&#39;3.1415076583334066&#39;),), {})</span>
+<span class="go">8.49952562843408e-5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">4</span><span class="p">]);</span> <span class="k">print</span><span class="p">(</span><span class="n">output</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+<span class="go">((mpf(&#39;3.1415928201669122&#39;),), {})</span>
+<span class="go">-1.66577118985331e-7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="timing">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">timing()</span></tt><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.timing">
+<tt class="descclassname">mpmath.</tt><tt class="descname">timing</tt><big>(</big><em>f</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.timing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns time elapsed for evaluating <tt class="docutils literal"><span class="pre">f()</span></tt>. Optionally arguments
+may be passed to time the execution of <tt class="docutils literal"><span class="pre">f(*args,</span> <span class="pre">**kwargs)</span></tt>.</p>
+<p>If the first call is very quick, <tt class="docutils literal"><span class="pre">f</span></tt> is called
+repeatedly and the best time is returned.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Utility functions</a><ul>
+<li><a class="reference internal" href="#conversion-and-printing">Conversion and printing</a><ul>
+<li><a class="reference internal" href="#mpmathify-convert"><tt class="docutils literal"><span class="pre">mpmathify()</span></tt> / <tt class="docutils literal"><span class="pre">convert()</span></tt></a></li>
+<li><a class="reference internal" href="#nstr"><tt class="docutils literal"><span class="pre">nstr()</span></tt></a></li>
+<li><a class="reference internal" href="#nprint"><tt class="docutils literal"><span class="pre">nprint()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#arithmetic-operations">Arithmetic operations</a><ul>
+<li><a class="reference internal" href="#fadd"><tt class="docutils literal"><span class="pre">fadd()</span></tt></a></li>
+<li><a class="reference internal" href="#fsub"><tt class="docutils literal"><span class="pre">fsub()</span></tt></a></li>
+<li><a class="reference internal" href="#fneg"><tt class="docutils literal"><span class="pre">fneg()</span></tt></a></li>
+<li><a class="reference internal" href="#fmul"><tt class="docutils literal"><span class="pre">fmul()</span></tt></a></li>
+<li><a class="reference internal" href="#fdiv"><tt class="docutils literal"><span class="pre">fdiv()</span></tt></a></li>
+<li><a class="reference internal" href="#fmod"><tt class="docutils literal"><span class="pre">fmod()</span></tt></a></li>
+<li><a class="reference internal" href="#fsum"><tt class="docutils literal"><span class="pre">fsum()</span></tt></a></li>
+<li><a class="reference internal" href="#fprod"><tt class="docutils literal"><span class="pre">fprod()</span></tt></a></li>
+<li><a class="reference internal" href="#fdot"><tt class="docutils literal"><span class="pre">fdot()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#complex-components">Complex components</a><ul>
+<li><a class="reference internal" href="#fabs"><tt class="docutils literal"><span class="pre">fabs()</span></tt></a></li>
+<li><a class="reference internal" href="#sign"><tt class="docutils literal"><span class="pre">sign()</span></tt></a></li>
+<li><a class="reference internal" href="#re"><tt class="docutils literal"><span class="pre">re()</span></tt></a></li>
+<li><a class="reference internal" href="#im"><tt class="docutils literal"><span class="pre">im()</span></tt></a></li>
+<li><a class="reference internal" href="#arg"><tt class="docutils literal"><span class="pre">arg()</span></tt></a></li>
+<li><a class="reference internal" href="#conj"><tt class="docutils literal"><span class="pre">conj()</span></tt></a></li>
+<li><a class="reference internal" href="#polar"><tt class="docutils literal"><span class="pre">polar()</span></tt></a></li>
+<li><a class="reference internal" href="#rect"><tt class="docutils literal"><span class="pre">rect()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integer-and-fractional-parts">Integer and fractional parts</a><ul>
+<li><a class="reference internal" href="#floor"><tt class="docutils literal"><span class="pre">floor()</span></tt></a></li>
+<li><a class="reference internal" href="#ceil"><tt class="docutils literal"><span class="pre">ceil()</span></tt></a></li>
+<li><a class="reference internal" href="#nint"><tt class="docutils literal"><span class="pre">nint()</span></tt></a></li>
+<li><a class="reference internal" href="#frac"><tt class="docutils literal"><span class="pre">frac()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tolerances-and-approximate-comparisons">Tolerances and approximate comparisons</a><ul>
+<li><a class="reference internal" href="#chop"><tt class="docutils literal"><span class="pre">chop()</span></tt></a></li>
+<li><a class="reference internal" href="#almosteq"><tt class="docutils literal"><span class="pre">almosteq()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#properties-of-numbers">Properties of numbers</a><ul>
+<li><a class="reference internal" href="#isinf"><tt class="docutils literal"><span class="pre">isinf()</span></tt></a></li>
+<li><a class="reference internal" href="#isnan"><tt class="docutils literal"><span class="pre">isnan()</span></tt></a></li>
+<li><a class="reference internal" href="#isnormal"><tt class="docutils literal"><span class="pre">isnormal()</span></tt></a></li>
+<li><a class="reference internal" href="#isint"><tt class="docutils literal"><span class="pre">isint()</span></tt></a></li>
+<li><a class="reference internal" href="#ldexp"><tt class="docutils literal"><span class="pre">ldexp()</span></tt></a></li>
+<li><a class="reference internal" href="#frexp"><tt class="docutils literal"><span class="pre">frexp()</span></tt></a></li>
+<li><a class="reference internal" href="#mag"><tt class="docutils literal"><span class="pre">mag()</span></tt></a></li>
+<li><a class="reference internal" href="#nint-distance"><tt class="docutils literal"><span class="pre">nint_distance()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#number-generation">Number generation</a><ul>
+<li><a class="reference internal" href="#fraction"><tt class="docutils literal"><span class="pre">fraction()</span></tt></a></li>
+<li><a class="reference internal" href="#rand"><tt class="docutils literal"><span class="pre">rand()</span></tt></a></li>
+<li><a class="reference internal" href="#arange"><tt class="docutils literal"><span class="pre">arange()</span></tt></a></li>
+<li><a class="reference internal" href="#linspace"><tt class="docutils literal"><span class="pre">linspace()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#precision-management">Precision management</a><ul>
+<li><a class="reference internal" href="#autoprec"><tt class="docutils literal"><span class="pre">autoprec()</span></tt></a></li>
+<li><a class="reference internal" href="#workprec"><tt class="docutils literal"><span class="pre">workprec()</span></tt></a></li>
+<li><a class="reference internal" href="#workdps"><tt class="docutils literal"><span class="pre">workdps()</span></tt></a></li>
+<li><a class="reference internal" href="#extraprec"><tt class="docutils literal"><span class="pre">extraprec()</span></tt></a></li>
+<li><a class="reference internal" href="#extradps"><tt class="docutils literal"><span class="pre">extradps()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance-and-debugging">Performance and debugging</a><ul>
+<li><a class="reference internal" href="#memoize"><tt class="docutils literal"><span class="pre">memoize()</span></tt></a></li>
+<li><a class="reference internal" href="#maxcalls"><tt class="docutils literal"><span class="pre">maxcalls()</span></tt></a></li>
+<li><a class="reference internal" href="#monitor"><tt class="docutils literal"><span class="pre">monitor()</span></tt></a></li>
+<li><a class="reference internal" href="#timing"><tt class="docutils literal"><span class="pre">timing()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="contexts.html"
+                        title="previous chapter">Contexts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="plotting.html"
+                        title="next chapter">Plotting</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/general.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="plotting.html" title="Plotting"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="contexts.html" title="Contexts"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

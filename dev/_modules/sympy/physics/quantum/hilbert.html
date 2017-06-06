@@ -1,0 +1,771 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.hilbert &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.hilbert</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Hilbert spaces for quantum mechanics.</span>
+
+<span class="sd">Authors:</span>
+<span class="sd">* Brian Granger</span>
+<span class="sd">* Matt Curry</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;HilbertSpaceError&#39;</span><span class="p">,</span>
+    <span class="s">&#39;HilbertSpace&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ComplexSpace&#39;</span><span class="p">,</span>
+    <span class="s">&#39;L2&#39;</span><span class="p">,</span>
+    <span class="s">&#39;FockSpace&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Main objects</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">HilbertSpaceError</span><span class="p">(</span><span class="n">QuantumError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Main objects</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="HilbertSpace"><a class="viewcode-back" href="../../../../modules/physics/quantum/hilbert.html#sympy.physics.quantum.hilbert.HilbertSpace">[docs]</a><span class="k">class</span> <span class="nc">HilbertSpace</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An abstract Hilbert space for quantum mechanics.</span>
+
+<span class="sd">    In short, a Hilbert space is an abstract vector space that is complete</span>
+<span class="sd">    with inner products defined [1]_.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import HilbertSpace</span>
+<span class="sd">    &gt;&gt;&gt; hs = HilbertSpace()</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    H</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Hilbert_space</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="HilbertSpace.dimension"><a class="viewcode-back" href="../../../../modules/physics/quantum/hilbert.html#sympy.physics.quantum.hilbert.HilbertSpace.dimension">[docs]</a>    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the Hilbert dimension of the space.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;This Hilbert space has no dimension.&#39;</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DirectSumHilbertSpace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DirectSumHilbertSpace</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TensorProductHilbertSpace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TensorProductHilbertSpace</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mod</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The third argument to __pow__ is not supported </span><span class="se">\</span>
+<span class="s">            for Hilbert spaces.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is the operator or state in this Hilbert space.</span>
+
+<span class="sd">        This is checked by comparing the classes of the Hilbert spaces, not</span>
+<span class="sd">        the instances. This is to allow Hilbert Spaces with symbolic</span>
+<span class="sd">        dimensions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">hilbert_space</span><span class="o">.</span><span class="n">__class__</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c"># u = u(&#39;\u2108&#39;) # script</span>
+        <span class="n">ustr</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u0048</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">ustr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;\mathcal{H}&#39;</span>
+
+</div>
+<div class="viewcode-block" id="ComplexSpace"><a class="viewcode-back" href="../../../../modules/physics/quantum/hilbert.html#sympy.physics.quantum.hilbert.ComplexSpace">[docs]</a><span class="k">class</span> <span class="nc">ComplexSpace</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finite dimensional Hilbert space of complex vectors.</span>
+
+<span class="sd">    The elements of this Hilbert space are n-dimensional complex valued</span>
+<span class="sd">    vectors with the usual inner product that takes the complex conjugate</span>
+<span class="sd">    of the vector on the right.</span>
+
+<span class="sd">    A classic example of this type of Hilbert space is spin-1/2, which is</span>
+<span class="sd">    ``ComplexSpace(2)``. Generalizing to spin-s, the space is</span>
+<span class="sd">    ``ComplexSpace(2*s+1)``.  Quantum computing with N qubits is done with the</span>
+<span class="sd">    direct product space ``ComplexSpace(2)**N``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import ComplexSpace</span>
+<span class="sd">    &gt;&gt;&gt; c1 = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; c1</span>
+<span class="sd">    C(2)</span>
+<span class="sd">    &gt;&gt;&gt; c1.dimension</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &gt;&gt;&gt; n = symbols(&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; c2 = ComplexSpace(n)</span>
+<span class="sd">    &gt;&gt;&gt; c2</span>
+<span class="sd">    C(n)</span>
+<span class="sd">    &gt;&gt;&gt; c2.dimension</span>
+<span class="sd">    n</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">dimension</span><span class="p">):</span>
+        <span class="n">dimension</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">dimension</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dimension</span><span class="o">.</span><span class="n">atoms</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dimension</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">dimension</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dimension</span> <span class="ow">is</span> <span class="n">oo</span>
+            <span class="ow">or</span> <span class="n">dimension</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;The dimension of a ComplexSpace can only&#39;</span>
+                                <span class="s">&#39;be a positive integer, oo, or a Symbol: </span><span class="si">%r</span><span class="s">&#39;</span>
+                                <span class="o">%</span> <span class="n">dimension</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dimension</span><span class="o">.</span><span class="n">atoms</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dim</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="n">dim</span> <span class="ow">is</span> <span class="n">oo</span> <span class="ow">or</span> <span class="n">dim</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;The dimension of a ComplexSpace can only&#39;</span>
+                                    <span class="s">&#39; contain integers, oo, or a Symbol: </span><span class="si">%r</span><span class="s">&#39;</span>
+                                    <span class="o">%</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                           <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;C(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c"># u = u(&#39;\u2102&#39;) # script</span>
+        <span class="n">ustr</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u0043</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">pform_exp</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">pform_base</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">ustr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pform_base</span><span class="o">**</span><span class="n">pform_exp</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;\mathcal{C}^{</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="L2"><a class="viewcode-back" href="../../../../modules/physics/quantum/hilbert.html#sympy.physics.quantum.hilbert.L2">[docs]</a><span class="k">class</span> <span class="nc">L2</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Hilbert space of square integrable functions on an interval.</span>
+
+<span class="sd">    An L2 object takes in a single sympy Interval argument which represents</span>
+<span class="sd">    the interval its functions (vectors) are defined on.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Interval, oo</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import L2</span>
+<span class="sd">    &gt;&gt;&gt; hs = L2(Interval(0,oo))</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    L2([0, oo))</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; hs.interval</span>
+<span class="sd">    [0, oo)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;L2 interval must be an Interval instance: </span><span class="si">%r</span><span class="s">&#39;</span>
+            <span class="o">%</span> <span class="n">interval</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">oo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;L2(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;L2(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">pform_exp</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;2&#39;</span><span class="p">))</span>
+        <span class="n">pform_base</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pform_base</span><span class="o">**</span><span class="n">pform_exp</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">r&#39;{\mathcal{L}^2}\left( </span><span class="si">%s</span><span class="s"> \right)&#39;</span> <span class="o">%</span> <span class="n">interval</span>
+
+</div>
+<div class="viewcode-block" id="FockSpace"><a class="viewcode-back" href="../../../../modules/physics/quantum/hilbert.html#sympy.physics.quantum.hilbert.FockSpace">[docs]</a><span class="k">class</span> <span class="nc">FockSpace</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Hilbert space for second quantization.</span>
+
+<span class="sd">    Technically, this Hilbert space is a infinite direct sum of direct</span>
+<span class="sd">    products of single particle Hilbert spaces [1]_. This is a mess, so we have</span>
+<span class="sd">    a class to represent it directly.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import FockSpace</span>
+<span class="sd">    &gt;&gt;&gt; hs = FockSpace()</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    F</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    oo</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Fock_space</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">oo</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;FockSpace()&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;F&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c"># u = u(&#39;\u2131&#39;) # script</span>
+        <span class="n">ustr</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u0046</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">ustr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;\mathcal{F}&#39;</span>
+
+</div>
+<span class="k">class</span> <span class="nc">TensorProductHilbertSpace</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A tensor product of Hilbert spaces [1]_.</span>
+
+<span class="sd">    The tensor product between Hilbert spaces is represented by the</span>
+<span class="sd">    operator ``*`` Products of the same Hilbert space will be combined into</span>
+<span class="sd">    tensor powers.</span>
+
+<span class="sd">    A ``TensorProductHilbertSpace`` object takes in an arbitrary number of</span>
+<span class="sd">    ``HilbertSpace`` objects as its arguments. In addition, multiplication of</span>
+<span class="sd">    ``HilbertSpace`` objects will automatically return this tensor product</span>
+<span class="sd">    object.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; c = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; f = FockSpace()</span>
+<span class="sd">    &gt;&gt;&gt; hs = c*f</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    C(2)*F</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; hs.spaces</span>
+<span class="sd">    (C(2), F)</span>
+
+<span class="sd">    &gt;&gt;&gt; c1 = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; n = symbols(&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; c2 = ComplexSpace(n)</span>
+<span class="sd">    &gt;&gt;&gt; hs = c1*c2</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    C(2)*C(n)</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    2*n</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the direct product.&quot;&quot;&quot;</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c">#flatten arguments</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">TensorProductHilbertSpace</span><span class="p">):</span>
+                <span class="n">new_args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">recall</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="p">(</span><span class="n">HilbertSpace</span><span class="p">,</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">)):</span>
+                <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Hilbert spaces can only be multiplied by </span><span class="se">\</span>
+<span class="s">                other Hilbert spaces: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">arg</span><span class="p">)</span>
+        <span class="c">#combine like arguments into direct powers</span>
+        <span class="n">comb_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">prev_arg</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">new_arg</span> <span class="ow">in</span> <span class="n">new_args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">prev_arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_arg</span><span class="p">,</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">)</span> <span class="ow">and</span> \
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">prev_arg</span><span class="p">,</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">new_arg</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="n">prev_arg</span><span class="o">.</span><span class="n">base</span><span class="p">:</span>
+                    <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">new_arg</span><span class="o">.</span><span class="n">base</span><span class="o">**</span><span class="p">(</span><span class="n">new_arg</span><span class="o">.</span><span class="n">exp</span> <span class="o">+</span> <span class="n">prev_arg</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_arg</span><span class="p">,</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">new_arg</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="n">prev_arg</span><span class="p">:</span>
+                    <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">prev_arg</span><span class="o">**</span><span class="p">(</span><span class="n">new_arg</span><span class="o">.</span><span class="n">exp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prev_arg</span><span class="p">,</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">new_arg</span> <span class="o">==</span> <span class="n">prev_arg</span><span class="o">.</span><span class="n">base</span><span class="p">:</span>
+                    <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">new_arg</span><span class="o">**</span><span class="p">(</span><span class="n">prev_arg</span><span class="o">.</span><span class="n">exp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">new_arg</span> <span class="o">==</span> <span class="n">prev_arg</span><span class="p">:</span>
+                    <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">new_arg</span><span class="o">**</span><span class="mi">2</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">comb_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prev_arg</span><span class="p">)</span>
+                    <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">new_arg</span>
+            <span class="k">elif</span> <span class="n">prev_arg</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">prev_arg</span> <span class="o">=</span> <span class="n">new_arg</span>
+        <span class="n">comb_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prev_arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">recall</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TensorProductHilbertSpace</span><span class="p">(</span><span class="o">*</span><span class="n">comb_args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TensorPowerHilbertSpace</span><span class="p">(</span><span class="n">comb_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">comb_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">dimension</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">oo</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">oo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">arg_list</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of the Hilbert spaces in this tensor product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">_spaces_printer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">spaces_strs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">DirectSumHilbertSpace</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">s</span>
+            <span class="n">spaces_strs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spaces_strs</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">spaces_reprs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spaces_printer</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;TensorProductHilbertSpace(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spaces_reprs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">spaces_strs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spaces_printer</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;*&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spaces_strs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">next_pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DirectSumHilbertSpace</span><span class="p">,</span>
+                          <span class="n">TensorProductHilbertSpace</span><span class="p">)):</span>
+                <span class="n">next_pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">next_pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">next_pform</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">printer</span><span class="o">.</span><span class="n">_use_unicode</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u2a02</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; x &#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pform</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">arg_s</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DirectSumHilbertSpace</span><span class="p">,</span>
+                 <span class="n">TensorProductHilbertSpace</span><span class="p">)):</span>
+                <span class="n">arg_s</span> <span class="o">=</span> <span class="s">r&#39;\left(</span><span class="si">%s</span><span class="s">\right)&#39;</span> <span class="o">%</span> <span class="n">arg_s</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">arg_s</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">r&#39;\otimes &#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">class</span> <span class="nc">DirectSumHilbertSpace</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A direct sum of Hilbert spaces [1]_.</span>
+
+<span class="sd">    This class uses the ``+`` operator to represent direct sums between</span>
+<span class="sd">    different Hilbert spaces.</span>
+
+<span class="sd">    A ``DirectSumHilbertSpace`` object takes in an arbitrary number of</span>
+<span class="sd">    ``HilbertSpace`` objects as its arguments. Also, addition of</span>
+<span class="sd">    ``HilbertSpace`` objects will automatically return a direct sum object.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; c = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; f = FockSpace()</span>
+<span class="sd">    &gt;&gt;&gt; hs = c+f</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    C(2)+F</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; list(hs.spaces)</span>
+<span class="sd">    [C(2), F]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the direct product.&quot;&quot;&quot;</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">recall</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c">#flatten arguments</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">DirectSumHilbertSpace</span><span class="p">):</span>
+                <span class="n">new_args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">recall</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">HilbertSpace</span><span class="p">):</span>
+                <span class="n">new_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Hilbert spaces can only be summed with other </span><span class="se">\</span>
+<span class="s">                Hilbert spaces: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">recall</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DirectSumHilbertSpace</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">dimension</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">oo</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">oo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">arg_list</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of the Hilbert spaces in this direct sum.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">spaces_reprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s">&quot;DirectSumHilbertSpace(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spaces_reprs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">spaces_strs</span> <span class="o">=</span> <span class="p">[</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">spaces_strs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">next_pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DirectSumHilbertSpace</span><span class="p">,</span>
+                          <span class="n">TensorProductHilbertSpace</span><span class="p">)):</span>
+                <span class="n">next_pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">next_pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">next_pform</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">printer</span><span class="o">.</span><span class="n">_use_unicode</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u2295</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; + &#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pform</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
+            <span class="n">arg_s</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">DirectSumHilbertSpace</span><span class="p">,</span>
+                 <span class="n">TensorProductHilbertSpace</span><span class="p">)):</span>
+                <span class="n">arg_s</span> <span class="o">=</span> <span class="s">r&#39;\left(</span><span class="si">%s</span><span class="s">\right)&#39;</span> <span class="o">%</span> <span class="n">arg_s</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="n">arg_s</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="s">r&#39;\oplus &#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">class</span> <span class="nc">TensorPowerHilbertSpace</span><span class="p">(</span><span class="n">HilbertSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exponentiated Hilbert space [1]_.</span>
+
+<span class="sd">    Tensor powers (repeated tensor products) are represented by the</span>
+<span class="sd">    operator ``**`` Identical Hilbert spaces that are multiplied together</span>
+<span class="sd">    will be automatically combined into a single tensor power object.</span>
+
+<span class="sd">    Any Hilbert space, product, or sum may be raised to a tensor power. The</span>
+<span class="sd">    ``TensorPowerHilbertSpace`` takes two arguments: the Hilbert space; and the</span>
+<span class="sd">    tensor power (number).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; n = symbols(&#39;n&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; c = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; hs = c**n</span>
+<span class="sd">    &gt;&gt;&gt; hs</span>
+<span class="sd">    C(2)**n</span>
+<span class="sd">    &gt;&gt;&gt; hs.dimension</span>
+<span class="sd">    2**n</span>
+
+<span class="sd">    &gt;&gt;&gt; c = ComplexSpace(2)</span>
+<span class="sd">    &gt;&gt;&gt; c*c</span>
+<span class="sd">    C(2)**2</span>
+<span class="sd">    &gt;&gt;&gt; f = FockSpace()</span>
+<span class="sd">    &gt;&gt;&gt; c*f*f</span>
+<span class="sd">    C(2)*F**2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sympify</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="n">new_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c">#simplify hs**1 -&gt; hs</span>
+        <span class="k">if</span> <span class="n">exp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c">#simplify hs**0 -&gt; 1</span>
+        <span class="k">if</span> <span class="n">exp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c">#check (and allow) for hs**(x+42+y...) case</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">atoms</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">exp</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">exp</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Hilbert spaces can only be raised to </span><span class="se">\</span>
+<span class="s">                positive integers or Symbols: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">exp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">power</span> <span class="ow">in</span> <span class="n">exp</span><span class="o">.</span><span class="n">atoms</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">power</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="n">power</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Tensor powers can only contain integers </span><span class="se">\</span>
+<span class="s">                    or Symbols: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">power</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">oo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">dimension</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;TensorPowerHilbertSpace(</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">**</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+        <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">pform_exp</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">printer</span><span class="o">.</span><span class="n">_use_unicode</span><span class="p">:</span>
+            <span class="n">pform_exp</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform_exp</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">prettyForm</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u2a02</span><span class="s">&#39;</span><span class="p">))))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pform_exp</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform_exp</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">prettyForm</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)))</span>
+        <span class="n">pform_base</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pform_base</span><span class="o">**</span><span class="n">pform_exp</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">r&#39;{</span><span class="si">%s</span><span class="s">}^{\otimes </span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

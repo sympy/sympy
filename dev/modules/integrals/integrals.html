@@ -1,0 +1,1876 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Symbolic Integrals &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Computing Integrals using Meijer G-Functions" href="g-functions.html" />
+    <link rel="prev" title="Geometry Module" href="../geometry.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="g-functions.html" title="Computing Integrals using Meijer G-Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../geometry.html" title="Geometry Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.integrals">
+<span id="symbolic-integrals"></span><h1>Symbolic Integrals<a class="headerlink" href="#module-sympy.integrals" title="Permalink to this headline">¶</a></h1>
+<p>The <tt class="docutils literal"><span class="pre">integrals</span></tt> module in SymPy implements methods to calculate definite and indefinite integrals of expressions.</p>
+<p>Principal method in this module is <a class="reference internal" href="#sympy.integrals.integrate" title="sympy.integrals.integrate"><tt class="xref py py-func docutils literal"><span class="pre">integrate()</span></tt></a></p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">integrate(f,</span> <span class="pre">x)</span></tt> returns the indefinite integral <span class="math">\(\int f\,dx\)</span></li>
+<li><tt class="docutils literal"><span class="pre">integrate(f,</span> <span class="pre">(x,</span> <span class="pre">a,</span> <span class="pre">b))</span></tt> returns the definite integral <span class="math">\(\int_{a}^{b} f\,dx\)</span></li>
+</ul>
+</div></blockquote>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>SymPy can integrate a vast array of functions. It can integrate polynomial functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">wrap_line</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">no_global</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go"> 3    2</span>
+<span class="go">x    x</span>
+<span class="go">-- + -- + x</span>
+<span class="go">3    2</span>
+</pre></div>
+</div>
+<p>Rational functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">               1</span>
+<span class="go">log(x + 1) + -----</span>
+<span class="go">             x + 1</span>
+</pre></div>
+</div>
+<p>Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions <tt class="docutils literal"><span class="pre">exp</span></tt>, <tt class="docutils literal"><span class="pre">cos</span></tt> and <tt class="docutils literal"><span class="pre">sin</span></tt> can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go"> 2  x           2  x                         x           x</span>
+<span class="go">x *e *sin(x)   x *e *cos(x)      x          e *sin(x)   e *cos(x)</span>
+<span class="go">------------ + ------------ - x*e *sin(x) + --------- - ---------</span>
+<span class="go">     2              2                           2           2</span>
+</pre></div>
+</div>
+<p>even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">erf</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">  ____    2</span>
+<span class="go">\/ pi *erf (x)</span>
+<span class="go">--------------</span>
+<span class="go">      4</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-sympy.integrals.transforms">
+<span id="integral-transforms"></span><h2>Integral Transforms<a class="headerlink" href="#module-sympy.integrals.transforms" title="Permalink to this headline">¶</a></h2>
+<p>SymPy has special support for definite integrals, and integral transforms.</p>
+<dl class="function">
+<dt id="sympy.integrals.transforms.mellin_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">mellin_transform</tt><big>(</big><em>f</em>, <em>x</em>, <em>s</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#mellin_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.mellin_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Mellin transform <span class="math">\(F(s)\)</span> of <span class="math">\(f(x)\)</span>,</p>
+<div class="math">
+\[F(s) = \int_0^\infty x^{s-1} f(x) \mathrm{d}x.\]</div>
+<dl class="docutils">
+<dt>For all &#8220;sensible&#8221; functions, this converges absolutely in a strip</dt>
+<dd><span class="math">\(a &lt; \operatorname{Re}(s) &lt; b\)</span>.</dd>
+</dl>
+<p>The Mellin transform is related via change of variables to the Fourier
+transform, and also to the (bilateral) Laplace transform.</p>
+<p>This function returns <tt class="docutils literal"><span class="pre">(F,</span> <span class="pre">(a,</span> <span class="pre">b),</span> <span class="pre">cond)</span></tt>
+where <tt class="docutils literal"><span class="pre">F</span></tt> is the Mellin transform of <tt class="docutils literal"><span class="pre">f</span></tt>, <tt class="docutils literal"><span class="pre">(a,</span> <span class="pre">b)</span></tt> is the fundamental strip
+(as above), and <tt class="docutils literal"><span class="pre">cond</span></tt> are auxiliary convergence conditions.</p>
+<p>If the integral cannot be computed in closed form, this function returns
+an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">MellinTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>. If <tt class="docutils literal"><span class="pre">noconds=False</span></tt>,
+then only <span class="math">\(F\)</span> will be returned (i.e. not <tt class="docutils literal"><span class="pre">cond</span></tt>, and also not the strip
+<tt class="docutils literal"><span class="pre">(a,</span> <span class="pre">b)</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.transforms</span> <span class="kn">import</span> <span class="n">mellin_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mellin_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+<span class="go">(gamma(s), (0, oo), True)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.inverse_mellin_transform" title="sympy.integrals.transforms.inverse_mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_mellin_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_mellin_transform</tt><big>(</big><em>F</em>, <em>s</em>, <em>x</em>, <em>strip</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_mellin_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_mellin_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse Mellin transform of <span class="math">\(F(s)\)</span> over the fundamental
+strip given by <tt class="docutils literal"><span class="pre">strip=(a,</span> <span class="pre">b)</span></tt>.</p>
+<p>This can be defined as</p>
+<div class="math">
+\[f(x) = \int_{c - i\infty}^{c + i\infty} x^{-s} F(s) \mathrm{d}s,\]</div>
+<p>for any <span class="math">\(c\)</span> in the fundamental strip. Under certain regularity
+conditions on <span class="math">\(F\)</span> and/or <span class="math">\(f\)</span>,
+this recovers <span class="math">\(f\)</span> from its Mellin transform <span class="math">\(F\)</span>
+(and vice versa), for positive real <span class="math">\(x\)</span>.</p>
+<p>One of <span class="math">\(a\)</span> or <span class="math">\(b\)</span> may be passed as <tt class="docutils literal"><span class="pre">None</span></tt>; a suitable <span class="math">\(c\)</span> will be
+inferred.</p>
+<p>If the integral cannot be computed in closed form, this function returns
+an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseMellinTransform</span></tt> object.</p>
+<p>Note that this function will assume x to be positive and real, regardless
+of the sympy assumptions!</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.transforms</span> <span class="kn">import</span> <span class="n">inverse_mellin_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">oo</span><span class="p">,</span> <span class="n">gamma</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_mellin_transform</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">exp(-x)</span>
+</pre></div>
+</div>
+<p>The fundamental strip matters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_mellin_transform</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">(x/2 - 1/(2*x))*Heaviside(x - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_mellin_transform</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">-x*Heaviside(-x + 1)/2 - Heaviside(x - 1)/(2*x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_mellin_transform</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">(-x/2 + 1/(2*x))*Heaviside(-x + 1)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.laplace_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">laplace_transform</tt><big>(</big><em>f</em>, <em>t</em>, <em>s</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#laplace_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.laplace_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Laplace Transform <span class="math">\(F(s)\)</span> of <span class="math">\(f(t)\)</span>,</p>
+<div class="math">
+\[F(s) = \int_0^\infty e^{-st} f(t) \mathrm{d}t.\]</div>
+<p>For all &#8220;sensible&#8221; functions, this converges absolutely in a
+half plane  <span class="math">\(a &lt; \operatorname{Re}(s)\)</span>.</p>
+<p>This function returns <tt class="docutils literal"><span class="pre">(F,</span> <span class="pre">a,</span> <span class="pre">cond)</span></tt>
+where <tt class="docutils literal"><span class="pre">F</span></tt> is the Laplace transform of <tt class="docutils literal"><span class="pre">f</span></tt>, <span class="math">\(\operatorname{Re}(s) &gt; a\)</span> is the half-plane
+of convergence, and <tt class="docutils literal"><span class="pre">cond</span></tt> are auxiliary convergence conditions.</p>
+<p>If the integral cannot be computed in closed form, this function returns
+an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">LaplaceTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>. If <tt class="docutils literal"><span class="pre">noconds=True</span></tt>,
+only <span class="math">\(F\)</span> will be returned (i.e. not <tt class="docutils literal"><span class="pre">cond</span></tt>, and also not the plane <tt class="docutils literal"><span class="pre">a</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals</span> <span class="kn">import</span> <span class="n">laplace_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">laplace_transform</span><span class="p">(</span><span class="n">t</span><span class="o">**</span><span class="n">a</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+<span class="go">(s**(-a)*gamma(a + 1)/s, 0, -re(a) &lt; 1)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.inverse_laplace_transform" title="sympy.integrals.transforms.inverse_laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_laplace_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_laplace_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_laplace_transform</tt><big>(</big><em>F</em>, <em>s</em>, <em>t</em>, <em>plane=None</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_laplace_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_laplace_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse Laplace transform of <span class="math">\(F(s)\)</span>, defined as</p>
+<div class="math">
+\[f(t) = \int_{c-i\infty}^{c+i\infty} e^{st} F(s) \mathrm{d}s,\]</div>
+<p>for <span class="math">\(c\)</span> so large that <span class="math">\(F(s)\)</span> has no singularites in the
+half-plane <span class="math">\(\operatorname{Re}(s) &gt; c-\epsilon\)</span>.</p>
+<p>The plane can be specified by
+argument <tt class="docutils literal"><span class="pre">plane</span></tt>, but will be inferred if passed as None.</p>
+<p>Under certain regularity conditions, this recovers <span class="math">\(f(t)\)</span> from its
+Laplace Transform <span class="math">\(F(s)\)</span>, for non-negative <span class="math">\(t\)</span>, and vice
+versa.</p>
+<p>If the integral cannot be computed in closed form, this function returns
+an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseLaplaceTransform</span></tt> object.</p>
+<p>Note that this function will always assume <span class="math">\(t\)</span> to be real,
+regardless of the sympy assumption on <span class="math">\(t\)</span>.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.transforms</span> <span class="kn">import</span> <span class="n">inverse_laplace_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_laplace_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+<span class="go">Heaviside(-a + t)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.fourier_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">fourier_transform</tt><big>(</big><em>f</em>, <em>x</em>, <em>k</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#fourier_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.fourier_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency Fourier transform of <span class="math">\(f\)</span>, defined
+as</p>
+<div class="math">
+\[F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x k} \mathrm{d} x.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">FourierTransform</span></tt> object.</p>
+<p>For other Fourier transform conventions, see the function
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms._fourier_transform()</span></tt>.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">fourier_transform</span><span class="p">,</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fourier_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">sqrt(pi)*exp(-pi**2*k**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fourier_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">noconds</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(sqrt(pi)*exp(-pi**2*k**2), True)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_fourier_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_fourier_transform</tt><big>(</big><em>F</em>, <em>k</em>, <em>x</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_fourier_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_fourier_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency inverse Fourier transform of <span class="math">\(F\)</span>,
+defined as</p>
+<div class="math">
+\[f(x) = \int_{-\infty}^\infty F(k) e^{2\pi i x k} \mathrm{d} k.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseFourierTransform</span></tt> object.</p>
+<p>For other Fourier transform conventions, see the function
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms._fourier_transform()</span></tt>.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">inverse_fourier_transform</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_fourier_transform</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">exp(-x**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_fourier_transform</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">noconds</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(exp(-x**2), True)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.sine_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">sine_transform</tt><big>(</big><em>f</em>, <em>x</em>, <em>k</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#sine_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.sine_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency sine transform of <span class="math">\(f\)</span>, defined
+as</p>
+<div class="math">
+\[F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \sin(2\pi x k) \mathrm{d} x.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">SineTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sine_transform</span><span class="p">,</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sine_transform</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">sqrt(2)*k*exp(-k**2/(4*a))/(4*a**(3/2))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sine_transform</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">2**(-a + 1/2)*k**(a - 1)*gamma(-a/2 + 1)/gamma(a/2 + 1/2)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_sine_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_sine_transform</tt><big>(</big><em>F</em>, <em>k</em>, <em>x</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_sine_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_sine_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency inverse sine transform of <span class="math">\(F\)</span>,
+defined as</p>
+<div class="math">
+\[f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \sin(2\pi x k) \mathrm{d} k.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseSineTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">inverse_sine_transform</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_sine_transform</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">k</span><span class="o">**</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span>
+<span class="gp">... </span>    <span class="n">gamma</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span><span class="p">((</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x**(-a)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_sine_transform</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x*exp(-a*x**2)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.cosine_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">cosine_transform</tt><big>(</big><em>f</em>, <em>x</em>, <em>k</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#cosine_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.cosine_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency cosine transform of <span class="math">\(f\)</span>, defined
+as</p>
+<div class="math">
+\[F(k) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty f(x) \cos(2\pi x k) \mathrm{d} x.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">CosineTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cosine_transform</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cosine_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">sqrt(2)*a/(sqrt(pi)*(a**2 + k**2))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cosine_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">a*exp(-a**2/(2*k))/(2*k**(3/2))</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_cosine_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_cosine_transform</tt><big>(</big><em>F</em>, <em>k</em>, <em>x</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_cosine_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_cosine_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unitary, ordinary-frequency inverse cosine transform of <span class="math">\(F\)</span>,
+defined as</p>
+<div class="math">
+\[f(x) = \sqrt{\frac{2}{\pi}} \int_{0}^\infty F(k) \cos(2\pi x k) \mathrm{d} k.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseCosineTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">inverse_cosine_transform</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_cosine_transform</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">exp(-a*x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_cosine_transform</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">k</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">1/sqrt(x)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.hankel_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">hankel_transform</tt><big>(</big><em>f</em>, <em>r</em>, <em>k</em>, <em>nu</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#hankel_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.hankel_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Hankel transform of <span class="math">\(f\)</span>, defined as</p>
+<div class="math">
+\[F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">HankelTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">hankel_transform</span><span class="p">,</span> <span class="n">inverse_hankel_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sinh</span><span class="p">,</span> <span class="n">cosh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">a</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span> <span class="o">=</span> <span class="n">hankel_transform</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">r</span><span class="o">**</span><span class="n">m</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span>
+<span class="go">2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_hankel_transform</span><span class="p">(</span><span class="n">ht</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+<span class="go">r**(-m)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span> <span class="o">=</span> <span class="n">hankel_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span>
+<span class="go">a/(k**3*(a**2/k**2 + 1)**(3/2))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_hankel_transform</span><span class="p">(</span><span class="n">ht</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">exp(-a*r)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_hankel_transform" title="sympy.integrals.transforms.inverse_hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.transforms.inverse_hankel_transform">
+<tt class="descclassname">sympy.integrals.transforms.</tt><tt class="descname">inverse_hankel_transform</tt><big>(</big><em>F</em>, <em>k</em>, <em>r</em>, <em>nu</em>, <em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/transforms.html#inverse_hankel_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.transforms.inverse_hankel_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse Hankel transform of <span class="math">\(F\)</span> defined as</p>
+<div class="math">
+\[f(r) = \int_{0}^\infty F_\nu(k) J_\nu(k r) k \mathrm{d} k.\]</div>
+<p>If the transform cannot be computed in closed form, this
+function returns an unevaluated <tt class="xref py py-class docutils literal"><span class="pre">InverseHankelTransform</span></tt> object.</p>
+<p>For a description of possible hints, refer to the docstring of
+<tt class="xref py py-func docutils literal"><span class="pre">sympy.integrals.transforms.IntegralTransform.doit()</span></tt>.
+Note that for this transform, by default <tt class="docutils literal"><span class="pre">noconds=True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">hankel_transform</span><span class="p">,</span> <span class="n">inverse_hankel_transform</span><span class="p">,</span> <span class="n">gamma</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sinh</span><span class="p">,</span> <span class="n">cosh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">a</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span> <span class="o">=</span> <span class="n">hankel_transform</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">r</span><span class="o">**</span><span class="n">m</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span>
+<span class="go">2*2**(-m)*k**(m - 2)*gamma(-m/2 + nu/2 + 1)/gamma(m/2 + nu/2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_hankel_transform</span><span class="p">(</span><span class="n">ht</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+<span class="go">r**(-m)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span> <span class="o">=</span> <span class="n">hankel_transform</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ht</span>
+<span class="go">a/(k**3*(a**2/k**2 + 1)**(3/2))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">inverse_hankel_transform</span><span class="p">(</span><span class="n">ht</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">exp(-a*r)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.integrals.transforms.fourier_transform" title="sympy.integrals.transforms.fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_fourier_transform" title="sympy.integrals.transforms.inverse_fourier_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_fourier_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.sine_transform" title="sympy.integrals.transforms.sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_sine_transform" title="sympy.integrals.transforms.inverse_sine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_sine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.cosine_transform" title="sympy.integrals.transforms.cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.inverse_cosine_transform" title="sympy.integrals.transforms.inverse_cosine_transform"><tt class="xref py py-obj docutils literal"><span class="pre">inverse_cosine_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.hankel_transform" title="sympy.integrals.transforms.hankel_transform"><tt class="xref py py-obj docutils literal"><span class="pre">hankel_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.mellin_transform" title="sympy.integrals.transforms.mellin_transform"><tt class="xref py py-obj docutils literal"><span class="pre">mellin_transform</span></tt></a>, <a class="reference internal" href="#sympy.integrals.transforms.laplace_transform" title="sympy.integrals.transforms.laplace_transform"><tt class="xref py py-obj docutils literal"><span class="pre">laplace_transform</span></tt></a></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="internals">
+<h2>Internals<a class="headerlink" href="#internals" title="Permalink to this headline">¶</a></h2>
+<p>There is a general method for calculating antiderivatives of elementary functions, called the <em>Risch algorithm</em>. The Risch algorithm is a decision procedure that can determine whether an elementary solution exists, and in that case calculate it. It can be extended to handle many nonelementary functions in addition to the elementary ones.</p>
+<p>SymPy currently uses a simplified version of the Risch algorithm, called the <em>Risch-Norman algorithm</em>. This algorithm is much faster, but may fail to find an antiderivative, although it is still very powerful. SymPy also uses pattern matching and heuristics to speed up evaluation of some types of integrals, e.g. polynomials.</p>
+<p>For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
+Details are described here:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="g-functions.html">Computing Integrals using Meijer G-Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="g-functions.html#the-g-function-integration-theorems">The G-Function Integration Theorems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="g-functions.html#the-inverse-laplace-transform-of-a-g-function">The Inverse Laplace Transform of a G-function</a></li>
+<li class="toctree-l1"><a class="reference internal" href="g-functions.html#implemented-g-function-formulae">Implemented G-Function Formulae</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="api-reference">
+<h2>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="staticmethod">
+<dt id="sympy.integrals.integrate">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">integrate</tt><big>(</big><em>f</em>, <em>var</em>, <em>...</em><big>)</big><a class="headerlink" href="#sympy.integrals.integrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute definite or indefinite integral of one or more variables
+using Risch-Norman algorithm and table lookup. This procedure is
+able to handle elementary algebraic and transcendental functions
+and also a huge class of special functions, including Airy,
+Bessel, Whittaker and Lambert.</p>
+<p>var can be:</p>
+<ul>
+<li><p class="first">a symbol                   &#8211; indefinite integration</p>
+</li>
+<li><dl class="first docutils">
+<dt>a tuple (symbol, a)        &#8211; indefinite integration with result</dt>
+<dd><p class="first last">given with <span class="math">\(a\)</span> replacing <span class="math">\(symbol\)</span></p>
+</dd>
+</dl>
+</li>
+<li><p class="first">a tuple (symbol, a, b)     &#8211; definite integration</p>
+</li>
+</ul>
+<p>Several variables can be specified, in which case the result is
+multiple integration. (If var is omitted and the integrand is
+univariate, the indefinite integral in that variable will be performed.)</p>
+<p>Indefinite integrals are returned without terms that are independent
+of the integration variables. (see examples)</p>
+<p>Definite improper integrals often entail delicate convergence
+conditions. Pass conds=&#8217;piecewise&#8217;, &#8216;separate&#8217; or &#8216;none&#8217; to have
+these returned, respectively, as a Piecewise function, as a separate
+result (i.e. result will be a tuple), or not at all (default is
+&#8216;piecewise&#8217;).</p>
+<p><strong>Strategy</strong></p>
+<p>SymPy uses various approaches to definite integration. One method is to
+find an antiderivative for the integrand, and then use the fundamental
+theorem of calculus. Various functions are implemented to integrate
+polynomial, rational and trigonometric functions, and integrands
+containing DiracDelta terms.</p>
+<p>SymPy also implements the part of the Risch algorithm, which is a decision
+procedure for integrating elementary functions, i.e., the algorithm can
+either find an elementary antiderivative, or prove that one does not
+exist.  There is also a (very successful, albeit somewhat slow) general
+implementation of the heuristic Risch algorithm.  This algorithm will
+eventually be phased out as more of the full Risch algorithm is
+implemented. See the docstring of Integral._eval_integral() for more
+details on computing the antiderivative using algebraic methods.</p>
+<p>The option risch=True can be used to use only the (full) Risch algorithm.
+This is useful if you want to know if an elementary function has an
+elementary antiderivative.  If the indefinite Integral returned by this
+function is an instance of NonElementaryIntegral, that means that the
+Risch algorithm has proven that integral to be non-elementary.  Note that
+by default, additional methods (such as the Meijer G method outlined
+below) are tried on these integrals, as they may be expressible in terms
+of special functions, so if you only care about elementary answers, use
+risch=True.  Also note that an unevaluated Integral returned by this
+function is not necessarily a NonElementaryIntegral, even with risch=True,
+as it may just be an indication that the particular part of the Risch
+algorithm needed to integrate that function is not yet implemented.</p>
+<p>Another family of strategies comes from re-writing the integrand in
+terms of so-called Meijer G-functions. Indefinite integrals of a
+single G-function can always be computed, and the definite integral
+of a product of two G-functions can be computed from zero to
+infinity. Various strategies are implemented to rewrite integrands
+as G-functions, and use this information to compute integrals (see
+the <tt class="docutils literal"><span class="pre">meijerint</span></tt> module).</p>
+<p>The option manual=True can be used to use only an algorithm that tries
+to mimic integration by hand. This algorithm does not handle as many
+integrands as the other algorithms implemented but may return results in
+a more familiar form. The <tt class="docutils literal"><span class="pre">manualintegrate</span></tt> module has functions that
+return the steps used (see the module docstring for more information).</p>
+<p>In general, the algebraic methods work best for computing
+antiderivatives of (possibly complicated) combinations of elementary
+functions. The G-function methods work best for computing definite
+integrals from zero to infinity of moderately complicated
+combinations of special functions, or indefinite integrals of very
+simple combinations of special functions.</p>
+<p>The strategy employed by the integration code is as follows:</p>
+<ul class="simple">
+<li>If computing a definite integral, and both limits are real,
+and at least one limit is +- oo, try the G-function method of
+definite integration first.</li>
+<li>Try to find an antiderivative, using all available methods, ordered
+by performance (that is try fastest method first, slowest last; in
+particular polynomial integration is tried first, meijer
+g-functions second to last, and heuristic risch last).</li>
+<li>If still not successful, try G-functions irrespective of the
+limits.</li>
+</ul>
+<p>The option meijerg=True, False, None can be used to, respectively:
+always use G-function methods and no others, never use G-function
+methods, or use all available methods (in order as described above).
+It defaults to None.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Integral</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">Integral.doit</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x**2*y/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x*log(x) - x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+<span class="go">a*log(a) - a + 1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">x**2/2</span>
+</pre></div>
+</div>
+<p>Terms that are independent of x are dropped by indefinite integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">2*(x + 1)**(3/2)/3 - 2/3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">2*(x + 1)**(3/2)/3</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">specify integration variables to integrate x*y</span>
+</pre></div>
+</div>
+<p>Note that <tt class="docutils literal"><span class="pre">integrate(x)</span></tt> syntax is meant only for convenience
+in interactive sessions and should be avoided in library code.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span> <span class="c"># same as conds=&#39;piecewise&#39;</span>
+<span class="go">Piecewise((gamma(a + 1), -re(a) &lt; 1),</span>
+<span class="go">    (Integral(x**a*exp(-x), (x, 0, oo)), True))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">),</span> <span class="n">conds</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+<span class="go">gamma(a + 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">),</span> <span class="n">conds</span><span class="o">=</span><span class="s">&#39;separate&#39;</span><span class="p">)</span>
+<span class="go">(gamma(a + 1), -re(a) &lt; 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.line_integrate">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">line_integrate</tt><big>(</big><em>field</em>, <em>Curve</em>, <em>variables</em><big>)</big><a class="headerlink" href="#sympy.integrals.line_integrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the line integral.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">integrate</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">Integral</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Curve</span><span class="p">,</span> <span class="n">line_integrate</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">ln</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Curve</span><span class="p">([</span><span class="n">E</span><span class="o">**</span><span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">E</span><span class="o">**</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ln</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line_integrate</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+<span class="go">3*sqrt(2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.deltaintegrate">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">deltaintegrate</tt><big>(</big><em>f</em>, <em>x</em><big>)</big><a class="headerlink" href="#sympy.integrals.deltaintegrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The idea for integration is the following:</p>
+<ul>
+<li><p class="first">If we are dealing with a DiracDelta expression, i.e. DiracDelta(g(x)),
+we try to simplify it.</p>
+<p>If we could simplify it, then we integrate the resulting expression.
+We already know we can integrate a simplified expression, because only
+simple DiracDelta expressions are involved.</p>
+<p>If we couldn&#8217;t simplify it, there are two cases:</p>
+<ol class="arabic simple">
+<li>The expression is a simple expression: we return the integral,
+taking care if we are dealing with a Derivative or with a proper
+DiracDelta.</li>
+<li>The expression is not simple (i.e. DiracDelta(cos(x))): we can do
+nothing at all.</li>
+</ol>
+</li>
+<li><p class="first">If the node is a multiplication node having a DiracDelta term:</p>
+<p>First we expand it.</p>
+<p>If the expansion did work, the we try to integrate the expansion.</p>
+<p>If not, we try to extract a simple DiracDelta term, then we have two
+cases:</p>
+<ol class="arabic simple">
+<li>We have a simple DiracDelta term, so we return the integral.</li>
+<li>We didn&#8217;t have a simple term, but we do have an expression with
+simplified DiracDelta terms, so we integrate this expression.</li>
+</ol>
+</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../functions/special.html#sympy.functions.special.delta_functions.DiracDelta" title="sympy.functions.special.delta_functions.DiracDelta"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.special.delta_functions.DiracDelta</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.deltafunctions</span> <span class="kn">import</span> <span class="n">deltaintegrate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">DiracDelta</span><span class="p">,</span> <span class="n">Heaviside</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deltaintegrate</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">sin(1)*cos(1)*Heaviside(x - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deltaintegrate</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">z**2*DiracDelta(x - z)*Heaviside(y - z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.ratint">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">ratint</tt><big>(</big><em>f</em>, <em>x</em>, <em>**flags</em><big>)</big><a class="headerlink" href="#sympy.integrals.ratint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs indefinite integration of rational functions.</p>
+<p>Given a field <span class="math">\(K\)</span> and a rational function <span class="math">\(f = p/q\)</span>,
+where <span class="math">\(p\)</span> and <span class="math">\(q\)</span> are polynomials in <span class="math">\(K[x]\)</span>,
+returns a function <span class="math">\(g\)</span> such that <span class="math">\(f = g'\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.rationaltools</span> <span class="kn">import</span> <span class="n">ratint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ratint</span><span class="p">(</span><span class="mi">36</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">(12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral.doit</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">ratint_logpart</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">ratint_ratpart</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="bro05" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Bro05]</a></td><td>M. Bronstein, Symbolic Integration I: Transcendental
+Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.heurisch">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">heurisch</tt><big>(</big><em>f</em>, <em>x</em>, <em>rewrite=False</em>, <em>hints=None</em>, <em>mappings=None</em>, <em>retries=3</em>, <em>degree_offset=0</em>, <em>unnecessary_permutations=None</em><big>)</big><a class="headerlink" href="#sympy.integrals.heurisch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute indefinite integral using heuristic Risch algorithm.</p>
+<p>This is a heuristic approach to indefinite integration in finite
+terms using the extended heuristic (parallel) Risch algorithm, based
+on Manuel Bronstein&#8217;s &#8220;Poor Man&#8217;s Integrator&#8221;.</p>
+<p>The algorithm supports various classes of functions including
+transcendental elementary or special functions like Airy,
+Bessel, Whittaker and Lambert.</p>
+<p>Note that this algorithm is not a decision procedure. If it isn&#8217;t
+able to compute the antiderivative for a given function, then this is
+not a proof that such a functions does not exist.  One should use
+recursive Risch algorithm in such case.  It&#8217;s an open question if
+this algorithm can be made a full decision procedure.</p>
+<p>This is an internal integrator procedure. You should use toplevel
+&#8216;integrate&#8217; function in most cases,  as this procedure needs some
+preprocessing steps and otherwise may fail.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral.doit</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">components</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">tan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.heurisch</span> <span class="kn">import</span> <span class="n">heurisch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">heurisch</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">y*log(tan(x)**2 + 1)/2</span>
+</pre></div>
+</div>
+<p>See Manuel Bronstein&#8217;s &#8220;Poor Man&#8217;s Integrator&#8221;:</p>
+<p>[1] <a class="reference external" href="http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html">http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html</a></p>
+<p>For more information on the implemented algorithm refer to:</p>
+<dl class="docutils">
+<dt>[2] K. Geddes, L. Stefanus, On the Risch-Norman Integration</dt>
+<dd>Method and its Implementation in Maple, Proceedings of
+ISSAC&#8216;89, ACM Press, 212-217.</dd>
+<dt>[3] J. H. Davenport, On the Parallel Risch Algorithm (I),</dt>
+<dd>Proceedings of EUROCAM&#8216;82, LNCS 144, Springer, 144-157.</dd>
+<dt>[4] J. H. Davenport, On the Parallel Risch Algorithm (III):</dt>
+<dd>Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.</dd>
+<dt>[5] J. H. Davenport, B. M. Trager, On the Parallel Risch</dt>
+<dd>Algorithm (II), ACM Transactions on Mathematical
+Software 11 (1985), 356-362.</dd>
+</dl>
+<p class="rubric">Specification</p>
+<p>heurisch(f, x, rewrite=False, hints=None)</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>where</dt>
+<dd><p class="first">f : expression
+x : symbol</p>
+<p>rewrite -&gt; force rewrite &#8216;f&#8217; in terms of &#8216;tan&#8217; and &#8216;tanh&#8217;
+hints   -&gt; a list of functions that may appear in anti-derivate</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>hints = None          &#8211;&gt; no suggestions at all</li>
+<li>hints = [ ]           &#8211;&gt; try to figure out</li>
+<li>hints = [f1, ..., fn] &#8211;&gt; we know better</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.heurisch_wrapper">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">heurisch_wrapper</tt><big>(</big><em>f</em>, <em>x</em>, <em>rewrite=False</em>, <em>hints=None</em>, <em>mappings=None</em>, <em>retries=3</em>, <em>degree_offset=0</em>, <em>unnecessary_permutations=None</em><big>)</big><a class="headerlink" href="#sympy.integrals.heurisch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper around the heurisch integration algorithm.</p>
+<p>This method takes the result from heurisch and checks for poles in the
+denominator. For each of these poles, the integral is reevaluated, and
+the final integration result is given in terms of a Piecewise.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">heurisch</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.heurisch</span> <span class="kn">import</span> <span class="n">heurisch</span><span class="p">,</span> <span class="n">heurisch_wrapper</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heurisch</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">sin(n*x)/n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">heurisch_wrapper</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Piecewise((x, n == 0), (sin(n*x)/n, True))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.trigintegrate">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">trigintegrate</tt><big>(</big><em>f</em>, <em>x</em>, <em>conds='piecewise'</em><big>)</big><a class="headerlink" href="#sympy.integrals.trigintegrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrate f = Mul(trig) over x</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">sec</span><span class="p">,</span> <span class="n">csc</span><span class="p">,</span> <span class="n">cot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.trigonometry</span> <span class="kn">import</span> <span class="n">trigintegrate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">trigintegrate</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">sin(x)**2/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">trigintegrate</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x/2 - sin(x)*cos(x)/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">trigintegrate</span><span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">sec</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">1/cos(x)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">trigintegrate</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="http://en.wikibooks.org/wiki/Calculus/Integration_techniques">http://en.wikibooks.org/wiki/Calculus/Integration_techniques</a></p>
+</div></blockquote>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral.doit</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.manualintegrate">
+<em class="property">static </em><tt class="descclassname">integrals.</tt><tt class="descname">manualintegrate</tt><big>(</big><em>f</em>, <em>var</em><big>)</big><a class="headerlink" href="#sympy.integrals.manualintegrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute indefinite integral of a single variable using an algorithm that
+resembles what a student would do by hand.</p>
+<p>Unlike <tt class="docutils literal"><span class="pre">integrate</span></tt>, var can only be a single symbol.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.integrate</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral.doit</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.integrals.Integral</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">integrate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.manualintegrate</span> <span class="kn">import</span> <span class="n">manualintegrate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">log(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+<span class="go">log(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">x*log(x) - x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">x*log(x) - x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">atan(exp(x))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)))</span>
+<span class="go">RootSum(4*_z**2 + 1, Lambda(_i, _i*log(2*_i + exp(x))))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-cos(x)**5/5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-cos(x)**5/5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">cos(x)**7/7 - cos(x)**5/5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">cos(x)**7/7 - cos(x)**5/5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manualintegrate</span><span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-log(cos(x))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-log(sin(x)**2 - 1)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.integrals.manualintegrate.integral_steps">
+<em class="property">static </em><tt class="descclassname">manualintegrate.</tt><tt class="descname">integral_steps</tt><big>(</big><em>integrand</em>, <em>symbol</em>, <em>**options</em><big>)</big><a class="headerlink" href="#sympy.integrals.manualintegrate.integral_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the steps needed to compute an integral.</p>
+<p>This function attempts to mirror what a student would do by hand as
+closely as possible.</p>
+<p>SymPy Gamma uses this to provide a step-by-step explanation of an
+integral. The code it uses to format the results of this function can be
+found at
+<a class="reference external" href="https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py">https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>rule</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>The first step; most rules have substeps that must also be
+considered. These substeps can be evaluated using <tt class="docutils literal"><span class="pre">manualintegrate</span></tt>
+to obtain a result.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.manualintegrate</span> <span class="kn">import</span> <span class="n">integral_steps</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">integral_steps</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">)))</span>     
+<span class="go">URule(u_var=_u, u_func=exp(x), constant=1,</span>
+<span class="go">    substep=ArctanRule(context=1/(_u**2 + 1), symbol=_u),</span>
+<span class="go">    context=exp(x)/(exp(2*x) + 1), symbol=x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">integral_steps</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)))</span>     
+<span class="go">TrigRule(func=&#39;sin&#39;, arg=x, context=sin(x), symbol=x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">integral_steps</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">,</span> <span class="n">x</span><span class="p">)))</span>     
+<span class="go">RewriteRule(rewritten=x**4 + 6*x**2 + 9,</span>
+<span class="go">substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),</span>
+<span class="go">    ConstantTimesRule(constant=6, other=x**2,</span>
+<span class="go">        substep=PowerRule(base=x, exp=2, context=x**2, symbol=x),</span>
+<span class="go">            context=6*x**2, symbol=x),</span>
+<span class="go">    ConstantRule(constant=9, context=9, symbol=x)],</span>
+<span class="go">context=x**4 + 6*x**2 + 9, symbol=x), context=(x**2 + 3)**2, symbol=x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>The class <span class="math">\(Integral\)</span> represents an unevaluated integral and has some methods that help in the integration of an expression.</p>
+<dl class="class">
+<dt id="sympy.integrals.Integral">
+<em class="property">class </em><tt class="descclassname">sympy.integrals.</tt><tt class="descname">Integral</tt><a class="headerlink" href="#sympy.integrals.Integral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents unevaluated integral.</p>
+<dl class="data">
+<dt id="sympy.integrals.transforms.Integral.is_commutative">
+<tt class="descname">is_commutative</tt><a class="headerlink" href="#sympy.integrals.transforms.Integral.is_commutative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether all the free symbols in the integral are commutative.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.integrals.Integral.as_sum">
+<tt class="descname">as_sum</tt><big>(</big><em>n</em>, <em>method='midpoint'</em><big>)</big><a class="headerlink" href="#sympy.integrals.Integral.as_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximates the definite integral by a sum.</p>
+<p>method ... one of: left, right, midpoint, trapezoid</p>
+<p>These are all basically the rectangle method [1], the only difference
+is where the function value is taken in each interval to define the
+rectangle.</p>
+<p>[1] <a class="reference external" href="http://en.wikipedia.org/wiki/Rectangle_method">http://en.wikipedia.org/wiki/Rectangle_method</a></p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">Integral.doit</span></tt></dt>
+<dd>Perform the integration using any hints</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span>
+<span class="go">Integral(sin(x), (x, 3, 7))</span>
+</pre></div>
+</div>
+<p>For demonstration purposes, this interval will only be split into 2
+regions, bounded by [3, 5] and [5, 7].</p>
+<p>The left-hand rule uses function evaluations at the left of each
+interval:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">)</span>
+<span class="go">2*sin(5) + 2*sin(3)</span>
+</pre></div>
+</div>
+<p>The midpoint rule uses evaluations at the center of each interval:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;midpoint&#39;</span><span class="p">)</span>
+<span class="go">2*sin(4) + 2*sin(6)</span>
+</pre></div>
+</div>
+<p>The right-hand rule uses function evaluations at the right of each
+interval:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">)</span>
+<span class="go">2*sin(5) + 2*sin(7)</span>
+</pre></div>
+</div>
+<p>The trapezoid rule uses function evaluations on both sides of the
+intervals. This is equivalent to taking the average of the left and
+right hand rule results:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;trapezoid&#39;</span><span class="p">)</span>
+<span class="go">2*sin(5) + sin(3) + sin(7)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span> <span class="o">==</span> <span class="n">_</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>All but the trapexoid method may be used when dealing with a function
+with a discontinuity. Here, the discontinuity at x = 0 can be avoided
+by using the midpoint or right-hand method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">1.730</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">1.809</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c"># the actual value is 2</span>
+<span class="go">2.000</span>
+</pre></div>
+</div>
+<p>The left- or trapezoid method will encounter the discontinuity and
+return oo:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;left&#39;</span><span class="p">)</span>
+<span class="go">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">.</span><span class="n">as_sum</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">&#39;trapezoid&#39;</span><span class="p">)</span>
+<span class="go">oo</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.integrals.Integral.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="headerlink" href="#sympy.integrals.Integral.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform the integration using any hints given.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.trigonometry.trigintegrate</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.risch.heurisch</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.integrals.rationaltools.ratint</span></tt></p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">as_sum</span></tt></dt>
+<dd>Approximate the integral using a sum</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">Piecewise((2, log(x) == 0), (x**3/log(x) - x/log(x), True))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.free_symbols">
+<tt class="descname">free_symbols</tt><a class="headerlink" href="#sympy.integrals.Integral.free_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method returns the symbols that will exist when the
+integral is evaluated. This is useful if one is trying to
+determine whether an integral depends on a certain
+symbol or not.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">function</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">limits</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">variables</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">free_symbols</span>
+<span class="go">set([y])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.function">
+<tt class="descname">function</tt><a class="headerlink" href="#sympy.integrals.Integral.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the function to be integrated.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">limits</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">variables</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">free_symbols</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,))</span><span class="o">.</span><span class="n">function</span>
+<span class="go">x**2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.is_number">
+<tt class="descname">is_number</tt><a class="headerlink" href="#sympy.integrals.Integral.is_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the Integral will result in a number, else False.</p>
+<p>Integrals are a special case since they contain symbols that can
+be replaced with numbers. Whether the integral can be done or not is
+another issue. But answering whether the final result is a number is
+not difficult.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">is_zero</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.is_zero">
+<tt class="descname">is_zero</tt><a class="headerlink" href="#sympy.integrals.Integral.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since Integral doesn&#8217;t autosimplify it it useful to see if
+it would simplify to zero or not in a trivial manner, i.e. when
+the function is 0 or two limits of a definite integral are the same.</p>
+<p>This is a very naive and quick test, not intended to check for special
+patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">is_number</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">is_zero</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">.</span><span class="n">is_zero</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_zero</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.limits">
+<tt class="descname">limits</tt><a class="headerlink" href="#sympy.integrals.Integral.limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the limits of integration.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">function</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">variables</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">free_symbols</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">limits</span>
+<span class="go">((i, 1, 3),)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.integrals.Integral.transform">
+<tt class="descname">transform</tt><big>(</big><em>x</em>, <em>u</em>, <em>inverse=False</em><big>)</big><a class="headerlink" href="#sympy.integrals.Integral.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a change of variables from <span class="math">\(x\)</span> to <span class="math">\(u\)</span> using the relationship
+given by <span class="math">\(x\)</span> and <span class="math">\(u\)</span> which will define the transformations <span class="math">\(f\)</span> and <span class="math">\(F\)</span>
+(which are inverses of each other) as follows:</p>
+<ol class="arabic simple">
+<li>If <span class="math">\(x\)</span> is a Symbol (which is a variable of integration) then <span class="math">\(u\)</span>
+will be interpreted as some function, f(u), with inverse F(u).
+This, in effect, just makes the substitution of x with f(x).</li>
+<li>If <span class="math">\(u\)</span> is a Symbol then <span class="math">\(x\)</span> will be interpreted as some function,
+F(x), with inverse f(u). This is commonly referred to as
+u-substitution.</li>
+</ol>
+<p>The <span class="math">\(inverse\)</span> option will reverse <span class="math">\(x\)</span> and <span class="math">\(u\)</span>. It is a deprecated option
+since <span class="math">\(x\)</span> and <span class="math">\(u\)</span> can just be passed in reverse order.</p>
+<p>Once f and F have been identified, the transformation is made as
+follows:</p>
+<div class="math">
+\[\int_a^b x \mathrm{d}x \rightarrow \int_{F(a)}^{F(b)} f(x)
+\frac{\mathrm{d}}{\mathrm{d}x}\]</div>
+<p>where <span class="math">\(F(x)\)</span> is the inverse of <span class="math">\(f(x)\)</span> and the limits and integrand have
+been corrected so as to retain the same value after integration.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">variables</span></tt></dt>
+<dd>Lists the integration variables</dd>
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">as_dummy</span></tt></dt>
+<dd>Replace integration variables with dummy ones</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The mappings, F(x) or f(u), must lead to a unique integral. Linear
+or rational linear expression, <span class="math">\(2*x\)</span>, <span class="math">\(1/x\)</span> and <span class="math">\(sqrt(x)\)</span>, will
+always work; quadratic expressions like <span class="math">\(x**2 - 1\)</span> are acceptable
+as long as the resulting integrand does not depend on the sign of
+the solutions (see examples).</p>
+<p>The integral will be returned unchanged if <span class="math">\(x\)</span> is not a variable of
+integration.</p>
+<p><span class="math">\(x\)</span> must be (or contain) only one of of the integration variables. If
+<span class="math">\(u\)</span> has more than one free symbol then it should be sent as a tuple
+(<span class="math">\(u\)</span>, <span class="math">\(uvar\)</span>) where <span class="math">\(uvar\)</span> identifies which variable is replacing
+the integration variable.
+XXX can it contain another integration variable?</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sqrt</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>transform can change the variable of integration</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+<span class="go">Integral(u*cos(u**2 - 1), (u, 0, 1))</span>
+</pre></div>
+</div>
+<p>transform can perform u-substitution as long as a unique
+integrand is obtained:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+<span class="go">Integral(cos(u)/2, (u, -1, 0))</span>
+</pre></div>
+</div>
+<p>This attempt fails because x = +/-sqrt(u + 1) and the
+sign does not cancel out of the integrand:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>:
+<span class="go">The mapping between F(x) and f(u) did not give a unique integrand.</span>
+</pre></div>
+</div>
+<p>transform can do a substitution. Here, the previous
+result is transformed back into the original expression
+using &#8220;u-substitution&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span> <span class="o">=</span> <span class="n">_</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">i</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>We can accomplish the same with a regular substitution:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ui</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">i</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If the <span class="math">\(x\)</span> does not contain a symbol of integration then
+the integral will be returned unchanged. Integral <span class="math">\(i\)</span> does
+not have an integration variable <span class="math">\(a\)</span> so no change is made:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">i</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>When <span class="math">\(u\)</span> has more than one free symbol the symbol that is
+replacing <span class="math">\(x\)</span> must be identified by passing <span class="math">\(u\)</span> as a tuple:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">a</span><span class="p">,</span> <span class="n">u</span><span class="p">))</span>
+<span class="go">Integral(a + u, (u, -a, -a + 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+<span class="go">Integral(a + u, (a, -u, -u + 1))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.integrals.Integral.variables">
+<tt class="descname">variables</tt><a class="headerlink" href="#sympy.integrals.Integral.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the integration variables.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><tt class="xref py py-obj docutils literal"><span class="pre">function</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">limits</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">free_symbols</span></tt></p>
+<dl class="last docutils">
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">as_dummy</span></tt></dt>
+<dd>Replace integration variables with dummy ones</dd>
+<dt><tt class="xref py py-obj docutils literal"><span class="pre">transform</span></tt></dt>
+<dd>Perform mapping on the integration variable</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">variables</span>
+<span class="go">[i]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="todo-and-bugs">
+<h2>TODO and Bugs<a class="headerlink" href="#todo-and-bugs" title="Permalink to this headline">¶</a></h2>
+<p>There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see <a class="reference external" href="http://code.google.com/p/sympy/issues/list?q=label:Integration">http://code.google.com/p/sympy/issues/list?q=label:Integration</a></p>
+</div>
+</div>
+<div class="section" id="numeric-integrals">
+<h1>Numeric Integrals<a class="headerlink" href="#numeric-integrals" title="Permalink to this headline">¶</a></h1>
+<p>SymPy has functions to calculate points and weights for Gaussian quadrature of
+any order and any precision:</p>
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_legendre">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_legendre</tt><big>(</big><em>n</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_legendre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_legendre" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Legendre quadrature <a class="reference internal" href="#r192">[R192]</a> points and weights.</p>
+<p>The Gauss-Legendre quadrature approximates the integral:</p>
+<div class="math">
+\[\int_{-1}^1 f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(P_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{2}{\left(1-x_i^2\right) \left(P'_n(x_i)\right)^2}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r192" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R192]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Gaussian_quadrature">http://en.wikipedia.org/wiki/Gaussian_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r193" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R193]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/legendre_rule/legendre_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/legendre_rule/legendre_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_legendre</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_legendre</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-0.7746, 0, 0.7746]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.55556, 0.88889, 0.55556]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_legendre</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-0.86114, -0.33998, 0.33998, 0.86114]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.34786, 0.65215, 0.65215, 0.34786]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_laguerre">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_laguerre</tt><big>(</big><em>n</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_laguerre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_laguerre" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Laguerre quadrature <a class="reference internal" href="#r194">[R194]</a> points and weights.</p>
+<p>The Gauss-Laguerre quadrature approximates the integral:</p>
+<div class="math">
+\[\int_0^{\infty} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(L_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{x_i}{(n+1)^2 \left(L_{n+1}(x_i)\right)^2}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r194" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R194]</td><td><em>(<a class="fn-backref" href="#id5">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature">http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r195" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[R195]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/laguerre_rule/laguerre_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_laguerre</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_laguerre</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.41577, 2.2943, 6.2899]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.71109, 0.27852, 0.010389]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_laguerre</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.22285, 1.1889, 2.9927, 5.7751, 9.8375, 15.983]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.45896, 0.417, 0.11337, 0.010399, 0.00026102, 8.9855e-7]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_hermite">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_hermite</tt><big>(</big><em>n</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_hermite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_hermite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Hermite quadrature <a class="reference internal" href="#r196">[R196]</a> points and weights.</p>
+<p>The Gauss-Hermite quadrature approximates the integral:</p>
+<div class="math">
+\[\int_{-\infty}^{\infty} e^{-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(H_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{2^{n-1} n! \sqrt{\pi}}{n^2 \left(H_{n-1}(x_i)\right)^2}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r196" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R196]</td><td><em>(<a class="fn-backref" href="#id8">1</a>, <a class="fn-backref" href="#id9">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature">http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r197" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10">[R197]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/hermite_rule/hermite_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/hermite_rule/hermite_rule.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r198" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[R198]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_hermite_rule/gen_hermite_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_hermite</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_hermite</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-1.2247, 0, 1.2247]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.29541, 1.1816, 0.29541]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_hermite</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-2.3506, -1.3358, -0.43608, 0.43608, 1.3358, 2.3506]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.00453, 0.15707, 0.72463, 0.72463, 0.15707, 0.00453]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_gen_laguerre">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_gen_laguerre</tt><big>(</big><em>n</em>, <em>alpha</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_gen_laguerre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_gen_laguerre" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the generalized Gauss-Laguerre quadrature <a class="reference internal" href="#r199">[R199]</a> points and weights.</p>
+<p>The generalized Gauss-Laguerre quadrature approximates the integral:</p>
+<div class="math">
+\[\int_{0}^\infty x^{\alpha} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(L^{\alpha}_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{\Gamma(\alpha+n)}{n \Gamma(n) L^{\alpha}_{n-1}(x_i) L^{\alpha+1}_{n-1}(x_i)}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>alpha</strong> : the exponent of the singularity, <span class="math">\(\alpha &gt; -1\)</span></p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r199" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R199]</td><td><em>(<a class="fn-backref" href="#id12">1</a>, <a class="fn-backref" href="#id13">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature">http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r200" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id14">[R200]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_gen_laguerre</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_gen_laguerre</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.19016, 1.7845, 5.5253]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[1.4493, 0.31413, 0.00906]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_gen_laguerre</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.97851, 2.9904, 6.3193, 11.712]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.53087, 0.67721, 0.11895, 0.0023152]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_chebyshev_t">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_chebyshev_t</tt><big>(</big><em>n</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_chebyshev_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_chebyshev_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Chebyshev quadrature <a class="reference internal" href="#r201">[R201]</a> points and weights of
+the first kind.</p>
+<p>The Gauss-Chebyshev quadrature of the first kind approximates the integral:</p>
+<div class="math">
+\[\int_{-1}^{1} \frac{1}{\sqrt{1-x^2}} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(T_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{\pi}{n}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r201" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R201]</td><td><em>(<a class="fn-backref" href="#id15">1</a>, <a class="fn-backref" href="#id16">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature">http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r202" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id17">[R202]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev1_rule/chebyshev1_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev1_rule/chebyshev1_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_chebyshev_t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_chebyshev_t</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.86602, 0, -0.86602]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[1.0472, 1.0472, 1.0472]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_chebyshev_t</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.96593, 0.70711, 0.25882, -0.25882, -0.70711, -0.96593]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.5236, 0.5236, 0.5236, 0.5236, 0.5236, 0.5236]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_chebyshev_u">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_chebyshev_u</tt><big>(</big><em>n</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_chebyshev_u"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_chebyshev_u" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Chebyshev quadrature <a class="reference internal" href="#r203">[R203]</a> points and weights of
+the second kind.</p>
+<p>The Gauss-Chebyshev quadrature of the second kind approximates the integral:</p>
+<div class="math">
+\[\int_{-1}^{1} \sqrt{1-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(U_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = \frac{\pi}{n+1} \sin^2 \left(\frac{i}{n+1}\pi\right)\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_jacobi</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r203" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R203]</td><td><em>(<a class="fn-backref" href="#id18">1</a>, <a class="fn-backref" href="#id19">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature">http://en.wikipedia.org/wiki/Chebyshev%E2%80%93Gauss_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r204" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id20">[R204]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev2_rule/chebyshev2_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/chebyshev2_rule/chebyshev2_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_chebyshev_u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_chebyshev_u</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.70711, 0, -0.70711]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.3927, 0.7854, 0.3927]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_chebyshev_u</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[0.90097, 0.62349, 0.22252, -0.22252, -0.62349, -0.90097]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.084489, 0.27433, 0.42658, 0.42658, 0.27433, 0.084489]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.integrals.quadrature.gauss_jacobi">
+<tt class="descclassname">sympy.integrals.quadrature.</tt><tt class="descname">gauss_jacobi</tt><big>(</big><em>n</em>, <em>alpha</em>, <em>beta</em>, <em>n_digits</em><big>)</big><a class="reference internal" href="../../_modules/sympy/integrals/quadrature.html#gauss_jacobi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.integrals.quadrature.gauss_jacobi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Gauss-Jacobi quadrature <a class="reference internal" href="#r205">[R205]</a> points and weights.</p>
+<p>The Gauss-Jacobi quadrature of the first kind approximates the integral:</p>
+<div class="math">
+\[\int_{-1}^1 (1-x)^\alpha (1+x)^\beta f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)\]</div>
+<p>The nodes <span class="math">\(x_i\)</span> of an order <span class="math">\(n\)</span> quadrature rule are the roots of <span class="math">\(P^{(\alpha,\beta)}_n\)</span>
+and the weights <span class="math">\(w_i\)</span> are given by:</p>
+<div class="math">
+\[w_i = -\frac{2n+\alpha+\beta+2}{n+\alpha+\beta+1}\frac{\Gamma(n+\alpha+1)\Gamma(n+\beta+1)}
+      {\Gamma(n+\alpha+\beta+1)(n+1)!} \frac{2^{\alpha+\beta}}{P'_n(x_i)
+      P^{(\alpha,\beta)}_{n+1}(x_i)}\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : the order of quadrature</p>
+<p><strong>alpha</strong> : the first parameter of the Jacobi Polynomial, <span class="math">\(\alpha &gt; -1\)</span></p>
+<p><strong>beta</strong> : the second parameter of the Jacobi Polynomial, <span class="math">\(\beta &gt; -1\)</span></p>
+<p><strong>n_digits</strong> : number of significant digits of the points and weights to return</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>(x, w)</strong> : the <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">w</span></tt> are lists of points and weights as Floats.</p>
+<blockquote class="last">
+<div><p>The points <span class="math">\(x_i\)</span> and weights <span class="math">\(w_i\)</span> are returned as <tt class="docutils literal"><span class="pre">(x,</span> <span class="pre">w)</span></tt>
+tuple of lists.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">gauss_legendre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_hermite</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_gen_laguerre</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_t</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">gauss_chebyshev_u</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r205" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R205]</td><td><em>(<a class="fn-backref" href="#id21">1</a>, <a class="fn-backref" href="#id22">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Gauss%E2%80%93Jacobi_quadrature">http://en.wikipedia.org/wiki/Gauss%E2%80%93Jacobi_quadrature</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r206" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id23">[R206]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/jacobi_rule/jacobi_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/jacobi_rule/jacobi_rule.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r207" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id24">[R207]</a></td><td><a class="reference external" href="http://people.sc.fsu.edu/~jburkardt/cpp_src/gegenbauer_rule/gegenbauer_rule.html">http://people.sc.fsu.edu/~jburkardt/cpp_src/gegenbauer_rule/gegenbauer_rule.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.integrals.quadrature</span> <span class="kn">import</span> <span class="n">gauss_jacobi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_jacobi</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-0.90097, -0.22252, 0.62349]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[1.7063, 1.0973, 0.33795]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">gauss_jacobi</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">[-0.87174, -0.5917, -0.2093, 0.2093, 0.5917, 0.87174]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">[0.050584, 0.22169, 0.39439, 0.39439, 0.22169, 0.050584]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Symbolic Integrals</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#module-sympy.integrals.transforms">Integral Transforms</a></li>
+<li><a class="reference internal" href="#internals">Internals</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-reference">API reference</a></li>
+<li><a class="reference internal" href="#todo-and-bugs">TODO and Bugs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#numeric-integrals">Numeric Integrals</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../geometry.html"
+                        title="previous chapter">Geometry Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="g-functions.html"
+                        title="next chapter">Computing Integrals using Meijer G-Functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/integrals/integrals.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="g-functions.html" title="Computing Integrals using Meijer G-Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../geometry.html" title="Geometry Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

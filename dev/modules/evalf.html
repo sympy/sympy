@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Numerical evaluation &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Functions Module" href="functions/index.html" />
+    <link rel="prev" title="Concrete Mathematics" href="concrete.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="functions/index.html" title="Functions Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="concrete.html" title="Concrete Mathematics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="numerical-evaluation">
+<span id="evalf-label"></span><h1>Numerical evaluation<a class="headerlink" href="#numerical-evaluation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
+<p>Exact SymPy expressions can be converted to floating-point approximations
+(decimal numbers) using either the <tt class="docutils literal"><span class="pre">.evalf()</span></tt> method or the <tt class="docutils literal"><span class="pre">N()</span></tt> function.
+<tt class="docutils literal"><span class="pre">N(expr,</span> <span class="pre">&lt;args&gt;)</span></tt> is equivalent to <tt class="docutils literal"><span class="pre">sympify(expr).evalf(&lt;args&gt;)</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">4.44288293815837</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">4.44288293815837</span>
+</pre></div>
+</div>
+<p>By default, numerical evaluation is performed to an accuracy of 15 decimal
+digits. You can optionally pass a desired accuracy (which should be a positive
+integer) as an argument to <tt class="docutils literal"><span class="pre">evalf</span></tt> or <tt class="docutils literal"><span class="pre">N</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">4.4429</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="go">4.4428829381583662470158809900606936986146216893757</span>
+</pre></div>
+</div>
+<p>Complex numbers are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">I</span><span class="p">),</span> <span class="mi">20</span><span class="p">)</span>
+<span class="go">0.28902548222223624241 - 0.091999668350375232456*I</span>
+</pre></div>
+</div>
+<p>If the expression contains symbols or for some other reason cannot be evaluated
+numerically, calling <tt class="docutils literal"><span class="pre">.evalf()</span></tt> or <tt class="docutils literal"><span class="pre">N()</span></tt> returns the original expression, or
+in some cases a partially evaluated expression. For example, when the
+expression is a polynomial in expanded form, the coefficients are evaluated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">3.14159265358979*x**2 + 0.333333333333333*x</span>
+</pre></div>
+</div>
+<p>You can also use the standard Python functions <tt class="docutils literal"><span class="pre">float()</span></tt>, <tt class="docutils literal"><span class="pre">complex()</span></tt> to
+convert SymPy expressions to regular Python numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">3.1415926535...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">complex</span><span class="p">(</span><span class="n">pi</span><span class="o">+</span><span class="n">E</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">(3.1415926535...+2.7182818284...j)</span>
+</pre></div>
+</div>
+<p>If these functions are used, failure to evaluate the expression to an explicit
+number (for example if the expression contains symbols) will raise an exception.</p>
+<p>There is essentially no upper precision limit. The following command, for
+example, computes the first 100,000 digits of π/e:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="n">E</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span> 
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>This shows digits 999,951 through 1,000,000 of pi:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">N</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">))[</span><span class="o">-</span><span class="mi">50</span><span class="p">:]</span> 
+<span class="go">&#39;95678796130331164628399634646042209010610577945815&#39;</span>
+</pre></div>
+</div>
+<p>High-precision calculations can be slow. It is recommended (but entirely
+optional) to install gmpy (<a class="reference external" href="http://code.google.com/p/gmpy/">http://code.google.com/p/gmpy/</a>), which will
+significantly speed up computations such as the one above.</p>
+</div>
+<div class="section" id="floating-point-numbers">
+<h2>Floating-point numbers<a class="headerlink" href="#floating-point-numbers" title="Permalink to this headline">¶</a></h2>
+<p>Floating-point numbers in SymPy are instances of the class <tt class="docutils literal"><span class="pre">Float</span></tt>. A <tt class="docutils literal"><span class="pre">Float</span></tt>
+can be created with a custom precision as second argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="go">0.100000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">0.1000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mf">0.125</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="go">0.125000000000000000000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="go">0.100000000000000005551115123126</span>
+</pre></div>
+</div>
+<p>As the last example shows, some Python floats are only accurate to about 15
+digits as inputs, while others (those that have a denominator that is a
+power of 2, like .125 = 1/4) are exact. To create a <tt class="docutils literal"><span class="pre">Float</span></tt> from a
+high-precision decimal number, it is better to pass a string, <tt class="docutils literal"><span class="pre">Rational</span></tt>,
+or <tt class="docutils literal"><span class="pre">evalf</span></tt> a <tt class="docutils literal"><span class="pre">Rational</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;0.1&#39;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="go">0.100000000000000000000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">30</span><span class="p">)</span>
+<span class="go">0.100000000000000000000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">0.100000000000000000000000000000</span>
+</pre></div>
+</div>
+<p>The precision of a number determines 1) the precision to use when performing
+arithmetic with the number, and 2) the number of digits to display when printing
+the number. When two numbers with different precision are used together in an
+arithmetic operation, the higher of the precisions is used for the result. The
+product of 0.1 +/- 0.001 and 3.1415 +/- 0.0001 has an uncertainty of about 0.003
+and yet 5 digits of precision are shown.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">Float</span><span class="p">(</span><span class="mf">3.1415</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">0.31417</span>
+</pre></div>
+</div>
+<p>So the displayed precision should not be used as a model of error propagation or
+significance arithmetic; rather, this scheme is employed to ensure stability of
+numerical algorithms.</p>
+<p><tt class="docutils literal"><span class="pre">N</span></tt> and <tt class="docutils literal"><span class="pre">evalf</span></tt> can be used to change the precision of existing
+floating-point numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="go">3.50000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">3.5000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+<span class="go">3.50000000000000000000000000000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="accuracy-and-error-handling">
+<h2>Accuracy and error handling<a class="headerlink" href="#accuracy-and-error-handling" title="Permalink to this headline">¶</a></h2>
+<p>When the input to <tt class="docutils literal"><span class="pre">N</span></tt> or <tt class="docutils literal"><span class="pre">evalf</span></tt> is a complicated expression, numerical
+error propagation becomes a concern. As an example, consider the 100&#8217;th
+Fibonacci number and the excellent (but not exact) approximation <span class="math">\(\varphi^{100} / \sqrt{5}\)</span>
+where <span class="math">\(\varphi\)</span> is the golden ratio. With ordinary floating-point arithmetic,
+subtracting these numbers from each other erroneously results in a complete
+cancellation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">GoldenRatio</span><span class="o">**</span><span class="mi">1000</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">fibonacci</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">4.34665576869e+208</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">4.34665576869e+208</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">N</span></tt> and <tt class="docutils literal"><span class="pre">evalf</span></tt> keep track of errors and automatically increase the
+precision used internally in order to obtain a correct result:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-</span> <span class="n">GoldenRatio</span><span class="o">**</span><span class="mi">100</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">-5.64613129282185e-22</span>
+</pre></div>
+</div>
+<p>Unfortunately, numerical evaluation cannot tell an expression that is exactly
+zero apart from one that is merely very small. The working precision is
+therefore capped, by default to around 100 digits. If we try with the 1000&#8217;th
+Fibonacci number, the following happens:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">GoldenRatio</span><span class="p">)</span><span class="o">**</span><span class="mi">1000</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">0.e+85</span>
+</pre></div>
+</div>
+<p>The lack of digits in the returned number indicates that <tt class="docutils literal"><span class="pre">N</span></tt> failed to achieve
+full accuracy. The result indicates that the magnitude of the expression is something less than 10^84, but that is not a particularly good answer. To force a higher working precision, the <tt class="docutils literal"><span class="pre">maxn</span></tt> keyword argument can be used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">GoldenRatio</span><span class="p">)</span><span class="o">**</span><span class="mi">1000</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">maxn</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="go">-4.60123853010113e-210</span>
+</pre></div>
+</div>
+<p>Normally, <tt class="docutils literal"><span class="pre">maxn</span></tt> can be set very high (thousands of digits), but be aware that
+this may cause significant slowdown in extreme cases. Alternatively, the
+<tt class="docutils literal"><span class="pre">strict=True</span></tt> option can be set to force an exception instead of silently
+returning a value with less than the requested accuracy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">GoldenRatio</span><span class="p">)</span><span class="o">**</span><span class="mi">1000</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">PrecisionExhausted</span>: <span class="n">Failed to distinguish the expression:</span>
+
+<span class="go">-sqrt(5)*GoldenRatio**1000/5 + 43466557686937456435688527675040625802564660517371780402481729089536555417949051890403879840079255169295922593080322634775209689623239873322471161642996440906533187938298969649928516003704476137795166849228875</span>
+
+<span class="go">from zero. Try simplifying the input, using chop=True, or providing a higher maxn for evalf</span>
+</pre></div>
+</div>
+<p>If we add a term so that the Fibonacci approximation becomes exact (the full
+form of Binet&#8217;s formula), we get an expression that is exactly zero, but <tt class="docutils literal"><span class="pre">N</span></tt>
+does not know this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">fibonacci</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">GoldenRatio</span><span class="o">**</span><span class="mi">100</span> <span class="o">-</span> <span class="p">(</span><span class="n">GoldenRatio</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">0.e-104</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">maxn</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">0.e-1336</span>
+</pre></div>
+</div>
+<p>In situations where such cancellations are known to occur, the <tt class="docutils literal"><span class="pre">chop</span></tt> options
+is useful. This basically replaces very small numbers in the real or
+imaginary portions of a number with exact zeros:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">chop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="mi">3</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">f</span><span class="p">,</span> <span class="n">chop</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">3.00000000000000</span>
+</pre></div>
+</div>
+<p>In situations where you wish to remove meaningless digits, re-evaluation or
+the use of the <tt class="docutils literal"><span class="pre">round</span></tt> method are useful:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;.1&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;.12345&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="go">0.012297</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ans</span> <span class="o">=</span> <span class="n">_</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">ans</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.01</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ans</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.01</span>
+</pre></div>
+</div>
+<p>If you are dealing with a numeric expression that contains no floats, it
+can be evaluated to arbitrary precision. To round the result relative to
+a given decimal, the round method is useful:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">pi</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+<span class="go">31.9562288417661</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">31.956</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sums-and-integrals">
+<h2>Sums and integrals<a class="headerlink" href="#sums-and-integrals" title="Permalink to this headline">¶</a></h2>
+<p>Sums (in particular, infinite series) and integrals can be used like regular
+closed-form expressions, and support arbitrary-precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="p">(</span><span class="s">&#39;n x&#39;</span><span class="p">)</span>
+<span class="go">(n, x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">1.29128599706266</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">1.29128599706266</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">1.2912859970626635404072825905956005414986193682745</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">1.2912859970626635404072825905956005414986193682745</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">3.14159265358979323846264338328</span>
+</pre></div>
+</div>
+<p>By default, the tanh-sinh quadrature algorithm is used to evaluate integrals.
+This algorithm is very efficient and robust for smooth integrands (and even
+integrals with endpoint singularities), but may struggle with integrals that
+are highly oscillatory or have mid-interval discontinuities. In many cases,
+<tt class="docutils literal"><span class="pre">evalf</span></tt>/<tt class="docutils literal"><span class="pre">N</span></tt> will correctly estimate the error. With the following integral,
+the result is accurate but only good to four digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">2.346</span>
+</pre></div>
+</div>
+<p>It is better to split this integral into two pieces:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">))</span> <span class="o">+</span> <span class="n">Integral</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">2.34635637913639</span>
+</pre></div>
+</div>
+<p>A similar example is the following oscillatory integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">maxn</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">0.5</span>
+</pre></div>
+</div>
+<p>It can be dealt with much more efficiently by telling <tt class="docutils literal"><span class="pre">evalf</span></tt> or <tt class="docutils literal"><span class="pre">N</span></tt> to
+use an oscillatory quadrature algorithm:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">quad</span><span class="o">=</span><span class="s">&#39;osc&#39;</span><span class="p">)</span>
+<span class="go">0.504067061906928</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="s">&#39;osc&#39;</span><span class="p">)</span>
+<span class="go">0.50406706190692837199</span>
+</pre></div>
+</div>
+<p>Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
+sin(ax+b). Note that many other oscillatory integrals can be transformed to
+this form with a change of variables:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">wrap_line</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">no_global</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">intgrl</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">intgrl</span>
+<span class="go"> oo</span>
+<span class="go">  /</span>
+<span class="go"> |</span>
+<span class="go"> |  sin(x)</span>
+<span class="go"> |  ------ dx</span>
+<span class="go"> |     2</span>
+<span class="go"> |    x</span>
+<span class="go"> |</span>
+<span class="go">/</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">intgrl</span><span class="p">,</span> <span class="n">quad</span><span class="o">=</span><span class="s">&#39;osc&#39;</span><span class="p">)</span>
+<span class="go">0.504067061906928</span>
+</pre></div>
+</div>
+<p>Infinite series use direct summation if the series converges quickly enough.
+Otherwise, extrapolation methods (generally the Euler-Maclaurin formula but
+also Richardson extrapolation) are used to speed up convergence. This allows
+high-precision evaluation of slowly convergent series:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">)</span>
+<span class="go">k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">1.64493406684823</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zeta</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">1.64493406684823</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.577215664901533</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">0.57721566490153286060651209008240243104215933593992</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">EulerGamma</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">0.57721566490153286060651209008240243104215933593992</span>
+</pre></div>
+</div>
+<p>The Euler-Maclaurin formula is also used for finite series, allowing them to
+be approximated quickly without evaluating all terms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">10000000</span><span class="p">,</span> <span class="mi">20000000</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.693147255559946</span>
+</pre></div>
+</div>
+<p>Note that <tt class="docutils literal"><span class="pre">evalf</span></tt> makes some assumptions that are not always optimal. For
+fine-tuned control over numerical summation, it might be worthwhile to manually
+use the method <tt class="docutils literal"><span class="pre">Sum.euler_maclaurin</span></tt>.</p>
+<p>Special optimizations are used for rational hypergeometric series (where the
+term is a product of polynomials, powers, factorials, binomial coefficients and
+the like). <tt class="docutils literal"><span class="pre">N</span></tt>/<tt class="docutils literal"><span class="pre">evalf</span></tt> sum series of this type very rapidly to high
+precision. For example, this Ramanujan formula for pi can be summed to 10,000
+digits in a fraction of a second with a simple command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="mi">9801</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">/</span><span class="n">Sum</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1103</span><span class="o">+</span><span class="mi">26390</span><span class="o">*</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">f</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">396</span><span class="o">**</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="p">),</span>
+<span class="gp">... </span>                        <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span> 
+<span class="go">3.141592653589793238462643383279502884197169399375105820974944592307816406286208</span>
+<span class="go">99862803482534211706798214808651328230664709384460955058223172535940812848111745</span>
+<span class="go">02841027019385211055596446229489549303819644288109756659334461284756482337867831</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="numerical-simplification">
+<h2>Numerical simplification<a class="headerlink" href="#numerical-simplification" title="Permalink to this headline">¶</a></h2>
+<p>The function <tt class="docutils literal"><span class="pre">nsimplify</span></tt> attempts to find a formula that is numerically equal
+to the given input. This feature can be used to guess an exact formula for an
+approximate floating-point input, or to guess a simpler formula for a
+complicated symbolic input. The algorithm used by <tt class="docutils literal"><span class="pre">nsimplify</span></tt> is capable of
+identifying simple fractions, simple algebraic expressions, linear combinations
+of given constants, and certain elementary functional transformations of any of
+the preceding.</p>
+<p>Optionally, <tt class="docutils literal"><span class="pre">nsimplify</span></tt> can be passed a list of constants to include (e.g. pi)
+and a minimum numerical tolerance. Here are some elementary examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="go">1/10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mf">6.28</span><span class="p">,</span> <span class="p">[</span><span class="n">pi</span><span class="p">],</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="go">2*pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="go">22/7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="go">355</span>
+<span class="go">---</span>
+<span class="go">113</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mf">0.33333</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+<span class="go">1/3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mf">2.0</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">3.</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="go">635</span>
+<span class="go">---</span>
+<span class="go">504</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mf">2.0</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">3.</span><span class="p">),</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">3 ___</span>
+<span class="go">\/ 2</span>
+</pre></div>
+</div>
+<p>Here are several more advanced examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;0.130198866629986772369127970337&#39;</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span> <span class="p">[</span><span class="n">pi</span><span class="p">,</span> <span class="n">E</span><span class="p">])</span>
+<span class="go">    1</span>
+<span class="go">----------</span>
+<span class="go">5*pi</span>
+<span class="go">---- + 2*E</span>
+<span class="go"> 7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">atan</span><span class="p">(</span><span class="s">&#39;1/3&#39;</span><span class="p">)))</span>
+<span class="go">    ____</span>
+<span class="go">3*\/ 10</span>
+<span class="go">--------</span>
+<span class="go">   10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)),</span> <span class="p">[</span><span class="n">GoldenRatio</span><span class="p">])</span>
+<span class="go">-2 + 2*GoldenRatio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="s">&#39;1/4&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">I</span><span class="p">))</span>
+<span class="go">49   8*I</span>
+<span class="go">-- + ---</span>
+<span class="go">17    17</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+<span class="go">           ___________</span>
+<span class="go">          /   ___</span>
+<span class="go">1        /  \/ 5    1</span>
+<span class="go">- - I*  /   ----- + -</span>
+<span class="go">2     \/      10    4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">I</span><span class="o">**</span><span class="n">I</span><span class="p">,</span> <span class="p">[</span><span class="n">pi</span><span class="p">])</span>
+<span class="go"> -pi</span>
+<span class="go"> ----</span>
+<span class="go">  2</span>
+<span class="go">e</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">)),</span> <span class="p">[</span><span class="n">pi</span><span class="p">])</span>
+<span class="go">  2</span>
+<span class="go">pi</span>
+<span class="go">---</span>
+<span class="go"> 6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsimplify</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;1/4&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;3/4&#39;</span><span class="p">),</span> <span class="p">[</span><span class="n">pi</span><span class="p">])</span>
+<span class="go">  ___</span>
+<span class="go">\/ 2 *pi</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Numerical evaluation</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#floating-point-numbers">Floating-point numbers</a></li>
+<li><a class="reference internal" href="#accuracy-and-error-handling">Accuracy and error handling</a></li>
+<li><a class="reference internal" href="#sums-and-integrals">Sums and integrals</a></li>
+<li><a class="reference internal" href="#numerical-simplification">Numerical simplification</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="concrete.html"
+                        title="previous chapter">Concrete Mathematics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="functions/index.html"
+                        title="next chapter">Functions Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/evalf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="functions/index.html" title="Functions Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="concrete.html" title="Concrete Mathematics"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

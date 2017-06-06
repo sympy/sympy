@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.qft &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.qft</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;An implementation of qubits and gates acting on them.</span>
+
+<span class="sd">Todo:</span>
+
+<span class="sd">* Update docstrings.</span>
+<span class="sd">* Update tests.</span>
+<span class="sd">* Implement apply using decompose.</span>
+<span class="sd">* Implement represent using decompose or something smarter. For this to</span>
+<span class="sd">  work we first have to implement represent for SWAP.</span>
+<span class="sd">* Decide if we want upper index to be inclusive in the constructor.</span>
+<span class="sd">* Fix the printing of Rk gates in plotting.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span><span class="p">,</span> <span class="n">QExpr</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.tensorproduct</span> <span class="kn">import</span> <span class="n">matrix_tensor_product</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Gate</span><span class="p">,</span> <span class="n">HadamardGate</span><span class="p">,</span> <span class="n">SwapGate</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">,</span> <span class="n">CGate</span><span class="p">,</span> <span class="n">PhaseGate</span><span class="p">,</span> <span class="n">TGate</span><span class="p">,</span> <span class="n">ZGate</span>
+<span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;QFT&#39;</span><span class="p">,</span>
+    <span class="s">&#39;IQFT&#39;</span><span class="p">,</span>
+    <span class="s">&#39;RkGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Rk&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Fourier stuff</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="RkGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/qft.html#sympy.physics.quantum.qft.RkGate">[docs]</a><span class="k">class</span> <span class="nc">RkGate</span><span class="p">(</span><span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This is the R_k gate of the QTF.&quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Rk&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;Rk gates only take two arguments, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">args</span>
+            <span class="p">)</span>
+        <span class="c"># For small k, Rk gates simplify to other gates, using these</span>
+        <span class="c"># substitutions give us familiar results for the QFT for small numbers</span>
+        <span class="c"># of qubits.</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ZGate</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PhaseGate</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TGate</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">inst</span><span class="o">.</span><span class="n">hilbert_space</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_eval_hilbert_space</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inst</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c"># Fall back to this, because Gate._eval_args assumes that args is</span>
+        <span class="c"># all targets and can&#39;t contain duplicates.</span>
+        <span class="k">return</span> <span class="n">QExpr</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gate_name_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;$</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">$&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name_latex</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;sympy&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">))]])</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;Invalid format for the R_k gate: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">format</span><span class="p">)</span>
+
+</div>
+<span class="n">Rk</span> <span class="o">=</span> <span class="n">RkGate</span>
+
+
+<span class="k">class</span> <span class="nc">Fourier</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Superclass of Quantum Fourier and Inverse Quantum Fourier Gates.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;QFT/IQFT only takes two arguments, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">args</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span><span class="s">&quot;Start must be smaller than finish&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_represent_default_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_represent_ZGate</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_represent_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Represents the (I)QFT In the Z Basis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nqubits</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;nqubits&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nqubits</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;The number of qubits must be given as nqubits.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nqubits</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;The number of qubits </span><span class="si">%r</span><span class="s"> is too small for the gate.&#39;</span> <span class="o">%</span> <span class="n">nqubits</span>
+            <span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span>
+
+        <span class="c">#Make a matrix that has the basic Fourier Transform Matrix</span>
+        <span class="n">arrayFT</span> <span class="o">=</span> <span class="p">[[</span><span class="n">omega</span><span class="o">**</span><span class="p">(</span>
+            <span class="n">i</span><span class="o">*</span><span class="n">j</span> <span class="o">%</span> <span class="n">size</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)]</span>
+        <span class="n">matrixFT</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">arrayFT</span><span class="p">)</span>
+
+        <span class="c">#Embed the FT Matrix in a higher space, if necessary</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">matrixFT</span> <span class="o">=</span> <span class="n">matrix_tensor_product</span><span class="p">(</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">matrixFT</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span> <span class="o">&lt;</span> <span class="n">nqubits</span><span class="p">:</span>
+            <span class="n">matrixFT</span> <span class="o">=</span> <span class="n">matrix_tensor_product</span><span class="p">(</span>
+                <span class="n">matrixFT</span><span class="p">,</span> <span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">nqubits</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">matrixFT</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Size is the size of the QFT matrix&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;omega&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="QFT"><a class="viewcode-back" href="../../../../modules/physics/quantum/qft.html#sympy.physics.quantum.qft.QFT">[docs]</a><span class="k">class</span> <span class="nc">QFT</span><span class="p">(</span><span class="n">Fourier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The forward quantum Fourier transform.&quot;&quot;&quot;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;QFT&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;QFT&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QFT.decompose"><a class="viewcode-back" href="../../../../modules/physics/quantum/qft.html#sympy.physics.quantum.qft.QFT.decompose">[docs]</a>    <span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decomposes QFT into elementary gates.&quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">finish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">finish</span><span class="p">)):</span>
+            <span class="n">circuit</span> <span class="o">=</span> <span class="n">HadamardGate</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="o">*</span><span class="n">circuit</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="n">start</span><span class="p">):</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">CGate</span><span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">RkGate</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">circuit</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">finish</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">circuit</span> <span class="o">=</span> <span class="n">SwapGate</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">start</span><span class="p">,</span> <span class="n">finish</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">circuit</span>
+        <span class="k">return</span> <span class="n">circuit</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply_operator_Qubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span><span class="o">*</span><span class="n">qubits</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">IQFT</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="IQFT"><a class="viewcode-back" href="../../../../modules/physics/quantum/qft.html#sympy.physics.quantum.qft.IQFT">[docs]</a><span class="k">class</span> <span class="nc">IQFT</span><span class="p">(</span><span class="n">Fourier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The inverse quantum Fourier transform.&quot;&quot;&quot;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;IQFT&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;{QFT^{-1}}&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IQFT.decompose"><a class="viewcode-back" href="../../../../modules/physics/quantum/qft.html#sympy.physics.quantum.qft.IQFT.decompose">[docs]</a>    <span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decomposes IQFT into elementary gates.&quot;&quot;&quot;</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">finish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">finish</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">circuit</span> <span class="o">=</span> <span class="n">SwapGate</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">start</span><span class="p">,</span> <span class="n">finish</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">circuit</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">finish</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="n">start</span><span class="p">)):</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">CGate</span><span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">RkGate</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="o">-</span><span class="n">i</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">circuit</span>
+            <span class="n">circuit</span> <span class="o">=</span> <span class="n">HadamardGate</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="o">*</span><span class="n">circuit</span>
+        <span class="k">return</span> <span class="n">circuit</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">QFT</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

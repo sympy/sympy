@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Numerical calculus &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="../index.html" />
+    <link rel="next" title="Polynomials" href="polynomials.html" />
+    <link rel="prev" title="q-functions" href="../functions/qfunctions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="polynomials.html" title="Polynomials"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../functions/qfunctions.html" title="q-functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="numerical-calculus">
+<h1>Numerical calculus<a class="headerlink" href="#numerical-calculus" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="polynomials.html">Polynomials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="polynomials.html#polynomial-evaluation-polyval">Polynomial evaluation (<tt class="docutils literal"><span class="pre">polyval</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="polynomials.html#polynomial-roots-polyroots">Polynomial roots (<tt class="docutils literal"><span class="pre">polyroots</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optimization.html">Root-finding and optimization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization.html#root-finding-findroot">Root-finding (<tt class="docutils literal"><span class="pre">findroot</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sums_limits.html">Sums, products, limits and extrapolation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sums_limits.html#summation">Summation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sums_limits.html#products">Products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sums_limits.html#limits-limit">Limits (<tt class="docutils literal"><span class="pre">limit</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sums_limits.html#extrapolation">Extrapolation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="differentiation.html">Differentiation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="differentiation.html#numerical-derivatives-diff-diffs">Numerical derivatives (<tt class="docutils literal"><span class="pre">diff</span></tt>, <tt class="docutils literal"><span class="pre">diffs</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="differentiation.html#composition-of-derivatives-diffs-prod-diffs-exp">Composition of derivatives (<tt class="docutils literal"><span class="pre">diffs_prod</span></tt>, <tt class="docutils literal"><span class="pre">diffs_exp</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="differentiation.html#fractional-derivatives-differintegration-differint">Fractional derivatives / differintegration (<tt class="docutils literal"><span class="pre">differint</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integration.html">Numerical integration (quadrature)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="integration.html#standard-quadrature-quad">Standard quadrature (<tt class="docutils literal"><span class="pre">quad</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integration.html#oscillatory-quadrature-quadosc">Oscillatory quadrature (<tt class="docutils literal"><span class="pre">quadosc</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integration.html#quadrature-rules">Quadrature rules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="odes.html">Ordinary differential equations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="odes.html#solving-the-ode-initial-value-problem-odefun">Solving the ODE initial value problem (<tt class="docutils literal"><span class="pre">odefun</span></tt>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="approximation.html">Function approximation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="approximation.html#taylor-series-taylor">Taylor series (<tt class="docutils literal"><span class="pre">taylor</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="approximation.html#pade-approximation-pade">Pade approximation (<tt class="docutils literal"><span class="pre">pade</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="approximation.html#chebyshev-approximation-chebyfit">Chebyshev approximation (<tt class="docutils literal"><span class="pre">chebyfit</span></tt>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="approximation.html#fourier-series-fourier-fourierval">Fourier series (<tt class="docutils literal"><span class="pre">fourier</span></tt>, <tt class="docutils literal"><span class="pre">fourierval</span></tt>)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../functions/qfunctions.html"
+                        title="previous chapter">q-functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="polynomials.html"
+                        title="next chapter">Polynomials</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/calculus/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="polynomials.html" title="Polynomials"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../functions/qfunctions.html" title="q-functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

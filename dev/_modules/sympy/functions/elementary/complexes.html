@@ -1,0 +1,980 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.elementary.complexes &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.elementary.complexes</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.piecewise</span> <span class="kn">import</span> <span class="n">Piecewise</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Mul</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Eq</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.trigonometric</span> <span class="kn">import</span> <span class="n">atan</span><span class="p">,</span> <span class="n">atan2</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">######################### REAL and IMAGINARY PARTS ############################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="re"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.re">[docs]</a><span class="k">class</span> <span class="nc">re</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns real part of expression. This function performs only</span>
+<span class="sd">       elementary analysis and so it will fail to decompose properly</span>
+<span class="sd">       more complicated expressions. If completely simplified result</span>
+<span class="sd">       is needed then use Basic.as_real_imag() or perform complex</span>
+<span class="sd">       expansion on instance of this function.</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import re, im, I, E</span>
+<span class="sd">       &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">       &gt;&gt;&gt; re(2*E)</span>
+<span class="sd">       2*E</span>
+
+<span class="sd">       &gt;&gt;&gt; re(2*I + 17)</span>
+<span class="sd">       17</span>
+
+<span class="sd">       &gt;&gt;&gt; re(2*I)</span>
+<span class="sd">       0</span>
+
+<span class="sd">       &gt;&gt;&gt; re(im(x) + x*I + 2)</span>
+<span class="sd">       2</span>
+
+<span class="sd">       See Also</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       im</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">unbranched</span> <span class="o">=</span> <span class="bp">True</span>  <span class="c"># implicitely works on the projection to C</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arg</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Function</span> <span class="ow">and</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">conjugate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">re</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">included</span><span class="p">,</span> <span class="n">reverted</span><span class="p">,</span> <span class="n">excluded</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">as_coefficient</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                        <span class="n">reverted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="p">)</span> <span class="ow">and</span> <span class="n">term</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                    <span class="n">excluded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c"># Try to do some advanced expansion.  If</span>
+                    <span class="c"># impossible, don&#39;t try to do re(arg) again</span>
+                    <span class="c"># (because this is what we are trying to do now).</span>
+                    <span class="n">real_imag</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">real_imag</span><span class="p">:</span>
+                        <span class="n">excluded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">real_imag</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">included</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">included</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">xs</span><span class="p">:</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">xs</span><span class="p">),</span>
+                    <span class="p">[</span><span class="n">included</span><span class="p">,</span> <span class="n">reverted</span><span class="p">,</span> <span class="n">excluded</span><span class="p">])</span>
+
+                <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="n">im</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span>
+
+<div class="viewcode-block" id="re.as_real_imag"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.re.as_real_imag">[docs]</a>    <span class="k">def</span> <span class="nf">as_real_imag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the real number with a zero complex part.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">re</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_imaginary</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> \
+                <span class="o">*</span> <span class="n">im</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+</div>
+<span class="k">class</span> <span class="nc">im</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns imaginary part of expression. This function performs only</span>
+<span class="sd">    elementary analysis and so it will fail to decompose properly more</span>
+<span class="sd">    complicated expressions. If completely simplified result is needed then</span>
+<span class="sd">    use Basic.as_real_imag() or perform complex expansion on instance of</span>
+<span class="sd">    this function.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import re, im, E, I</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    &gt;&gt;&gt; im(2*E)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    &gt;&gt;&gt; re(2*I + 17)</span>
+<span class="sd">    17</span>
+
+<span class="sd">    &gt;&gt;&gt; im(x*I)</span>
+<span class="sd">    re(x)</span>
+
+<span class="sd">    &gt;&gt;&gt; im(re(x) + y)</span>
+<span class="sd">    im(y)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    re</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">unbranched</span> <span class="o">=</span> <span class="bp">True</span>  <span class="c"># implicitely works on the projection to C</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="o">*</span> <span class="n">arg</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Function</span> <span class="ow">and</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">conjugate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">im</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">included</span><span class="p">,</span> <span class="n">reverted</span><span class="p">,</span> <span class="n">excluded</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">coeff</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">as_coefficient</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                        <span class="n">reverted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">excluded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">term</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                    <span class="c"># Try to do some advanced expansion.  If</span>
+                    <span class="c"># impossible, don&#39;t try to do im(arg) again</span>
+                    <span class="c"># (because this is what we are trying to do now).</span>
+                    <span class="n">real_imag</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">real_imag</span><span class="p">:</span>
+                        <span class="n">excluded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">real_imag</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">included</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">included</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">xs</span><span class="p">:</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">xs</span><span class="p">),</span>
+                    <span class="p">[</span><span class="n">included</span><span class="p">,</span> <span class="n">reverted</span><span class="p">,</span> <span class="n">excluded</span><span class="p">])</span>
+
+                <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">re</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">c</span>
+
+    <span class="k">def</span> <span class="nf">as_real_imag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the imaginary part with a zero real part.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions import im</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import I</span>
+<span class="sd">        &gt;&gt;&gt; im(2 + 3*I).as_real_imag()</span>
+<span class="sd">        (3, 0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">im</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_imaginary</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> \
+                <span class="o">*</span> <span class="n">re</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+
+<span class="c">###############################################################################</span>
+<span class="c">############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################</span>
+<span class="c">###############################################################################</span>
+
+<div class="viewcode-block" id="sign"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.sign">[docs]</a><span class="k">class</span> <span class="nc">sign</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the sign of an expression, that is:</span>
+
+<span class="sd">    * 1 if expression is positive</span>
+<span class="sd">    * 0 if expression is equal to zero</span>
+<span class="sd">    * -1 if expression is negative</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions import sign</span>
+<span class="sd">    &gt;&gt;&gt; sign(-1)</span>
+<span class="sd">    -1</span>
+<span class="sd">    &gt;&gt;&gt; sign(0)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Abs, conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_bounded</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_complex</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_nonzero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="c"># handle what we can</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">()</span>
+            <span class="n">unk</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">is_imag</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">is_imaginary</span>
+            <span class="n">is_neg</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">is_negative</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                    <span class="n">is_neg</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_neg</span>
+                <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ai</span> <span class="o">=</span> <span class="n">im</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_imaginary</span> <span class="ow">and</span> <span class="n">ai</span><span class="o">.</span><span class="n">is_comparable</span><span class="p">:</span>  <span class="c"># i.e. a = I*real</span>
+                        <span class="n">is_imag</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_imag</span>
+                        <span class="k">if</span> <span class="n">ai</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                            <span class="n">is_neg</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">is_neg</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">unk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">unk</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span> <span class="k">if</span> <span class="n">is_neg</span> <span class="k">else</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)</span> \
+                <span class="o">*</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="k">if</span> <span class="n">is_imag</span> <span class="k">else</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)</span> \
+                <span class="o">*</span> <span class="n">cls</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">_new_rawargs</span><span class="p">(</span><span class="o">*</span><span class="n">unk</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>  <span class="c"># it may be an Expr that is zero</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Function</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">sign</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arg</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="n">arg2</span> <span class="o">=</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="o">*</span> <span class="n">arg</span>
+            <span class="k">if</span> <span class="n">arg2</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span>
+            <span class="k">if</span> <span class="n">arg2</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">return</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span>
+
+    <span class="k">def</span> <span class="nf">_eval_Abs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_nonzero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sign</span><span class="p">(</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.functions.special.delta_functions</span> <span class="kn">import</span> <span class="n">DiracDelta</span>
+            <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> \
+                <span class="o">*</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.functions.special.delta_functions</span> <span class="kn">import</span> <span class="n">DiracDelta</span>
+            <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> \
+                <span class="o">*</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_imaginary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_imaginary</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_zero</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_nonzero</span> <span class="ow">and</span>
+            <span class="n">other</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span>
+            <span class="n">other</span><span class="o">.</span><span class="n">is_even</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_sage_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">sage.all</span> <span class="kn">as</span> <span class="nn">sage</span>
+        <span class="k">return</span> <span class="n">sage</span><span class="o">.</span><span class="n">sgn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_sage_</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Piecewise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">arg</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">arg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="Abs"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.Abs">[docs]</a><span class="k">class</span> <span class="nc">Abs</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the absolute value of the argument.</span>
+
+<span class="sd">    This is an extension of the built-in function abs() to accept symbolic</span>
+<span class="sd">    values.  If you pass a SymPy expression to the built-in abs(), it will</span>
+<span class="sd">    pass it automatically to Abs().</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Abs, Symbol, S</span>
+<span class="sd">    &gt;&gt;&gt; Abs(-1)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; Abs(-x)</span>
+<span class="sd">    Abs(x)</span>
+<span class="sd">    &gt;&gt;&gt; Abs(x**2)</span>
+<span class="sd">    x**2</span>
+<span class="sd">    &gt;&gt;&gt; abs(-x) # The Python built-in</span>
+<span class="sd">    Abs(x)</span>
+
+<span class="sd">    Note that the Python built-in will return either an Expr or int depending on</span>
+<span class="sd">    the argument::</span>
+
+<span class="sd">        &gt;&gt;&gt; type(abs(-1))</span>
+<span class="sd">        &lt;... &#39;int&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; type(abs(S.NegativeOne))</span>
+<span class="sd">        &lt;class &#39;sympy.core.numbers.One&#39;&gt;</span>
+
+<span class="sd">    Abs will always return a sympy object.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sign, conjugate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_negative</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">unbranched</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="Abs.fdiff"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.Abs.fdiff">[docs]</a>    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the first derivative of the argument to Abs().</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.functions import Abs</span>
+<span class="sd">        &gt;&gt;&gt; Abs(-x).fdiff()</span>
+<span class="sd">        sign(x)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s">&#39;_eval_Abs&#39;</span><span class="p">):</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_eval_Abs</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">obj</span>
+        <span class="c"># handle what we can</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">unk</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">tnew</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">tnew</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">cls</span><span class="p">:</span>
+                    <span class="n">unk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tnew</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">known</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tnew</span><span class="p">)</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">known</span><span class="p">)</span>
+            <span class="n">unk</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">unk</span><span class="p">),</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">unk</span> <span class="k">else</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">return</span> <span class="n">known</span><span class="o">*</span><span class="n">unk</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>  <span class="c"># it may be an Expr that is zero</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arg</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_nonpositive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">arg</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="n">arg2</span> <span class="o">=</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span> <span class="o">*</span> <span class="n">arg</span>
+            <span class="k">if</span> <span class="n">arg2</span><span class="o">.</span><span class="n">is_nonnegative</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arg2</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">expand_mul</span>
+            <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">arg</span> <span class="o">*</span> <span class="n">arg</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">exponent</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">exponent</span><span class="o">.</span><span class="n">is_even</span> <span class="ow">and</span> <span class="n">base</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arg</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_nonzero</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_nonzero</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="n">other</span>
+            <span class="k">elif</span> <span class="n">other</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">other</span> <span class="o">-</span> <span class="n">sign</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="n">e</span><span class="o">*</span><span class="bp">self</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_eval_nseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="p">):</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">leadterm</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_eval_nseries</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="o">=</span><span class="n">logx</span><span class="p">)</span>
+        <span class="n">when</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span>
+            <span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">when</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">sign</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="bp">True</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sage_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">sage.all</span> <span class="kn">as</span> <span class="nn">sage</span>
+        <span class="k">return</span> <span class="n">sage</span><span class="o">.</span><span class="n">abs_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_sage_</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> \
+                <span class="o">*</span> <span class="n">sign</span><span class="p">(</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">re</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">re</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">x</span><span class="p">,</span>
+            <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">im</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">im</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span> <span class="o">/</span> <span class="n">Abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Heaviside</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="c"># Note this only holds for real arg (since Heaviside is not defined</span>
+        <span class="c"># for complex arguments).</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arg</span><span class="o">*</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Heaviside</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">Heaviside</span><span class="p">(</span><span class="o">-</span><span class="n">arg</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Piecewise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">arg</span><span class="p">,</span> <span class="n">arg</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="n">arg</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="arg"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.arg">[docs]</a><span class="k">class</span> <span class="nc">arg</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the argument (in radians) of a complex number&quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_bounded</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">re</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">im</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arg</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">re</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">im</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span>
+                    <span class="n">Derivative</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_atan2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">re</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">im</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">atan2</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="conjugate"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.complexes.conjugate">[docs]</a><span class="k">class</span> <span class="nc">conjugate</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Changes the sign of the imaginary part of a complex number.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import conjugate, I</span>
+
+<span class="sd">    &gt;&gt;&gt; conjugate(1 + I)</span>
+<span class="sd">    1 - I</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sign, Abs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_eval_conjugate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">_eval_Abs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">conjugate</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">x</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">conjugate</span><span class="p">(</span><span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+</div>
+<span class="k">class</span> <span class="nc">transpose</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Linear map transposition.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_eval_transpose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">adjoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">adjoint</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conjugate transpose or Hermite conjugation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_eval_adjoint</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_eval_transpose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">conjugate</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="n">exp</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">tex</span> <span class="o">=</span> <span class="s">r&#39;</span><span class="si">%s</span><span class="s">^{\dag}&#39;</span> <span class="o">%</span> <span class="n">arg</span>
+        <span class="k">if</span> <span class="n">exp</span><span class="p">:</span>
+            <span class="n">tex</span> <span class="o">=</span> <span class="s">r&#39;\left(</span><span class="si">%s</span><span class="s">\right)^{</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">tex</span><span class="p">,</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">exp</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tex</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">printer</span><span class="o">.</span><span class="n">_use_unicode</span><span class="p">:</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">pform</span><span class="o">**</span><span class="n">prettyForm</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\u2020</span><span class="s">&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">pform</span><span class="o">**</span><span class="n">prettyForm</span><span class="p">(</span><span class="s">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pform</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">############### HANDLING OF POLAR NUMBERS #####################################</span>
+<span class="c">###############################################################################</span>
+
+
+<span class="k">class</span> <span class="nc">polar_lift</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lift argument to the riemann surface of the logarithm, using the</span>
+<span class="sd">    standard branch.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, polar_lift, I</span>
+<span class="sd">    &gt;&gt;&gt; p = Symbol(&#39;p&#39;, polar=True)</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; polar_lift(4)</span>
+<span class="sd">    4*exp_polar(0)</span>
+<span class="sd">    &gt;&gt;&gt; polar_lift(-4)</span>
+<span class="sd">    4*exp_polar(I*pi)</span>
+<span class="sd">    &gt;&gt;&gt; polar_lift(-I)</span>
+<span class="sd">    exp_polar(-I*pi/2)</span>
+<span class="sd">    &gt;&gt;&gt; polar_lift(I + 2)</span>
+<span class="sd">    polar_lift(2 + I)</span>
+
+<span class="sd">    &gt;&gt;&gt; polar_lift(4*x)</span>
+<span class="sd">    4*polar_lift(x)</span>
+<span class="sd">    &gt;&gt;&gt; polar_lift(4*p)</span>
+<span class="sd">    4*p</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.functions.elementary.exponential.exp_polar</span>
+<span class="sd">    periodic_argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_polar</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_comparable</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># Cannot be evalf&#39;d.</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">arg</span> <span class="k">as</span> <span class="n">argument</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="n">ar</span> <span class="o">=</span> <span class="n">argument</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="c">#if not ar.has(argument) and not ar.has(atan):</span>
+            <span class="k">if</span> <span class="n">ar</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">exp_polar</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">ar</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+        <span class="n">included</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">excluded</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_polar</span><span class="p">:</span>
+                <span class="n">included</span> <span class="o">+=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="n">positive</span> <span class="o">+=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">excluded</span> <span class="o">+=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">excluded</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">excluded</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">included</span> <span class="o">+</span> <span class="n">positive</span><span class="p">))</span><span class="o">*</span><span class="n">polar_lift</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">excluded</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">included</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">included</span> <span class="o">+</span> <span class="n">positive</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">positive</span><span class="p">)</span><span class="o">*</span><span class="n">exp_polar</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Careful! any evalf of polar numbers is flaky &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">periodic_argument</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represent the argument on a quotient of the riemann surface of the</span>
+<span class="sd">    logarithm. That is, given a period P, always return a value in</span>
+<span class="sd">    (-P/2, P/2], by using exp(P*I) == 1.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import exp, exp_polar, periodic_argument, unbranched_argument</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import I, pi</span>
+<span class="sd">    &gt;&gt;&gt; unbranched_argument(exp(5*I*pi))</span>
+<span class="sd">    pi</span>
+<span class="sd">    &gt;&gt;&gt; unbranched_argument(exp_polar(5*I*pi))</span>
+<span class="sd">    5*pi</span>
+<span class="sd">    &gt;&gt;&gt; periodic_argument(exp_polar(5*I*pi), 2*pi)</span>
+<span class="sd">    pi</span>
+<span class="sd">    &gt;&gt;&gt; periodic_argument(exp_polar(5*I*pi), 3*pi)</span>
+<span class="sd">    -pi</span>
+<span class="sd">    &gt;&gt;&gt; periodic_argument(exp_polar(5*I*pi), pi)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.functions.elementary.exponential.exp_polar</span>
+<span class="sd">    polar_lift : Lift argument to the riemann surface of the logarithm</span>
+<span class="sd">    principal_branch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_getunbranched</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ar</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">polar_lift</span>
+        <span class="k">if</span> <span class="n">ar</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">ar</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar</span><span class="p">]</span>
+        <span class="n">unbranched</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">is_polar</span><span class="p">:</span>
+                <span class="n">unbranched</span> <span class="o">+=</span> <span class="n">arg</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp_polar</span><span class="p">:</span>
+                <span class="n">unbranched</span> <span class="o">+=</span> <span class="n">a</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+                <span class="n">re</span><span class="p">,</span> <span class="n">im</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+                <span class="n">unbranched</span> <span class="o">+=</span> <span class="n">re</span><span class="o">*</span><span class="n">unbranched_argument</span><span class="p">(</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">+</span> <span class="n">im</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">base</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">polar_lift</span><span class="p">:</span>
+                <span class="n">unbranched</span> <span class="o">+=</span> <span class="n">arg</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">unbranched</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ar</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+        <span class="c"># Our strategy is to evaluate the argument on the riemann surface of the</span>
+        <span class="c"># logarithm, and then reduce.</span>
+        <span class="c"># NOTE evidently this means it is a rather bad idea to use this with</span>
+        <span class="c"># period != 2*pi and non-polar numbers.</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ceiling</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">atan2</span><span class="p">,</span> <span class="n">atan</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Mul</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">period</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="n">oo</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ar</span><span class="p">,</span> <span class="n">principal_branch</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="o">*</span><span class="n">ar</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ar</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">polar_lift</span> <span class="ow">and</span> <span class="n">period</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">ar</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ar</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ar</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_positive</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">newargs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ar</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">),</span> <span class="n">period</span><span class="p">)</span>
+        <span class="n">unbranched</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_getunbranched</span><span class="p">(</span><span class="n">ar</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unbranched</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">unbranched</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">periodic_argument</span><span class="p">,</span> <span class="n">atan2</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">atan</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">unbranched</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">!=</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">ceiling</span><span class="p">(</span><span class="n">unbranched</span><span class="o">/</span><span class="n">period</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">period</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">ceiling</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">unbranched</span> <span class="o">-</span> <span class="n">n</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ceiling</span><span class="p">,</span> <span class="n">oo</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="n">unbranched</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="o">.</span><span class="n">_getunbranched</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">unbranched</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">return</span> <span class="n">unbranched</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ub</span> <span class="o">-</span> <span class="n">ceiling</span><span class="p">(</span><span class="n">ub</span><span class="o">/</span><span class="n">period</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">period</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">unbranched_argument</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">oo</span>
+    <span class="k">return</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">principal_branch</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represent a polar number reduced to its principal branch on a quotient</span>
+<span class="sd">    of the riemann surface of the logarithm.</span>
+
+<span class="sd">    This is a function of two arguments. The first argument is a polar</span>
+<span class="sd">    number `z`, and the second one a positive real number of infinity, `p`.</span>
+<span class="sd">    The result is &quot;z mod exp_polar(I*p)&quot;.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import exp_polar, principal_branch, oo, I, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z</span>
+<span class="sd">    &gt;&gt;&gt; principal_branch(z, oo)</span>
+<span class="sd">    z</span>
+<span class="sd">    &gt;&gt;&gt; principal_branch(exp_polar(2*pi*I)*3, 2*pi)</span>
+<span class="sd">    3*exp_polar(0)</span>
+<span class="sd">    &gt;&gt;&gt; principal_branch(exp_polar(2*pi*I)*3*z, 2*pi)</span>
+<span class="sd">    3*principal_branch(z, 2*pi)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.functions.elementary.exponential.exp_polar</span>
+<span class="sd">    polar_lift : Lift argument to the riemann surface of the logarithm</span>
+<span class="sd">    periodic_argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">is_polar</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_comparable</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># cannot always be evalf&#39;d</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">period</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">oo</span><span class="p">,</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">,</span> <span class="n">Symbol</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">principal_branch</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+        <span class="n">barg</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ub</span> <span class="o">!=</span> <span class="n">barg</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ub</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">periodic_argument</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">barg</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">periodic_argument</span><span class="p">):</span>
+            <span class="n">pl</span> <span class="o">=</span> <span class="n">polar_lift</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">mr</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">polar_lift</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">expr</span>
+            <span class="n">pl</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">polar_lift</span><span class="p">,</span> <span class="n">mr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pl</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">polar_lift</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">exp_polar</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="n">barg</span> <span class="o">-</span> <span class="n">ub</span><span class="p">))</span><span class="o">*</span><span class="n">pl</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">is_polar</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">exp_polar</span><span class="p">):</span>
+                    <span class="n">res</span> <span class="o">*=</span> <span class="n">exp_polar</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">res</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span>
+        <span class="n">others</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">*=</span> <span class="n">y</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">others</span> <span class="o">+=</span> <span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">others</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">periodic_argument</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="p">(</span><span class="n">unbranched_argument</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">!=</span> <span class="n">arg</span> <span class="ow">or</span>
+                              <span class="p">(</span><span class="n">arg</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">m</span> <span class="o">!=</span> <span class="p">()</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">*</span><span class="n">principal_branch</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">m</span><span class="p">),</span> <span class="n">period</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">principal_branch</span><span class="p">(</span><span class="n">exp_polar</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">arg</span><span class="p">)</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">m</span><span class="p">),</span> <span class="n">period</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="p">((</span><span class="nb">abs</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">period</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">period</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="n">m</span> <span class="o">==</span> <span class="p">():</span>
+            <span class="k">return</span> <span class="n">exp_polar</span><span class="p">(</span><span class="n">arg</span><span class="o">*</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">I</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">periodic_argument</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">period</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">pi</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">==</span> <span class="o">-</span><span class="n">pi</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>  <span class="c"># Cannot evalf for this argument.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">p</span><span class="p">))</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+
+<span class="c"># /cyclic/</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">basic</span> <span class="k">as</span> <span class="n">_</span>
+<span class="n">_</span><span class="o">.</span><span class="n">abs_</span> <span class="o">=</span> <span class="n">Abs</span>
+<span class="k">del</span> <span class="n">_</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

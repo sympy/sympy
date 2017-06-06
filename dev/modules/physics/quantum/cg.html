@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Clebsch-Gordan Coefficients &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Commutator" href="commutator.html" />
+    <link rel="prev" title="Anticommutator" href="anticommutator.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="commutator.html" title="Commutator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="anticommutator.html" title="Anticommutator"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.cg">
+<span id="clebsch-gordan-coefficients"></span><h1>Clebsch-Gordan Coefficients<a class="headerlink" href="#module-sympy.physics.quantum.cg" title="Permalink to this headline">¶</a></h1>
+<p>Clebsch-Gordon Coefficients.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.cg.CG">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cg.</tt><tt class="descname">CG</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cg.html#CG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cg.CG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for Clebsch-Gordan coefficient</p>
+<p>Clebsch-Gordan coefficients describe the angular momentum coupling between
+two systems. The coefficients give the expansion of a coupled total angular
+momentum state and an uncoupled tensor product state. The Clebsch-Gordan
+coefficients are defined as <a class="reference internal" href="#r216">[R216]</a>:</p>
+<div class="math">
+\[C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \langle j_1,m_1;j_2,m_2 | j_3,m_3\rangle\]</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j1, m1, j2, m2, j3, m3</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Terms determining the angular momentum of coupled angular momentum
+systems.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.cg.Wigner3j" title="sympy.physics.quantum.cg.Wigner3j"><tt class="xref py py-obj docutils literal"><span class="pre">Wigner3j</span></tt></a></dt>
+<dd>Wigner-3j symbols</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r216" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R216]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Define a Clebsch-Gordan coefficient and evaluate its value</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cg</span> <span class="kn">import</span> <span class="n">CG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span>
+<span class="go">CG(3/2, 3/2, 1/2, -1/2, 1, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">sqrt(3)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cg.Wigner3j">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cg.</tt><tt class="descname">Wigner3j</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cg.html#Wigner3j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cg.Wigner3j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for the Wigner-3j symbols</p>
+<p>Wigner 3j-symbols are coefficients determined by the coupling of
+two angular momenta. When created, they are expressed as symbolic
+quantities that, for numerical parameters, can be evaluated using the
+<tt class="docutils literal"><span class="pre">.doit()</span></tt> method <a class="reference internal" href="#r217">[R217]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j1, m1, j2, m2, j3, m3</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>Terms determining the angular momentum of coupled angular momentum
+systems.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.cg.CG" title="sympy.physics.quantum.cg.CG"><tt class="xref py py-obj docutils literal"><span class="pre">CG</span></tt></a></dt>
+<dd>Clebsch-Gordan coefficients</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r217" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R217]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Declare a Wigner-3j coefficient and calcualte its value</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cg</span> <span class="kn">import</span> <span class="n">Wigner3j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w3j</span> <span class="o">=</span> <span class="n">Wigner3j</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w3j</span>
+<span class="go">Wigner3j(6, 0, 4, 0, 2, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w3j</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">sqrt(715)/143</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cg.Wigner6j">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cg.</tt><tt class="descname">Wigner6j</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cg.html#Wigner6j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cg.Wigner6j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for the Wigner-6j symbols</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.cg.Wigner3j" title="sympy.physics.quantum.cg.Wigner3j"><tt class="xref py py-obj docutils literal"><span class="pre">Wigner3j</span></tt></a></dt>
+<dd>Wigner-3j symbols</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cg.Wigner9j">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cg.</tt><tt class="descname">Wigner9j</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cg.html#Wigner9j"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cg.Wigner9j" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for the Wigner-9j symbols</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.cg.Wigner3j" title="sympy.physics.quantum.cg.Wigner3j"><tt class="xref py py-obj docutils literal"><span class="pre">Wigner3j</span></tt></a></dt>
+<dd>Wigner-3j symbols</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.cg.cg_simp">
+<tt class="descclassname">sympy.physics.quantum.cg.</tt><tt class="descname">cg_simp</tt><big>(</big><em>e</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cg.html#cg_simp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cg.cg_simp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify and combine CG coefficients</p>
+<p>This function uses various symmetry and properties of sums and
+products of Clebsch-Gordan coefficients to simplify statements
+involving these terms <a class="reference internal" href="#r218">[R218]</a>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.quantum.cg.CG" title="sympy.physics.quantum.cg.CG"><tt class="xref py py-obj docutils literal"><span class="pre">CG</span></tt></a></dt>
+<dd>Clebsh-Gordan coefficients</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r218" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R218]</td><td><em>(<a class="fn-backref" href="#id5">1</a>, <a class="fn-backref" href="#id6">2</a>)</em> Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Simplify the sum over CG(a,alpha,0,0,a,alpha) for all alpha to
+2*a+1</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cg</span> <span class="kn">import</span> <span class="n">CG</span><span class="p">,</span> <span class="n">cg_simp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">CG</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg_simp</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">+</span><span class="n">c</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="anticommutator.html"
+                        title="previous chapter">Anticommutator</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="commutator.html"
+                        title="next chapter">Commutator</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/cg.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="commutator.html" title="Commutator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="anticommutator.html" title="Anticommutator"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

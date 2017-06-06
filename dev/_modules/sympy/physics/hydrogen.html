@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.hydrogen &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.hydrogen</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">assoc_laguerre</span><span class="p">,</span> <span class="n">Float</span>
+
+
+<div class="viewcode-block" id="R_nl"><a class="viewcode-back" href="../../../modules/physics/hydrogen.html#sympy.physics.hydrogen.R_nl">[docs]</a><span class="k">def</span> <span class="nf">R_nl</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the Hydrogen radial wavefunction R_{nl}.</span>
+
+<span class="sd">    n, l</span>
+<span class="sd">        quantum numbers &#39;n&#39; and &#39;l&#39;</span>
+<span class="sd">    r</span>
+<span class="sd">        radial coordinate</span>
+<span class="sd">    Z</span>
+<span class="sd">        atomic number (1 for Hydrogen, 2 for Helium, ...)</span>
+
+<span class="sd">    Everything is in Hartree atomic units.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.hydrogen import R_nl</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import var</span>
+<span class="sd">    &gt;&gt;&gt; var(&quot;r Z&quot;)</span>
+<span class="sd">    (r, Z)</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(1, 0, r, Z)</span>
+<span class="sd">    2*sqrt(Z**3)*exp(-Z*r)</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(2, 0, r, Z)</span>
+<span class="sd">    sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(2, 1, r, Z)</span>
+<span class="sd">    sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12</span>
+
+<span class="sd">    For Hydrogen atom, you can just use the default value of Z=1:</span>
+
+<span class="sd">    &gt;&gt;&gt; R_nl(1, 0, r)</span>
+<span class="sd">    2*exp(-r)</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(2, 0, r)</span>
+<span class="sd">    sqrt(2)*(-r + 2)*exp(-r/2)/4</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(3, 0, r)</span>
+<span class="sd">    2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27</span>
+
+<span class="sd">    For Silver atom, you would use Z=47:</span>
+
+<span class="sd">    &gt;&gt;&gt; R_nl(1, 0, r, Z=47)</span>
+<span class="sd">    94*sqrt(47)*exp(-47*r)</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(2, 0, r, Z=47)</span>
+<span class="sd">    47*sqrt(94)*(-47*r + 2)*exp(-47*r/2)/4</span>
+<span class="sd">    &gt;&gt;&gt; R_nl(3, 0, r, Z=47)</span>
+<span class="sd">    94*sqrt(141)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27</span>
+
+<span class="sd">    The normalization of the radial wavefunction is:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import integrate, oo</span>
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(1, 0, r)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(2, 0, r)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(2, 1, r)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+
+<span class="sd">    It holds for any atomic number:</span>
+
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(1, 0, r, Z=2)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(2, 0, r, Z=3)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; integrate(R_nl(2, 1, r, Z=4)**2 * r**2, (r, 0, oo))</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># sympify arguments</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">S</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="n">S</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">S</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+    <span class="c"># radial quantum number</span>
+    <span class="n">n_r</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="c"># rescaled &quot;r&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">Z</span>  <span class="c"># Bohr radius</span>
+    <span class="n">r0</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">a</span><span class="p">)</span>
+    <span class="c"># normalization coefficient</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">S</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">**</span><span class="mi">3</span> <span class="o">*</span> <span class="n">factorial</span><span class="p">(</span><span class="n">n_r</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">l</span><span class="p">)))</span>
+    <span class="c"># This is an equivalent normalization coefficient, that can be found in</span>
+    <span class="c"># some books. Both coefficients seem to be the same fast:</span>
+    <span class="c"># C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))</span>
+    <span class="k">return</span> <span class="n">C</span> <span class="o">*</span> <span class="n">r0</span><span class="o">**</span><span class="n">l</span> <span class="o">*</span> <span class="n">assoc_laguerre</span><span class="p">(</span><span class="n">n_r</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r0</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">r0</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="E_nl"><a class="viewcode-back" href="../../../modules/physics/hydrogen.html#sympy.physics.hydrogen.E_nl">[docs]</a><span class="k">def</span> <span class="nf">E_nl</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the energy of the state (n, l) in Hartree atomic units.</span>
+
+<span class="sd">    The energy doesn&#39;t depend on &quot;l&quot;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import var</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.hydrogen import E_nl</span>
+<span class="sd">    &gt;&gt;&gt; var(&quot;n Z&quot;)</span>
+<span class="sd">    (n, Z)</span>
+<span class="sd">    &gt;&gt;&gt; E_nl(n, Z)</span>
+<span class="sd">    -Z**2/(2*n**2)</span>
+<span class="sd">    &gt;&gt;&gt; E_nl(1)</span>
+<span class="sd">    -1/2</span>
+<span class="sd">    &gt;&gt;&gt; E_nl(2)</span>
+<span class="sd">    -1/8</span>
+<span class="sd">    &gt;&gt;&gt; E_nl(3)</span>
+<span class="sd">    -1/18</span>
+<span class="sd">    &gt;&gt;&gt; E_nl(3, 47)</span>
+<span class="sd">    -2209/18</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">S</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;n&#39; must be positive integer&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">Z</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="E_nl_dirac"><a class="viewcode-back" href="../../../modules/physics/hydrogen.html#sympy.physics.hydrogen.E_nl_dirac">[docs]</a><span class="k">def</span> <span class="nf">E_nl_dirac</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">spin_up</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">Float</span><span class="p">(</span><span class="s">&quot;137.035999037&quot;</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the relativistic energy of the state (n, l, spin) in Hartree atomic</span>
+<span class="sd">    units.</span>
+
+<span class="sd">    The energy is calculated from the Dirac equation. The rest mass energy is</span>
+<span class="sd">    *not* included.</span>
+
+<span class="sd">    n, l</span>
+<span class="sd">        quantum numbers &#39;n&#39; and &#39;l&#39;</span>
+<span class="sd">    spin_up</span>
+<span class="sd">        True if the electron spin is up (default), otherwise down</span>
+<span class="sd">    Z</span>
+<span class="sd">        atomic number (1 for Hydrogen, 2 for Helium, ...)</span>
+<span class="sd">    c</span>
+<span class="sd">        speed of light in atomic units. Default value is 137.035999037,</span>
+<span class="sd">        taken from: http://arxiv.org/abs/1012.3627</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.hydrogen import E_nl_dirac</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(1, 0)</span>
+<span class="sd">    -0.500006656595360</span>
+
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(2, 0)</span>
+<span class="sd">    -0.125002080189006</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(2, 1)</span>
+<span class="sd">    -0.125000416028342</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(2, 1, False)</span>
+<span class="sd">    -0.125002080189006</span>
+
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(3, 0)</span>
+<span class="sd">    -0.0555562951740285</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(3, 1)</span>
+<span class="sd">    -0.0555558020932949</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(3, 1, False)</span>
+<span class="sd">    -0.0555562951740285</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(3, 2)</span>
+<span class="sd">    -0.0555556377366884</span>
+<span class="sd">    &gt;&gt;&gt; E_nl_dirac(3, 2, False)</span>
+<span class="sd">    -0.0555558020932949</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">l</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;l&#39; must be positive or zero&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;</span> <span class="n">l</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;n&#39; must be greater than &#39;l&#39;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">l</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">spin_up</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Spin must be up for l==0.&quot;</span><span class="p">)</span>
+    <span class="c"># skappa is sign*kappa, where sign contains the correct sign</span>
+    <span class="k">if</span> <span class="n">spin_up</span><span class="p">:</span>
+        <span class="n">skappa</span> <span class="o">=</span> <span class="o">-</span><span class="n">l</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">skappa</span> <span class="o">=</span> <span class="o">-</span><span class="n">l</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">skappa</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">Z</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">Z</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">skappa</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.concrete.simplification &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.concrete.simplification</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Change index / Reorder / Reverse order of limits of Sums and Products&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.concrete</span> <span class="kn">import</span> <span class="n">Product</span><span class="p">,</span> <span class="n">Sum</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+
+
+<span class="k">class</span> <span class="nc">ReorderError</span><span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exception raised when trying to reorder dependent limits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ReorderError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+            <span class="s">&quot;</span><span class="si">%s</span><span class="s"> could not be reordered: </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">msg</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="index"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.simplification.index">[docs]</a><span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the index of a limit variable.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    ``index(expr, x)``  returns the index of the limit variable ``x`` in the</span>
+<span class="sd">    limits of ``expr``. Note that we start counting with 0 at the inner-most</span>
+<span class="sd">    limits tuple.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.simplification import index</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c, d</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum, Product</span>
+<span class="sd">    &gt;&gt;&gt; index(Sum(x*y, (x, a, b), (y, c, d)), x)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; index(Sum(x*y, (x, a, b), (y, c, d)), y)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; index(Product(x*y, (x, a, b), (y, c, d)), x)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; index(Product(x*y, (x, a, b), (y, c, d)), y)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.concrete.simplification.change_index,</span>
+<span class="sd">    sympy.concrete.simplification.reorder_limit,</span>
+<span class="sd">    sympy.concrete.simplification.reorder,</span>
+<span class="sd">    sympy.concrete.simplification.reverse_order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Sum</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">limit</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">variables</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&quot;Number of instances of variable not equal to one&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">variables</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="change_index"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.simplification.change_index">[docs]</a><span class="k">def</span> <span class="nf">change_index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">trafo</span><span class="p">,</span> <span class="n">newvar</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change index of a Sum or Product.</span>
+
+<span class="sd">    Perform a linear transformation `x \mapsto a x + b` on the index variable</span>
+<span class="sd">    `x`. For `a` the only values allowed are `\pm 1`. A new variable to be used</span>
+<span class="sd">    after the change of index can also be specified.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the</span>
+<span class="sd">    index variable `x` to transform. The transformation ``trafo`` must be linear</span>
+<span class="sd">    and given in terms of ``var``. If the optional argument ``newvar`` is</span>
+<span class="sd">    provided then ``var`` gets replaced by ``newvar`` in the final expression.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.simplification import change_index</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum, Product, simplify</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c, d, u, v, i, j, k, l</span>
+
+<span class="sd">    &gt;&gt;&gt; S = Sum(x, (x, a, b))</span>
+<span class="sd">    &gt;&gt;&gt; S.doit()</span>
+<span class="sd">    -a**2/2 + a/2 + b**2/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; Sn = change_index(S, x, x + 1, y)</span>
+<span class="sd">    &gt;&gt;&gt; Sn</span>
+<span class="sd">    Sum(y - 1, (y, a + 1, b + 1))</span>
+<span class="sd">    &gt;&gt;&gt; Sn.doit()</span>
+<span class="sd">    -a**2/2 + a/2 + b**2/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; Sn = change_index(S, x, -x, y)</span>
+<span class="sd">    &gt;&gt;&gt; Sn</span>
+<span class="sd">    Sum(-y, (y, -b, -a))</span>
+<span class="sd">    &gt;&gt;&gt; Sn.doit()</span>
+<span class="sd">    -a**2/2 + a/2 + b**2/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; Sn = change_index(S, x, x+u)</span>
+<span class="sd">    &gt;&gt;&gt; Sn</span>
+<span class="sd">    Sum(-u + x, (x, a + u, b + u))</span>
+<span class="sd">    &gt;&gt;&gt; Sn.doit()</span>
+<span class="sd">    -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u</span>
+<span class="sd">    &gt;&gt;&gt; simplify(Sn.doit())</span>
+<span class="sd">    -a**2/2 + a/2 + b**2/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; Sn = change_index(S, x, -x - u, y)</span>
+<span class="sd">    &gt;&gt;&gt; Sn</span>
+<span class="sd">    Sum(-u - y, (y, -b - u, -a - u))</span>
+<span class="sd">    &gt;&gt;&gt; Sn.doit()</span>
+<span class="sd">    -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u</span>
+<span class="sd">    &gt;&gt;&gt; simplify(Sn.doit())</span>
+<span class="sd">    -a**2/2 + a/2 + b**2/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; P = Product(i*j**2, (i, a, b), (j, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; P</span>
+<span class="sd">    Product(i*j**2, (i, a, b), (j, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; P2 = change_index(P, i, i+3, k)</span>
+<span class="sd">    &gt;&gt;&gt; P2</span>
+<span class="sd">    Product(j**2*(k - 3), (k, a + 3, b + 3), (j, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; P3 = change_index(P2, j, -j, l)</span>
+<span class="sd">    &gt;&gt;&gt; P3</span>
+<span class="sd">    Product(l**2*(k - 3), (k, a + 3, b + 3), (l, -d, -c))</span>
+
+<span class="sd">    When dealing with symbols only, we can make a</span>
+<span class="sd">    general linear transformation:</span>
+
+<span class="sd">    &gt;&gt;&gt; Sn = change_index(S, x, u*x+v, y)</span>
+<span class="sd">    &gt;&gt;&gt; Sn</span>
+<span class="sd">    Sum((-v + y)/u, (y, b*u + v, a*u + v))</span>
+<span class="sd">    &gt;&gt;&gt; Sn.doit()</span>
+<span class="sd">    -v*(a*u - b*u + 1)/u + (a**2*u**2/2 + a*u*v + a*u/2 - b**2*u**2/2 - b*u*v + b*u/2 + v)/u</span>
+<span class="sd">    &gt;&gt;&gt; simplify(Sn.doit())</span>
+<span class="sd">    a**2*u/2 + a/2 - b**2*u/2 + b/2</span>
+
+<span class="sd">    However, the last result can be inconsistent with usual</span>
+<span class="sd">    summation where the index increment is always 1. This is</span>
+<span class="sd">    obvious as we get back the original value only for ``u``</span>
+<span class="sd">    equal +1 or -1.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.concrete.simplification.index,</span>
+<span class="sd">    sympy.concrete.simplification.reorder_limit,</span>
+<span class="sd">    sympy.concrete.simplification.reorder,</span>
+<span class="sd">    sympy.concrete.simplification.reverse_order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">newvar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">newvar</span> <span class="o">=</span> <span class="n">var</span>
+
+    <span class="n">limits</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">limit</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">var</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">trafo</span><span class="o">.</span><span class="n">as_poly</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Index transformation is not linear&quot;</span><span class="p">)</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">coeff_monomial</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">coeff_monomial</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">alpha</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">alpha</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                    <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">newvar</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">alpha</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                    <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">newvar</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Linear transformation results in non-linear summation stepsize&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Note that the case of alpha being symbolic can give issues if alpha &lt; 0.</span>
+                <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">newvar</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">,</span> <span class="n">alpha</span><span class="o">*</span><span class="n">limit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+
+    <span class="n">function</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">(</span><span class="n">var</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span><span class="o">/</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="n">function</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">newvar</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Sum</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">limits</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">limits</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&quot;change_index only implemented for Sum and Product&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="reorder"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.simplification.reorder">[docs]</a><span class="k">def</span> <span class="nf">reorder</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reorder limits in a expression containing a Sum or a Product.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    ``reorder(expr, *arg)`` reorders the limits in the expression ``expr``</span>
+<span class="sd">    according to the list of tuples given by ``arg``. These tuples can</span>
+<span class="sd">    contain numerical indices or index variable names or involve both.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.simplification import reorder</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum, Product</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z, a, b, c, d, e, f</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder(Sum(x*y, (x, a, b), (y, c, d)), (x, y))</span>
+<span class="sd">    Sum(x*y, (y, c, d), (x, a, b))</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), (x, y), (x, z), (y, z))</span>
+<span class="sd">    Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+
+<span class="sd">    &gt;&gt;&gt; P = Product(x*y*z, (x, a, b), (y, c, d), (z, e, f))</span>
+<span class="sd">    &gt;&gt;&gt; reorder(P, (x, y), (x, z), (y, z))</span>
+<span class="sd">    Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+
+<span class="sd">    We can also select the index variables by counting them, starting</span>
+<span class="sd">    with the inner-most one:</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder(Sum(x**2, (x, a, b), (x, c, d)), (0, 1))</span>
+<span class="sd">    Sum(x**2, (x, c, d), (x, a, b))</span>
+
+<span class="sd">    And of course we can mix both schemes:</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, x))</span>
+<span class="sd">    Sum(x*y, (y, c, d), (x, a, b))</span>
+<span class="sd">    &gt;&gt;&gt; reorder(Sum(x*y, (x, a, b), (y, c, d)), (y, 0))</span>
+<span class="sd">    Sum(x*y, (y, c, d), (x, a, b))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.concrete.simplification.index,</span>
+<span class="sd">    sympy.concrete.simplification.change_index,</span>
+<span class="sd">    sympy.concrete.simplification.reorder_limit,</span>
+<span class="sd">    sympy.concrete.simplification.reverse_order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_expr</span> <span class="o">=</span> <span class="n">expr</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s">&quot;Invalid number of arguments&quot;</span><span class="p">)</span>
+
+        <span class="n">index1</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">index2</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">index1</span> <span class="o">=</span> <span class="n">index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">index2</span> <span class="o">=</span> <span class="n">index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">new_expr</span> <span class="o">=</span> <span class="n">reorder_limit</span><span class="p">(</span><span class="n">new_expr</span><span class="p">,</span> <span class="n">index1</span><span class="p">,</span> <span class="n">index2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_expr</span>
+
+</div>
+<div class="viewcode-block" id="reorder_limit"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.simplification.reorder_limit">[docs]</a><span class="k">def</span> <span class="nf">reorder_limit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interchange two limit tuples of a Sum or Product expression.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    ``reorder_limit(expr, x, y)`` interchanges two limit tuples. The</span>
+<span class="sd">    arguments ``x`` and ``y`` are integers corresponding to the index</span>
+<span class="sd">    variables of the two limits which are to be interchanged. The</span>
+<span class="sd">    expression ``expr`` has to be either a Sum or a Product.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.simplification import reorder_limit</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z, a, b, c, d, e, f</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum, Product</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder_limit(Sum(x*y*z, (x, a, b), (y, c, d), (z, e, f)), 0, 2)</span>
+<span class="sd">    Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+<span class="sd">    &gt;&gt;&gt; reorder_limit(Sum(x**2, (x, a, b), (x, c, d)), 1, 0)</span>
+<span class="sd">    Sum(x**2, (x, c, d), (x, a, b))</span>
+
+<span class="sd">    &gt;&gt;&gt; reorder_limit(Product(x*y*z, (x, a, b), (y, c, d), (z, e, f)), 0, 2)</span>
+<span class="sd">    Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.concrete.simplification.index,</span>
+<span class="sd">    sympy.concrete.simplification.change_index,</span>
+<span class="sd">    sympy.concrete.simplification.reorder,</span>
+<span class="sd">    sympy.concrete.simplification.reverse_order</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">limit</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">])</span>
+    <span class="n">limit_x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+    <span class="n">limit_y</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">limit_x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">var</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span>
+        <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">limit_x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">var</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span>
+        <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">limit_y</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">var</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span>
+        <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">limit_y</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">var</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+
+        <span class="n">limits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">limit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">limit_y</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+                <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">limit_x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Sum</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&quot;reorder only implemented for Sum and Product&quot;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ReorderError</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&quot;could not interchange the two limits specified&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="reverse_order"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.simplification.reverse_order">[docs]</a><span class="k">def</span> <span class="nf">reverse_order</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reverse the order of a limit in a Sum or Product.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    ``reverse_order(expr, *indices)`` reverses some limits in the expression</span>
+<span class="sd">    ``expr`` which can be either a ``Sum`` or a ``Product``. The selectors in</span>
+<span class="sd">    the argument ``indices`` specify some indices whose limits get reversed.</span>
+<span class="sd">    These selectors are either variable names or numerical indices counted</span>
+<span class="sd">    starting from the inner-most limit tuple.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.simplification import reverse_order</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a, b, c, d</span>
+
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x, (x, 0, 3)), x)</span>
+<span class="sd">    Sum(-x, (x, 4, -1))</span>
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x*y, (x, 1, 5), (y, 0, 6)), x, y)</span>
+<span class="sd">    Sum(x*y, (x, 6, 0), (y, 7, -1))</span>
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x, (x, a, b)), x)</span>
+<span class="sd">    Sum(-x, (x, b + 1, a - 1))</span>
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x, (x, a, b)), 0)</span>
+<span class="sd">    Sum(-x, (x, b + 1, a - 1))</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Product, simplify, RisingFactorial, gamma</span>
+<span class="sd">    &gt;&gt;&gt; P = Product(x, (x, a, b))</span>
+<span class="sd">    &gt;&gt;&gt; Pr = reverse_order(P, x)</span>
+<span class="sd">    &gt;&gt;&gt; Pr</span>
+<span class="sd">    Product(1/x, (x, b + 1, a - 1))</span>
+<span class="sd">    &gt;&gt;&gt; Pr = Pr.doit()</span>
+<span class="sd">    &gt;&gt;&gt; Pr</span>
+<span class="sd">    1/RisingFactorial(b + 1, a - b - 1)</span>
+<span class="sd">    &gt;&gt;&gt; simplify(Pr)</span>
+<span class="sd">    gamma(b + 1)/gamma(a)</span>
+<span class="sd">    &gt;&gt;&gt; P = P.doit()</span>
+<span class="sd">    &gt;&gt;&gt; P</span>
+<span class="sd">    RisingFactorial(a, -a + b + 1)</span>
+<span class="sd">    &gt;&gt;&gt; simplify(P)</span>
+<span class="sd">    gamma(b + 1)/gamma(a)</span>
+
+<span class="sd">    While one should prefer variable names when specifying which limits</span>
+<span class="sd">    to reverse, the index counting notation comes in handy in case there</span>
+<span class="sd">    are several symbols with the same name.</span>
+
+<span class="sd">    &gt;&gt;&gt; S = Sum(x**2, (x, a, b), (x, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; S</span>
+<span class="sd">    Sum(x**2, (x, a, b), (x, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; S0 = reverse_order(S, 0)</span>
+<span class="sd">    &gt;&gt;&gt; S0</span>
+<span class="sd">    Sum(-x**2, (x, b + 1, a - 1), (x, c, d))</span>
+<span class="sd">    &gt;&gt;&gt; S1 = reverse_order(S0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; S1</span>
+<span class="sd">    Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))</span>
+
+<span class="sd">    Of course we can mix both notations:</span>
+
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), x, 1)</span>
+<span class="sd">    Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))</span>
+<span class="sd">    &gt;&gt;&gt; reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x)</span>
+<span class="sd">    Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.concrete.simplification.index,</span>
+<span class="sd">    sympy.concrete.simplification.change_index,</span>
+<span class="sd">    sympy.concrete.simplification.reorder_limit,</span>
+<span class="sd">    sympy.concrete.simplification.reorder</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Michael Karr, &quot;Summation in Finite Terms&quot;, Journal of the ACM,</span>
+<span class="sd">           Volume 28 Issue 2, April 1981, Pages 305-350</span>
+<span class="sd">           http://dl.acm.org/citation.cfm?doid=322248.322255</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">l_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">indx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l_indices</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indx</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">l_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">indx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Sum</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">limits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">limit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">limits</span><span class="p">):</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">limit</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">l_indices</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="o">-</span><span class="n">e</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="p">(</span><span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">limit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">,</span> <span class="n">limit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Sum</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Sum</span><span class="p">(</span><span class="n">e</span> <span class="o">*</span> <span class="n">expr</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">function</span> <span class="o">**</span> <span class="n">e</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

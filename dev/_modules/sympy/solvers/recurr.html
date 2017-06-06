@@ -1,0 +1,941 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.solvers.recurr &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.solvers.recurr</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module is intended for solving recurrences or, in other words,</span>
+<span class="sd">difference equations. Currently supported are linear, inhomogeneous</span>
+<span class="sd">equations with polynomial or rational coefficients.</span>
+
+<span class="sd">The solutions are obtained among polynomials, rational functions,</span>
+<span class="sd">hypergeometric terms, or combinations of hypergeometric term which</span>
+<span class="sd">are pairwise dissimilar.</span>
+
+<span class="sd">``rsolve_X`` functions were meant as a low level interface</span>
+<span class="sd">for ``rsolve`` which would use Mathematica&#39;s syntax.</span>
+
+<span class="sd">Given a recurrence relation:</span>
+
+<span class="sd">    .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +</span>
+<span class="sd">              ... + a_{0}(n) y(n) = f(n)</span>
+
+<span class="sd">where `k &gt; 0` and `a_{i}(n)` are polynomials in `n`. To use</span>
+<span class="sd">``rsolve_X`` we need to put all coefficients in to a list ``L`` of</span>
+<span class="sd">`k+1` elements the following way:</span>
+
+<span class="sd">    ``L = [ a_{0}(n), ..., a_{k-1}(n), a_{k}(n) ]``</span>
+
+<span class="sd">where ``L[i]``, for `i=0, \dots, k`, maps to</span>
+<span class="sd">`a_{i}(n) y(n+i)` (`y(n+i)` is implicit).</span>
+
+<span class="sd">For example if we would like to compute `m`-th Bernoulli polynomial</span>
+<span class="sd">up to a constant (example was taken from rsolve_poly docstring),</span>
+<span class="sd">then we would use `b(n+1) - b(n) = m n^{m-1}` recurrence, which</span>
+<span class="sd">has solution `b(n) = B_m + C`.</span>
+
+<span class="sd">Then ``L = [-1, 1]`` and `f(n) = m n^(m-1)` and finally for `m=4`:</span>
+
+<span class="sd">&gt;&gt;&gt; from sympy import Symbol, bernoulli, rsolve_poly</span>
+<span class="sd">&gt;&gt;&gt; n = Symbol(&#39;n&#39;, integer=True)</span>
+
+<span class="sd">&gt;&gt;&gt; rsolve_poly([-1, 1], 4*n**3, n)</span>
+<span class="sd">C0 + n**4 - 2*n**3 + n**2</span>
+
+<span class="sd">&gt;&gt;&gt; bernoulli(4, n)</span>
+<span class="sd">n**4 - 2*n**3 + n**2 - 1/30</span>
+
+<span class="sd">For the sake of completeness, `f(n)` can be:</span>
+
+<span class="sd">    [1] a polynomial              -&gt; rsolve_poly</span>
+<span class="sd">    [2] a rational function       -&gt; rsolve_ratio</span>
+<span class="sd">    [3] a hypergeometric function  -&gt; rsolve_hyper</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Wild</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Equality</span>
+<span class="kn">from</span> <span class="nn">sympy.core.add</span> <span class="kn">import</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">Mul</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span>
+
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">hypersimp</span><span class="p">,</span> <span class="n">hypersimilar</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span><span class="p">,</span> <span class="n">solve_undetermined_coeffs</span>
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">quo</span><span class="p">,</span> <span class="n">gcd</span><span class="p">,</span> <span class="n">lcm</span><span class="p">,</span> <span class="n">roots</span><span class="p">,</span> <span class="n">resultant</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">FallingFactorial</span><span class="p">,</span> <span class="n">RisingFactorial</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">casoratian</span>
+<span class="kn">from</span> <span class="nn">sympy.concrete</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">default_sort_key</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">numbered_symbols</span>
+
+
+<div class="viewcode-block" id="rsolve_poly"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.recurr.rsolve_poly">[docs]</a><span class="k">def</span> <span class="nf">rsolve_poly</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given linear recurrence operator `\operatorname{L}` of order</span>
+<span class="sd">    `k` with polynomial coefficients and inhomogeneous equation</span>
+<span class="sd">    `\operatorname{L} y = f`, where `f` is a polynomial, we seek for</span>
+<span class="sd">    all polynomial solutions over field `K` of characteristic zero.</span>
+
+<span class="sd">    The algorithm performs two basic steps:</span>
+
+<span class="sd">        (1) Compute degree `N` of the general polynomial solution.</span>
+<span class="sd">        (2) Find all polynomials of degree `N` or less</span>
+<span class="sd">            of `\operatorname{L} y = f`.</span>
+
+<span class="sd">    There are two methods for computing the polynomial solutions.</span>
+<span class="sd">    If the degree bound is relatively small, i.e. it&#39;s smaller than</span>
+<span class="sd">    or equal to the order of the recurrence, then naive method of</span>
+<span class="sd">    undetermined coefficients is being used. This gives system</span>
+<span class="sd">    of algebraic equations with `N+1` unknowns.</span>
+
+<span class="sd">    In the other case, the algorithm performs transformation of the</span>
+<span class="sd">    initial equation to an equivalent one, for which the system of</span>
+<span class="sd">    algebraic equations has only `r` indeterminates. This method is</span>
+<span class="sd">    quite sophisticated (in comparison with the naive one) and was</span>
+<span class="sd">    invented together by Abramov, Bronstein and Petkovsek.</span>
+
+<span class="sd">    It is possible to generalize the algorithm implemented here to</span>
+<span class="sd">    the case of linear q-difference and differential equations.</span>
+
+<span class="sd">    Lets say that we would like to compute `m`-th Bernoulli polynomial</span>
+<span class="sd">    up to a constant. For this we can use `b(n+1) - b(n) = m n^{m-1}`</span>
+<span class="sd">    recurrence, which has solution `b(n) = B_m + C`. For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, rsolve_poly</span>
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&#39;n&#39;, integer=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; rsolve_poly([-1, 1], 4*n**3, n)</span>
+<span class="sd">    C0 + n**4 - 2*n**3 + n**2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] S. A. Abramov, M. Bronstein and M. Petkovsek, On polynomial</span>
+<span class="sd">           solutions of linear operator equations, in: T. Levelt, ed.,</span>
+<span class="sd">           Proc. ISSAC &#39;95, ACM Press, New York, 1995, 290-296.</span>
+
+<span class="sd">    .. [2] M. Petkovsek, Hypergeometric solutions of linear recurrences</span>
+<span class="sd">           with polynomial coefficients, J. Symbolic Computation,</span>
+<span class="sd">           14 (1992), 243-264.</span>
+
+<span class="sd">    .. [3] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">homogeneous</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">is_zero</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Poly</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span> <span class="p">]</span>
+
+    <span class="n">polys</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Poly</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">)</span> <span class="p">]</span> <span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">binomial</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">exp</span><span class="p">,),</span> <span class="n">coeff</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">LT</span><span class="p">()</span>
+            <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">b</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">d</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span>
+
+    <span class="n">d</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+
+    <span class="n">degree_poly</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">degree_poly</span> <span class="o">+=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">FallingFactorial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="n">nni_roots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">degree_poly</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&#39;Z&#39;</span><span class="p">,</span>
+        <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">nni_roots</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">nni_roots</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">+=</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">+=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">as_poly</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;symbols&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">:</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">E</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">C</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;C&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="o">**</span><span class="n">i</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">E</span> <span class="o">+=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">*</span><span class="n">y</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="n">solutions</span> <span class="o">=</span> <span class="n">solve_undetermined_coeffs</span><span class="p">(</span><span class="n">E</span> <span class="o">-</span> <span class="n">f</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">solutions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="p">[</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span> <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">solutions</span><span class="p">)</span> <span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">solutions</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>  <span class="c"># TBD</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">N</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">nni_roots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">polys</span><span class="p">[</span><span class="n">r</span><span class="p">],</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&#39;Z&#39;</span><span class="p">,</span>
+            <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">nni_roots</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nni_roots</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">def</span> <span class="nf">_zero_vector</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">]</span> <span class="o">*</span> <span class="n">k</span>
+
+        <span class="k">def</span> <span class="nf">_one_vector</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">]</span> <span class="o">*</span> <span class="n">k</span>
+
+        <span class="k">def</span> <span class="nf">_delta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">B</span> <span class="o">*=</span> <span class="o">-</span><span class="n">Rational</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">D</span> <span class="o">+=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">k</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">D</span>
+
+        <span class="n">alpha</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="o">-</span><span class="n">A</span><span class="p">,</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">_one_vector</span><span class="p">(</span><span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">I</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">I</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">k</span>
+
+            <span class="n">alpha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">B</span> <span class="o">=</span> <span class="n">binomial</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span>
+                    <span class="n">D</span> <span class="o">=</span> <span class="n">_delta</span><span class="p">(</span><span class="n">polys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">as_expr</span><span class="p">(),</span> <span class="n">k</span><span class="p">)</span>
+
+                    <span class="n">alpha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">I</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">B</span><span class="o">*</span><span class="n">D</span>
+
+        <span class="n">V</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">U</span><span class="p">):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">_zero_vector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">A</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                    <span class="n">B</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="n">A</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+                        <span class="n">v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+                <span class="n">denom</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="o">-</span><span class="n">A</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+                    <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="n">denom</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">_zero_vector</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">U</span><span class="p">):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">_zero_vector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">A</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                    <span class="n">B</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="n">A</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+                        <span class="n">v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+                    <span class="n">g</span> <span class="o">+=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span>
+
+                <span class="n">denom</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="o">-</span><span class="n">A</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+                    <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="n">denom</span>
+
+                <span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_delta</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+
+        <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">_one_vector</span><span class="p">(</span><span class="n">U</span><span class="p">),</span> <span class="n">_zero_vector</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">U</span><span class="p">):</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">a</span> <span class="o">-</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+            <span class="n">Q</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="p">(</span><span class="n">v</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">V</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">P</span><span class="p">)</span> <span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">homogeneous</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="p">(</span><span class="n">g</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span> <span class="p">])</span>
+
+        <span class="n">C</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;C&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">c</span><span class="o">*</span><span class="n">_delta</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span> <span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">_delta</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">E</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">solutions</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="o">*</span><span class="n">C</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">solutions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;symbols&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">solutions</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">homogeneous</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">h</span>
+
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">Q</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">solutions</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">solutions</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">*</span><span class="n">q</span>
+                <span class="n">C</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">q</span>
+
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">s</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;symbols&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="rsolve_ratio"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.recurr.rsolve_ratio">[docs]</a><span class="k">def</span> <span class="nf">rsolve_ratio</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given linear recurrence operator `\operatorname{L}` of order `k`</span>
+<span class="sd">    with polynomial coefficients and inhomogeneous equation</span>
+<span class="sd">    `\operatorname{L} y = f`, where `f` is a polynomial, we seek</span>
+<span class="sd">    for all rational solutions over field `K` of characteristic zero.</span>
+
+<span class="sd">    This procedure accepts only polynomials, however if you are</span>
+<span class="sd">    interested in solving recurrence with rational coefficients</span>
+<span class="sd">    then use ``rsolve`` which will pre-process the given equation</span>
+<span class="sd">    and run this procedure with polynomial arguments.</span>
+
+<span class="sd">    The algorithm performs two basic steps:</span>
+
+<span class="sd">        (1) Compute polynomial `v(n)` which can be used as universal</span>
+<span class="sd">            denominator of any rational solution of equation</span>
+<span class="sd">            `\operatorname{L} y = f`.</span>
+
+<span class="sd">        (2) Construct new linear difference equation by substitution</span>
+<span class="sd">            `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its</span>
+<span class="sd">            polynomial solutions. Return ``None`` if none were found.</span>
+
+<span class="sd">    Algorithm implemented here is a revised version of the original</span>
+<span class="sd">    Abramov&#39;s algorithm, developed in 1989. The new approach is much</span>
+<span class="sd">    simpler to implement and has better overall efficiency. This</span>
+<span class="sd">    method can be easily adapted to q-difference equations case.</span>
+
+<span class="sd">    Besides finding rational solutions alone, this functions is</span>
+<span class="sd">    an important part of Hyper algorithm were it is used to find</span>
+<span class="sd">    particular solution of inhomogeneous part of a recurrence.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.recurr import rsolve_ratio</span>
+<span class="sd">    &gt;&gt;&gt; rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,</span>
+<span class="sd">    ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)</span>
+<span class="sd">    C2*(2*x - 3)/(2*(x**2 - 1))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] S. A. Abramov, Rational solutions of linear difference</span>
+<span class="sd">           and q-difference equations with polynomial coefficients,</span>
+<span class="sd">           in: T. Levelt, ed., Proc. ISSAC &#39;95, ACM Press, New York,</span>
+<span class="sd">           1995, 285-289</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    rsolve_hyper</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">))</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">r</span><span class="p">],</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;h&#39;</span><span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">resultant</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">h</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+    <span class="n">nni_roots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">roots</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s">&#39;Z&#39;</span><span class="p">,</span>
+        <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nni_roots</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rsolve_poly</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">numers</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">nni_roots</span><span class="p">)),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="n">A</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">i</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="n">C</span> <span class="o">*=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">d</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">])</span>
+
+        <span class="n">denoms</span> <span class="o">=</span> <span class="p">[</span> <span class="n">C</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">gcd</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">denoms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="n">numers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">denoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">denoms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">numers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">denoms</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">denoms</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]))</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rsolve_poly</span><span class="p">(</span><span class="n">numers</span><span class="p">,</span> <span class="n">f</span> <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">denoms</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;symbols&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">C</span><span class="p">),</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">simplify</span><span class="p">(</span><span class="n">result</span> <span class="o">/</span> <span class="n">C</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="rsolve_hyper"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.recurr.rsolve_hyper">[docs]</a><span class="k">def</span> <span class="nf">rsolve_hyper</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given linear recurrence operator `\operatorname{L}` of order `k`</span>
+<span class="sd">    with polynomial coefficients and inhomogeneous equation</span>
+<span class="sd">    `\operatorname{L} y = f` we seek for all hypergeometric solutions</span>
+<span class="sd">    over field `K` of characteristic zero.</span>
+
+<span class="sd">    The inhomogeneous part can be either hypergeometric or a sum</span>
+<span class="sd">    of a fixed number of pairwise dissimilar hypergeometric terms.</span>
+
+<span class="sd">    The algorithm performs three basic steps:</span>
+
+<span class="sd">        (1) Group together similar hypergeometric terms in the</span>
+<span class="sd">            inhomogeneous part of `\operatorname{L} y = f`, and find</span>
+<span class="sd">            particular solution using Abramov&#39;s algorithm.</span>
+
+<span class="sd">        (2) Compute generating set of `\operatorname{L}` and find basis</span>
+<span class="sd">            in it, so that all solutions are linearly independent.</span>
+
+<span class="sd">        (3) Form final solution with the number of arbitrary</span>
+<span class="sd">            constants equal to dimension of basis of `\operatorname{L}`.</span>
+
+<span class="sd">    Term `a(n)` is hypergeometric if it is annihilated by first order</span>
+<span class="sd">    linear difference equations with polynomial coefficients or, in</span>
+<span class="sd">    simpler words, if consecutive term ratio is a rational function.</span>
+
+<span class="sd">    The output of this procedure is a linear combination of fixed</span>
+<span class="sd">    number of hypergeometric terms. However the underlying method</span>
+<span class="sd">    can generate larger class of solutions - D&#39;Alembertian terms.</span>
+
+<span class="sd">    Note also that this method not only computes the kernel of the</span>
+<span class="sd">    inhomogeneous equation, but also reduces in to a basis so that</span>
+<span class="sd">    solutions generated by this procedure are linearly independent</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers import rsolve_hyper</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">    &gt;&gt;&gt; rsolve_hyper([-1, -1, 1], 0, x)</span>
+<span class="sd">    C0*(1/2 + sqrt(5)/2)**x + C1*(-sqrt(5)/2 + 1/2)**x</span>
+
+<span class="sd">    &gt;&gt;&gt; rsolve_hyper([-1, 1], 1 + x, x)</span>
+<span class="sd">    C0 + x*(x + 1)/2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] M. Petkovsek, Hypergeometric solutions of linear recurrences</span>
+<span class="sd">           with polynomial coefficients, J. Symbolic Computation,</span>
+<span class="sd">           14 (1992), 243-264.</span>
+
+<span class="sd">    .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">))</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">r</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">symbols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[],</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+            <span class="n">similar</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+
+                <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">similar</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">hypersimilar</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                        <span class="n">similar</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">+=</span> <span class="n">g</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">similar</span><span class="p">[</span><span class="n">g</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+            <span class="n">inhomogeneous</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">similar</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">inhomogeneous</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span> <span class="o">+</span> <span class="n">h</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">inhomogeneous</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inhomogeneous</span><span class="p">):</span>
+            <span class="n">coeff</span><span class="p">,</span> <span class="n">polys</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">[:]</span>
+            <span class="n">denoms</span> <span class="o">=</span> <span class="p">[</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">s</span> <span class="o">=</span> <span class="n">hypersimp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">coeff</span> <span class="o">*=</span> <span class="n">s</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+                <span class="n">polys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*=</span> <span class="n">p</span>
+                <span class="n">denoms</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">q</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">polys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">denoms</span><span class="p">[:</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">denoms</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]))</span>
+
+            <span class="n">R</span> <span class="o">=</span> <span class="n">rsolve_poly</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">denoms</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">R</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">R</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">):</span>
+                <span class="n">inhomogeneous</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">R</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">inhomogeneous</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">)</span>
+
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">p_factors</span> <span class="o">=</span> <span class="p">[</span> <span class="n">z</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">]</span>
+    <span class="n">q_factors</span> <span class="o">=</span> <span class="p">[</span> <span class="n">z</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">]</span>
+
+    <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p_factors</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">q_factors</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">q</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="n">q</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">factors</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">q</span><span class="p">)]</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p_factors</span> <span class="p">]</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">q_factors</span> <span class="p">]</span>
+
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">p</span> <span class="o">+</span> <span class="n">factors</span> <span class="o">+</span> <span class="n">q</span>
+
+    <span class="k">for</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">:</span>
+        <span class="n">polys</span><span class="p">,</span> <span class="n">degrees</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">r</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">A</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="p">])</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">B</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="p">])</span>
+
+            <span class="n">poly</span> <span class="o">=</span> <span class="n">quo</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">polys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">as_poly</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">poly</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="n">degrees</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+
+        <span class="n">d</span><span class="p">,</span> <span class="n">poly</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">degrees</span><span class="p">),</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">nth</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="n">poly</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">Z</span><span class="o">**</span><span class="n">i</span>
+
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">rsolve_poly</span><span class="p">([</span> <span class="n">polys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">z</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="n">symbols</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+                <span class="n">ratio</span> <span class="o">=</span> <span class="n">z</span> <span class="o">*</span> <span class="n">A</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">B</span> <span class="o">/</span> <span class="n">C</span>
+                <span class="n">ratio</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+                <span class="c"># If there is a nonnegative root in the denominator of the ratio,</span>
+                <span class="c"># this indicates that the term y(n_root) is zero, and one should</span>
+                <span class="c"># start the product with the term y(n_root + 1).</span>
+                <span class="n">n0</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">n_root</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">n0</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">n_root</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">n0</span> <span class="o">=</span> <span class="n">n_root</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">factorial</span><span class="p">,</span> <span class="n">FallingFactorial</span><span class="p">,</span> <span class="n">RisingFactorial</span><span class="p">):</span>
+                    <span class="n">K</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">casoratian</span><span class="p">(</span><span class="n">kernel</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">kernel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
+
+    <span class="n">kernel</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+    <span class="n">sk</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">numbered_symbols</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">),</span> <span class="n">kernel</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">sk</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">C</span><span class="p">,</span> <span class="n">ker</span> <span class="ow">in</span> <span class="n">sk</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">C</span> <span class="o">*</span> <span class="n">ker</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;symbols&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">symbols</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sk</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">symbols</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="rsolve"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.recurr.rsolve">[docs]</a><span class="k">def</span> <span class="nf">rsolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve univariate recurrence with rational coefficients.</span>
+
+<span class="sd">    Given `k`-th order linear recurrence `\operatorname{L} y = f`,</span>
+<span class="sd">    or equivalently:</span>
+
+<span class="sd">    .. math:: a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) +</span>
+<span class="sd">              \dots + a_{0}(n) y(n) = f(n)</span>
+
+<span class="sd">    where `a_{i}(n)`, for `i=0, \dots, k`, are polynomials or rational</span>
+<span class="sd">    functions in `n`, and `f` is a hypergeometric function or a sum</span>
+<span class="sd">    of a fixed number of pairwise dissimilar hypergeometric terms in</span>
+<span class="sd">    `n`, finds all solutions or returns ``None``, if none were found.</span>
+
+<span class="sd">    Initial conditions can be given as a dictionary in two forms:</span>
+
+<span class="sd">        (1) ``{   n_0  : v_0,   n_1  : v_1, ...,   n_m  : v_m }``</span>
+<span class="sd">        (2) ``{ y(n_0) : v_0, y(n_1) : v_1, ..., y(n_m) : v_m }``</span>
+
+<span class="sd">    or as a list ``L`` of values:</span>
+
+<span class="sd">        ``L = [ v_0, v_1, ..., v_m ]``</span>
+
+<span class="sd">    where ``L[i] = v_i``, for `i=0, \dots, m`, maps to `y(n_i)`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Lets consider the following recurrence:</span>
+
+<span class="sd">    .. math:: (n - 1) y(n + 2) - (n^2 + 3 n - 2) y(n + 1) +</span>
+<span class="sd">              2 n (n + 1) y(n) = 0</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, rsolve</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n</span>
+<span class="sd">    &gt;&gt;&gt; y = Function(&#39;y&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)</span>
+
+<span class="sd">    &gt;&gt;&gt; rsolve(f, y(n))</span>
+<span class="sd">    2**n*C0 + C1*factorial(n)</span>
+
+<span class="sd">    &gt;&gt;&gt; rsolve(f, y(n), { y(0):0, y(1):3 })</span>
+<span class="sd">    3*2**n - 3*factorial(n)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    rsolve_poly, rsolve_ratio, rsolve_hyper</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">f</span><span class="o">.</span><span class="n">rhs</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,))</span>
+
+    <span class="c"># Preprocess user input to allow things like</span>
+    <span class="c"># y(n) + a*(y(n + 1) + y(n - 1))/2</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">Wild</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+
+    <span class="n">h_part</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+    <span class="n">i_part</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="n">kspec</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">Mul</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">is_Function</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">func</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">kspec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">+k)&#39; expected, got &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; expected, got &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">func</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">coeff</span> <span class="o">*=</span> <span class="n">h</span>
+
+        <span class="k">if</span> <span class="n">kspec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">h_part</span><span class="p">[</span><span class="n">kspec</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coeff</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i_part</span> <span class="o">+=</span> <span class="n">coeff</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">h_part</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">h_part</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="n">common</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">h_part</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_rational_function</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">common</span> <span class="o">=</span> <span class="n">lcm</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;Polynomial or rational function expected, got &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">coeff</span><span class="p">)</span>
+
+    <span class="n">i_numer</span><span class="p">,</span> <span class="n">i_denom</span> <span class="o">=</span> <span class="n">i_part</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">i_denom</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">common</span> <span class="o">=</span> <span class="n">lcm</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">i_denom</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">common</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">h_part</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+            <span class="n">h_part</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">numer</span><span class="o">*</span><span class="n">quo</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">denom</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="n">i_part</span> <span class="o">=</span> <span class="n">i_numer</span><span class="o">*</span><span class="n">quo</span><span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">i_denom</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="n">K_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">h_part</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">K_min</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">K_min</span><span class="p">)</span>
+
+        <span class="n">H_part</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+        <span class="n">i_part</span> <span class="o">=</span> <span class="n">i_part</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">K</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+        <span class="n">common</span> <span class="o">=</span> <span class="n">common</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">K</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">h_part</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">H_part</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="n">K</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">K</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">H_part</span> <span class="o">=</span> <span class="n">h_part</span>
+
+    <span class="n">K_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">H_part</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">H_part</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">K_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">rsolve_hyper</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="o">-</span><span class="n">i_part</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">solution</span><span class="p">,</span> <span class="n">symbols</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="k">if</span> <span class="n">init</span> <span class="o">==</span> <span class="p">{}</span> <span class="ow">or</span> <span class="n">init</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">symbols</span> <span class="ow">and</span> <span class="n">init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">init</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">init</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">init</span><span class="p">))])</span>
+
+        <span class="n">equations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">init</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Function</span> <span class="ow">and</span> <span class="n">k</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">func</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Integer or term expected, got &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">eq</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">eq</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">-</span> <span class="n">v</span>
+            <span class="n">equations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">equations</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">solution</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

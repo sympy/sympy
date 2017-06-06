@@ -1,0 +1,698 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.tensor.indexed &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.tensor.indexed</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Module that defines indexed objects</span>
+
+<span class="sd">    The classes IndexedBase, Indexed and Idx would represent a matrix element</span>
+<span class="sd">    M[i, j] as in the following graph::</span>
+
+<span class="sd">       1) The Indexed class represents the entire indexed object.</span>
+<span class="sd">                  |</span>
+<span class="sd">               ___|___</span>
+<span class="sd">              &#39;       &#39;</span>
+<span class="sd">               M[i, j]</span>
+<span class="sd">              /   \__\______</span>
+<span class="sd">              |             |</span>
+<span class="sd">              |             |</span>
+<span class="sd">              |     2) The Idx class represent indices and each Idx can</span>
+<span class="sd">              |        optionally contain information about its range.</span>
+<span class="sd">              |</span>
+<span class="sd">        3) IndexedBase represents the `stem&#39; of an indexed object, here `M&#39;.</span>
+<span class="sd">           The stem used by itself is usually taken to represent the entire</span>
+<span class="sd">           array.</span>
+
+<span class="sd">    There can be any number of indices on an Indexed object.  No</span>
+<span class="sd">    transformation properties are implemented in these Base objects, but</span>
+<span class="sd">    implicit contraction of repeated indices is supported.</span>
+
+<span class="sd">    Note that the support for complicated (i.e. non-atomic) integer</span>
+<span class="sd">    expressions as indices is limited.  (This should be improved in</span>
+<span class="sd">    future releases.)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    To express the above matrix element example you would write:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.tensor import IndexedBase, Idx</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; M = IndexedBase(&#39;M&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; i, j = symbols(&#39;i j&#39;, cls=Idx)</span>
+<span class="sd">    &gt;&gt;&gt; M[i, j]</span>
+<span class="sd">    M[i, j]</span>
+
+<span class="sd">    Repeated indices in a product implies a summation, so to express a</span>
+<span class="sd">    matrix-vector product in terms of Indexed objects:</span>
+
+<span class="sd">    &gt;&gt;&gt; x = IndexedBase(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; M[i, j]*x[j]</span>
+<span class="sd">    M[i, j]*x[j]</span>
+
+<span class="sd">    If the indexed objects will be converted to component based arrays, e.g.</span>
+<span class="sd">    with the code printers or the autowrap framework, you also need to provide</span>
+<span class="sd">    (symbolic or numerical) dimensions.  This can be done by passing an</span>
+<span class="sd">    optional shape parameter to IndexedBase upon construction:</span>
+
+<span class="sd">    &gt;&gt;&gt; dim1, dim2 = symbols(&#39;dim1 dim2&#39;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; A = IndexedBase(&#39;A&#39;, shape=(dim1, 2*dim1, dim2))</span>
+<span class="sd">    &gt;&gt;&gt; A.shape</span>
+<span class="sd">    (dim1, 2*dim1, dim2)</span>
+<span class="sd">    &gt;&gt;&gt; A[i, j, 3].shape</span>
+<span class="sd">    (dim1, 2*dim1, dim2)</span>
+
+<span class="sd">    If an IndexedBase object has no shape information, it is assumed that the</span>
+<span class="sd">    array is as large as the ranges of its indices:</span>
+
+<span class="sd">    &gt;&gt;&gt; n, m = symbols(&#39;n m&#39;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; i = Idx(&#39;i&#39;, m)</span>
+<span class="sd">    &gt;&gt;&gt; j = Idx(&#39;j&#39;, n)</span>
+<span class="sd">    &gt;&gt;&gt; M[i, j].shape</span>
+<span class="sd">    (m, n)</span>
+<span class="sd">    &gt;&gt;&gt; M[i, j].ranges</span>
+<span class="sd">    [(0, m - 1), (0, n - 1)]</span>
+
+<span class="sd">    The above can be compared with the following:</span>
+
+<span class="sd">    &gt;&gt;&gt; A[i, 2, j].shape</span>
+<span class="sd">    (dim1, 2*dim1, dim2)</span>
+<span class="sd">    &gt;&gt;&gt; A[i, 2, j].ranges</span>
+<span class="sd">    [(0, m - 1), None, (0, n - 1)]</span>
+
+<span class="sd">    To analyze the structure of indexed expressions, you can use the methods</span>
+<span class="sd">    get_indices() and get_contraction_structure():</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.tensor import get_indices, get_contraction_structure</span>
+<span class="sd">    &gt;&gt;&gt; get_indices(A[i, j, j])</span>
+<span class="sd">    (set([i]), {})</span>
+<span class="sd">    &gt;&gt;&gt; get_contraction_structure(A[i, j, j])</span>
+<span class="sd">    {(j,): set([A[i, j, j]])}</span>
+
+<span class="sd">    See the appropriate docstrings for a detailed explanation of the output.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c">#   TODO:  (some ideas for improvement)</span>
+<span class="c">#</span>
+<span class="c">#   o test and guarantee numpy compatibility</span>
+<span class="c">#      - implement full support for broadcasting</span>
+<span class="c">#      - strided arrays</span>
+<span class="c">#</span>
+<span class="c">#   o more functions to analyze indexed expressions</span>
+<span class="c">#      - identify standard constructs, e.g matrix-vector product in a subexpression</span>
+<span class="c">#</span>
+<span class="c">#   o functions to generate component based arrays (numpy and sympy.Matrix)</span>
+<span class="c">#      - generate a single array directly from Indexed</span>
+<span class="c">#      - convert simple sub-expressions</span>
+<span class="c">#</span>
+<span class="c">#   o sophisticated indexing (possibly in subclasses to preserve simplicity)</span>
+<span class="c">#      - Idx with range smaller than dimension of Indexed</span>
+<span class="c">#      - Idx with stepsize != 1</span>
+<span class="c">#      - Idx with step determined by function call</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span><span class="p">,</span> <span class="n">string_types</span>
+
+
+<span class="k">class</span> <span class="nc">IndexException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="Indexed"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed">[docs]</a><span class="k">class</span> <span class="nc">Indexed</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a mathematical object with indices.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.tensor import Indexed, IndexedBase, Idx</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; i, j = symbols(&#39;i j&#39;, cls=Idx)</span>
+<span class="sd">    &gt;&gt;&gt; Indexed(&#39;A&#39;, i, j)</span>
+<span class="sd">    A[i, j]</span>
+
+<span class="sd">    It is recommended that Indexed objects are created via IndexedBase:</span>
+
+<span class="sd">    &gt;&gt;&gt; A = IndexedBase(&#39;A&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; Indexed(&#39;A&#39;, i, j) == A[i, j]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">filldedent</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IndexException</span><span class="p">(</span><span class="s">&quot;Indexed needs at least one index.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="p">(</span><span class="n">string_types</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)):</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">IndexedBase</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">IndexedBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                Indexed expects string, Symbol or IndexedBase as base.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Indexed.base"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed.base">[docs]</a>    <span class="k">def</span> <span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the IndexedBase of the Indexed object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.tensor import Indexed, IndexedBase, Idx</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; i, j = symbols(&#39;i j&#39;, cls=Idx)</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, i, j).base</span>
+<span class="sd">        A</span>
+<span class="sd">        &gt;&gt;&gt; B = IndexedBase(&#39;B&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; B == B[i, j].base</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Indexed.indices"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed.indices">[docs]</a>    <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the indices of the Indexed object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.tensor import Indexed, Idx</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; i, j = symbols(&#39;i j&#39;, cls=Idx)</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, i, j).indices</span>
+<span class="sd">        (i, j)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Indexed.rank"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed.rank">[docs]</a>    <span class="k">def</span> <span class="nf">rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the rank of the Indexed object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.tensor import Indexed, Idx</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; i, j, k, l, m = symbols(&#39;i:m&#39;, cls=Idx)</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, i, j).rank</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; q = Indexed(&#39;A&#39;, i, j, k, l, m)</span>
+<span class="sd">        &gt;&gt;&gt; q.rank</span>
+<span class="sd">        5</span>
+<span class="sd">        &gt;&gt;&gt; q.rank == len(q.indices)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Indexed.shape"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list with dimensions of each index.</span>
+
+<span class="sd">        Dimensions is a property of the array, not of the indices.  Still, if</span>
+<span class="sd">        the IndexedBase does not define a shape attribute, it is assumed that</span>
+<span class="sd">        the ranges of the indices correspond to the shape of the array.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.tensor.indexed import IndexedBase, Idx</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; n, m = symbols(&#39;n m&#39;, integer=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Idx(&#39;i&#39;, m)</span>
+<span class="sd">        &gt;&gt;&gt; j = Idx(&#39;j&#39;, m)</span>
+<span class="sd">        &gt;&gt;&gt; A = IndexedBase(&#39;A&#39;, shape=(n, n))</span>
+<span class="sd">        &gt;&gt;&gt; B = IndexedBase(&#39;B&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; A[i, j].shape</span>
+<span class="sd">        (n, n)</span>
+<span class="sd">        &gt;&gt;&gt; B[i, j].shape</span>
+<span class="sd">        (m, m)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">filldedent</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">i</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IndexException</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                Range is not defined for all indices in: </span><span class="si">%s</span><span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">IndexException</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                Shape cannot be inferred from Idx with</span>
+<span class="s">                undefined range: </span><span class="si">%s</span><span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Indexed.ranges"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Indexed.ranges">[docs]</a>    <span class="k">def</span> <span class="nf">ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a list of tuples with lower and upper range of each index.</span>
+
+<span class="sd">        If an index does not define the data members upper and lower, the</span>
+<span class="sd">        corresponding slot in the list contains ``None`` instead of a tuple.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Indexed,Idx, symbols</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, Idx(&#39;i&#39;, 2), Idx(&#39;j&#39;, 4), Idx(&#39;k&#39;, 8)).ranges</span>
+<span class="sd">        [(0, 1), (0, 3), (0, 7)]</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, Idx(&#39;i&#39;, 3), Idx(&#39;j&#39;, 3), Idx(&#39;k&#39;, 3)).ranges</span>
+<span class="sd">        [(0, 2), (0, 2), (0, 2)]</span>
+<span class="sd">        &gt;&gt;&gt; x, y, z = symbols(&#39;x y z&#39;, integer=True)</span>
+<span class="sd">        &gt;&gt;&gt; Indexed(&#39;A&#39;, x, y, z).ranges</span>
+<span class="sd">        [None, None, None]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ranges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ranges</span>
+</div>
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">doprint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">[</span><span class="si">%s</span><span class="s">]&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="IndexedBase"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.IndexedBase">[docs]</a><span class="k">class</span> <span class="nc">IndexedBase</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent the base or stem of an indexed object</span>
+
+<span class="sd">    The IndexedBase class represent an array that contains elements. The main purpose</span>
+<span class="sd">    of this class is to allow the convenient creation of objects of the Indexed</span>
+<span class="sd">    class.  The __getitem__ method of IndexedBase returns an instance of</span>
+<span class="sd">    Indexed.  Alone, without indices, the IndexedBase class can be used as a</span>
+<span class="sd">    notation for e.g. matrix equations, resembling what you could do with the</span>
+<span class="sd">    Symbol class.  But, the IndexedBase class adds functionality that is not</span>
+<span class="sd">    available for Symbol instances:</span>
+
+<span class="sd">      -  An IndexedBase object can optionally store shape information.  This can</span>
+<span class="sd">         be used in to check array conformance and conditions for numpy</span>
+<span class="sd">         broadcasting.  (TODO)</span>
+<span class="sd">      -  An IndexedBase object implements syntactic sugar that allows easy symbolic</span>
+<span class="sd">         representation of array operations, using implicit summation of</span>
+<span class="sd">         repeated indices.</span>
+<span class="sd">      -  The IndexedBase object symbolizes a mathematical structure equivalent</span>
+<span class="sd">         to arrays, and is recognized as such for code generation and automatic</span>
+<span class="sd">         compilation and wrapping.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.tensor import IndexedBase, Idx</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; A = IndexedBase(&#39;A&#39;); A</span>
+<span class="sd">    A</span>
+<span class="sd">    &gt;&gt;&gt; type(A)</span>
+<span class="sd">    &lt;class &#39;sympy.tensor.indexed.IndexedBase&#39;&gt;</span>
+
+<span class="sd">    When an IndexedBase object receives indices, it returns an array with named</span>
+<span class="sd">    axes, represented by an Indexed object:</span>
+
+<span class="sd">    &gt;&gt;&gt; i, j = symbols(&#39;i j&#39;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; A[i, j, 2]</span>
+<span class="sd">    A[i, j, 2]</span>
+<span class="sd">    &gt;&gt;&gt; type(A[i, j, 2])</span>
+<span class="sd">    &lt;class &#39;sympy.tensor.indexed.Indexed&#39;&gt;</span>
+
+<span class="sd">    The IndexedBase constructor takes an optional shape argument.  If given,</span>
+<span class="sd">    it overrides any shape information in the indices. (But not the index</span>
+<span class="sd">    ranges!)</span>
+
+<span class="sd">    &gt;&gt;&gt; m, n, o, p = symbols(&#39;m n o p&#39;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; i = Idx(&#39;i&#39;, m)</span>
+<span class="sd">    &gt;&gt;&gt; j = Idx(&#39;j&#39;, n)</span>
+<span class="sd">    &gt;&gt;&gt; A[i, j].shape</span>
+<span class="sd">    (m, n)</span>
+<span class="sd">    &gt;&gt;&gt; B = IndexedBase(&#39;B&#39;, shape=(o, p))</span>
+<span class="sd">    &gt;&gt;&gt; B[i, j].shape</span>
+<span class="sd">    (o, p)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="p">(</span><span class="n">string_types</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Base label should be a string or Symbol.&quot;</span><span class="p">)</span>
+
+        <span class="n">label</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="IndexedBase.args"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.IndexedBase.args">[docs]</a>    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the arguments used to create this IndexedBase object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import IndexedBase</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; IndexedBase(&#39;A&#39;, shape=(x, y)).args</span>
+<span class="sd">        (A, (x, y))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span>
+</div>
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+            <span class="c"># Special case needed because M[*my_tuple] is a syntax error.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">IndexException</span><span class="p">(</span><span class="s">&quot;Rank mismatch.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">indices</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">IndexException</span><span class="p">(</span><span class="s">&quot;Rank mismatch.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="IndexedBase.shape"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.IndexedBase.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the shape of the IndexedBase object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import IndexedBase, Idx, Symbol</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; IndexedBase(&#39;A&#39;, shape=(x, y)).shape</span>
+<span class="sd">        (x, y)</span>
+
+<span class="sd">        Note: If the shape of the IndexedBase is specified, it will override</span>
+<span class="sd">        any shape information given by the indices.</span>
+
+<span class="sd">        &gt;&gt;&gt; A = IndexedBase(&#39;A&#39;, shape=(x, y))</span>
+<span class="sd">        &gt;&gt;&gt; B = IndexedBase(&#39;B&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; i = Idx(&#39;i&#39;, 2)</span>
+<span class="sd">        &gt;&gt;&gt; j = Idx(&#39;j&#39;, 1)</span>
+<span class="sd">        &gt;&gt;&gt; A[i, j].shape</span>
+<span class="sd">        (x, y)</span>
+<span class="sd">        &gt;&gt;&gt; B[i, j].shape</span>
+<span class="sd">        (2, 1)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="IndexedBase.label"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.IndexedBase.label">[docs]</a>    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the label of the IndexedBase object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import IndexedBase</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; IndexedBase(&#39;A&#39;, shape=(x, y)).label</span>
+<span class="sd">        A</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Idx"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Idx">[docs]</a><span class="k">class</span> <span class="nc">Idx</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an integer index as an Integer or integer expression.</span>
+
+<span class="sd">    There are a number of ways to create an Idx object.  The constructor</span>
+<span class="sd">    takes two arguments:</span>
+
+<span class="sd">    ``label``</span>
+<span class="sd">        An integer or a symbol that labels the index.</span>
+<span class="sd">    ``range``</span>
+<span class="sd">        Optionally you can specify a range as either</span>
+
+<span class="sd">    - Symbol or integer: This is interpreted as a dimension. Lower and</span>
+<span class="sd">      upper bounds are set to 0 and range - 1, respectively.</span>
+<span class="sd">    - tuple: The two elements are interpreted as the lower and upper</span>
+<span class="sd">      bounds of the range, respectively.</span>
+
+<span class="sd">    Note: the Idx constructor is rather pedantic in that it only accepts</span>
+<span class="sd">    integer arguments.  The only exception is that you can use oo and -oo to</span>
+<span class="sd">    specify an unbounded range.  For all other cases, both label and bounds</span>
+<span class="sd">    must be declared as integers, e.g. if n is given as an argument then</span>
+<span class="sd">    n.is_integer must return True.</span>
+
+<span class="sd">    For convenience, if the label is given as a string it is automatically</span>
+<span class="sd">    converted to an integer symbol.  (Note: this conversion is not done for</span>
+<span class="sd">    range or dimension arguments.)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.tensor import IndexedBase, Idx</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols, oo</span>
+<span class="sd">    &gt;&gt;&gt; n, i, L, U = symbols(&#39;n i L U&#39;, integer=True)</span>
+
+<span class="sd">    If a string is given for the label an integer Symbol is created and the</span>
+<span class="sd">    bounds are both None:</span>
+
+<span class="sd">    &gt;&gt;&gt; idx = Idx(&#39;qwerty&#39;); idx</span>
+<span class="sd">    qwerty</span>
+<span class="sd">    &gt;&gt;&gt; idx.lower, idx.upper</span>
+<span class="sd">    (None, None)</span>
+
+<span class="sd">    Both upper and lower bounds can be specified:</span>
+
+<span class="sd">    &gt;&gt;&gt; idx = Idx(i, (L, U)); idx</span>
+<span class="sd">    i</span>
+<span class="sd">    &gt;&gt;&gt; idx.lower, idx.upper</span>
+<span class="sd">    (L, U)</span>
+
+<span class="sd">    When only a single bound is given it is interpreted as the dimension</span>
+<span class="sd">    and the lower bound defaults to 0:</span>
+
+<span class="sd">    &gt;&gt;&gt; idx = Idx(i, n); idx.lower, idx.upper</span>
+<span class="sd">    (0, n - 1)</span>
+<span class="sd">    &gt;&gt;&gt; idx = Idx(i, 4); idx.lower, idx.upper</span>
+<span class="sd">    (0, 3)</span>
+<span class="sd">    &gt;&gt;&gt; idx = Idx(i, oo); idx.lower, idx.upper</span>
+<span class="sd">    (0, oo)</span>
+
+<span class="sd">    The label can be a literal integer instead of a string/Symbol:</span>
+
+<span class="sd">    &gt;&gt;&gt; idx = Idx(2, n); idx.lower, idx.upper</span>
+<span class="sd">    (0, n - 1)</span>
+<span class="sd">    &gt;&gt;&gt; idx.label</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_integer</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">filldedent</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">label</span><span class="p">,</span> <span class="nb">range</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">range</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">label</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Idx object requires an integer label.&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">is_sequence</span><span class="p">(</span><span class="nb">range</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                    Idx range tuple must have length 2, but got </span><span class="si">%s</span><span class="s">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">bound</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">bound</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">bound</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Idx object requires integer bounds.&quot;</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">label</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="nb">range</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">range</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">or</span> <span class="nb">range</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Idx object requires an integer dimension.&quot;</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">label</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">range</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">range</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                The range must be an ordered iterable or</span>
+<span class="s">                integer SymPy expression.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">label</span><span class="p">,</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Idx.label"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Idx.label">[docs]</a>    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the label (Integer or integer expression) of the Idx object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Idx, Symbol</span>
+<span class="sd">        &gt;&gt;&gt; Idx(2).label</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; j = Symbol(&#39;j&#39;, integer=True)</span>
+<span class="sd">        &gt;&gt;&gt; Idx(j).label</span>
+<span class="sd">        j</span>
+<span class="sd">        &gt;&gt;&gt; Idx(j + 1).label</span>
+<span class="sd">        j + 1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Idx.lower"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Idx.lower">[docs]</a>    <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the lower bound of the Index.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Idx</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;, 2).lower</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;, 5).lower</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;).lower is None</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Idx.upper"><a class="viewcode-back" href="../../../modules/tensor/indexed.html#sympy.tensor.indexed.Idx.upper">[docs]</a>    <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the upper bound of the Index.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Idx</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;, 2).upper</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;, 5).upper</span>
+<span class="sd">        4</span>
+<span class="sd">        &gt;&gt;&gt; Idx(&#39;j&#39;).upper is None</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span>
+</div>
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

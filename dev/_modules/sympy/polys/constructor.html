@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.constructor &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.constructor</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tools for constructing domains for expressions. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyutils</span> <span class="kn">import</span> <span class="n">parallel_dict_from_basic</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyoptions</span> <span class="kn">import</span> <span class="n">build_options</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">GeneratorsNeeded</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.domains</span> <span class="kn">import</span> <span class="n">ZZ</span><span class="p">,</span> <span class="n">QQ</span><span class="p">,</span> <span class="n">RR</span><span class="p">,</span> <span class="n">EX</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions</span> <span class="kn">import</span> <span class="n">ask</span><span class="p">,</span> <span class="n">Q</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Symbol</span>
+
+
+<span class="k">def</span> <span class="nf">_construct_simple</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. &quot;&quot;&quot;</span>
+    <span class="n">result</span><span class="p">,</span> <span class="n">rationals</span><span class="p">,</span> <span class="n">reals</span><span class="p">,</span> <span class="n">algebraics</span> <span class="o">=</span> <span class="p">{},</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">extension</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">is_algebraic</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">coeff</span><span class="p">:</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">(</span><span class="n">coeff</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_algebraic</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">coeff</span><span class="p">:</span> <span class="bp">False</span>
+
+    <span class="c"># XXX: add support for a + b*I coefficients</span>
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="n">rationals</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Float</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">algebraics</span><span class="p">:</span>
+                <span class="n">reals</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># there are both reals and algebraics -&gt; EX</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">is_algebraic</span><span class="p">(</span><span class="n">coeff</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">reals</span><span class="p">:</span>
+                <span class="n">algebraics</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># there are both algebraics and reals -&gt; EX</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># this is a composite domain, e.g. ZZ[X], EX</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">algebraics</span><span class="p">:</span>
+        <span class="n">domain</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">_construct_algebraic</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">reals</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">RR</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">field</span> <span class="ow">or</span> <span class="n">rationals</span><span class="p">:</span>
+                <span class="n">domain</span> <span class="o">=</span> <span class="n">QQ</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">domain</span> <span class="o">=</span> <span class="n">ZZ</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_construct_algebraic</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;We know that coefficients are algebraic so construct the extension. &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.polys.numberfields</span> <span class="kn">import</span> <span class="n">primitive_element</span>
+
+    <span class="n">result</span><span class="p">,</span> <span class="n">exts</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">set</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">QQ</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_coeff_add</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">-=</span> <span class="n">a</span>
+
+            <span class="n">b</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff</span> <span class="o">/=</span> <span class="n">b</span>
+
+            <span class="n">exts</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="n">coeff</span> <span class="o">=</span> <span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="n">exts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">exts</span><span class="p">)</span>
+
+    <span class="n">g</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">primitive_element</span><span class="p">(</span><span class="n">exts</span><span class="p">,</span> <span class="n">ex</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span> <span class="n">s</span><span class="o">*</span><span class="n">ext</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">ext</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">span</span><span class="p">,</span> <span class="n">exts</span><span class="p">)</span> <span class="p">])</span>
+
+    <span class="n">domain</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">QQ</span><span class="o">.</span><span class="n">algebraic_field</span><span class="p">((</span><span class="n">g</span><span class="p">,</span> <span class="n">root</span><span class="p">)),</span> <span class="n">g</span><span class="o">.</span><span class="n">rep</span><span class="o">.</span><span class="n">rep</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">exts</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">coeff</span><span class="p">)],</span> <span class="n">g</span><span class="p">,</span> <span class="n">QQ</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeff</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">from_list</span><span class="p">([</span><span class="n">b</span><span class="p">],</span> <span class="n">g</span><span class="p">,</span> <span class="n">QQ</span><span class="p">)</span>
+
+        <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_construct_composite</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle composite domains, e.g.: ZZ[X], QQ[X], ZZ(X), QQ(X). &quot;&quot;&quot;</span>
+    <span class="n">numers</span><span class="p">,</span> <span class="n">denoms</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+        <span class="n">numers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numer</span><span class="p">)</span>
+        <span class="n">denoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">polys</span><span class="p">,</span> <span class="n">gens</span> <span class="o">=</span> <span class="n">parallel_dict_from_basic</span><span class="p">(</span><span class="n">numers</span> <span class="o">+</span> <span class="n">denoms</span><span class="p">)</span>  <span class="c"># XXX: sorting</span>
+    <span class="k">except</span> <span class="n">GeneratorsNeeded</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">composite</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">is_number</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span> <span class="c"># generators are number-like so lets better use EX</span>
+
+        <span class="n">all_symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">:</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Symbol</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">all_symbols</span> <span class="o">&amp;</span> <span class="n">symbols</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span> <span class="c"># there could be algebraic relations between generators</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_symbols</span> <span class="o">|=</span> <span class="n">symbols</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">polys</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+
+    <span class="n">numers</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span>
+    <span class="n">denoms</span> <span class="o">=</span> <span class="n">polys</span><span class="p">[</span><span class="n">k</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">field</span><span class="p">:</span>
+        <span class="n">fractions</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fractions</span><span class="p">,</span> <span class="n">zeros</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="n">n</span>
+
+        <span class="k">for</span> <span class="n">denom</span> <span class="ow">in</span> <span class="n">denoms</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">denom</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">zeros</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">denom</span><span class="p">:</span>
+                <span class="n">fractions</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">break</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fractions</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numers</span><span class="p">,</span> <span class="n">denoms</span><span class="p">):</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">denom</span><span class="p">[</span><span class="n">zeros</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">numer</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">coeff</span> <span class="o">/=</span> <span class="n">denom</span>
+                <span class="n">coeffs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+                <span class="n">numer</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numers</span><span class="p">,</span> <span class="n">denoms</span><span class="p">):</span>
+            <span class="n">coeffs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">numer</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">coeffs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">denom</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="n">rationals</span><span class="p">,</span> <span class="n">reals</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="n">rationals</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">coeff</span><span class="o">.</span><span class="n">is_Float</span><span class="p">:</span>
+            <span class="n">reals</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">reals</span><span class="p">:</span>
+        <span class="n">ground</span> <span class="o">=</span> <span class="n">RR</span>
+    <span class="k">elif</span> <span class="n">rationals</span><span class="p">:</span>
+        <span class="n">ground</span> <span class="o">=</span> <span class="n">QQ</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ground</span> <span class="o">=</span> <span class="n">ZZ</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fractions</span><span class="p">:</span>
+        <span class="n">domain</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">poly_ring</span><span class="p">(</span><span class="o">*</span><span class="n">gens</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">numer</span> <span class="ow">in</span> <span class="n">numers</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">numer</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">numer</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="p">(</span><span class="n">numer</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">domain</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">frac_field</span><span class="p">(</span><span class="o">*</span><span class="n">gens</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numers</span><span class="p">,</span> <span class="n">denoms</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">numer</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">numer</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">denom</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">denom</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">ground</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="p">((</span><span class="n">numer</span><span class="p">,</span> <span class="n">denom</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_construct_expression</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The last resort case, i.e. use the expression domain. &quot;&quot;&quot;</span>
+    <span class="n">domain</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">EX</span><span class="p">,</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">coeff</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">result</span>
+
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="construct_domain"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.constructor.construct_domain">[docs]</a><span class="k">def</span> <span class="nf">construct_domain</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a minimal domain for the list of coefficients. &quot;&quot;&quot;</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">build_options</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="n">monoms</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">monoms</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">obj</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_construct_simple</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="n">_construct_expression</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">opt</span><span class="o">.</span><span class="n">composite</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_construct_composite</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span> <span class="o">=</span> <span class="n">_construct_expression</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">monoms</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">domain</span><span class="p">,</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

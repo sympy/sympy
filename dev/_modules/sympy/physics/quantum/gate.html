@@ -1,0 +1,1394 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.gate &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.gate</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;An implementation of gates that act on qubits.</span>
+
+<span class="sd">Gates are unitary operators that act on the space of qubits.</span>
+
+<span class="sd">Medium Term Todo:</span>
+
+<span class="sd">* Optimize Gate._apply_operators_Qubit to remove the creation of many</span>
+<span class="sd">  intermediate Qubit objects.</span>
+<span class="sd">* Add commutation relationships to all operators and use this in gate_sort.</span>
+<span class="sd">* Fix gate_sort and gate_simp.</span>
+<span class="sd">* Get multi-target UGates plotting properly.</span>
+<span class="sd">* Get UGate to work with either sympy/numpy matrices and output either</span>
+<span class="sd">  format. This should also use the matrix slots.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span><span class="p">,</span> <span class="n">stringPict</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.anticommutator</span> <span class="kn">import</span> <span class="n">AntiCommutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.commutator</span> <span class="kn">import</span> <span class="n">Commutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">ComplexSpace</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="p">(</span><span class="n">UnitaryOperator</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span>
+                                            <span class="n">HermitianOperator</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.matrixutils</span> <span class="kn">import</span> <span class="n">matrix_tensor_product</span><span class="p">,</span> <span class="n">matrix_eye</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.matrixcache</span> <span class="kn">import</span> <span class="n">matrix_cache</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+
+<span class="kn">from</span> <span class="nn">sympy.matrices.matrices</span> <span class="kn">import</span> <span class="n">MatrixBase</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Gate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;CGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;UGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;OneQubitGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;TwoQubitGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;IdentityGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;HadamardGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;XGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;YGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ZGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;TGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PhaseGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;SwapGate&#39;</span><span class="p">,</span>
+    <span class="s">&#39;CNotGate&#39;</span><span class="p">,</span>
+    <span class="c"># Aliased gate names</span>
+    <span class="s">&#39;CNOT&#39;</span><span class="p">,</span>
+    <span class="s">&#39;SWAP&#39;</span><span class="p">,</span>
+    <span class="s">&#39;H&#39;</span><span class="p">,</span>
+    <span class="s">&#39;X&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Y&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Z&#39;</span><span class="p">,</span>
+    <span class="s">&#39;T&#39;</span><span class="p">,</span>
+    <span class="s">&#39;S&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Phase&#39;</span><span class="p">,</span>
+    <span class="s">&#39;normalized&#39;</span><span class="p">,</span>
+    <span class="s">&#39;gate_sort&#39;</span><span class="p">,</span>
+    <span class="s">&#39;gate_simp&#39;</span><span class="p">,</span>
+    <span class="s">&#39;random_circuit&#39;</span><span class="p">,</span>
+    <span class="s">&#39;CPHASE&#39;</span><span class="p">,</span>
+    <span class="s">&#39;CGateS&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Gate Super-Classes</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+<span class="n">_normalized</span> <span class="o">=</span> <span class="bp">True</span>
+
+
+<div class="viewcode-block" id="normalized"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.normalized">[docs]</a><span class="k">def</span> <span class="nf">normalized</span><span class="p">(</span><span class="n">normalize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set flag controlling normalization of Hadamard gates by 1/sqrt(2).</span>
+
+<span class="sd">    This is a global setting that can be used to simplify the look of various</span>
+<span class="sd">    expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    normalize : bool</span>
+<span class="sd">        Should the Hadamard gate include the 1/sqrt(2) normalization factor?</span>
+<span class="sd">        When True, the Hadamard gate will have the 1/sqrt(2). When False, the</span>
+<span class="sd">        Hadamard gate will not have this factor.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_normalized</span>
+    <span class="n">_normalized</span> <span class="o">=</span> <span class="n">normalize</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_validate_targets_controls</span><span class="p">(</span><span class="n">tandc</span><span class="p">):</span>
+    <span class="n">tandc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tandc</span><span class="p">)</span>
+    <span class="c"># Check for integers</span>
+    <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="n">tandc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bit</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bit</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Integer expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">tandc</span><span class="p">[</span><span class="n">bit</span><span class="p">])</span>
+    <span class="c"># Detect duplicates</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">tandc</span><span class="p">)))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tandc</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+            <span class="s">&#39;Target/control qubits in a gate cannot be duplicated&#39;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Gate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.Gate">[docs]</a><span class="k">class</span> <span class="nc">Gate</span><span class="p">(</span><span class="n">UnitaryOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Non-controlled unitary gate operator that acts on qubits.</span>
+
+<span class="sd">    This is a general abstract gate that needs to be subclassed to do anything</span>
+<span class="sd">    useful.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : tuple, int</span>
+<span class="sd">        A list of the target qubits (as ints) that the gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_label_separator</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;G&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;G&#39;</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Initialization/creation</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">UnitaryOperator</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">_validate_targets_controls</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This returns the smallest possible Hilbert space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Gate.nqubits"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.Gate.nqubits">[docs]</a>    <span class="k">def</span> <span class="nf">nqubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The total number of qubits this gate acts on.</span>
+
+<span class="sd">        For controlled gate subclasses this includes both target and control</span>
+<span class="sd">        qubits, so that, for examples the CNOT gate acts on 2 qubits.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Gate.min_qubits"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.Gate.min_qubits">[docs]</a>    <span class="k">def</span> <span class="nf">min_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The minimum number of qubits this gate needs to act on.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Gate.targets"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.Gate.targets">[docs]</a>    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of target qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gate_name_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;$</span><span class="si">%s</span><span class="s">$&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_name_latex</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Gate methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Gate.get_target_matrix"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.Gate.get_target_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The matrix rep. of the target part of the gate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        format : str</span>
+<span class="sd">            The format string (&#39;sympy&#39;,&#39;numpy&#39;, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;get_target_matrix is not implemented in Gate.&#39;</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Apply</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply_operator_IntQubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Redirect an apply from IntQubit to Qubit&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_operator_Qubit</span><span class="p">(</span><span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_Qubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply this gate to a Qubit.&quot;&quot;&quot;</span>
+
+        <span class="c"># Check number of qubits this gate acts on.</span>
+        <span class="k">if</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;Gate needs a minimum of </span><span class="si">%r</span><span class="s"> qubits to act on, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">,</span> <span class="n">qubits</span><span class="o">.</span><span class="n">nqubits</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c"># If the controls are not met, just return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CGate</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_controls</span><span class="p">(</span><span class="n">qubits</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">qubits</span>
+
+        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+        <span class="n">target_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_matrix</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+
+        <span class="c"># Find which column of the target matrix this applies to.</span>
+        <span class="n">column_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="n">column_index</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="n">qubits</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">target_matrix</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">column_index</span><span class="p">)]</span>
+
+        <span class="c"># Now apply each column element to the qubit.</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">column</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="c"># TODO: This can be optimized to reduce the number of Qubit</span>
+            <span class="c"># creations. We should simply manipulate the raw list of qubit</span>
+            <span class="c"># values and then build the new Qubit object once.</span>
+            <span class="c"># Make a copy of the incoming qubits.</span>
+            <span class="n">new_qubit</span> <span class="o">=</span> <span class="n">qubits</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="o">*</span><span class="n">qubits</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="c"># Flip the bits that need to be flipped.</span>
+            <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">new_qubit</span><span class="p">[</span><span class="n">targets</span><span class="p">[</span><span class="n">bit</span><span class="p">]]</span> <span class="o">!=</span> <span class="p">(</span><span class="n">index</span> <span class="o">&gt;&gt;</span> <span class="n">bit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">new_qubit</span> <span class="o">=</span> <span class="n">new_qubit</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">targets</span><span class="p">[</span><span class="n">bit</span><span class="p">])</span>
+            <span class="c"># The value in that row and column times the flipped-bit qubit</span>
+            <span class="c"># is the result for that part.</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">column</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">*</span><span class="n">new_qubit</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Represent</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_represent_default_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_represent_ZGate</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_represent_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">format</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+        <span class="n">nqubits</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;nqubits&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nqubits</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;The number of qubits must be given as nqubits.&#39;</span><span class="p">)</span>
+
+        <span class="c"># Make sure we have enough qubits for the gate.</span>
+        <span class="k">if</span> <span class="n">nqubits</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">QuantumError</span><span class="p">(</span>
+                <span class="s">&#39;The number of qubits </span><span class="si">%r</span><span class="s"> is too small for the gate.&#39;</span> <span class="o">%</span> <span class="n">nqubits</span>
+            <span class="p">)</span>
+
+        <span class="n">target_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_matrix</span><span class="p">(</span><span class="n">format</span><span class="p">)</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CGate</span><span class="p">):</span>
+            <span class="n">controls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">controls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">represent_zbasis</span><span class="p">(</span>
+            <span class="n">controls</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">target_matrix</span><span class="p">,</span> <span class="n">nqubits</span><span class="p">,</span> <span class="n">format</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Print methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name</span><span class="p">))</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_subscript_pretty</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_{</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name_latex</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">,</span> <span class="n">gate_grid</span><span class="p">,</span> <span class="n">wire_grid</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;plot_gate is not implemented.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="CGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate">[docs]</a><span class="k">class</span> <span class="nc">CGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A general unitary gate with control qubits.</span>
+
+<span class="sd">    A general control gate applies a target gate to a set of targets if all</span>
+<span class="sd">    of the control qubits have a particular values (set by</span>
+<span class="sd">    ``CGate.control_value``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : tuple</span>
+<span class="sd">        The label in this case has the form (controls, gate), where controls</span>
+<span class="sd">        is a tuple/list of control qubits (as ints) and gate is a ``Gate``</span>
+<span class="sd">        instance that is the target operator.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+
+    <span class="c"># The values this class controls for.</span>
+    <span class="n">control_value</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">simplify_cgate</span><span class="o">=</span><span class="bp">False</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Initialization</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c"># _eval_args has the right logic for the controls argument.</span>
+        <span class="n">controls</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">controls</span><span class="p">):</span>
+            <span class="n">controls</span> <span class="o">=</span> <span class="p">(</span><span class="n">controls</span><span class="p">,)</span>
+        <span class="n">controls</span> <span class="o">=</span> <span class="n">UnitaryOperator</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">controls</span><span class="p">)</span>
+        <span class="n">_validate_targets_controls</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="n">controls</span><span class="p">,</span> <span class="n">gate</span><span class="o">.</span><span class="n">targets</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">controls</span><span class="p">),</span> <span class="n">gate</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This returns the smallest possible Hilbert space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CGate.nqubits"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.nqubits">[docs]</a>    <span class="k">def</span> <span class="nf">nqubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The total number of qubits this gate acts on.</span>
+
+<span class="sd">        For controlled gate subclasses this includes both target and control</span>
+<span class="sd">        qubits, so that, for examples the CNOT gate acts on 2 qubits.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CGate.min_qubits"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.min_qubits">[docs]</a>    <span class="k">def</span> <span class="nf">min_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The minimum number of qubits this gate needs to act on.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CGate.targets"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.targets">[docs]</a>    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of target qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">targets</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CGate.controls"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.controls">[docs]</a>    <span class="k">def</span> <span class="nf">controls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of control qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CGate.gate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.gate">[docs]</a>    <span class="k">def</span> <span class="nf">gate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The non-controlled gate that will be applied to the targets.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Gate methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">get_target_matrix</span><span class="p">(</span><span class="n">format</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CGate.eval_controls"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.eval_controls">[docs]</a>    <span class="k">def</span> <span class="nf">eval_controls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubit</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True/False to indicate if the controls are satisfied.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">qubit</span><span class="p">[</span><span class="n">bit</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">control_value</span> <span class="k">for</span> <span class="n">bit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CGate.decompose"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.decompose">[docs]</a>    <span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decompose the controlled gate into CNOT and single qubits gates.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="n">YGate</span><span class="p">):</span>
+                <span class="n">g1</span> <span class="o">=</span> <span class="n">PhaseGate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">g2</span> <span class="o">=</span> <span class="n">CNotGate</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                <span class="n">g3</span> <span class="o">=</span> <span class="n">PhaseGate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">g4</span> <span class="o">=</span> <span class="n">ZGate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">g1</span><span class="o">*</span><span class="n">g2</span><span class="o">*</span><span class="n">g3</span><span class="o">*</span><span class="n">g4</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="n">ZGate</span><span class="p">):</span>
+                <span class="n">g1</span> <span class="o">=</span> <span class="n">HadamardGate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">g2</span> <span class="o">=</span> <span class="n">CNotGate</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                <span class="n">g3</span> <span class="o">=</span> <span class="n">HadamardGate</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">g1</span><span class="o">*</span><span class="n">g2</span><span class="o">*</span><span class="n">g3</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Print methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">_print_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">controls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">),</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">controls</span><span class="p">,</span> <span class="n">gate</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">controls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_sequence_pretty</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">)</span>
+        <span class="n">gate_name</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name</span><span class="p">))</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_subscript_pretty</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">controls</span><span class="p">)</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_parens_pretty</span><span class="p">(</span><span class="n">gate</span><span class="p">)</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="o">.</span><span class="n">right</span><span class="p">((</span><span class="n">gate</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">final</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">controls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">r&#39;</span><span class="si">%s</span><span class="s">_{</span><span class="si">%s</span><span class="s">}{\left(</span><span class="si">%s</span><span class="s">\right)}&#39;</span> <span class="o">%</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name_latex</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">gate</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CGate.plot_gate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGate.plot_gate">[docs]</a>    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the controlled gate. If *simplify_cgate* is true, simplify</span>
+<span class="sd">        C-X and C-Z gates into their more familiar forms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">min_wire</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)))</span>
+        <span class="n">max_wire</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)))</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">control_line</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="n">min_wire</span><span class="p">,</span> <span class="n">max_wire</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">:</span>
+            <span class="n">circ_plot</span><span class="o">.</span><span class="n">control_point</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">simplify_cgate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">gate_name</span> <span class="o">==</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">plot_gate_plus</span><span class="p">(</span><span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">gate_name</span> <span class="o">==</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">):</span>
+                <span class="n">circ_plot</span><span class="o">.</span><span class="n">control_point</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">plot_gate</span><span class="p">(</span><span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="o">.</span><span class="n">plot_gate</span><span class="p">(</span><span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Miscellaneous</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_dagger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="n">HermitianOperator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_dagger</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="n">HermitianOperator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate</span><span class="p">,</span> <span class="n">HermitianOperator</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">exp</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="p">(</span><span class="n">Gate</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CGateS"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CGateS">[docs]</a><span class="k">class</span> <span class="nc">CGateS</span><span class="p">(</span><span class="n">CGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Version of CGate that allows gate simplifications.</span>
+<span class="sd">    I.e. cnot looks like an oplus, cphase has dots, etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">simplify_cgate</span><span class="o">=</span><span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="UGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.UGate">[docs]</a><span class="k">class</span> <span class="nc">UGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;General gate specified by a set of targets and a target matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : tuple</span>
+<span class="sd">        A tuple of the form (targets, U), where targets is a tuple of the</span>
+<span class="sd">        target qubits and U is a unitary matrix with dimension of</span>
+<span class="sd">        len(targets).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;U&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;U&#39;</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Initialization</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">targets</span><span class="p">):</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">(</span><span class="n">targets</span><span class="p">,)</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">_validate_targets_controls</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Matrix expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mat</span><span class="p">)</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">dim</span> <span class="o">==</span> <span class="n">shape</span> <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">mat</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="s">&#39;Number of targets must match the matrix size: </span><span class="si">%r</span><span class="s"> </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This returns the smallest possible Hilbert space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="UGate.targets"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.UGate.targets">[docs]</a>    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of target qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Gate methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+</div>
+<div class="viewcode-block" id="UGate.get_target_matrix"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.UGate.get_target_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The matrix rep. of the target part of the gate.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        format : str</span>
+<span class="sd">            The format string (&#39;sympy&#39;,&#39;numpy&#39;, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Print methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span></div>
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_sequence_pretty</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">gate_name</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_subscript_pretty</span><span class="p">(</span><span class="n">gate_name</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">r&#39;</span><span class="si">%s</span><span class="s">_{</span><span class="si">%s</span><span class="s">}&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_name_latex</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">one_qubit_box</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate_name_plot</span><span class="p">,</span>
+            <span class="n">gate_idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="OneQubitGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.OneQubitGate">[docs]</a><span class="k">class</span> <span class="nc">OneQubitGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A single qubit unitary gate base class.&quot;&quot;&quot;</span>
+
+    <span class="n">nqubits</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">one_qubit_box</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gate_name_plot</span><span class="p">,</span>
+            <span class="n">gate_idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">targets</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="o">.</span><span class="n">_eval_commutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">targets</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">*</span><span class="n">other</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="o">.</span><span class="n">_eval_anticommutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TwoQubitGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.TwoQubitGate">[docs]</a><span class="k">class</span> <span class="nc">TwoQubitGate</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A two qubit unitary gate base class.&quot;&quot;&quot;</span>
+
+    <span class="n">nqubits</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Single Qubit Gates</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+</div>
+<div class="viewcode-block" id="IdentityGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.IdentityGate">[docs]</a><span class="k">class</span> <span class="nc">IdentityGate</span><span class="p">(</span><span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit identity gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;1&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;eye2&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">other</span>
+
+</div>
+<div class="viewcode-block" id="HadamardGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.HadamardGate">[docs]</a><span class="k">class</span> <span class="nc">HadamardGate</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit Hadamard gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.qubit import Qubit</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.gate import HadamardGate</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">    &gt;&gt;&gt; qapply(HadamardGate(0)*Qubit(&#39;1&#39;))</span>
+<span class="sd">    sqrt(2)*|0&gt;/2 - sqrt(2)*|1&gt;/2</span>
+<span class="sd">    &gt;&gt;&gt; # Hadamard on bell state, applied on 2 qubits.</span>
+<span class="sd">    &gt;&gt;&gt; psi = 1/sqrt(2)*(Qubit(&#39;00&#39;)+Qubit(&#39;11&#39;))</span>
+<span class="sd">    &gt;&gt;&gt; qapply(HadamardGate(0)*HadamardGate(1)*psi)</span>
+<span class="sd">    sqrt(2)*|00&gt;/2 + sqrt(2)*|11&gt;/2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_normalized</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;Hsqrt2&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_XGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">YGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ZGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">XGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">YGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_XGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">IdentityGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">IdentityGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="XGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.XGate">[docs]</a><span class="k">class</span> <span class="nc">XGate</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit X, or NOT, gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="n">OneQubitGate</span><span class="o">.</span><span class="n">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">circ_plot</span><span class="p">,</span><span class="n">gate_idx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">plot_gate_plus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">not_point</span><span class="p">(</span>
+            <span class="n">gate_idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">ZGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_XGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">IdentityGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="YGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.YGate">[docs]</a><span class="k">class</span> <span class="nc">YGate</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit Y gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">XGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">IdentityGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ZGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.ZGate">[docs]</a><span class="k">class</span> <span class="nc">ZGate</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">,</span> <span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit Z gate.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_XGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">YGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator_YGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="PhaseGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.PhaseGate">[docs]</a><span class="k">class</span> <span class="nc">PhaseGate</span><span class="p">(</span><span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit phase, or S, gate.</span>
+
+<span class="sd">    This gate rotates the phase of the state by pi/2 if the state is ``|1&gt;`` and</span>
+<span class="sd">    does nothing if the state is ``|0&gt;``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;S&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;S&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;S&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_TGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.TGate">[docs]</a><span class="k">class</span> <span class="nc">TGate</span><span class="p">(</span><span class="n">OneQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The single qubit pi/8 gate.</span>
+
+<span class="sd">    This gate rotates the phase of the state by pi/4 if the state is ``|1&gt;`` and</span>
+<span class="sd">    does nothing if the state is ``|0&gt;``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : int</span>
+<span class="sd">        The target qubit this gate will apply to.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;T&#39;</span><span class="p">)</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;T&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;T&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_PhaseGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="c"># Aliases for gate names.</span></div>
+<span class="n">H</span> <span class="o">=</span> <span class="n">HadamardGate</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">XGate</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">YGate</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">ZGate</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TGate</span>
+<span class="n">Phase</span> <span class="o">=</span> <span class="n">S</span> <span class="o">=</span> <span class="n">PhaseGate</span>
+
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># 2 Qubit Gates</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="CNotGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CNotGate">[docs]</a><span class="k">class</span> <span class="nc">CNotGate</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">,</span> <span class="n">CGate</span><span class="p">,</span> <span class="n">TwoQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Two qubit controlled-NOT.</span>
+
+<span class="sd">    This gate performs the NOT or X gate on the target qubit if the control</span>
+<span class="sd">    qubits all have the value 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : tuple</span>
+<span class="sd">        A tuple of the form (control, target).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.gate import CNOT</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.qubit import Qubit</span>
+<span class="sd">    &gt;&gt;&gt; c = CNOT(1,0)</span>
+<span class="sd">    &gt;&gt;&gt; qapply(c*Qubit(&#39;10&#39;)) # note that qubits are indexed from right to left</span>
+<span class="sd">    |11&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="s">&#39;CNOT&#39;</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;CNOT&#39;</span><span class="p">)</span>
+    <span class="n">simplify_cgate</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Initialization</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_eval_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This returns the smallest possible Hilbert space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CNotGate.min_qubits"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CNotGate.min_qubits">[docs]</a>    <span class="k">def</span> <span class="nf">min_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The minimum number of qubits this gate needs to act on.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CNotGate.targets"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CNotGate.targets">[docs]</a>    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of target qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CNotGate.controls"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CNotGate.controls">[docs]</a>    <span class="k">def</span> <span class="nf">controls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A tuple of control qubits.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CNotGate.gate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.CNotGate.gate">[docs]</a>    <span class="k">def</span> <span class="nf">gate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The non-controlled gate that will be applied to the targets.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">XGate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Properties</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="c"># The default printing of Gate works better than those of CGate, so we</span>
+    <span class="c"># go around the overridden methods in CGate.</span>
+</div>
+    <span class="k">def</span> <span class="nf">_print_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Gate</span><span class="o">.</span><span class="n">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Commutator/AntiCommutator</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[CNOT(i, j), Z(i)] == 0.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Commutator not implemented: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_TGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[CNOT(i, j), T(i)] == 0.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_commutator_ZGate</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_PhaseGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[CNOT(i, j), S(i)] == 0.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_commutator_ZGate</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_XGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[CNOT(i, j), X(j)] == 0.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Commutator not implemented: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_CNotGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;[CNOT(i, j), CNOT(i,k)] == 0.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">Integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Commutator not implemented: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="SwapGate"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.SwapGate">[docs]</a><span class="k">class</span> <span class="nc">SwapGate</span><span class="p">(</span><span class="n">TwoQubitGate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Two qubit SWAP gate.</span>
+
+<span class="sd">    This gate swap the values of the two qubits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label : tuple</span>
+<span class="sd">        A tuple of the form (target1, target2).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gate_name</span> <span class="o">=</span> <span class="s">&#39;SWAP&#39;</span>
+    <span class="n">gate_name_latex</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="s">&#39;SWAP&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_target_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;SWAP&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SwapGate.decompose"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.SwapGate.decompose">[docs]</a>    <span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decompose the SWAP gate into CNOT gates.&quot;&quot;&quot;</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">g1</span> <span class="o">=</span> <span class="n">CNotGate</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="n">g2</span> <span class="o">=</span> <span class="n">CNotGate</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g1</span><span class="o">*</span><span class="n">g2</span><span class="o">*</span><span class="n">g1</span>
+</div>
+    <span class="k">def</span> <span class="nf">plot_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circ_plot</span><span class="p">,</span> <span class="n">gate_idx</span><span class="p">):</span>
+        <span class="n">min_wire</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">))</span>
+        <span class="n">max_wire</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">))</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">control_line</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="n">min_wire</span><span class="p">,</span> <span class="n">max_wire</span><span class="p">)</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">swap_point</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="n">min_wire</span><span class="p">)</span>
+        <span class="n">circ_plot</span><span class="o">.</span><span class="n">swap_point</span><span class="p">(</span><span class="n">gate_idx</span><span class="p">,</span> <span class="n">max_wire</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_represent_ZGate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Represent the SWAP gate in the computational basis.</span>
+
+<span class="sd">        The following representation is used to compute this:</span>
+
+<span class="sd">        SWAP = |1&gt;&lt;1|x|1&gt;&lt;1| + |0&gt;&lt;0|x|0&gt;&lt;0| + |1&gt;&lt;0|x|0&gt;&lt;1| + |0&gt;&lt;1|x|1&gt;&lt;0|</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">format</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+        <span class="n">min_target</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">max_target</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">nqubits</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;nqubits&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_qubits</span><span class="p">)</span>
+
+        <span class="n">op01</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;op01&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+        <span class="n">op10</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;op10&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+        <span class="n">op11</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;op11&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+        <span class="n">op00</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;op00&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+        <span class="n">eye2</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;eye2&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">((</span><span class="n">op01</span><span class="p">,</span> <span class="n">op10</span><span class="p">),</span> <span class="p">(</span><span class="n">op10</span><span class="p">,</span> <span class="n">op01</span><span class="p">),</span> <span class="p">(</span><span class="n">op00</span><span class="p">,</span> <span class="n">op00</span><span class="p">),</span> <span class="p">(</span><span class="n">op11</span><span class="p">,</span> <span class="n">op11</span><span class="p">)):</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="n">nqubits</span><span class="o">*</span><span class="p">[</span><span class="n">eye2</span><span class="p">]</span>
+            <span class="n">product</span><span class="p">[</span><span class="n">nqubits</span> <span class="o">-</span> <span class="n">min_target</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">product</span><span class="p">[</span><span class="n">nqubits</span> <span class="o">-</span> <span class="n">max_target</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
+            <span class="n">new_result</span> <span class="o">=</span> <span class="n">matrix_tensor_product</span><span class="p">(</span><span class="o">*</span><span class="n">product</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">new_result</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="n">new_result</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="c"># Aliases for gate names.</span></div>
+<span class="n">CNOT</span> <span class="o">=</span> <span class="n">CNotGate</span>
+<span class="n">SWAP</span> <span class="o">=</span> <span class="n">SwapGate</span>
+<span class="k">def</span> <span class="nf">CPHASE</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">):</span> <span class="k">return</span> <span class="n">CGateS</span><span class="p">((</span><span class="n">a</span><span class="p">,),</span><span class="n">Z</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Represent</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span> <span class="nf">represent_zbasis</span><span class="p">(</span><span class="n">controls</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">target_matrix</span><span class="p">,</span> <span class="n">nqubits</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent a gate with controls, targets and target_matrix.</span>
+
+<span class="sd">    This function does the low-level work of representing gates as matrices</span>
+<span class="sd">    in the standard computational basis (ZGate). Currently, we support two</span>
+<span class="sd">    main cases:</span>
+
+<span class="sd">    1. One target qubit and no control qubits.</span>
+<span class="sd">    2. One target qubits and multiple control qubits.</span>
+
+<span class="sd">    For the base of multiple controls, we use the following expression [1]:</span>
+
+<span class="sd">    1_{2**n} + (|1&gt;&lt;1|)^{(n-1)} x (target-matrix - 1_{2})</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    controls : list, tuple</span>
+<span class="sd">        A sequence of control qubits.</span>
+<span class="sd">    targets : list, tuple</span>
+<span class="sd">        A sequence of target qubits.</span>
+<span class="sd">    target_matrix : sympy.Matrix, numpy.matrix, scipy.sparse</span>
+<span class="sd">        The matrix form of the transformation to be performed on the target</span>
+<span class="sd">        qubits.  The format of this matrix must match that passed into</span>
+<span class="sd">        the `format` argument.</span>
+<span class="sd">    nqubits : int</span>
+<span class="sd">        The total number of qubits used for the representation.</span>
+<span class="sd">    format : str</span>
+<span class="sd">        The format of the final matrix (&#39;sympy&#39;, &#39;numpy&#39;, &#39;scipy.sparse&#39;).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] http://www.johnlapeyre.com/qinf/qinf_html/node6.html.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">controls</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">controls</span><span class="p">]</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+    <span class="n">nqubits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nqubits</span><span class="p">)</span>
+
+    <span class="c"># This checks for the format as well.</span>
+    <span class="n">op11</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;op11&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+    <span class="n">eye2</span> <span class="o">=</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;eye2&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+    <span class="c"># Plain single qubit case</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">controls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bit</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c"># Fill product with [I1,Gate,I2] such that the unitaries,</span>
+        <span class="c"># I, cause the gate to be applied to the correct Qubit</span>
+        <span class="k">if</span> <span class="n">bit</span> <span class="o">!=</span> <span class="n">nqubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">product</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix_eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">nqubits</span> <span class="o">-</span> <span class="n">bit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">format</span><span class="o">=</span><span class="n">format</span><span class="p">))</span>
+        <span class="n">product</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bit</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">product</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix_eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">bit</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">matrix_tensor_product</span><span class="p">(</span><span class="o">*</span><span class="n">product</span><span class="p">)</span>
+
+    <span class="c"># Single target, multiple controls.</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">controls</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c"># Build the non-trivial part.</span>
+        <span class="n">product2</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nqubits</span><span class="p">):</span>
+            <span class="n">product2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix_eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">control</span> <span class="ow">in</span> <span class="n">controls</span><span class="p">:</span>
+            <span class="n">product2</span><span class="p">[</span><span class="n">nqubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">control</span><span class="p">]</span> <span class="o">=</span> <span class="n">op11</span>
+        <span class="n">product2</span><span class="p">[</span><span class="n">nqubits</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">target</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_matrix</span> <span class="o">-</span> <span class="n">eye2</span>
+
+        <span class="k">return</span> <span class="n">matrix_eye</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">nqubits</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="n">matrix_tensor_product</span><span class="p">(</span><span class="o">*</span><span class="n">product2</span><span class="p">)</span>
+
+    <span class="c"># Multi-target, multi-control is not yet implemented.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&#39;The representation of multi-target, multi-control gates &#39;</span>
+            <span class="s">&#39;is not implemented.&#39;</span>
+        <span class="p">)</span>
+
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Gate manipulation functions.</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="gate_simp"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.gate_simp">[docs]</a><span class="k">def</span> <span class="nf">gate_simp</span><span class="p">(</span><span class="n">circuit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Simplifies gates symbolically</span>
+
+<span class="sd">    It first sorts gates using gate_sort. It then applies basic</span>
+<span class="sd">    simplification rules to the circuit, e.g., XGate**2 = Identity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Bubble sort out gates that commute.</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">gate_sort</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+
+    <span class="c"># Do simplifications by subing a simplification into the first element</span>
+    <span class="c"># which can be simplified. We recursively call gate_simp with new circuit</span>
+    <span class="c"># as input more simplifications exist.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">gate_simp</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="n">circuit_args</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+        <span class="n">circuit_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">gate_simp</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="n">e</span><span class="p">,)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">circuit</span>
+
+    <span class="c"># Iterate through each element in circuit, simplify if possible.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">)):</span>
+        <span class="c"># H,X,Y or Z squared is 1.</span>
+        <span class="c"># T**2 = S, S**2 = Z</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Pow</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">HadamardGate</span><span class="p">,</span> <span class="n">XGate</span><span class="p">,</span> <span class="n">YGate</span><span class="p">,</span> <span class="n">ZGate</span><span class="p">))</span> \
+                    <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+                <span class="c"># Build a new circuit taking replacing the</span>
+                <span class="c"># H,X,Y,Z squared with one.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">circuit_args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span>
+                          <span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="o">**</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span> <span class="o">%</span> <span class="mi">2</span><span class="p">),)</span> <span class="o">+</span>
+                           <span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+                <span class="c"># Recursively simplify the new circuit.</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">gate_simp</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">))</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">PhaseGate</span><span class="p">):</span>
+                <span class="c"># Build a new circuit taking old circuit but splicing</span>
+                <span class="c"># in simplification.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">circuit_args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+                <span class="c"># Replace PhaseGate**2 with ZGate.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">newargs</span> <span class="o">+</span> <span class="p">(</span><span class="n">ZGate</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span>
+                <span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="o">**</span>
+                <span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="c"># Append the last elements.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">newargs</span> <span class="o">+</span> <span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="c"># Recursively simplify the new circuit.</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">gate_simp</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">))</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">TGate</span><span class="p">):</span>
+                <span class="c"># Build a new circuit taking all the old elements.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">circuit_args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="c"># Put an Phasegate in place of any TGate**2.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">newargs</span> <span class="o">+</span> <span class="p">(</span><span class="n">PhaseGate</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span>
+                <span class="n">Integer</span><span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">base</span><span class="o">**</span>
+                    <span class="p">(</span><span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">exp</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+
+                <span class="c"># Append the last elements.</span>
+                <span class="n">newargs</span> <span class="o">=</span> <span class="n">newargs</span> <span class="o">+</span> <span class="n">circuit_args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="c"># Recursively simplify the new circuit.</span>
+                <span class="n">circuit</span> <span class="o">=</span> <span class="n">gate_simp</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">))</span>
+                <span class="k">break</span>
+    <span class="k">return</span> <span class="n">circuit</span>
+
+</div>
+<div class="viewcode-block" id="gate_sort"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.gate_sort">[docs]</a><span class="k">def</span> <span class="nf">gate_sort</span><span class="p">(</span><span class="n">circuit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sorts the gates while keeping track of commutation relations</span>
+
+<span class="sd">    This function uses a bubble sort to rearrange the order of gate</span>
+<span class="sd">    application. Keeps track of Quantum computations special commutation</span>
+<span class="sd">    relations (e.g. things that apply to the same Qubit do not commute with</span>
+<span class="sd">    each other)</span>
+
+<span class="sd">    circuit is the Mul of gates that are to be sorted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Make sure we have an Add or Mul.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">gate_sort</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">gate_sort</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">base</span><span class="p">)</span><span class="o">**</span><span class="n">circuit</span><span class="o">.</span><span class="n">exp</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Gate</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">circuit</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">circuit</span>
+
+    <span class="n">changes</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">while</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">circ_array</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">circ_array</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="c"># Go through each element and switch ones that are in wrong order</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circ_array</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">Gate</span><span class="p">,</span> <span class="n">Pow</span><span class="p">))</span> <span class="ow">and</span> \
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">circ_array</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="n">Gate</span><span class="p">,</span> <span class="n">Pow</span><span class="p">)):</span>
+                <span class="c"># If we have a Pow object, look at only the base</span>
+                <span class="n">first_base</span><span class="p">,</span> <span class="n">first_exp</span> <span class="o">=</span> <span class="n">circ_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+                <span class="n">second_base</span><span class="p">,</span> <span class="n">second_exp</span> <span class="o">=</span> <span class="n">circ_array</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+
+                <span class="c"># Use sympy&#39;s hash based sorting. This is not mathematical</span>
+                <span class="c"># sorting, but is rather based on comparing hashes of objects.</span>
+                <span class="c"># See Basic.compare for details.</span>
+                <span class="k">if</span> <span class="n">first_base</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">second_base</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">first_base</span><span class="p">,</span> <span class="n">second_base</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">new_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],)</span> <span class="o">+</span>
+                                   <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],)</span> <span class="o">+</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:])</span>
+                        <span class="n">circuit</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+                        <span class="n">circ_array</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span>
+                        <span class="n">changes</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">AntiCommutator</span><span class="p">(</span><span class="n">first_base</span><span class="p">,</span> <span class="n">second_base</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">new_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],)</span> <span class="o">+</span>
+                                   <span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">],)</span> <span class="o">+</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:])</span>
+                        <span class="n">sign</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">first_exp</span><span class="o">*</span><span class="n">second_exp</span><span class="p">)</span>
+                        <span class="n">circuit</span> <span class="o">=</span> <span class="n">sign</span><span class="o">*</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+                        <span class="n">circ_array</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span>
+                        <span class="n">changes</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+    <span class="k">return</span> <span class="n">circuit</span>
+
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Utility functions</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+</div>
+<div class="viewcode-block" id="random_circuit"><a class="viewcode-back" href="../../../../modules/physics/quantum/gate.html#sympy.physics.quantum.gate.random_circuit">[docs]</a><span class="k">def</span> <span class="nf">random_circuit</span><span class="p">(</span><span class="n">ngates</span><span class="p">,</span> <span class="n">nqubits</span><span class="p">,</span> <span class="n">gate_space</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">CNOT</span><span class="p">,</span> <span class="n">SWAP</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;Return a random circuit of ngates and nqubits.</span>
+
+<span class="sd">    This uses an equally weighted sample of (X, Y, Z, S, T, H, CNOT, SWAP)</span>
+<span class="sd">    gates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ngates : int</span>
+<span class="sd">        The number of gates in the circuit.</span>
+<span class="sd">    nqubits : int</span>
+<span class="sd">        The number of qubits in the circuit.</span>
+<span class="sd">    gate_space : tuple</span>
+<span class="sd">        A tuple of the gate classes that will be used in the circuit.</span>
+<span class="sd">        Repeating gate classes multiple times in this tuple will increase</span>
+<span class="sd">        the frequency they appear in the random circuit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">qubit_space</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nqubits</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">ngates</span><span class="p">):</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">gate_space</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">g</span> <span class="o">==</span> <span class="n">CNotGate</span> <span class="ow">or</span> <span class="n">g</span> <span class="o">==</span> <span class="n">SwapGate</span><span class="p">:</span>
+            <span class="n">qubits</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">qubit_space</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="o">*</span><span class="n">qubits</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qubit</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">qubit_space</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">zx_basis_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transformation matrix from Z to X basis.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;ZX&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">zy_basis_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;sympy&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transformation matrix from Z to Y basis.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">matrix_cache</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">(</span><span class="s">&#39;ZY&#39;</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

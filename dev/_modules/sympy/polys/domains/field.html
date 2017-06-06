@@ -1,0 +1,216 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.domains.field &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy.polys.domains" href="../domains.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" accesskey="U">sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.domains.field</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implementation of :class:`Field` class. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.domains.ring</span> <span class="kn">import</span> <span class="n">Ring</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">NotReversible</span><span class="p">,</span> <span class="n">DomainError</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="Field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field">[docs]</a><span class="k">class</span> <span class="nc">Field</span><span class="p">(</span><span class="n">Ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents a field domain. &quot;&quot;&quot;</span>
+
+    <span class="n">has_Field</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="Field.get_ring"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.get_ring">[docs]</a>    <span class="k">def</span> <span class="nf">get_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a ring associated with ``self``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">DomainError</span><span class="p">(</span><span class="s">&#39;there is no ring associated with </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Field.get_field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.get_field">[docs]</a>    <span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a field associated with ``self``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Field.exquo"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.exquo">[docs]</a>    <span class="k">def</span> <span class="nf">exquo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exact quotient of ``a`` and ``b``, implies ``__div__``.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">/</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Field.quo"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.quo">[docs]</a>    <span class="k">def</span> <span class="nf">quo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Quotient of ``a`` and ``b``, implies ``__div__``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">/</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Field.rem"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.rem">[docs]</a>    <span class="k">def</span> <span class="nf">rem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remainder of ``a`` and ``b``, implies nothing.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span>
+</div>
+<div class="viewcode-block" id="Field.div"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.div">[docs]</a>    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division of ``a`` and ``b``, implies ``__div__``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span>
+</div>
+<div class="viewcode-block" id="Field.gcd"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.gcd">[docs]</a>    <span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns GCD of ``a`` and ``b``.</span>
+
+<span class="sd">        This definition of GCD over fields allows to clear denominators</span>
+<span class="sd">        in `primitive()`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.domains import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import S, gcd, primitive</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">        &gt;&gt;&gt; QQ.gcd(QQ(2, 3), QQ(4, 9))</span>
+<span class="sd">        2/9</span>
+<span class="sd">        &gt;&gt;&gt; gcd(S(2)/3, S(4)/9)</span>
+<span class="sd">        2/9</span>
+<span class="sd">        &gt;&gt;&gt; primitive(2*x/3 + S(4)/9)</span>
+<span class="sd">        (2/9, 3*x + 2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ring</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ring</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">DomainError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">one</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">lcm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span><span class="o">/</span><span class="n">q</span>
+</div>
+<div class="viewcode-block" id="Field.lcm"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.lcm">[docs]</a>    <span class="k">def</span> <span class="nf">lcm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns LCM of ``a`` and ``b``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.domains import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import S, lcm</span>
+
+<span class="sd">        &gt;&gt;&gt; QQ.lcm(QQ(2, 3), QQ(4, 9))</span>
+<span class="sd">        4/3</span>
+<span class="sd">        &gt;&gt;&gt; lcm(S(2)/3, S(4)/9)</span>
+<span class="sd">        4/3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ring</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ring</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">DomainError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">a</span><span class="o">*</span><span class="n">b</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">lcm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">numer</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">denom</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span><span class="o">/</span><span class="n">q</span>
+</div>
+<div class="viewcode-block" id="Field.revert"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.field.Field.revert">[docs]</a>    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``a**(-1)`` if possible. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">a</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotReversible</span><span class="p">(</span><span class="s">&#39;zero is not reversible&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" >sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

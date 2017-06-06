@@ -1,0 +1,642 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.combinatorics.util &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.combinatorics" href="../combinatorics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" accesskey="U">sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.combinatorics.util</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">isprime</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span><span class="p">,</span> <span class="n">_af_invert</span><span class="p">,</span> <span class="n">_af_rmul</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="n">rmul</span> <span class="o">=</span> <span class="n">Permutation</span><span class="o">.</span><span class="n">rmul</span>
+<span class="n">_af_new</span> <span class="o">=</span> <span class="n">Permutation</span><span class="o">.</span><span class="n">_af_new</span>
+
+<span class="c">############################################</span>
+<span class="c">###</span>
+<span class="c">### Utilities for computational group theory</span>
+<span class="c">###</span>
+<span class="c">############################################</span>
+
+
+<div class="viewcode-block" id="_base_ordering"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._base_ordering">[docs]</a><span class="k">def</span> <span class="nf">_base_ordering</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">degree</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Order `\{0, 1, ..., n-1\}` so that base points come first and in order.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``base`` - the base</span>
+<span class="sd">    ``degree`` - the degree of the associated permutation group</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A list ``base_ordering`` such that ``base_ordering[point]`` is the</span>
+<span class="sd">    number of ``point`` in the ordering.</span>
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _base_ordering</span>
+<span class="sd">    &gt;&gt;&gt; S = SymmetricGroup(4)</span>
+<span class="sd">    &gt;&gt;&gt; S.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; _base_ordering(S.base, S.degree)</span>
+<span class="sd">    [0, 1, 2, 3]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    This is used in backtrack searches, when we define a relation `&lt;&lt;` on</span>
+<span class="sd">    the underlying set for a permutation group of degree `n`,</span>
+<span class="sd">    `\{0, 1, ..., n-1\}`, so that if `(b_1, b_2, ..., b_k)` is a base we</span>
+<span class="sd">    have `b_i &lt;&lt; b_j` whenever `i&lt;j` and `b_i &lt;&lt; a` for all</span>
+<span class="sd">    `i\in\{1,2, ..., k\}` and `a` is not in the base. The idea is developed</span>
+<span class="sd">    and applied to backtracking algorithms in [1], pp.108-132. The points</span>
+<span class="sd">    that are not in the base are taken in increasing order.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] Holt, D., Eick, B., O&#39;Brien, E.</span>
+<span class="sd">    &quot;Handbook of computational group theory&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">degree</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">base_len</span><span class="p">):</span>
+        <span class="n">ordering</span><span class="p">[</span><span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">base_len</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">degree</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">ordering</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">current</span>
+            <span class="n">current</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">ordering</span>
+
+</div>
+<div class="viewcode-block" id="_check_cycles_alt_sym"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._check_cycles_alt_sym">[docs]</a><span class="k">def</span> <span class="nf">_check_cycles_alt_sym</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks for cycles of prime length p with n/2 &lt; p &lt; n-2.</span>
+
+<span class="sd">    Here `n` is the degree of the permutation. This is a helper function for</span>
+<span class="sd">    the function is_alt_sym from sympy.combinatorics.perm_groups.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _check_cycles_alt_sym</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.permutations import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; a = Permutation([[0,1,2,3,4,5,6,7,8,9,10], [11, 12]])</span>
+<span class="sd">    &gt;&gt;&gt; _check_cycles_alt_sym(a)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; b = Permutation([[0,1,2,3,4,5,6], [7,8,9,10]])</span>
+<span class="sd">    &gt;&gt;&gt; _check_cycles_alt_sym(b)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.combinatorics.perm_groups.PermutationGroup.is_alt_sym</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">perm</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">af</span> <span class="o">=</span> <span class="n">perm</span><span class="o">.</span><span class="n">array_form</span>
+    <span class="n">current_len</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_len</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">used</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">-</span> <span class="n">total_len</span><span class="p">:</span>
+            <span class="n">current_len</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">while</span><span class="p">(</span><span class="n">af</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="n">i</span><span class="p">):</span>
+                <span class="n">current_len</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">af</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">total_len</span> <span class="o">+=</span> <span class="n">current_len</span>
+            <span class="k">if</span> <span class="n">current_len</span> <span class="o">&gt;</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="ow">and</span> <span class="n">current_len</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">isprime</span><span class="p">(</span><span class="n">current_len</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="_distribute_gens_by_base"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._distribute_gens_by_base">[docs]</a><span class="k">def</span> <span class="nf">_distribute_gens_by_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Distribute the group elements ``gens`` by membership in basic stabilizers.</span>
+
+<span class="sd">    Notice that for a base `(b_1, b_2, ..., b_k)`, the basic stabilizers</span>
+<span class="sd">    are defined as `G^{(i)} = G_{b_1, ..., b_{i-1}}` for</span>
+<span class="sd">    `i \in\{1, 2, ..., k\}`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``base`` - a sequence of points in `\{0, 1, ..., n-1\}`</span>
+<span class="sd">    ``gens`` - a list of elements of a permutation group of degree `n`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    List of length `k`, where `k` is</span>
+<span class="sd">    the length of ``base``. The `i`-th entry contains those elements in</span>
+<span class="sd">    ``gens`` which fix the first `i` elements of ``base`` (so that the</span>
+<span class="sd">    `0`-th entry is equal to ``gens`` itself). If no element fixes the first</span>
+<span class="sd">    `i` elements of ``base``, the `i`-th element is set to a list containing</span>
+<span class="sd">    the identity element.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import DihedralGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _distribute_gens_by_base</span>
+<span class="sd">    &gt;&gt;&gt; D = DihedralGroup(3)</span>
+<span class="sd">    &gt;&gt;&gt; D.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; D.strong_gens</span>
+<span class="sd">    [Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)]</span>
+<span class="sd">    &gt;&gt;&gt; D.base</span>
+<span class="sd">    [0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; _distribute_gens_by_base(D.base, D.strong_gens)</span>
+<span class="sd">    [[Permutation(0, 1, 2), Permutation(0, 2), Permutation(1, 2)],</span>
+<span class="sd">     [Permutation(1, 2)]]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    _strong_gens_from_distr, _orbits_transversals_from_bsgs,</span>
+<span class="sd">    _handle_precomputed_bsgs</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">stabs</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">base_len</span><span class="p">)]</span>
+    <span class="n">max_stab_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">base_len</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">gen</span><span class="o">.</span><span class="n">_array_form</span><span class="p">[</span><span class="n">base</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">==</span> <span class="n">base</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">max_stab_index</span><span class="p">:</span>
+            <span class="n">max_stab_index</span> <span class="o">=</span> <span class="n">j</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">stabs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_stab_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">base_len</span><span class="p">):</span>
+        <span class="n">stabs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_af_new</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">degree</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="n">stabs</span>
+</div>
+<div class="viewcode-block" id="_handle_precomputed_bsgs"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._handle_precomputed_bsgs">[docs]</a><span class="k">def</span> <span class="nf">_handle_precomputed_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens</span><span class="p">,</span> <span class="n">transversals</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                             <span class="n">basic_orbits</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate BSGS-related structures from those present.</span>
+
+<span class="sd">    The base and strong generating set must be provided; if any of the</span>
+<span class="sd">    transversals, basic orbits or distributed strong generators are not</span>
+<span class="sd">    provided, they will be calculated from the base and strong generating set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``base`` - the base</span>
+<span class="sd">    ``strong_gens`` - the strong generators</span>
+<span class="sd">    ``transversals`` - basic transversals</span>
+<span class="sd">    ``basic_orbits`` - basic orbits</span>
+<span class="sd">    ``strong_gens_distr`` - strong generators distributed by membership in basic</span>
+<span class="sd">    stabilizers</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals``</span>
+<span class="sd">    are the basic transversals, ``basic_orbits`` are the basic orbits, and</span>
+<span class="sd">    ``strong_gens_distr`` are the strong generators distributed by membership</span>
+<span class="sd">    in basic stabilizers.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import DihedralGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _handle_precomputed_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; D = DihedralGroup(3)</span>
+<span class="sd">    &gt;&gt;&gt; D.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; _handle_precomputed_bsgs(D.base, D.strong_gens,</span>
+<span class="sd">    ... basic_orbits=D.basic_orbits)</span>
+<span class="sd">    ([{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2)},</span>
+<span class="sd">    {1: Permutation(2), 2: Permutation(1, 2)}],</span>
+<span class="sd">    [[0, 1, 2], [1, 2]], [[Permutation(0, 1, 2),</span>
+<span class="sd">                           Permutation(0, 2),</span>
+<span class="sd">                           Permutation(1, 2)],</span>
+<span class="sd">                          [Permutation(1, 2)]])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    _orbits_transversals_from_bsgs, distribute_gens_by_base</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">strong_gens_distr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">strong_gens_distr</span> <span class="o">=</span> <span class="n">_distribute_gens_by_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">transversals</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">basic_orbits</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">basic_orbits</span><span class="p">,</span> <span class="n">transversals</span> <span class="o">=</span> \
+                <span class="n">_orbits_transversals_from_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transversals</span> <span class="o">=</span> \
+                <span class="n">_orbits_transversals_from_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="p">,</span>
+                                           <span class="n">transversals_only</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">basic_orbits</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">basic_orbits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="n">base_len</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">base_len</span><span class="p">):</span>
+                <span class="n">basic_orbits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transversals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">transversals</span><span class="p">,</span> <span class="n">basic_orbits</span><span class="p">,</span> <span class="n">strong_gens_distr</span>
+
+</div>
+<div class="viewcode-block" id="_orbits_transversals_from_bsgs"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._orbits_transversals_from_bsgs">[docs]</a><span class="k">def</span> <span class="nf">_orbits_transversals_from_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="p">,</span>
+                                   <span class="n">transversals_only</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute basic orbits and transversals from a base and strong generating set.</span>
+
+<span class="sd">    The generators are provided as distributed across the basic stabilizers.</span>
+<span class="sd">    If the optional argument ``transversals_only`` is set to True, only the</span>
+<span class="sd">    transversals are returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``base`` - the base</span>
+<span class="sd">    ``strong_gens_distr`` - strong generators distributed by membership in basic</span>
+<span class="sd">    stabilizers</span>
+<span class="sd">    ``transversals_only`` - a flag swithing between returning only the</span>
+<span class="sd">    transversals/ both orbits and transversals</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _orbits_transversals_from_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import (_orbits_transversals_from_bsgs,</span>
+<span class="sd">    ... _distribute_gens_by_base)</span>
+<span class="sd">    &gt;&gt;&gt; S = SymmetricGroup(3)</span>
+<span class="sd">    &gt;&gt;&gt; S.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)</span>
+<span class="sd">    &gt;&gt;&gt; _orbits_transversals_from_bsgs(S.base, strong_gens_distr)</span>
+<span class="sd">    ([[0, 1, 2], [1, 2]],</span>
+<span class="sd">    [{0: Permutation(2), 1: Permutation(0, 1, 2), 2: Permutation(0, 2, 1)},</span>
+<span class="sd">    {1: Permutation(2), 2: Permutation(1, 2)}])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    _distribute_gens_by_base, _handle_precomputed_bsgs</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">_orbit_transversal</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">transversals</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="n">base_len</span>
+    <span class="k">if</span> <span class="n">transversals_only</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+        <span class="n">basic_orbits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="n">base_len</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">base_len</span><span class="p">):</span>
+        <span class="n">transversals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_orbit_transversal</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                 <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pairs</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">transversals_only</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="n">basic_orbits</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transversals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">transversals_only</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">transversals</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">basic_orbits</span><span class="p">,</span> <span class="n">transversals</span>
+
+</div>
+<div class="viewcode-block" id="_remove_gens"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._remove_gens">[docs]</a><span class="k">def</span> <span class="nf">_remove_gens</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens</span><span class="p">,</span> <span class="n">basic_orbits</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove redundant generators from a strong generating set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``base`` - a base</span>
+<span class="sd">    ``strong_gens`` - a strong generating set relative to ``base``</span>
+<span class="sd">    ``basic_orbits`` - basic orbits</span>
+<span class="sd">    ``strong_gens_distr`` - strong generators distributed by membership in basic</span>
+<span class="sd">    stabilizers</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A strong generating set with respect to ``base`` which is a subset of</span>
+<span class="sd">    ``strong_gens``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.perm_groups import PermutationGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _remove_gens</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.testutil import _verify_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; S = SymmetricGroup(15)</span>
+<span class="sd">    &gt;&gt;&gt; base, strong_gens = S.schreier_sims_incremental()</span>
+<span class="sd">    &gt;&gt;&gt; len(strong_gens)</span>
+<span class="sd">    26</span>
+<span class="sd">    &gt;&gt;&gt; new_gens = _remove_gens(base, strong_gens)</span>
+<span class="sd">    &gt;&gt;&gt; len(new_gens)</span>
+<span class="sd">    14</span>
+<span class="sd">    &gt;&gt;&gt; _verify_bsgs(S, base, new_gens)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    This procedure is outlined in [1],p.95.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] Holt, D., Eick, B., O&#39;Brien, E.</span>
+<span class="sd">    &quot;Handbook of computational group theory&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">PermutationGroup</span><span class="p">,</span> <span class="n">_orbit</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">strong_gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">if</span> <span class="n">strong_gens_distr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">strong_gens_distr</span> <span class="o">=</span> <span class="n">_distribute_gens_by_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">strong_gens</span><span class="p">)</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">strong_gens_distr</span><span class="p">[:]</span>
+    <span class="k">if</span> <span class="n">basic_orbits</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">basic_orbits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">base_len</span><span class="p">):</span>
+            <span class="n">basic_orbit</span> <span class="o">=</span> <span class="n">_orbit</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">basic_orbits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">basic_orbit</span><span class="p">)</span>
+    <span class="n">strong_gens_distr</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">strong_gens</span><span class="p">[:]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">base_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">gens_copy</span> <span class="o">=</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="n">i</span><span class="p">][:]</span>
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">gen</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">temp_gens</span> <span class="o">=</span> <span class="n">gens_copy</span><span class="p">[:]</span>
+                <span class="n">temp_gens</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">temp_gens</span> <span class="o">==</span> <span class="p">[]:</span>
+                    <span class="k">continue</span>
+                <span class="n">temp_orbit</span> <span class="o">=</span> <span class="n">_orbit</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">temp_gens</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">temp_orbit</span> <span class="o">==</span> <span class="n">basic_orbits</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">gens_copy</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="_strip"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._strip">[docs]</a><span class="k">def</span> <span class="nf">_strip</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">orbits</span><span class="p">,</span> <span class="n">transversals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attempt to decompose a permutation using a (possibly partial) BSGS</span>
+<span class="sd">    structure.</span>
+
+<span class="sd">    This is done by treating the sequence ``base`` as an actual base, and</span>
+<span class="sd">    the orbits ``orbits`` and transversals ``transversals`` as basic orbits and</span>
+<span class="sd">    transversals relative to it.</span>
+
+<span class="sd">    This process is called &quot;sifting&quot;. A sift is unsuccessful when a certain</span>
+<span class="sd">    orbit element is not found or when after the sift the decomposition</span>
+<span class="sd">    doesn&#39;t end with the identity element.</span>
+
+<span class="sd">    The argument ``transversals`` is a list of dictionaries that provides</span>
+<span class="sd">    transversal elements for the orbits ``orbits``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``g`` - permutation to be decomposed</span>
+<span class="sd">    ``base`` - sequence of points</span>
+<span class="sd">    ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``</span>
+<span class="sd">    under some subgroup of the pointwise stabilizer of `</span>
+<span class="sd">    `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit</span>
+<span class="sd">    in this function since the only infromation we need is encoded in the orbits</span>
+<span class="sd">    and transversals</span>
+<span class="sd">    ``transversals`` - a list of orbit transversals associated with the orbits</span>
+<span class="sd">    ``orbits``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.permutations import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import _strip</span>
+<span class="sd">    &gt;&gt;&gt; S = SymmetricGroup(5)</span>
+<span class="sd">    &gt;&gt;&gt; S.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([0, 2, 3, 1, 4])</span>
+<span class="sd">    &gt;&gt;&gt; _strip(g, S.base, S.basic_orbits, S.basic_transversals)</span>
+<span class="sd">    (Permutation(4), 5)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    The algorithm is described in [1],pp.89-90. The reason for returning</span>
+<span class="sd">    both the current state of the element being decomposed and the level</span>
+<span class="sd">    at which the sifting ends is that they provide important information for</span>
+<span class="sd">    the randomized version of the Schreier-Sims algorithm.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] Holt, D., Eick, B., O&#39;Brien, E.</span>
+<span class="sd">    &quot;Handbook of computational group theory&quot;</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims</span>
+
+<span class="sd">    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">_array_form</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">base_len</span><span class="p">):</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="o">==</span> <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orbits</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">transversals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">beta</span><span class="p">]</span><span class="o">.</span><span class="n">_array_form</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">_af_rmul</span><span class="p">(</span><span class="n">_af_invert</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">base_len</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+<span class="k">def</span> <span class="nf">_strip_af</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">orbits</span><span class="p">,</span> <span class="n">transversals</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    optimized _strip, with h, transversals and result in array form</span>
+<span class="sd">    if the stripped elements is the identity, it returns False, base_len + 1</span>
+
+<span class="sd">    j    h[base[i]] == base[i] for i &lt;= j</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">base_len</span><span class="p">):</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="o">==</span> <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">orbits</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">h</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">transversals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">beta</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="n">u</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span><span class="p">,</span> <span class="n">base_len</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">_af_rmul</span><span class="p">(</span><span class="n">_af_invert</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">h</span><span class="p">,</span> <span class="n">base_len</span> <span class="o">+</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="_strong_gens_from_distr"><a class="viewcode-back" href="../../../modules/combinatorics/util.html#sympy.combinatorics.util._strong_gens_from_distr">[docs]</a><span class="k">def</span> <span class="nf">_strong_gens_from_distr</span><span class="p">(</span><span class="n">strong_gens_distr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve strong generating set from generators of basic stabilizers.</span>
+
+<span class="sd">    This is just the union of the generators of the first and second basic</span>
+<span class="sd">    stabilizers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ``strong_gens_distr`` - strong generators distributed by membership in basic</span>
+<span class="sd">    stabilizers</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.named_groups import SymmetricGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.util import (_strong_gens_from_distr,</span>
+<span class="sd">    ... _distribute_gens_by_base)</span>
+<span class="sd">    &gt;&gt;&gt; S = SymmetricGroup(3)</span>
+<span class="sd">    &gt;&gt;&gt; S.schreier_sims()</span>
+<span class="sd">    &gt;&gt;&gt; S.strong_gens</span>
+<span class="sd">    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]</span>
+<span class="sd">    &gt;&gt;&gt; strong_gens_distr = _distribute_gens_by_base(S.base, S.strong_gens)</span>
+<span class="sd">    &gt;&gt;&gt; _strong_gens_from_distr(strong_gens_distr)</span>
+<span class="sd">    [Permutation(0, 1, 2), Permutation(2)(0, 1), Permutation(1, 2)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    _distribute_gens_by_base</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">strong_gens_distr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="mi">0</span><span class="p">][:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">strong_gens_distr</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">gen</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" >sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

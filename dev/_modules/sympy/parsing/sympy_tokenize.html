@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.parsing.sympy_tokenize &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.parsing.sympy_tokenize</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tokenization help for Python programs.</span>
+
+<span class="sd">generate_tokens(readline) is a generator that breaks a stream of</span>
+<span class="sd">text into Python tokens.  It accepts a readline-like method which is called</span>
+<span class="sd">repeatedly to get the next line of input (or &quot;&quot; for EOF).  It generates</span>
+<span class="sd">5-tuples with these members:</span>
+
+<span class="sd">    the token type (see token.py)</span>
+<span class="sd">    the token (a string)</span>
+<span class="sd">    the starting (row, column) indices of the token (a 2-tuple of ints)</span>
+<span class="sd">    the ending (row, column) indices of the token (a 2-tuple of ints)</span>
+<span class="sd">    the original line (string)</span>
+
+<span class="sd">It is designed to match the working of the Python tokenizer exactly, except</span>
+<span class="sd">that it produces COMMENT tokens for comments and gives type OP for all</span>
+<span class="sd">operators</span>
+
+<span class="sd">Older entry points</span>
+<span class="sd">    tokenize_loop(readline, tokeneater)</span>
+<span class="sd">    tokenize(readline, tokeneater=printtoken)</span>
+<span class="sd">are the same, except instead of generating tokens, tokeneater is a callback</span>
+<span class="sd">function to which the 5 fields described above are passed as 5 arguments,</span>
+<span class="sd">each time a new token is found.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Ka-Ping Yee &lt;ping@lfw.org&gt;&#39;</span>
+<span class="n">__credits__</span> <span class="o">=</span> \
+    <span class="s">&#39;GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger&#39;</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">token</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">token</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;_&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;COMMENT&quot;</span><span class="p">,</span> <span class="s">&quot;tokenize&quot;</span><span class="p">,</span>
+           <span class="s">&quot;generate_tokens&quot;</span><span class="p">,</span> <span class="s">&quot;NL&quot;</span><span class="p">,</span> <span class="s">&quot;untokenize&quot;</span><span class="p">]</span>
+<span class="k">del</span> <span class="n">token</span>
+
+<span class="n">COMMENT</span> <span class="o">=</span> <span class="n">N_TOKENS</span>
+<span class="n">tok_name</span><span class="p">[</span><span class="n">COMMENT</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;COMMENT&#39;</span>
+<span class="n">NL</span> <span class="o">=</span> <span class="n">N_TOKENS</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">tok_name</span><span class="p">[</span><span class="n">NL</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;NL&#39;</span>
+<span class="n">N_TOKENS</span> <span class="o">+=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="group"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.group">[docs]</a><span class="k">def</span> <span class="nf">group</span><span class="p">(</span><span class="o">*</span><span class="n">choices</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39;(&#39;</span> <span class="o">+</span> <span class="s">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choices</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span>
+
+</div>
+<div class="viewcode-block" id="any"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.any">[docs]</a><span class="k">def</span> <span class="nf">any</span><span class="p">(</span><span class="o">*</span><span class="n">choices</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">group</span><span class="p">(</span><span class="o">*</span><span class="n">choices</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;*&#39;</span>
+
+</div>
+<div class="viewcode-block" id="maybe"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.maybe">[docs]</a><span class="k">def</span> <span class="nf">maybe</span><span class="p">(</span><span class="o">*</span><span class="n">choices</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">group</span><span class="p">(</span><span class="o">*</span><span class="n">choices</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;?&#39;</span>
+</div>
+<span class="n">Whitespace</span> <span class="o">=</span> <span class="s">r&#39;[ \f\t]*&#39;</span>
+<span class="n">Comment</span> <span class="o">=</span> <span class="s">r&#39;#[^\r\n]*&#39;</span>
+<span class="n">Ignore</span> <span class="o">=</span> <span class="n">Whitespace</span> <span class="o">+</span> <span class="nb">any</span><span class="p">(</span><span class="s">r&#39;</span><span class="se">\\</span><span class="s">\r?\n&#39;</span> <span class="o">+</span> <span class="n">Whitespace</span><span class="p">)</span> <span class="o">+</span> <span class="n">maybe</span><span class="p">(</span><span class="n">Comment</span><span class="p">)</span>
+<span class="n">Name</span> <span class="o">=</span> <span class="s">r&#39;[a-zA-Z_]\w*&#39;</span>
+
+<span class="n">Hexnumber</span> <span class="o">=</span> <span class="s">r&#39;0[xX][\da-fA-F]+[lL]?&#39;</span>
+<span class="n">Octnumber</span> <span class="o">=</span> <span class="s">r&#39;(0[oO][0-7]+)|(0[0-7]*)[lL]?&#39;</span>
+<span class="n">Binnumber</span> <span class="o">=</span> <span class="s">r&#39;0[bB][01]+[lL]?&#39;</span>
+<span class="n">Decnumber</span> <span class="o">=</span> <span class="s">r&#39;[1-9]\d*[lL]?&#39;</span>
+<span class="n">Intnumber</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="n">Hexnumber</span><span class="p">,</span> <span class="n">Binnumber</span><span class="p">,</span> <span class="n">Octnumber</span><span class="p">,</span> <span class="n">Decnumber</span><span class="p">)</span>
+<span class="n">Exponent</span> <span class="o">=</span> <span class="s">r&#39;[eE][-+]?\d+&#39;</span>
+<span class="n">Pointfloat</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&#39;\d+\.\d*&#39;</span><span class="p">,</span> <span class="s">r&#39;\.\d+&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">maybe</span><span class="p">(</span><span class="n">Exponent</span><span class="p">)</span>
+<span class="n">Repeatedfloat</span> <span class="o">=</span> <span class="s">r&#39;\d*\.\d*\[\d+\]&#39;</span>
+<span class="n">Expfloat</span> <span class="o">=</span> <span class="s">r&#39;\d+&#39;</span> <span class="o">+</span> <span class="n">Exponent</span>
+<span class="n">Floatnumber</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="n">Repeatedfloat</span><span class="p">,</span> <span class="n">Pointfloat</span><span class="p">,</span> <span class="n">Expfloat</span><span class="p">)</span>
+<span class="n">Imagnumber</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&#39;\d+[jJ]&#39;</span><span class="p">,</span> <span class="n">Floatnumber</span> <span class="o">+</span> <span class="s">r&#39;[jJ]&#39;</span><span class="p">)</span>
+<span class="n">Number</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="n">Imagnumber</span><span class="p">,</span> <span class="n">Floatnumber</span><span class="p">,</span> <span class="n">Intnumber</span><span class="p">)</span>
+
+<span class="c"># Tail end of &#39; string.</span>
+<span class="n">Single</span> <span class="o">=</span> <span class="s">r&quot;[^&#39;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^&#39;</span><span class="se">\\</span><span class="s">]*)*&#39;&quot;</span>
+<span class="c"># Tail end of &quot; string.</span>
+<span class="n">Double</span> <span class="o">=</span> <span class="s">r&#39;[^&quot;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^&quot;</span><span class="se">\\</span><span class="s">]*)*&quot;&#39;</span>
+<span class="c"># Tail end of &#39;&#39;&#39; string.</span>
+<span class="n">Single3</span> <span class="o">=</span> <span class="s">r&quot;[^&#39;</span><span class="se">\\</span><span class="s">]*(?:(?:</span><span class="se">\\</span><span class="s">.|&#39;(?!&#39;&#39;))[^&#39;</span><span class="se">\\</span><span class="s">]*)*&#39;&#39;&#39;&quot;</span>
+<span class="c"># Tail end of &quot;&quot;&quot; string.</span>
+<span class="n">Double3</span> <span class="o">=</span> <span class="s">r&#39;[^&quot;</span><span class="se">\\</span><span class="s">]*(?:(?:</span><span class="se">\\</span><span class="s">.|&quot;(?!&quot;&quot;))[^&quot;</span><span class="se">\\</span><span class="s">]*)*&quot;&quot;&quot;&#39;</span>
+<span class="n">Triple</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">&quot;[uU]?[rR]?&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;[uU]?[rR]?&quot;&quot;&quot;&#39;</span><span class="p">)</span>
+<span class="c"># Single-line &#39; or &quot; string.</span>
+<span class="n">String</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&quot;[uU]?[rR]?&#39;[^\n&#39;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^\n&#39;</span><span class="se">\\</span><span class="s">]*)*&#39;&quot;</span><span class="p">,</span>
+               <span class="s">r&#39;[uU]?[rR]?&quot;[^\n&quot;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^\n&quot;</span><span class="se">\\</span><span class="s">]*)*&quot;&#39;</span><span class="p">)</span>
+
+<span class="c"># Because of leftmost-then-longest match semantics, be sure to put the</span>
+<span class="c"># longest operators first (e.g., if = came before ==, == would get</span>
+<span class="c"># recognized as two instances of =).</span>
+<span class="n">Operator</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&quot;\*\*=?&quot;</span><span class="p">,</span> <span class="s">r&quot;&gt;&gt;=?&quot;</span><span class="p">,</span> <span class="s">r&quot;&lt;&lt;=?&quot;</span><span class="p">,</span> <span class="s">r&quot;&lt;&gt;&quot;</span><span class="p">,</span> <span class="s">r&quot;!=&quot;</span><span class="p">,</span>
+                 <span class="s">r&quot;//=?&quot;</span><span class="p">,</span>
+                 <span class="s">r&quot;[+\-*/%&amp;|^=&lt;&gt;]=?&quot;</span><span class="p">,</span>
+                 <span class="s">r&quot;~&quot;</span><span class="p">)</span>
+
+<span class="n">Bracket</span> <span class="o">=</span> <span class="s">&#39;[][(){}]&#39;</span>
+<span class="n">Special</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&#39;\r?\n&#39;</span><span class="p">,</span> <span class="s">r&#39;[:;.,`@]&#39;</span><span class="p">,</span> <span class="s">r&#39;\!\!&#39;</span><span class="p">,</span> <span class="s">r&#39;\!&#39;</span><span class="p">)</span>
+<span class="n">Funny</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="n">Operator</span><span class="p">,</span> <span class="n">Bracket</span><span class="p">,</span> <span class="n">Special</span><span class="p">)</span>
+
+<span class="n">PlainToken</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="n">Number</span><span class="p">,</span> <span class="n">Funny</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span>
+<span class="n">Token</span> <span class="o">=</span> <span class="n">Ignore</span> <span class="o">+</span> <span class="n">PlainToken</span>
+
+<span class="c"># First (or only) line of &#39; or &quot; string.</span>
+<span class="n">ContStr</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&quot;[uU]?[rR]?&#39;[^\n&#39;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^\n&#39;</span><span class="se">\\</span><span class="s">]*)*&quot;</span> <span class="o">+</span>
+                <span class="n">group</span><span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s">r&#39;</span><span class="se">\\</span><span class="s">\r?\n&#39;</span><span class="p">),</span>
+                <span class="s">r&#39;[uU]?[rR]?&quot;[^\n&quot;</span><span class="se">\\</span><span class="s">]*(?:</span><span class="se">\\</span><span class="s">.[^\n&quot;</span><span class="se">\\</span><span class="s">]*)*&#39;</span> <span class="o">+</span>
+                <span class="n">group</span><span class="p">(</span><span class="s">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s">r&#39;</span><span class="se">\\</span><span class="s">\r?\n&#39;</span><span class="p">))</span>
+<span class="n">PseudoExtras</span> <span class="o">=</span> <span class="n">group</span><span class="p">(</span><span class="s">r&#39;</span><span class="se">\\</span><span class="s">\r?\n&#39;</span><span class="p">,</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Triple</span><span class="p">)</span>
+<span class="n">PseudoToken</span> <span class="o">=</span> <span class="n">Whitespace</span> <span class="o">+</span> <span class="n">group</span><span class="p">(</span><span class="n">PseudoExtras</span><span class="p">,</span> <span class="n">Number</span><span class="p">,</span> <span class="n">Funny</span><span class="p">,</span> <span class="n">ContStr</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span>
+
+<span class="n">tokenprog</span><span class="p">,</span> <span class="n">pseudoprog</span><span class="p">,</span> <span class="n">single3prog</span><span class="p">,</span> <span class="n">double3prog</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">,</span> <span class="p">(</span><span class="n">Token</span><span class="p">,</span> <span class="n">PseudoToken</span><span class="p">,</span> <span class="n">Single3</span><span class="p">,</span> <span class="n">Double3</span><span class="p">))</span>
+<span class="n">endprogs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;&#39;&quot;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">Single</span><span class="p">),</span> <span class="s">&#39;&quot;&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">Double</span><span class="p">),</span>
+            <span class="s">&quot;&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;r&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;r&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;u&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;u&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;ur&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;ur&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;R&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;R&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;U&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;U&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;uR&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;uR&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;Ur&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;Ur&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;UR&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;UR&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;b&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;b&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;br&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;br&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;B&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;B&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;bR&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;bR&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;Br&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;Br&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&quot;BR&#39;&#39;&#39;&quot;</span><span class="p">:</span> <span class="n">single3prog</span><span class="p">,</span> <span class="s">&#39;BR&quot;&quot;&quot;&#39;</span><span class="p">:</span> <span class="n">double3prog</span><span class="p">,</span>
+            <span class="s">&#39;r&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;R&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;u&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;U&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+            <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+
+<span class="n">triple_quoted</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;r&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;r&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;R&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;R&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;u&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;u&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;U&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;U&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;ur&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;ur&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;Ur&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;Ur&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;uR&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;uR&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;UR&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;UR&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;b&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;b&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;B&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;B&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;br&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;br&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;Br&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;Br&quot;&quot;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;bR&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;bR&quot;&quot;&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;BR&#39;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;BR&quot;&quot;&quot;&#39;</span><span class="p">):</span>
+    <span class="n">triple_quoted</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+<span class="n">single_quoted</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;r&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;r&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;R&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;R&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;u&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;u&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;U&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;U&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;ur&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;ur&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;Ur&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;Ur&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;uR&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;uR&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;UR&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;UR&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;b&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;b&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;B&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;B&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;br&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;br&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;Br&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;Br&quot;&#39;</span><span class="p">,</span>
+          <span class="s">&quot;bR&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;bR&quot;&#39;</span><span class="p">,</span> <span class="s">&quot;BR&#39;&quot;</span><span class="p">,</span> <span class="s">&#39;BR&quot;&#39;</span> <span class="p">):</span>
+    <span class="n">single_quoted</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+
+<span class="n">tabsize</span> <span class="o">=</span> <span class="mi">8</span>
+
+
+<div class="viewcode-block" id="TokenError"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.TokenError">[docs]</a><span class="k">class</span> <span class="nc">TokenError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="StopTokenizing"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.StopTokenizing">[docs]</a><span class="k">class</span> <span class="nc">StopTokenizing</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="printtoken"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.printtoken">[docs]</a><span class="k">def</span> <span class="nf">printtoken</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">srow_scol</span><span class="p">,</span> <span class="n">erow_ecol</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>  <span class="c"># for testing</span>
+    <span class="n">srow</span><span class="p">,</span> <span class="n">scol</span> <span class="o">=</span> <span class="n">srow_scol</span>
+    <span class="n">erow</span><span class="p">,</span> <span class="n">ecol</span> <span class="o">=</span> <span class="n">erow_ecol</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">,</span><span class="si">%d</span><span class="s">-</span><span class="si">%d</span><span class="s">,</span><span class="si">%d</span><span class="s">:</span><span class="se">\t</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> \
+        <span class="p">(</span><span class="n">srow</span><span class="p">,</span> <span class="n">scol</span><span class="p">,</span> <span class="n">erow</span><span class="p">,</span> <span class="n">ecol</span><span class="p">,</span> <span class="n">tok_name</span><span class="p">[</span><span class="nb">type</span><span class="p">],</span> <span class="nb">repr</span><span class="p">(</span><span class="n">token</span><span class="p">)))</span>
+
+</div>
+<div class="viewcode-block" id="tokenize"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.tokenize">[docs]</a><span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="n">readline</span><span class="p">,</span> <span class="n">tokeneater</span><span class="o">=</span><span class="n">printtoken</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The tokenize() function accepts two parameters: one representing the</span>
+<span class="sd">    input stream, and one providing an output mechanism for tokenize().</span>
+
+<span class="sd">    The first parameter, readline, must be a callable object which provides</span>
+<span class="sd">    the same interface as the readline() method of built-in file objects.</span>
+<span class="sd">    Each call to the function should return one line of input as a string.</span>
+
+<span class="sd">    The second parameter, tokeneater, must also be a callable object. It is</span>
+<span class="sd">    called once for each token, with five arguments, corresponding to the</span>
+<span class="sd">    tuples generated by generate_tokens().</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tokenize_loop</span><span class="p">(</span><span class="n">readline</span><span class="p">,</span> <span class="n">tokeneater</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">StopTokenizing</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+<span class="c"># backwards compatible interface</span>
+
+</div>
+<span class="k">def</span> <span class="nf">tokenize_loop</span><span class="p">(</span><span class="n">readline</span><span class="p">,</span> <span class="n">tokeneater</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">token_info</span> <span class="ow">in</span> <span class="n">generate_tokens</span><span class="p">(</span><span class="n">readline</span><span class="p">):</span>
+        <span class="n">tokeneater</span><span class="p">(</span><span class="o">*</span><span class="n">token_info</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Untokenizer</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_row</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_col</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">add_whitespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+        <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">assert</span> <span class="n">row</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_row</span>
+        <span class="n">col_offset</span> <span class="o">=</span> <span class="n">col</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_col</span>
+        <span class="k">if</span> <span class="n">col_offset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot; &quot;</span> <span class="o">*</span> <span class="n">col_offset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">untokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">compat</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">iterable</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">tok_type</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_whitespace</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_col</span> <span class="o">=</span> <span class="n">end</span>
+            <span class="k">if</span> <span class="n">tok_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NEWLINE</span><span class="p">,</span> <span class="n">NL</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prev_row</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prev_col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+        <span class="n">startline</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">indents</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">toks_append</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="o">.</span><span class="n">append</span>
+        <span class="n">toknum</span><span class="p">,</span> <span class="n">tokval</span> <span class="o">=</span> <span class="n">token</span>
+        <span class="k">if</span> <span class="n">toknum</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NAME</span><span class="p">,</span> <span class="n">NUMBER</span><span class="p">):</span>
+            <span class="n">tokval</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span>
+        <span class="k">if</span> <span class="n">toknum</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NEWLINE</span><span class="p">,</span> <span class="n">NL</span><span class="p">):</span>
+            <span class="n">startline</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">prevstring</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">:</span>
+            <span class="n">toknum</span><span class="p">,</span> <span class="n">tokval</span> <span class="o">=</span> <span class="n">tok</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">toknum</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NAME</span><span class="p">,</span> <span class="n">NUMBER</span><span class="p">):</span>
+                <span class="n">tokval</span> <span class="o">+=</span> <span class="s">&#39; &#39;</span>
+
+            <span class="c"># Insert a space between two consecutive strings</span>
+            <span class="k">if</span> <span class="n">toknum</span> <span class="o">==</span> <span class="n">STRING</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">prevstring</span><span class="p">:</span>
+                    <span class="n">tokval</span> <span class="o">=</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">tokval</span>
+                <span class="n">prevstring</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prevstring</span> <span class="o">=</span> <span class="bp">False</span>
+
+            <span class="k">if</span> <span class="n">toknum</span> <span class="o">==</span> <span class="n">INDENT</span><span class="p">:</span>
+                <span class="n">indents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tokval</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">toknum</span> <span class="o">==</span> <span class="n">DEDENT</span><span class="p">:</span>
+                <span class="n">indents</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">toknum</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NEWLINE</span><span class="p">,</span> <span class="n">NL</span><span class="p">):</span>
+                <span class="n">startline</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">startline</span> <span class="ow">and</span> <span class="n">indents</span><span class="p">:</span>
+                <span class="n">toks_append</span><span class="p">(</span><span class="n">indents</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">startline</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">toks_append</span><span class="p">(</span><span class="n">tokval</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="untokenize"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.untokenize">[docs]</a><span class="k">def</span> <span class="nf">untokenize</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform tokens back into Python source code.</span>
+
+<span class="sd">    Each element returned by the iterable must be a token sequence</span>
+<span class="sd">    with at least two elements, a token number and token value.  If</span>
+<span class="sd">    only two tokens are passed, the resulting output is poor.</span>
+
+<span class="sd">    Round-trip invariant for full input:</span>
+<span class="sd">        Untokenized source will match input source exactly</span>
+
+<span class="sd">    Round-trip invariant for limited intput::</span>
+
+<span class="sd">        # Output text will tokenize the back to the input</span>
+<span class="sd">        t1 = [tok[:2] for tok in generate_tokens(f.readline)]</span>
+<span class="sd">        newcode = untokenize(t1)</span>
+<span class="sd">        readline = iter(newcode.splitlines(1)).next</span>
+<span class="sd">        t2 = [tok[:2] for tok in generate_tokens(readline)]</span>
+<span class="sd">        assert t1 == t2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ut</span> <span class="o">=</span> <span class="n">Untokenizer</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ut</span><span class="o">.</span><span class="n">untokenize</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="generate_tokens"><a class="viewcode-back" href="../../../modules/parsing.html#sympy.parsing.sympy_tokenize.generate_tokens">[docs]</a><span class="k">def</span> <span class="nf">generate_tokens</span><span class="p">(</span><span class="n">readline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The generate_tokens() generator requires one argment, readline, which</span>
+<span class="sd">    must be a callable object which provides the same interface as the</span>
+<span class="sd">    readline() method of built-in file objects. Each call to the function</span>
+<span class="sd">    should return one line of input as a string.  Alternately, readline</span>
+<span class="sd">    can be a callable function terminating with StopIteration::</span>
+
+<span class="sd">        readline = open(myfile).next    # Example of alternate readline</span>
+
+<span class="sd">    The generator produces 5-tuples with these members: the token type; the</span>
+<span class="sd">    token string; a 2-tuple (srow, scol) of ints specifying the row and</span>
+<span class="sd">    column where the token begins in the source; a 2-tuple (erow, ecol) of</span>
+<span class="sd">    ints specifying the row and column where the token ends in the source;</span>
+<span class="sd">    and the line on which the token was found. The line passed is the</span>
+<span class="sd">    logical line; continuation lines are included.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lnum</span> <span class="o">=</span> <span class="n">parenlev</span> <span class="o">=</span> <span class="n">continued</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">namechars</span><span class="p">,</span> <span class="n">numchars</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span><span class="p">,</span> <span class="s">&#39;0123456789&#39;</span>
+    <span class="n">contstr</span><span class="p">,</span> <span class="n">needcont</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="n">contline</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">indents</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>                                   <span class="c"># loop over lines in stream</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">readline</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="n">lnum</span> <span class="o">=</span> <span class="n">lnum</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">pos</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">contstr</span><span class="p">:</span>                            <span class="c"># continued string</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TokenError</span><span class="p">(</span><span class="s">&quot;EOF in multi-line string&quot;</span><span class="p">,</span> <span class="n">strstart</span><span class="p">)</span>
+            <span class="n">endmatch</span> <span class="o">=</span> <span class="n">endprog</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">endmatch</span><span class="p">:</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">end</span> <span class="o">=</span> <span class="n">endmatch</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">STRING</span><span class="p">,</span> <span class="n">contstr</span> <span class="o">+</span> <span class="n">line</span><span class="p">[:</span><span class="n">end</span><span class="p">],</span>
+                       <span class="n">strstart</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">contline</span> <span class="o">+</span> <span class="n">line</span><span class="p">)</span>
+                <span class="n">contstr</span><span class="p">,</span> <span class="n">needcont</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="n">contline</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">elif</span> <span class="n">needcont</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="s">&#39;</span><span class="se">\\\n</span><span class="s">&#39;</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">!=</span> <span class="s">&#39;</span><span class="se">\\\r\n</span><span class="s">&#39;</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">ERRORTOKEN</span><span class="p">,</span> <span class="n">contstr</span> <span class="o">+</span> <span class="n">line</span><span class="p">,</span>
+                       <span class="n">strstart</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)),</span> <span class="n">contline</span><span class="p">)</span>
+                <span class="n">contstr</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="n">contline</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">contstr</span> <span class="o">=</span> <span class="n">contstr</span> <span class="o">+</span> <span class="n">line</span>
+                <span class="n">contline</span> <span class="o">=</span> <span class="n">contline</span> <span class="o">+</span> <span class="n">line</span>
+                <span class="k">continue</span>
+
+        <span class="k">elif</span> <span class="n">parenlev</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">continued</span><span class="p">:</span>  <span class="c"># new statement</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">:</span>                   <span class="c"># measure leading whitespace</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39; &#39;</span><span class="p">:</span>
+                    <span class="n">column</span> <span class="o">=</span> <span class="n">column</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">:</span>
+                    <span class="n">column</span> <span class="o">=</span> <span class="p">(</span><span class="n">column</span><span class="o">/</span><span class="n">tabsize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">tabsize</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\f</span><span class="s">&#39;</span><span class="p">:</span>
+                    <span class="n">column</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="nb">max</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">in</span> <span class="s">&#39;#</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">:</span>           <span class="c"># skip comments or blank lines</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;#&#39;</span><span class="p">:</span>
+                    <span class="n">comment_token</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">)</span>
+                    <span class="n">nl_pos</span> <span class="o">=</span> <span class="n">pos</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">comment_token</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">COMMENT</span><span class="p">,</span> <span class="n">comment_token</span><span class="p">,</span>
+                           <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">comment_token</span><span class="p">)),</span> <span class="n">line</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">NL</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="n">nl_pos</span><span class="p">:],</span>
+                           <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">nl_pos</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)),</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">((</span><span class="n">NL</span><span class="p">,</span> <span class="n">COMMENT</span><span class="p">)[</span><span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;#&#39;</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:],</span>
+                           <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)),</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">column</span> <span class="o">&gt;</span> <span class="n">indents</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>           <span class="c"># count indents or dedents</span>
+                <span class="n">indents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">INDENT</span><span class="p">,</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">],</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="n">line</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">column</span> <span class="o">&lt;</span> <span class="n">indents</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indents</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">IndentationError</span><span class="p">(</span>
+                        <span class="s">&quot;unindent does not match any outer indentation level&quot;</span><span class="p">,</span>
+                        <span class="p">(</span><span class="s">&quot;&lt;tokenize&gt;&quot;</span><span class="p">,</span> <span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span>
+                <span class="n">indents</span> <span class="o">=</span> <span class="n">indents</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">DEDENT</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="n">line</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>                                  <span class="c"># continued statement</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TokenError</span><span class="p">(</span><span class="s">&quot;EOF in multi-line statement&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="n">continued</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="nb">max</span><span class="p">:</span>
+            <span class="n">pseudomatch</span> <span class="o">=</span> <span class="n">pseudoprog</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pseudomatch</span><span class="p">:</span>                                <span class="c"># scan for tokens</span>
+                <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">pseudomatch</span><span class="o">.</span><span class="n">span</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">end</span>
+                <span class="n">token</span><span class="p">,</span> <span class="n">initial</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">initial</span> <span class="ow">in</span> <span class="n">numchars</span> <span class="ow">or</span> \
+                        <span class="p">(</span><span class="n">initial</span> <span class="o">==</span> <span class="s">&#39;.&#39;</span> <span class="ow">and</span> <span class="n">token</span> <span class="o">!=</span> <span class="s">&#39;.&#39;</span><span class="p">):</span>      <span class="c"># ordinary number</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">NUMBER</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">initial</span> <span class="ow">in</span> <span class="s">&#39;</span><span class="se">\r\n</span><span class="s">&#39;</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">NL</span> <span class="k">if</span> <span class="n">parenlev</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">NEWLINE</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">initial</span> <span class="o">==</span> <span class="s">&#39;#&#39;</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="ow">not</span> <span class="n">token</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">COMMENT</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">triple_quoted</span><span class="p">:</span>
+                    <span class="n">endprog</span> <span class="o">=</span> <span class="n">endprogs</span><span class="p">[</span><span class="n">token</span><span class="p">]</span>
+                    <span class="n">endmatch</span> <span class="o">=</span> <span class="n">endprog</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">endmatch</span><span class="p">:</span>                           <span class="c"># all on one line</span>
+                        <span class="n">pos</span> <span class="o">=</span> <span class="n">endmatch</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">token</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">pos</span><span class="p">]</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">STRING</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="n">line</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">contstr</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span>
+                        <span class="n">contline</span> <span class="o">=</span> <span class="n">line</span>
+                        <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">initial</span> <span class="ow">in</span> <span class="n">single_quoted</span> <span class="ow">or</span> \
+                    <span class="n">token</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">single_quoted</span> <span class="ow">or</span> \
+                        <span class="n">token</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="n">single_quoted</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">:</span>                  <span class="c"># continued string</span>
+                        <span class="n">endprog</span> <span class="o">=</span> <span class="p">(</span><span class="n">endprogs</span><span class="p">[</span><span class="n">initial</span><span class="p">]</span> <span class="ow">or</span> <span class="n">endprogs</span><span class="p">[</span><span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="ow">or</span>
+                                   <span class="n">endprogs</span><span class="p">[</span><span class="n">token</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+                        <span class="n">contstr</span><span class="p">,</span> <span class="n">needcont</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">start</span><span class="p">:],</span> <span class="mi">1</span>
+                        <span class="n">contline</span> <span class="o">=</span> <span class="n">line</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>                                  <span class="c"># ordinary string</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">STRING</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">initial</span> <span class="ow">in</span> <span class="n">namechars</span><span class="p">:</span>                 <span class="c"># ordinary name</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">NAME</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">initial</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">:</span>                      <span class="c"># continued stmt</span>
+                    <span class="n">continued</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">initial</span> <span class="ow">in</span> <span class="s">&#39;([{&#39;</span><span class="p">:</span>
+                        <span class="n">parenlev</span> <span class="o">=</span> <span class="n">parenlev</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">elif</span> <span class="n">initial</span> <span class="ow">in</span> <span class="s">&#39;)]}&#39;</span><span class="p">:</span>
+                        <span class="n">parenlev</span> <span class="o">=</span> <span class="n">parenlev</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">OP</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">spos</span><span class="p">,</span> <span class="n">epos</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">ERRORTOKEN</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span>
+                       <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">line</span><span class="p">)</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">indent</span> <span class="ow">in</span> <span class="n">indents</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>                 <span class="c"># pop remaining indent levels</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">DEDENT</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="p">(</span><span class="n">ENDMARKER</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">lnum</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>                     <span class="c"># testing</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">tokenize</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">readline</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tokenize</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.matrices &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.matrices</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Known matrices related to physics&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">I</span>
+
+
+<div class="viewcode-block" id="msigma"><a class="viewcode-back" href="../../../modules/physics/matrices.html#sympy.physics.matrices.msigma">[docs]</a><span class="k">def</span> <span class="nf">msigma</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a Pauli matrix sigma_i. i=1,2,3</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Pauli_matrices</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.matrices import msigma</span>
+<span class="sd">    &gt;&gt;&gt; msigma(1)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [0, 1],</span>
+<span class="sd">    [1, 0]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span> <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">I</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span> <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span> <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;Invalid Pauli index&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="pat_matrix"><a class="viewcode-back" href="../../../modules/physics/matrices.html#sympy.physics.matrices.pat_matrix">[docs]</a><span class="k">def</span> <span class="nf">pat_matrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the Parallel Axis Theorem matrix to translate the inertia</span>
+<span class="sd">    matrix a distance of (dx, dy, dz) for a body of mass m.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    If the point we want the inertia about is a distance of 2 units of</span>
+<span class="sd">    length and 1 unit along the x-axis we get:</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.matrices import pat_matrix</span>
+<span class="sd">    &gt;&gt;&gt; pat_matrix(2,1,0,0)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [0, 0, 0],</span>
+<span class="sd">    [0, 2, 0],</span>
+<span class="sd">    [0, 0, 2]])</span>
+
+<span class="sd">    In case we want to find the inertia along a vector of (1,1,1):</span>
+<span class="sd">    &gt;&gt;&gt; pat_matrix(2,1,1,1)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [ 4, -2, -2],</span>
+<span class="sd">    [-2,  4, -2],</span>
+<span class="sd">    [-2, -2,  4]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dxdy</span> <span class="o">=</span> <span class="o">-</span><span class="n">dx</span><span class="o">*</span><span class="n">dy</span>
+    <span class="n">dydz</span> <span class="o">=</span> <span class="o">-</span><span class="n">dy</span><span class="o">*</span><span class="n">dz</span>
+    <span class="n">dzdx</span> <span class="o">=</span> <span class="o">-</span><span class="n">dz</span><span class="o">*</span><span class="n">dx</span>
+    <span class="n">dxdx</span> <span class="o">=</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">dydy</span> <span class="o">=</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">dzdz</span> <span class="o">=</span> <span class="n">dz</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="p">((</span><span class="n">dydy</span> <span class="o">+</span> <span class="n">dzdz</span><span class="p">,</span> <span class="n">dxdy</span><span class="p">,</span> <span class="n">dzdx</span><span class="p">),</span>
+           <span class="p">(</span><span class="n">dxdy</span><span class="p">,</span> <span class="n">dxdx</span> <span class="o">+</span> <span class="n">dzdz</span><span class="p">,</span> <span class="n">dydz</span><span class="p">),</span>
+           <span class="p">(</span><span class="n">dzdx</span><span class="p">,</span> <span class="n">dydz</span><span class="p">,</span> <span class="n">dydy</span> <span class="o">+</span> <span class="n">dxdx</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">*</span><span class="n">Matrix</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="mgamma"><a class="viewcode-back" href="../../../modules/physics/matrices.html#sympy.physics.matrices.mgamma">[docs]</a><span class="k">def</span> <span class="nf">mgamma</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a Dirac gamma matrix gamma^mu in the standard</span>
+<span class="sd">    (Dirac) representation.</span>
+
+<span class="sd">    If you want gamma_mu, use gamma(mu, True).</span>
+
+<span class="sd">    We use a convention:</span>
+
+<span class="sd">    gamma^5 = I * gamma^0 * gamma^1 * gamma^2 * gamma^3</span>
+<span class="sd">    gamma_5 = I * gamma_0 * gamma_1 * gamma_2 * gamma_3 = - gamma^5</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Gamma_matrices</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.matrices import mgamma</span>
+<span class="sd">    &gt;&gt;&gt; mgamma(1)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [ 0,  0, 0, 1],</span>
+<span class="sd">    [ 0,  0, 1, 0],</span>
+<span class="sd">    [ 0, -1, 0, 0],</span>
+<span class="sd">    [-1,  0, 0, 0]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;Invalid Dirac index&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mu</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mu</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">I</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mu</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mu</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lower</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mu</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="o">-</span><span class="n">m</span>
+    <span class="k">return</span> <span class="n">m</span>
+
+<span class="c">#Minkowski tensor using the convention (+,-,-,-) used in the Quantum Field</span>
+<span class="c">#Theory</span></div>
+<span class="n">minkowski_tensor</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span> <span class="p">(</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

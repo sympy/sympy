@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Polyhedron &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Prufer Sequences" href="prufer.html" />
+    <link rel="prev" title="Permutation Groups" href="perm_groups.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prufer.html" title="Prufer Sequences"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="perm_groups.html" title="Permutation Groups"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.polyhedron">
+<span id="polyhedron"></span><span id="combinatorics-polyhedron"></span><h1>Polyhedron<a class="headerlink" href="#module-sympy.combinatorics.polyhedron" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.polyhedron.</tt><tt class="descname">Polyhedron</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the polyhedral symmetry group (PSG).</p>
+<p>The PSG is one of the symmetry groups of the Platonic solids.
+There are three polyhedral groups: the tetrahedral group
+of order 12, the octahedral group of order 24, and the
+icosahedral group of order 60.</p>
+<p>All doctests have been given in the docstring of the
+constructor of the object.</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://mathworld.wolfram.com/PolyhedralGroup.html">http://mathworld.wolfram.com/PolyhedralGroup.html</a></p>
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.array_form">
+<tt class="descname">array_form</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.array_form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.array_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indices of the corners.</p>
+<p>The indices are given relative to the original position of corners.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.corners" title="sympy.combinatorics.polyhedron.Polyhedron.corners"><tt class="xref py py-obj docutils literal"><span class="pre">corners</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.cyclic_form" title="sympy.combinatorics.polyhedron.Polyhedron.cyclic_form"><tt class="xref py py-obj docutils literal"><span class="pre">cyclic_form</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span><span class="p">,</span> <span class="n">Cycle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.polyhedron</span> <span class="kn">import</span> <span class="n">tetrahedron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tetrahedron</span><span class="o">.</span><span class="n">array_form</span>
+<span class="go">[0, 1, 2, 3]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tetrahedron</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tetrahedron</span><span class="o">.</span><span class="n">array_form</span>
+<span class="go">[0, 2, 3, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tetrahedron</span><span class="o">.</span><span class="n">pgroup</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array_form</span>
+<span class="go">[0, 2, 3, 1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.corners">
+<tt class="descname">corners</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.corners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.corners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the corners of the Polyhedron.</p>
+<p>The method <tt class="docutils literal"><span class="pre">vertices</span></tt> is an alias for <tt class="docutils literal"><span class="pre">corners</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.array_form" title="sympy.combinatorics.polyhedron.Polyhedron.array_form"><tt class="xref py py-obj docutils literal"><span class="pre">array_form</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.cyclic_form" title="sympy.combinatorics.polyhedron.Polyhedron.cyclic_form"><tt class="xref py py-obj docutils literal"><span class="pre">cyclic_form</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Polyhedron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Polyhedron</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="s">&#39;abcd&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">corners</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">vertices</span> <span class="o">==</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.cyclic_form">
+<tt class="descname">cyclic_form</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.cyclic_form"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.cyclic_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indices of the corners in cyclic notation.</p>
+<p>The indices are given relative to the original position of corners.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.corners" title="sympy.combinatorics.polyhedron.Polyhedron.corners"><tt class="xref py py-obj docutils literal"><span class="pre">corners</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.array_form" title="sympy.combinatorics.polyhedron.Polyhedron.array_form"><tt class="xref py py-obj docutils literal"><span class="pre">array_form</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.edges">
+<tt class="descname">edges</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the faces of the polyhedra we can get the edges.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Polyhedron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corners</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">faces</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Polyhedron</span><span class="p">(</span><span class="n">corners</span><span class="p">,</span> <span class="n">faces</span><span class="p">)</span><span class="o">.</span><span class="n">edges</span>
+<span class="go">{(0, 1), (0, 2), (1, 2)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.faces">
+<tt class="descname">faces</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the faces of the Polyhedron.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.pgroup">
+<tt class="descname">pgroup</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.pgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.pgroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the permutations of the Polyhedron.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.reset">
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return corners to their original positions.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.polyhedron</span> <span class="kn">import</span> <span class="n">tetrahedron</span> <span class="k">as</span> <span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(0, 1, 2, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(0, 2, 3, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(0, 1, 2, 3)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.rotate">
+<tt class="descname">rotate</tt><big>(</big><em>perm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a permutation to the polyhedron <em>in place</em>. The permutation
+may be given as a Permutation instance or an integer indicating
+which permutation from pgroup of the Polyhedron should be
+applied.</p>
+<p>This is an operation that is analogous to rotation about
+an axis by a fixed increment.</p>
+<p class="rubric">Notes</p>
+<p>When a Permutation is applied, no check is done to see if that
+is a valid permutation for the Polyhedron. For example, a cube
+could be given a permutation which effectively swaps only 2
+vertices. A valid permutation (that rotates the object in a
+physical way) will be obtained if one only uses
+permutations from the <tt class="docutils literal"><span class="pre">pgroup</span></tt> of the Polyhedron. On the other
+hand, allowing arbitrary rotations (applications of permutations)
+gives a way to follow named elements rather than indices since
+Polyhedron allows vertices to be named while Permutation works
+only with indices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Polyhedron</span><span class="p">,</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.polyhedron</span> <span class="kn">import</span> <span class="n">cube</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(0, 1, 2, 3, 4, 5, 6, 7)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(1, 2, 3, 0, 5, 6, 7, 4)</span>
+</pre></div>
+</div>
+<p>A non-physical &#8220;rotation&#8221; that is not prohibited by this method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">Permutation</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]],</span> <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cube</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(0, 2, 1, 3, 4, 5, 6, 7)</span>
+</pre></div>
+</div>
+<p>Polyhedron can be used to follow elements of set that are
+identified by letters instead of integers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">shadow</span> <span class="o">=</span> <span class="n">h5</span> <span class="o">=</span> <span class="n">Polyhedron</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="s">&#39;abcde&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Permutation</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h5</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h5</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">(d, a, b, c, e)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">==</span> <span class="n">shadow</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">copy</span> <span class="o">=</span> <span class="n">h5</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h5</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h5</span><span class="o">.</span><span class="n">corners</span> <span class="o">==</span> <span class="n">copy</span><span class="o">.</span><span class="n">corners</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.size">
+<tt class="descname">size</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/polyhedron.html#Polyhedron.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of corners of the Polyhedron.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.polyhedron.Polyhedron.vertices">
+<tt class="descname">vertices</tt><a class="headerlink" href="#sympy.combinatorics.polyhedron.Polyhedron.vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the corners of the Polyhedron.</p>
+<p>The method <tt class="docutils literal"><span class="pre">vertices</span></tt> is an alias for <tt class="docutils literal"><span class="pre">corners</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.array_form" title="sympy.combinatorics.polyhedron.Polyhedron.array_form"><tt class="xref py py-obj docutils literal"><span class="pre">array_form</span></tt></a>, <a class="reference internal" href="#sympy.combinatorics.polyhedron.Polyhedron.cyclic_form" title="sympy.combinatorics.polyhedron.Polyhedron.cyclic_form"><tt class="xref py py-obj docutils literal"><span class="pre">cyclic_form</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Polyhedron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Polyhedron</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="s">&#39;abcd&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">corners</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">vertices</span> <span class="o">==</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="perm_groups.html"
+                        title="previous chapter">Permutation Groups</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="prufer.html"
+                        title="next chapter">Prufer Sequences</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/polyhedron.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prufer.html" title="Prufer Sequences"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="perm_groups.html" title="Permutation Groups"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

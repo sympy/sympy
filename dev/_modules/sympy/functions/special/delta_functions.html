@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.delta_functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.delta_functions</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">diff</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Eq</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">PolynomialError</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.complexes</span> <span class="kn">import</span> <span class="n">im</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.piecewise</span> <span class="kn">import</span> <span class="n">Piecewise</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">################################ DELTA FUNCTION ###############################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="DiracDelta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.delta_functions.DiracDelta">[docs]</a><span class="k">class</span> <span class="nc">DiracDelta</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DiracDelta function and its derivatives.</span>
+
+<span class="sd">    DiracDelta function has the following properties:</span>
+
+<span class="sd">    1) ``diff(Heaviside(x),x) = DiracDelta(x)``</span>
+<span class="sd">    2) ``integrate(DiracDelta(x-a)*f(x),(x,-oo,oo)) = f(a)`` and</span>
+<span class="sd">       ``integrate(DiracDelta(x-a)*f(x),(x,a-e,a+e)) = f(a)``</span>
+<span class="sd">    3) ``DiracDelta(x) = 0`` for all ``x != 0``</span>
+<span class="sd">    4) ``DiracDelta(g(x)) = Sum_i(DiracDelta(x-x_i)/abs(g&#39;(x_i)))``</span>
+<span class="sd">       Where ``x_i``-s are the roots of ``g``</span>
+
+<span class="sd">    Derivatives of ``k``-th order of DiracDelta have the following property:</span>
+
+<span class="sd">    5) ``DiracDelta(x,k) = 0``, for all ``x != 0``</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Heaviside</span>
+<span class="sd">    simplify, is_simple</span>
+<span class="sd">    sympy.functions.special.tensor_functions.KroneckerDelta</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://mathworld.wolfram.com/DeltaFunction.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c">#I didn&#39;t know if there is a better way to handle default arguments</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="n">k</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Error: the second argument of DiracDelta must be </span><span class="se">\</span>
+<span class="s">            a non-negative integer, </span><span class="si">%s</span><span class="s"> given instead.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,))</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_positive</span> <span class="ow">or</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+<div class="viewcode-block" id="DiracDelta.simplify"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.delta_functions.DiracDelta.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;simplify(self, x)</span>
+
+<span class="sd">           Compute a simplified representation of the function using</span>
+<span class="sd">           property number 4.</span>
+
+<span class="sd">           x can be:</span>
+
+<span class="sd">           - a symbol</span>
+
+<span class="sd">           Examples</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import DiracDelta</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x*y).simplify(x)</span>
+<span class="sd">           DiracDelta(x)/Abs(y)</span>
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x*y).simplify(y)</span>
+<span class="sd">           DiracDelta(y)/Abs(x)</span>
+
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x**2 + x - 2).simplify(x)</span>
+<span class="sd">           DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3</span>
+
+<span class="sd">           See Also</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           is_simple, Directdelta</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.polyroots</span> <span class="kn">import</span> <span class="n">roots</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">argroots</span> <span class="o">=</span> <span class="n">roots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">,</span> <span class="n">multiple</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">darg</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">argroots</span><span class="p">:</span>
+                <span class="c">#should I care about multiplicities of roots?</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">darg</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">darg</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">valid</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">valid</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="n">PolynomialError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="DiracDelta.is_simple"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.delta_functions.DiracDelta.is_simple">[docs]</a>    <span class="k">def</span> <span class="nf">is_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;is_simple(self, x)</span>
+
+<span class="sd">           Tells whether the argument(args[0]) of DiracDelta is a linear</span>
+<span class="sd">           expression in x.</span>
+
+<span class="sd">           x can be:</span>
+
+<span class="sd">           - a symbol</span>
+
+<span class="sd">           Examples</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import DiracDelta, cos</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x*y).is_simple(x)</span>
+<span class="sd">           True</span>
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x*y).is_simple(y)</span>
+<span class="sd">           True</span>
+
+<span class="sd">           &gt;&gt;&gt; DiracDelta(x**2+x-2).is_simple(x)</span>
+<span class="sd">           False</span>
+
+<span class="sd">           &gt;&gt;&gt; DiracDelta(cos(x)).is_simple(x)</span>
+<span class="sd">           False</span>
+
+<span class="sd">           See Also</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           simplify, Directdelta</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">as_poly</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_latex_no_arg</span><span class="p">(</span><span class="n">printer</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;\delta&#39;</span>
+
+
+<span class="c">###############################################################################</span>
+<span class="c">############################## HEAVISIDE FUNCTION #############################</span>
+<span class="c">###############################################################################</span>
+
+</div>
+<div class="viewcode-block" id="Heaviside"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.delta_functions.Heaviside">[docs]</a><span class="k">class</span> <span class="nc">Heaviside</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Heaviside Piecewise function</span>
+
+<span class="sd">    Heaviside function has the following properties [*]_:</span>
+
+<span class="sd">    1) ``diff(Heaviside(x),x) = DiracDelta(x)``</span>
+<span class="sd">                        ``( 0, if x &lt; 0``</span>
+<span class="sd">    2) ``Heaviside(x) = &lt; ( 1/2 if x==0 [*]``</span>
+<span class="sd">                        ``( 1, if x &gt; 0``</span>
+
+<span class="sd">    .. [*] Regarding to the value at 0, Mathematica defines ``H(0) = 1``,</span>
+<span class="sd">           but Maple uses ``H(0) = undefined``</span>
+
+<span class="sd">    I think is better to have H(0) = 1/2, due to the following::</span>
+
+<span class="sd">        integrate(DiracDelta(x), x) = Heaviside(x)</span>
+<span class="sd">        integrate(DiracDelta(x), (x, -oo, oo)) = 1</span>
+
+<span class="sd">    and since DiracDelta is a symmetric function,</span>
+<span class="sd">    ``integrate(DiracDelta(x), (x, 0, oo))`` should be 1/2 (which is what</span>
+<span class="sd">    Maple returns).</span>
+
+<span class="sd">    If we take ``Heaviside(0) = 1/2``, we would have</span>
+<span class="sd">    ``integrate(DiracDelta(x), (x, 0, oo)) = ``</span>
+<span class="sd">    ``Heaviside(oo) - Heaviside(0) = 1 - 1/2 = 1/2``</span>
+<span class="sd">    and</span>
+<span class="sd">    ``integrate(DiracDelta(x), (x, -oo, 0)) = ``</span>
+<span class="sd">    ``Heaviside(0) - Heaviside(-oo) = 1/2 - 0 = 1/2``</span>
+
+<span class="sd">    If we consider, instead ``Heaviside(0) = 1``, we would have</span>
+<span class="sd">    ``integrate(DiracDelta(x), (x, 0, oo)) = Heaviside(oo) - Heaviside(0) = 0``</span>
+<span class="sd">    and</span>
+<span class="sd">    ``integrate(DiracDelta(x), (x, -oo, 0)) = Heaviside(0) - Heaviside(-oo) = 1``</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    DiracDelta</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># property number 1</span>
+            <span class="k">return</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">elif</span> <span class="n">im</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="n">is_nonzero</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Function defined only for Real Values. Complex part: </span><span class="si">%s</span><span class="s">  found in </span><span class="si">%s</span><span class="s"> .&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">im</span><span class="p">(</span><span class="n">arg</span><span class="p">)),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span>
+        <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Piecewise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">arg</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.operatorset &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.operatorset</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; A module for mapping operators to their corresponding eigenstates</span>
+<span class="sd">and vice versa</span>
+
+<span class="sd">It contains a global dictionary with eigenstate-operator pairings.</span>
+<span class="sd">If a new state-operator pair is created, this dictionary should be</span>
+<span class="sd">updated as well.</span>
+
+<span class="sd">It also contains functions operators_to_state and state_to_operators</span>
+<span class="sd">for mapping between the two. These can handle both classes and</span>
+<span class="sd">instances of operators and states. See the individual function</span>
+<span class="sd">descriptions for details.</span>
+
+<span class="sd">TODO List:</span>
+<span class="sd">- Update the dictionary with a complete list of state-operator pairs</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="p">(</span><span class="n">XOp</span><span class="p">,</span> <span class="n">YOp</span><span class="p">,</span> <span class="n">ZOp</span><span class="p">,</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">PxOp</span><span class="p">,</span> <span class="n">PxKet</span><span class="p">,</span>
+                                             <span class="n">PositionKet3D</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">StateBase</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">,</span> <span class="n">Ket</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.spin</span> <span class="kn">import</span> <span class="p">(</span><span class="n">JxOp</span><span class="p">,</span> <span class="n">JyOp</span><span class="p">,</span> <span class="n">JzOp</span><span class="p">,</span> <span class="n">J2Op</span><span class="p">,</span> <span class="n">JxKet</span><span class="p">,</span> <span class="n">JyKet</span><span class="p">,</span>
+                                        <span class="n">JzKet</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;operators_to_state&#39;</span><span class="p">,</span>
+    <span class="s">&#39;state_to_operators&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#state_mapping stores the mappings between states and their associated</span>
+<span class="c">#operators or tuples of operators. This should be updated when new</span>
+<span class="c">#classes are written! Entries are of the form PxKet : PxOp or</span>
+<span class="c">#something like 3DKet : (ROp, ThetaOp, PhiOp)</span>
+
+<span class="c">#frozenset is used so that the reverse mapping can be made</span>
+<span class="c">#(regular sets are not hashable because they are mutable</span>
+<span class="n">state_mapping</span> <span class="o">=</span> <span class="p">{</span> <span class="n">JxKet</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">((</span><span class="n">J2Op</span><span class="p">,</span> <span class="n">JxOp</span><span class="p">)),</span>
+                  <span class="n">JyKet</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">((</span><span class="n">J2Op</span><span class="p">,</span> <span class="n">JyOp</span><span class="p">)),</span>
+                  <span class="n">JzKet</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">((</span><span class="n">J2Op</span><span class="p">,</span> <span class="n">JzOp</span><span class="p">)),</span>
+                  <span class="n">Ket</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
+                  <span class="n">PositionKet3D</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">((</span><span class="n">XOp</span><span class="p">,</span> <span class="n">YOp</span><span class="p">,</span> <span class="n">ZOp</span><span class="p">)),</span>
+                  <span class="n">PxKet</span><span class="p">:</span> <span class="n">PxOp</span><span class="p">,</span>
+                  <span class="n">XKet</span><span class="p">:</span> <span class="n">XOp</span> <span class="p">}</span>
+
+<span class="n">op_mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="operators_to_state"><a class="viewcode-back" href="../../../../modules/physics/quantum/operatorset.html#sympy.physics.quantum.operatorset.operators_to_state">[docs]</a><span class="k">def</span> <span class="nf">operators_to_state</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns the eigenstate of the given operator or set of operators</span>
+
+<span class="sd">    A global function for mapping operator classes to their associated</span>
+<span class="sd">    states. It takes either an Operator or a set of operators and</span>
+<span class="sd">    returns the state associated with these.</span>
+
+<span class="sd">    This function can handle both instances of a given operator or</span>
+<span class="sd">    just the class itself (i.e. both XOp() and XOp)</span>
+
+<span class="sd">    There are multiple use cases to consider:</span>
+
+<span class="sd">    1) A class or set of classes is passed: First, we try to</span>
+<span class="sd">    instantiate default instances for these operators. If this fails,</span>
+<span class="sd">    then the class is simply returned. If we succeed in instantiating</span>
+<span class="sd">    default instances, then we try to call state._operators_to_state</span>
+<span class="sd">    on the operator instances. If this fails, the class is returned.</span>
+<span class="sd">    Otherwise, the instance returned by _operators_to_state is returned.</span>
+
+<span class="sd">    2) An instance or set of instances is passed: In this case,</span>
+<span class="sd">    state._operators_to_state is called on the instances passed. If</span>
+<span class="sd">    this fails, a state class is returned. If the method returns an</span>
+<span class="sd">    instance, that instance is returned.</span>
+
+<span class="sd">    In both cases, if the operator class or set does not exist in the</span>
+<span class="sd">    state_mapping dictionary, None is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    arg: Operator or set</span>
+<span class="sd">         The class or instance of the operator or set of operators</span>
+<span class="sd">         to be mapped to a state</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, PxOp</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.operatorset import operators_to_state</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.operator import Operator</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(XOp)</span>
+<span class="sd">    |x&gt;</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(XOp())</span>
+<span class="sd">    |x&gt;</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(PxOp)</span>
+<span class="sd">    |px&gt;</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(PxOp())</span>
+<span class="sd">    |px&gt;</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(Operator)</span>
+<span class="sd">    |psi&gt;</span>
+<span class="sd">    &gt;&gt;&gt; operators_to_state(Operator())</span>
+<span class="sd">    |psi&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Argument is not an Operator or a set!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operators</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span>
+                   <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Set is not all Operators!&quot;</span><span class="p">)</span>
+
+        <span class="c">#ops = tuple(operators)</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ops</span> <span class="ow">in</span> <span class="n">op_mapping</span><span class="p">:</span>  <span class="c"># ops is a list of classes in this case</span>
+            <span class="c">#Try to get an object from default instances of the</span>
+            <span class="c">#operators...if this fails, return the class</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">op_instances</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="p">()</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">]</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_state</span><span class="p">(</span><span class="n">op_mapping</span><span class="p">[</span><span class="n">ops</span><span class="p">],</span> <span class="nb">set</span><span class="p">(</span><span class="n">op_instances</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">op_mapping</span><span class="p">[</span><span class="n">ops</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">ret</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">]</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">classes</span> <span class="ow">in</span> <span class="n">op_mapping</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_state</span><span class="p">(</span><span class="n">op_mapping</span><span class="p">[</span><span class="n">classes</span><span class="p">],</span> <span class="n">ops</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">return</span> <span class="n">ret</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">operators</span> <span class="ow">in</span> <span class="n">op_mapping</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">op_instance</span> <span class="o">=</span> <span class="n">operators</span><span class="p">()</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_state</span><span class="p">(</span><span class="n">op_mapping</span><span class="p">[</span><span class="n">operators</span><span class="p">],</span> <span class="n">op_instance</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">op_mapping</span><span class="p">[</span><span class="n">operators</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">ret</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span> <span class="ow">in</span> <span class="n">op_mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_get_state</span><span class="p">(</span><span class="n">op_mapping</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">operators</span><span class="p">)],</span> <span class="n">operators</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="state_to_operators"><a class="viewcode-back" href="../../../../modules/physics/quantum/operatorset.html#sympy.physics.quantum.operatorset.state_to_operators">[docs]</a><span class="k">def</span> <span class="nf">state_to_operators</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns the operator or set of operators corresponding to the</span>
+<span class="sd">    given eigenstate</span>
+
+<span class="sd">    A global function for mapping state classes to their associated</span>
+<span class="sd">    operators or sets of operators. It takes either a state class</span>
+<span class="sd">    or instance.</span>
+
+<span class="sd">    This function can handle both instances of a given state or just</span>
+<span class="sd">    the class itself (i.e. both XKet() and XKet)</span>
+
+<span class="sd">    There are multiple use cases to consider:</span>
+
+<span class="sd">    1) A state class is passed: In this case, we first try</span>
+<span class="sd">    instantiating a default instance of the class. If this succeeds,</span>
+<span class="sd">    then we try to call state._state_to_operators on that instance.</span>
+<span class="sd">    If the creation of the default instance or if the calling of</span>
+<span class="sd">    _state_to_operators fails, then either an operator class or set of</span>
+<span class="sd">    operator classes is returned. Otherwise, the appropriate</span>
+<span class="sd">    operator instances are returned.</span>
+
+<span class="sd">    2) A state instance is returned: Here, state._state_to_operators</span>
+<span class="sd">    is called for the instance. If this fails, then a class or set of</span>
+<span class="sd">    operator classes is returned. Otherwise, the instances are returned.</span>
+
+<span class="sd">    In either case, if the state&#39;s class does not exist in</span>
+<span class="sd">    state_mapping, None is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    arg: StateBase class or instance (or subclasses)</span>
+<span class="sd">         The class or instance of the state to be mapped to an</span>
+<span class="sd">         operator or set of operators</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XKet, PxKet, XBra, PxBra</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.operatorset import state_to_operators</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.state import Ket, Bra</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(XKet)</span>
+<span class="sd">    X</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(XKet())</span>
+<span class="sd">    X</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(PxKet)</span>
+<span class="sd">    Px</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(PxKet())</span>
+<span class="sd">    Px</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(PxBra)</span>
+<span class="sd">    Px</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(XBra)</span>
+<span class="sd">    X</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(Ket)</span>
+<span class="sd">    O</span>
+<span class="sd">    &gt;&gt;&gt; state_to_operators(Bra)</span>
+<span class="sd">    O</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Argument is not a state!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">state_mapping</span><span class="p">:</span>  <span class="c"># state is a class</span>
+        <span class="n">state_inst</span> <span class="o">=</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_ops</span><span class="p">(</span><span class="n">state_inst</span><span class="p">,</span>
+                           <span class="n">_make_set</span><span class="p">(</span><span class="n">state_mapping</span><span class="p">[</span><span class="n">state</span><span class="p">]),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">state_mapping</span><span class="p">[</span><span class="n">state</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="ow">in</span> <span class="n">state_mapping</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_ops</span><span class="p">(</span><span class="n">state</span><span class="p">,</span>
+                       <span class="n">_make_set</span><span class="p">(</span><span class="n">state_mapping</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">state</span><span class="p">)]),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span> <span class="ow">in</span> <span class="n">state_mapping</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_ops</span><span class="p">(</span><span class="n">state</span><span class="p">,</span>
+                       <span class="n">_make_set</span><span class="p">(</span><span class="n">state_mapping</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()]))</span>
+    <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span> <span class="ow">in</span> <span class="n">state_mapping</span><span class="p">:</span>
+        <span class="n">state_inst</span> <span class="o">=</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">_get_ops</span><span class="p">(</span><span class="n">state_inst</span><span class="p">,</span>
+                           <span class="n">_make_set</span><span class="p">(</span><span class="n">state_mapping</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()]))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">state_mapping</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">_make_set</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_make_default</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">expr</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">expr</span>
+
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">_get_state</span><span class="p">(</span><span class="n">state_class</span><span class="p">,</span> <span class="n">ops</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="c"># Try to get a state instance from the operator INSTANCES.</span>
+    <span class="c"># If this fails, get the class</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">state_class</span><span class="o">.</span><span class="n">_operators_to_state</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">state_class</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">_get_ops</span><span class="p">(</span><span class="n">state_inst</span><span class="p">,</span> <span class="n">op_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="c"># Try to get operator instances from the state INSTANCE.</span>
+    <span class="c"># If this fails, just return the classes</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">state_inst</span><span class="o">.</span><span class="n">_state_to_operators</span><span class="p">(</span><span class="n">op_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op_classes</span><span class="p">,</span> <span class="p">(</span><span class="nb">set</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">)):</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">op_classes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">op_classes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">_make_set</span><span class="p">(</span><span class="n">ops</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ops</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

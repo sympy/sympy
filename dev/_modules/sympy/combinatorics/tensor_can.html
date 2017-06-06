@@ -1,0 +1,1300 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.combinatorics.tensor_can &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.combinatorics" href="../combinatorics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" accesskey="U">sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.combinatorics.tensor_can</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.permutations</span> <span class="kn">import</span> <span class="n">Permutation</span><span class="p">,</span> <span class="n">_af_rmul</span><span class="p">,</span> <span class="n">_af_rmuln</span><span class="p">,</span>\
+    <span class="n">_af_invert</span><span class="p">,</span> <span class="n">_af_new</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.perm_groups</span> <span class="kn">import</span> <span class="n">PermutationGroup</span><span class="p">,</span> <span class="n">_orbit</span><span class="p">,</span> \
+    <span class="n">_orbit_transversal</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.util</span> <span class="kn">import</span> <span class="n">_distribute_gens_by_base</span><span class="p">,</span> \
+    <span class="n">_orbits_transversals_from_bsgs</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    References for tensor canonicalization:</span>
+
+<span class="sd">    [1] R. Portugal &quot;Algorithmic simplification of tensor expressions&quot;,</span>
+<span class="sd">        J. Phys. A 32 (1999) 7779-7789</span>
+
+<span class="sd">    [2] R. Portugal, B.F. Svaiter &quot;Group-theoretic Approach for Symbolic</span>
+<span class="sd">        Tensor Manipulation: I. Free Indices&quot;</span>
+<span class="sd">        arXiv:math-ph/0107031v1</span>
+
+<span class="sd">    [3] L.R.U. Manssur, R. Portugal &quot;Group-theoretic Approach for Symbolic</span>
+<span class="sd">        Tensor Manipulation: II. Dummy Indices&quot;</span>
+<span class="sd">        arXiv:math-ph/0107032v1</span>
+
+<span class="sd">    [4] xperm.c part of XPerm written by J. M. Martin-Garcia</span>
+<span class="sd">        http://www.xact.es/index.html</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">dummy_sgs</span><span class="p">(</span><span class="n">dummies</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the strong generators for dummy indices</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    dummies : list of dummy indices</span>
+<span class="sd">        `dummies[2k], dummies[2k+1]` are paired indices</span>
+<span class="sd">    sym : symmetry under interchange of contracted dummies::</span>
+<span class="sd">        * None  no symmetry</span>
+<span class="sd">        * 0     commuting</span>
+<span class="sd">        * 1     anticommuting</span>
+
+<span class="sd">    n : number of indices</span>
+
+<span class="sd">    in base form the dummy indices are always in consecutive positions</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import dummy_sgs</span>
+<span class="sd">    &gt;&gt;&gt; dummy_sgs(range(2, 8), 0, 8)</span>
+<span class="sd">    [[0, 1, 3, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 5, 4, 6, 7, 8, 9],</span>
+<span class="sd">     [0, 1, 2, 3, 4, 5, 7, 6, 8, 9], [0, 1, 4, 5, 2, 3, 6, 7, 8, 9],</span>
+<span class="sd">     [0, 1, 2, 3, 6, 7, 4, 5, 8, 9]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummies</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">n</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># exchange of contravariant and covariant indices</span>
+    <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">[::</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sym</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">a</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="c"># rename dummy indices</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">:</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">2</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">3</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_min_dummies</span><span class="p">(</span><span class="n">dummies</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return list of minima of the orbits of indices in group of dummies</span>
+<span class="sd">    see `double_coset_can_rep` for the description of `dummies` and `sym`</span>
+<span class="sd">    indices is the initial list of dummy indices</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import _min_dummies</span>
+<span class="sd">    &gt;&gt;&gt; _min_dummies([list(range(2, 8))], [0], list(range(10)))</span>
+<span class="sd">    [0, 1, 2, 2, 2, 2, 2, 2, 8, 9]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dx</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dx</span><span class="p">:</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[:]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_types</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_types</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">break</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_trace_S</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">S_cosets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the representative h satisfying s[h[b]] == j</span>
+
+<span class="sd">    If there is not such a representative return None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">S_cosets</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="n">b</span><span class="p">]]</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">h</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="k">def</span> <span class="nf">_trace_D</span><span class="p">(</span><span class="n">gj</span><span class="p">,</span> <span class="n">p_i</span><span class="p">,</span> <span class="n">Dxtrav</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the representative h satisfying h[gj] == p_i</span>
+
+<span class="sd">    If there is not such a representative return None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">Dxtrav</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="n">gj</span><span class="p">]</span> <span class="o">==</span> <span class="n">p_i</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">h</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="k">def</span> <span class="nf">_dumx_remove</span><span class="p">(</span><span class="n">dumx</span><span class="p">,</span> <span class="n">dumx_flat</span><span class="p">,</span> <span class="n">p0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    remove p0 from dumx</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dx</span> <span class="ow">in</span> <span class="n">dumx</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">p0</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">dx</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">p0_paired</span> <span class="o">=</span> <span class="n">dx</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p0_paired</span> <span class="o">=</span> <span class="n">dx</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">dx</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">dx</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p0_paired</span><span class="p">)</span>
+        <span class="n">dumx_flat</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">dumx_flat</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p0_paired</span><span class="p">)</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">transversal2coset</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">transversal</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">transversal</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))])</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))]:</span>
+        <span class="n">j</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">[:</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="double_coset_can_rep"><a class="viewcode-back" href="../../../modules/combinatorics/tensor_can.html#sympy.combinatorics.tensor_can.double_coset_can_rep">[docs]</a><span class="k">def</span> <span class="nf">double_coset_can_rep</span><span class="p">(</span><span class="n">dummies</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">b_S</span><span class="p">,</span> <span class="n">sgens</span><span class="p">,</span> <span class="n">S_transversals</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Butler-Portugal algorithm for tensor canonicalization with dummy indices</span>
+
+<span class="sd">      dummies</span>
+<span class="sd">        list of lists of dummy indices,</span>
+<span class="sd">        one list for each type of index;</span>
+<span class="sd">        the dummy indices are put in order contravariant, covariant</span>
+<span class="sd">        [d0, -d0, d1, -d1, ...].</span>
+
+<span class="sd">      sym</span>
+<span class="sd">        list of the symmetries of the index metric for each type.</span>
+
+<span class="sd">      possible symmetries of the metrics</span>
+<span class="sd">              * 0     symmetric</span>
+<span class="sd">              * 1     antisymmetric</span>
+<span class="sd">              * None  no symmetry</span>
+
+<span class="sd">      b_S</span>
+<span class="sd">        base of a minimal slot symmetry BSGS.</span>
+
+<span class="sd">      sgens</span>
+<span class="sd">        generators of the slot symmetry BSGS.</span>
+
+<span class="sd">      S_transversals</span>
+<span class="sd">        transversals for the slot BSGS.</span>
+
+<span class="sd">      g</span>
+<span class="sd">        permutation representing the tensor.</span>
+
+<span class="sd">    Return 0 if the tensor is zero, else return the array form of</span>
+<span class="sd">    the permutation representing the canonical form of the tensor.</span>
+
+
+<span class="sd">    A tensor with dummy indices can be represented in a number</span>
+<span class="sd">    of equivalent ways which typically grows exponentially with</span>
+<span class="sd">    the number of indices. To be able to establish if two tensors</span>
+<span class="sd">    with many indices are equal becomes computationally very slow</span>
+<span class="sd">    in absence of an efficient algorithm.</span>
+
+<span class="sd">    The Butler-Portugal algorithm [3] is an efficient algorithm to</span>
+<span class="sd">    put tensors in canonical form, solving the above problem.</span>
+
+<span class="sd">    Portugal observed that a tensor can be represented by a permutation,</span>
+<span class="sd">    and that the class of tensors equivalent to it under slot and dummy</span>
+<span class="sd">    symmetries is equivalent to the double coset `D*g*S`</span>
+<span class="sd">    (Note: in this documentation we use the conventions for multiplication</span>
+<span class="sd">    of permutations p, q with (p*q)(i) = p[q[i]] which is opposite</span>
+<span class="sd">    to the one used in the Permutation class)</span>
+
+<span class="sd">    Using the algorithm by Butler to find a representative of the</span>
+<span class="sd">    double coset one can find a canonical form for the tensor.</span>
+
+<span class="sd">    To see this correspondence,</span>
+<span class="sd">    let `g` be a permutation in array form; a tensor with indices `ind`</span>
+<span class="sd">    (the indices including both the contravariant and the covariant ones)</span>
+<span class="sd">    can be written as</span>
+
+<span class="sd">    `t = T(ind[g[0],..., ind[g[n-1]])`,</span>
+
+<span class="sd">    where `n= len(ind)`;</span>
+<span class="sd">    `g` has size `n + 2`, the last two indices for the sign of the tensor</span>
+<span class="sd">    (trick introduced in [4]).</span>
+
+<span class="sd">    A slot symmetry transformation `s` is a permutation acting on the slots</span>
+<span class="sd">    `t -&gt; T(ind[(g*s)[0]],..., ind[(g*s)[n-1]])`</span>
+
+<span class="sd">    A dummy symmetry transformation acts on `ind`</span>
+<span class="sd">    `t -&gt; T(ind[(d*g)[0]],..., ind[(d*g)[n-1]])`</span>
+
+<span class="sd">    Being interested only in the transformations of the tensor under</span>
+<span class="sd">    these symmetries, one can represent the tensor by `g`, which transforms</span>
+<span class="sd">    as</span>
+
+<span class="sd">    `g -&gt; d*g*s`, so it belongs to the coset `D*g*S`.</span>
+
+<span class="sd">    Let us explain the conventions by an example.</span>
+
+<span class="sd">    Given a tensor `T^{d3 d2 d1}{}_{d1 d2 d3}` with the slot symmetries</span>
+<span class="sd">          `T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}`</span>
+
+<span class="sd">          `T^{a0 a1 a2 a3 a4 a5} = -T^{a4 a1 a2 a3 a0 a5}`</span>
+
+<span class="sd">    and symmetric metric, find the tensor equivalent to it which</span>
+<span class="sd">    is the lowest under the ordering of indices:</span>
+<span class="sd">    lexicographic ordering `d1, d2, d3` then and contravariant index</span>
+<span class="sd">    before covariant index; that is the canonical form of the tensor.</span>
+
+<span class="sd">    The canonical form is `-T^{d1 d2 d3}{}_{d1 d2 d3}`</span>
+<span class="sd">    obtained using `T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}`.</span>
+
+<span class="sd">    To convert this problem in the input for this function,</span>
+<span class="sd">    use the following labelling of the index names</span>
+<span class="sd">    (- for covariant for short) `d1, -d1, d2, -d2, d3, -d3`</span>
+
+<span class="sd">    `T^{d3 d2 d1}{}_{d1 d2 d3}` corresponds to `g = [4,2,0,1,3,5,6,7]`</span>
+<span class="sd">    where the last two indices are for the sign</span>
+
+<span class="sd">    `sgens = [Permutation(0,2)(6,7), Permutation(0,4)(6,7)]`</span>
+
+<span class="sd">    sgens[0] is the slot symmetry `-(0,2)`</span>
+<span class="sd">    `T^{a0 a1 a2 a3 a4 a5} = -T^{a2 a1 a0 a3 a4 a5}`</span>
+
+<span class="sd">    sgens[1] is the slot symmetry `-(0,4)`</span>
+<span class="sd">    `T^{a0 a1 a2 a3 a4 a5} = -T^{a4 a1 a2 a3 a0 a5}`</span>
+
+<span class="sd">    The dummy symmetry group D is generated by the strong base generators</span>
+<span class="sd">    `[(0,1),(2,3),(4,5),(0,1)(2,3),(2,3)(4,5)]`</span>
+
+<span class="sd">    The dummy symmetry acts from the left</span>
+<span class="sd">    `d = [1,0,2,3,4,5,6,7]`  exchange `d1 -&gt; -d1`</span>
+<span class="sd">    `T^{d3 d2 d1}{}_{d1 d2 d3} == T^{d3 d2}{}_{d1}{}^{d1}{}_{d2 d3}`</span>
+
+<span class="sd">    `g=[4,2,0,1,3,5,6,7]  -&gt; [4,2,1,0,3,5,6,7] = _af_rmul(d, g)`</span>
+<span class="sd">    which differs from `_af_rmul(g, d)`.</span>
+
+<span class="sd">    The slot symmetry acts from the right</span>
+<span class="sd">    `s = [2,1,0,3,4,5,7,6]`  exchanges slots 0 and 2 and changes sign</span>
+<span class="sd">    `T^{d3 d2 d1}{}_{d1 d2 d3} == -T^{d1 d2 d3}{}_{d1 d2 d3}`</span>
+
+<span class="sd">    `g=[4,2,0,1,3,5,6,7]  -&gt; [0,2,4,1,3,5,7,6] = _af_rmul(g, s)`</span>
+
+<span class="sd">    Example in which the tensor is zero, same slot symmetries as above:</span>
+<span class="sd">    `T^{d3}{}_{d1,d2}{}^{d1}{}_{d3}{}^{d2}`</span>
+
+<span class="sd">    `= -T^{d3}{}_{d1,d3}{}^{d1}{}_{d2}{}^{d2}`   under slot symmetry `-(2,4)`;</span>
+
+<span class="sd">    `= T_{d3 d1}{}^{d3}{}^{d1}{}_{d2}{}^{d2}`    under slot symmetry `-(0,2)`;</span>
+
+<span class="sd">    `= T^{d3}{}_{d1 d3}{}^{d1}{}_{d2}{}^{d2}`    symmetric metric;</span>
+
+<span class="sd">    `= 0`  since two of these lines have tensors differ only for the sign.</span>
+
+<span class="sd">    The double coset D*g*S consists of permutations `h = d*g*s` corresponding</span>
+<span class="sd">    to equivalent tensors; if there are two `h` which are the same apart</span>
+<span class="sd">    from the sign, return zero; otherwise</span>
+<span class="sd">    choose as representative the tensor with indices</span>
+<span class="sd">    ordered lexicographically according to `[d1, -d1, d2, -d2, d3, -d3]`</span>
+<span class="sd">    that is `rep = min(D*g*S) = min([d*g*s for d in D for s in S])`</span>
+
+<span class="sd">    The indices are fixed one by one; first choose the lowest index</span>
+<span class="sd">    for slot 0, then the lowest remaining index for slot 1, etc.</span>
+<span class="sd">    Doing this one obtains a chain of stabilizers</span>
+
+<span class="sd">    `S -&gt; S_{b0} -&gt; S_{b0,b1} -&gt; ...` and</span>
+<span class="sd">    `D -&gt; D_{p0} -&gt; D_{p0,p1} -&gt; ...`</span>
+
+<span class="sd">    where `[b0, b1, ...] = range(b)` is a base of the symmetric group;</span>
+<span class="sd">    the strong base `b_S` of S is an ordered sublist of it;</span>
+<span class="sd">    therefore it is sufficient to compute once the</span>
+<span class="sd">    strong base generators of S using the Schreier-Sims algorithm;</span>
+<span class="sd">    the stabilizers of the strong base generators are the</span>
+<span class="sd">    strong base generators of the stabilizer subgroup.</span>
+
+<span class="sd">    `dbase = [p0,p1,...]` is not in general in lexicographic order,</span>
+<span class="sd">    so that one must recompute the strong base generators each time;</span>
+<span class="sd">    however this is trivial, there is no need to use the Schreier-Sims</span>
+<span class="sd">    algorithm for D.</span>
+
+<span class="sd">    The algorithm keeps a TAB of elements `(s_i, d_i, h_i)`</span>
+<span class="sd">    where `h_i = d_i*g*s_i` satisfying `h_i[j] = p_j` for `0 &lt;= j &lt; i`</span>
+<span class="sd">    starting from `s_0 = id, d_0 = id, h_0 = g`.</span>
+
+<span class="sd">    The equations `h_0[0] = p_0, h_1[1] = p_1,...` are solved in this order,</span>
+<span class="sd">    choosing each time the lowest possible value of p_i</span>
+
+<span class="sd">    For `j &lt; i`</span>
+<span class="sd">    `d_i*g*s_i*S_{b_0,...,b_{i-1}}*b_j = D_{p_0,...,p_{i-1}}*p_j`</span>
+<span class="sd">    so that for dx in `D_{p_0,...,p_{i-1}}` and sx in</span>
+<span class="sd">    `S_{base[0],...,base[i-1]}` one has `dx*d_i*g*s_i*sx*b_j = p_j`</span>
+
+<span class="sd">    Search for dx, sx such that this equation holds for `j = i`;</span>
+<span class="sd">    it can be written as `s_i*sx*b_j = J, dx*d_i*g*J = p_j`</span>
+<span class="sd">    `sx*b_j = s_i**-1*J; sx = trace(s_i**-1, S_{b_0,...,b_{i-1}})`</span>
+<span class="sd">    `dx**-1*p_j = d_i*g*J; dx = trace(d_i*g*J, D_{p_0,...,p_{i-1}})`</span>
+
+<span class="sd">    `s_{i+1} = s_i*trace(s_i**-1*J, S_{b_0,...,b_{i-1}})`</span>
+<span class="sd">    `d_{i+1} = trace(d_i*g*J, D_{p_0,...,p_{i-1}})**-1*d_i`</span>
+<span class="sd">    `h_{i+1}*b_i = d_{i+1}*g*s_{i+1}*b_i = p_i`</span>
+
+<span class="sd">    `h_n*b_j = p_j` for all j, so that `h_n` is the solution.</span>
+
+<span class="sd">    Add the found `(s, d, h)` to TAB1.</span>
+
+<span class="sd">    At the end of the iteration sort TAB1 with respect to the `h`;</span>
+<span class="sd">    if there are two consecutive `h` in TAB1 which differ only for the</span>
+<span class="sd">    sign, the tensor is zero, so return 0;</span>
+<span class="sd">    if there are two consecutive `h` which are equal, keep only one.</span>
+
+<span class="sd">    Then stabilize the slot generators under `i` and the dummy generators</span>
+<span class="sd">    under `p_i`.</span>
+
+<span class="sd">    Assign `TAB = TAB1` at the end of the iteration step.</span>
+
+<span class="sd">    At the end `TAB` contains a unique `(s, d, h)`, since all the slots</span>
+<span class="sd">    of the tensor `h` have been fixed to have the minimum value according</span>
+<span class="sd">    to the symmetries. The algorithm returns `h`.</span>
+
+<span class="sd">    It is important that the slot BSGS has lexicographic minimal base,</span>
+<span class="sd">    otherwise there is an `i` which does not belong to the slot base</span>
+<span class="sd">    for which `p_i` is fixed by the dummy symmetry only, while `i`</span>
+<span class="sd">    is not invariant from the slot stabilizer, so `p_i` is not in</span>
+<span class="sd">    general the minimal value.</span>
+
+<span class="sd">    This algorithm differs slightly from the original algorithm [3]:</span>
+<span class="sd">      the canonical form is minimal lexicographically, and</span>
+<span class="sd">      the BSGS has minimal base under lexicographic order.</span>
+<span class="sd">      Equal tensors `h` are eliminated from TAB.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.permutations import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.perm_groups import PermutationGroup</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import double_coset_can_rep, get_transversals</span>
+<span class="sd">    &gt;&gt;&gt; gens = [Permutation(x) for x in [[2,1,0,3,4,5,7,6], [4,1,2,3,0,5,7,6]]]</span>
+<span class="sd">    &gt;&gt;&gt; base = [0, 2]</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([4,2,0,1,3,5,6,7])</span>
+<span class="sd">    &gt;&gt;&gt; transversals = get_transversals(base, gens)</span>
+<span class="sd">    &gt;&gt;&gt; double_coset_can_rep([list(range(6))], [0], base, gens, transversals, g)</span>
+<span class="sd">    [0, 1, 2, 3, 4, 5, 7, 6]</span>
+
+<span class="sd">    &gt;&gt;&gt; g = Permutation([4,1,3,0,5,2,6,7])</span>
+<span class="sd">    &gt;&gt;&gt; double_coset_can_rep([list(range(6))], [0], base, gens, transversals, g)</span>
+<span class="sd">    0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">array_form</span>
+    <span class="n">num_dummies</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_dummies</span><span class="p">))</span>
+    <span class="n">all_metrics_with_sym</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sym</span><span class="p">])</span>
+    <span class="n">num_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+    <span class="n">dumx</span> <span class="o">=</span> <span class="n">dummies</span><span class="p">[:]</span>
+    <span class="n">dumx_flat</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dx</span> <span class="ow">in</span> <span class="n">dumx</span><span class="p">:</span>
+        <span class="n">dumx_flat</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+    <span class="n">b_S</span> <span class="o">=</span> <span class="n">b_S</span><span class="p">[:]</span>
+    <span class="n">sgensx</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="o">.</span><span class="n">_array_form</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">sgens</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">b_S</span><span class="p">:</span>
+        <span class="n">S_transversals</span> <span class="o">=</span> <span class="n">transversal2coset</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">b_S</span><span class="p">,</span> <span class="n">S_transversals</span><span class="p">)</span>
+    <span class="c"># strong generating set for D</span>
+    <span class="n">dsgsx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_types</span><span class="p">):</span>
+        <span class="n">dsgsx</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dummy_sgs</span><span class="p">(</span><span class="n">dumx</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sym</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num_dummies</span><span class="p">))</span>
+    <span class="n">ginv</span> <span class="o">=</span> <span class="n">_af_invert</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">idn</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="c"># TAB = list of entries (s, d, h) where h = _af_rmuln(d,g,s)</span>
+    <span class="c"># for short, in the following d*g*s means _af_rmuln(d,g,s)</span>
+    <span class="n">TAB</span> <span class="o">=</span> <span class="p">[(</span><span class="n">idn</span><span class="p">,</span> <span class="n">idn</span><span class="p">,</span> <span class="n">g</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">testb</span> <span class="o">=</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">b_S</span> <span class="ow">and</span> <span class="n">sgensx</span>
+        <span class="k">if</span> <span class="n">testb</span><span class="p">:</span>
+            <span class="n">sgensx1</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sgensx</span><span class="p">]</span>
+            <span class="n">deltab</span> <span class="o">=</span> <span class="n">_orbit</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">sgensx1</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">deltab</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">b</span><span class="p">])</span>
+        <span class="c"># p1 = min(IMAGES) = min(Union D_p*h*deltab for h in TAB)</span>
+        <span class="k">if</span> <span class="n">all_metrics_with_sym</span><span class="p">:</span>
+            <span class="n">md</span> <span class="o">=</span> <span class="n">_min_dummies</span><span class="p">(</span><span class="n">dumx</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">md</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">_orbit</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span>
+                <span class="n">ddx</span><span class="p">)</span> <span class="k">for</span> <span class="n">ddx</span> <span class="ow">in</span> <span class="n">dsgsx</span><span class="p">],</span> <span class="n">ii</span><span class="p">))</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span>
+
+        <span class="n">p_i</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">([</span><span class="n">md</span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">deltab</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">TAB</span><span class="p">])</span>
+        <span class="n">dsgsx1</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dsgsx</span><span class="p">]</span>
+        <span class="n">Dxtrav</span> <span class="o">=</span> <span class="n">_orbit_transversal</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dsgsx1</span><span class="p">,</span> <span class="n">p_i</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">af</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="n">dsgsx</span> <span class="k">else</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">Dxtrav</span><span class="p">:</span>
+            <span class="n">Dxtrav</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_invert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Dxtrav</span><span class="p">]</span>
+        <span class="c"># compute the orbit of p_i</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">p_i</span> <span class="ow">in</span> <span class="n">dumx</span><span class="p">[</span><span class="n">ii</span><span class="p">]:</span>
+                <span class="c"># the orbit is made by all the indices in dum[ii]</span>
+                <span class="k">if</span> <span class="n">sym</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">deltap</span> <span class="o">=</span> <span class="n">dumx</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c"># the orbit is made by all the even indices if p_i</span>
+                    <span class="c"># is even, by all the odd indices if p_i is odd</span>
+                    <span class="n">p_i_index</span> <span class="o">=</span> <span class="n">dumx</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">p_i</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>
+                    <span class="n">deltap</span> <span class="o">=</span> <span class="n">dumx</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="n">p_i_index</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">deltap</span> <span class="o">=</span> <span class="p">[</span><span class="n">p_i</span><span class="p">]</span>
+        <span class="n">TAB1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">nTAB</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">TAB</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">TAB</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">TAB</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">min</span><span class="p">([</span><span class="n">md</span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">deltab</span><span class="p">])</span> <span class="o">!=</span> <span class="n">p_i</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">deltab1</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">deltab</span> <span class="k">if</span> <span class="n">md</span><span class="p">[</span><span class="n">h</span><span class="p">[</span><span class="n">x</span><span class="p">]]</span> <span class="o">==</span> <span class="n">p_i</span><span class="p">]</span>
+            <span class="c"># NEXT = s*deltab1 intersection (d*g)**-1*deltap</span>
+            <span class="n">dg</span> <span class="o">=</span> <span class="n">_af_rmul</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+            <span class="n">dginv</span> <span class="o">=</span> <span class="n">_af_invert</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+            <span class="n">sdeltab</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">deltab1</span><span class="p">]</span>
+            <span class="n">gdeltap</span> <span class="o">=</span> <span class="p">[</span><span class="n">dginv</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">deltap</span><span class="p">]</span>
+            <span class="n">NEXT</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sdeltab</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gdeltap</span><span class="p">]</span>
+            <span class="c"># d, s satisfy</span>
+            <span class="c"># d*g*s*base[i-1] = p_{i-1}; using the stabilizers</span>
+            <span class="c"># d*g*s*S_{base[0],...,base[i-1]}*base[i-1] =</span>
+            <span class="c"># D_{p_0,...,p_{i-1}}*p_{i-1}</span>
+            <span class="c"># so that to find d1, s1 satisfying d1*g*s1*b = p_i</span>
+            <span class="c"># one can look for dx in D_{p_0,...,p_{i-1}} and</span>
+            <span class="c"># sx in S_{base[0],...,base[i-1]}</span>
+            <span class="c"># d1 = dx*d; s1 = s*sx</span>
+            <span class="c"># d1*g*s1*b = dx*d*g*s*sx*b = p_i</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">NEXT</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">testb</span><span class="p">:</span>
+                    <span class="c"># solve s1*b = j with s1 = s*sx for some element sx</span>
+                    <span class="c"># of the stabilizer of ..., base[i-1]</span>
+                    <span class="c"># sx*b = s**-1*j; sx = _trace_S(s, j,...)</span>
+                    <span class="c"># s1 = s*trace_S(s**-1*j,...)</span>
+                    <span class="n">s1</span> <span class="o">=</span> <span class="n">_trace_S</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">S_transversals</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">s1</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">s1</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">s1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s1</span> <span class="o">=</span> <span class="n">s</span>
+                <span class="c">#assert s1[b] == j  # invariant</span>
+                <span class="c"># solve d1*g*j = p_i with d1 = dx*d for some element dg</span>
+                <span class="c"># of the stabilizer of ..., p_{i-1}</span>
+                <span class="c"># dx**-1*p_i = d*g*j; dx**-1 = trace_D(d*g*j,...)</span>
+                <span class="c"># d1 = trace_D(d*g*j,...)**-1*d</span>
+                <span class="c"># to save an inversion in the inner loop; notice we did</span>
+                <span class="c"># Dxtrav = [perm_af_invert(x) for x in Dxtrav] out of the loop</span>
+                <span class="k">if</span> <span class="n">Dxtrav</span><span class="p">:</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">_trace_D</span><span class="p">(</span><span class="n">dg</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">p_i</span><span class="p">,</span> <span class="n">Dxtrav</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">d1</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">p_i</span> <span class="o">!=</span> <span class="n">dg</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                        <span class="k">continue</span>
+                    <span class="n">d1</span> <span class="o">=</span> <span class="n">idn</span>
+                <span class="k">assert</span> <span class="n">d1</span><span class="p">[</span><span class="n">dg</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">==</span> <span class="n">p_i</span>  <span class="c"># invariant</span>
+                <span class="n">d1</span> <span class="o">=</span> <span class="p">[</span><span class="n">d1</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+                <span class="n">h1</span> <span class="o">=</span> <span class="p">[</span><span class="n">d1</span><span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="n">ix</span><span class="p">]]</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">s1</span><span class="p">]</span>
+                <span class="c">#assert h1[b] == p_i  # invariant</span>
+                <span class="n">TAB1</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s1</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">h1</span><span class="p">))</span>
+
+        <span class="c"># if TAB contains equal permutations, keep only one of them;</span>
+        <span class="c"># if TAB contains equal permutations up to the sign, return 0</span>
+        <span class="n">TAB1</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">nTAB1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">TAB1</span><span class="p">)</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">size</span>
+        <span class="k">while</span> <span class="n">TAB1</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">TAB1</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">h</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">prev</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">prev</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">TAB</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="n">h</span>
+
+        <span class="c"># stabilize the SGS</span>
+        <span class="n">sgensx</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">sgensx</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">b_S</span><span class="p">:</span>
+            <span class="n">b_S</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">_dumx_remove</span><span class="p">(</span><span class="n">dumx</span><span class="p">,</span> <span class="n">dumx_flat</span><span class="p">,</span> <span class="n">p_i</span><span class="p">)</span>
+        <span class="n">dsgsx</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_types</span><span class="p">):</span>
+            <span class="n">dsgsx</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dummy_sgs</span><span class="p">(</span><span class="n">dumx</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sym</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">num_dummies</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">TAB</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">canonical_free</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">num_free</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    canonicalization of a tensor with respect to free indices</span>
+<span class="sd">    choosing the minimum with respect to lexicographical ordering</span>
+<span class="sd">    in the free indices</span>
+
+<span class="sd">    ``base``, ``gens``  BSGS for slot permutation group</span>
+<span class="sd">    ``g``               permutation representing the tensor</span>
+<span class="sd">    ``num_free``        number of free indices</span>
+<span class="sd">    The indices must be ordered with first the free indices</span>
+
+<span class="sd">    see explanation in double_coset_can_rep</span>
+<span class="sd">    The algorithm is a variation of the one given in [2].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import canonical_free</span>
+<span class="sd">    &gt;&gt;&gt; gens = [[1,0,2,3,5,4], [2,3,0,1,4,5],[0,1,3,2,5,4]]</span>
+<span class="sd">    &gt;&gt;&gt; gens = [Permutation(h) for h in gens]</span>
+<span class="sd">    &gt;&gt;&gt; base = [0, 2]</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([2, 1, 0, 3, 4, 5])</span>
+<span class="sd">    &gt;&gt;&gt; canonical_free(base, gens, g, 4)</span>
+<span class="sd">    [0, 3, 1, 2, 5, 4]</span>
+
+<span class="sd">    Consider the product of Riemann tensors</span>
+<span class="sd">    ``T = R^{a}_{d0}^{d1,d2}*R_{d2,d1}^{d0,b}``</span>
+<span class="sd">    The order of the indices is ``[a,b,d0,-d0,d1,-d1,d2,-d2]``</span>
+<span class="sd">    The permutation corresponding to the tensor is</span>
+<span class="sd">    ``g = [0,3,4,6,7,5,2,1,8,9]``</span>
+
+<span class="sd">    In particular ``a`` is position ``0``, ``b`` is in position ``9``.</span>
+<span class="sd">    Use the slot symmetries to get `T` is a form which is the minimal</span>
+<span class="sd">    in lexicographic order in the free indices ``a`` and ``b``, e.g.</span>
+<span class="sd">    ``-R^{a}_{d0}^{d1,d2}*R^{b,d0}_{d2,d1}`` corresponding to</span>
+<span class="sd">    ``[0, 3, 4, 6, 1, 2, 7, 5, 9, 8]``</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import riemann_bsgs, tensor_gens</span>
+<span class="sd">    &gt;&gt;&gt; base, gens = riemann_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; size, sbase, sgens = tensor_gens(base, gens, [[],[]], 0)</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([0,3,4,6,7,5,2,1,8,9])</span>
+<span class="sd">    &gt;&gt;&gt; canonical_free(sbase, [Permutation(h) for h in sgens], g, 2)</span>
+<span class="sd">    [0, 3, 4, 6, 1, 2, 7, 5, 9, 8]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">array_form</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">base</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g</span><span class="p">[:]</span>
+
+    <span class="n">transversals</span> <span class="o">=</span> <span class="n">get_transversals</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">g</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">base</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">transv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">transversals</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">h_i</span> <span class="o">=</span> <span class="p">[</span><span class="n">size</span><span class="p">]</span><span class="o">*</span><span class="n">num_free</span>
+        <span class="c"># find the element s in transversals[i] such that</span>
+        <span class="c"># _af_rmul(h, s) has its free elements with the lowest position in h</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">sk</span> <span class="ow">in</span> <span class="n">transv</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">h1</span> <span class="o">=</span> <span class="n">_af_rmul</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">sk</span><span class="p">)</span>
+            <span class="n">hi</span> <span class="o">=</span> <span class="p">[</span><span class="n">h1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ix</span><span class="p">)</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_free</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">hi</span> <span class="o">&lt;</span> <span class="n">h_i</span><span class="p">:</span>
+                <span class="n">h_i</span> <span class="o">=</span> <span class="n">hi</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">sk</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">_af_rmul</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">h</span>
+
+
+<span class="k">def</span> <span class="nf">_get_map_slots</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">fixed_slots</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fixed_slots</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_lift_sgens</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">fixed_slots</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">fixed_slots</span><span class="p">,</span> <span class="n">free</span><span class="p">))</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">fd</span><span class="p">)]</span>
+    <span class="n">num_free</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">free</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fixed_slots</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fd</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">num_free</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+
+<div class="viewcode-block" id="canonicalize"><a class="viewcode-back" href="../../../modules/combinatorics/tensor_can.html#sympy.combinatorics.tensor_can.canonicalize">[docs]</a><span class="k">def</span> <span class="nf">canonicalize</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">dummies</span><span class="p">,</span> <span class="n">msym</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    canonicalize tensor formed by tensors</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    g : permutation representing the tensor</span>
+
+<span class="sd">    dummies : list representing the dummy indices</span>
+<span class="sd">      it can be a list of dummy indices of the same type</span>
+<span class="sd">      or a list of lists of dummy indices, one list for each</span>
+<span class="sd">      type of index;</span>
+<span class="sd">      the dummy indices must come after the free indices,</span>
+<span class="sd">      and put in order contravariant, covariant</span>
+<span class="sd">      [d0, -d0, d1,-d1,...]</span>
+<span class="sd">    msym :  symmetry of the metric(s)</span>
+<span class="sd">        it can be an integer or a list;</span>
+<span class="sd">        in the first case it is the symmetry of the dummy index metric;</span>
+<span class="sd">        in the second case it is the list of the symmetries of the</span>
+<span class="sd">        index metric for each type</span>
+<span class="sd">    v : list, (base_i, gens_i, n_i, sym_i) for tensors of type `i`</span>
+
+<span class="sd">    base_i, gens_i : BSGS for tensors of this type.</span>
+<span class="sd">        The BSGS should have minimal base under lexicographic ordering;</span>
+<span class="sd">        if not, an attempt is made do get the minimal BSGS;</span>
+<span class="sd">        in case of failure,</span>
+<span class="sd">        canonicalize_naive is used, which is much slower.</span>
+
+<span class="sd">    n_i :    number of tensors of type `i`.</span>
+
+<span class="sd">    sym_i :  symmetry under exchange of component tensors of type `i`.</span>
+
+<span class="sd">        Both for msym and sym_i the cases are</span>
+<span class="sd">            * None  no symmetry</span>
+<span class="sd">            * 0     commuting</span>
+<span class="sd">            * 1     anticommuting</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    0 if the tensor is zero, else return the array form of</span>
+<span class="sd">    the permutation representing the canonical form of the tensor.</span>
+
+<span class="sd">    Algorithm</span>
+<span class="sd">    =========</span>
+
+<span class="sd">    First one uses canonical_free to get the minimum tensor under</span>
+<span class="sd">    lexicographic order, using only the slot symmetries.</span>
+<span class="sd">    If the component tensors have not minimal BSGS, it is attempted</span>
+<span class="sd">    to find it; if the attempt fails canonicalize_naive</span>
+<span class="sd">    is used instead.</span>
+
+<span class="sd">    Compute the residual slot symmetry keeping fixed the free indices</span>
+<span class="sd">    using tensor_gens(base, gens, list_free_indices, sym).</span>
+
+<span class="sd">    Reduce the problem eliminating the free indices.</span>
+
+<span class="sd">    Then use double_coset_can_rep and lift back the result reintroducing</span>
+<span class="sd">    the free indices.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    one type of index with commuting metric;</span>
+
+<span class="sd">    `A_{a b}` and `B_{a b}` antisymmetric and commuting</span>
+
+<span class="sd">    `T = A_{d0 d1} * B^{d0}{}_{d2} * B^{d2 d1}`</span>
+
+<span class="sd">    `ord = [d0,-d0,d1,-d1,d2,-d2]` order of the indices</span>
+
+<span class="sd">    g = [1,3,0,5,4,2,6,7]</span>
+
+<span class="sd">    `T_c = 0`</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize, bsgs_direct_product</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; base2a, gens2a = get_symmetric_group_sgs(2, 1)</span>
+<span class="sd">    &gt;&gt;&gt; t0 = (base2a, gens2a, 1, 0)</span>
+<span class="sd">    &gt;&gt;&gt; t1 = (base2a, gens2a, 2, 0)</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([1,3,0,5,4,2,6,7])</span>
+<span class="sd">    &gt;&gt;&gt; canonicalize(g, range(6), 0, t0, t1)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    same as above, but with `B_{a b}` anticommuting</span>
+
+<span class="sd">    `T_c = -A^{d0 d1} * B_{d0}{}^{d2} * B_{d1 d2}`</span>
+
+<span class="sd">    can = [0,2,1,4,3,5,7,6]</span>
+
+<span class="sd">    &gt;&gt;&gt; t1 = (base2a, gens2a, 2, 1)</span>
+<span class="sd">    &gt;&gt;&gt; canonicalize(g, range(6), 0, t0, t1)</span>
+<span class="sd">    [0, 2, 1, 4, 3, 5, 7, 6]</span>
+
+<span class="sd">    two types of indices `[a,b,c,d,e,f]` and `[m,n]`, in this order,</span>
+<span class="sd">    both with commuting metric</span>
+
+<span class="sd">    `f^{a b c}` antisymmetric, commuting</span>
+
+<span class="sd">    `A_{m a}` no symmetry, commuting</span>
+
+<span class="sd">    `T = f^c{}_{d a} * f^f{}_{e b} * A_m{}^d * A^{m b} * A_n{}^a * A^{n e}`</span>
+
+<span class="sd">    ord = [c,f,a,-a,b,-b,d,-d,e,-e,m,-m,n,-n]</span>
+
+<span class="sd">    g = [0,7,3, 1,9,5, 11,6, 10,4, 13,2, 12,8, 14,15]</span>
+
+<span class="sd">    The canonical tensor is</span>
+<span class="sd">    `T_c = -f^{c a b} * f^{f d e} * A^m{}_a * A_{m d} * A^n{}_b * A_{n e}`</span>
+
+<span class="sd">    can = [0,2,4, 1,6,8, 10,3, 11,7, 12,5, 13,9, 15,14]</span>
+
+<span class="sd">    &gt;&gt;&gt; base_f, gens_f = get_symmetric_group_sgs(3, 1)</span>
+<span class="sd">    &gt;&gt;&gt; base1, gens1 = get_symmetric_group_sgs(1)</span>
+<span class="sd">    &gt;&gt;&gt; base_A, gens_A = bsgs_direct_product(base1, gens1, base1, gens1)</span>
+<span class="sd">    &gt;&gt;&gt; t0 = (base_f, gens_f, 2, 0)</span>
+<span class="sd">    &gt;&gt;&gt; t1 = (base_A, gens_A, 4, 0)</span>
+<span class="sd">    &gt;&gt;&gt; dummies = [range(2, 10), range(10, 14)]</span>
+<span class="sd">    &gt;&gt;&gt; g = Permutation([0,7,3,1,9,5,11,6,10,4,13,2,12,8,14,15])</span>
+<span class="sd">    &gt;&gt;&gt; canonicalize(g, dummies, [0, 0], t0, t1)</span>
+<span class="sd">    [0, 2, 4, 1, 6, 8, 10, 3, 11, 7, 12, 5, 13, 9, 15, 14]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.combinatorics.testutil</span> <span class="kn">import</span> <span class="n">canonicalize_naive</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msym</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">msym</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">None</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;msym must be 0, 1 or None&#39;</span><span class="p">)</span>
+        <span class="n">num_types</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_types</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">msym</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">msymx</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span> <span class="k">for</span> <span class="n">msymx</span> <span class="ow">in</span> <span class="n">msym</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;msym entries must be 0, 1 or None&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummies</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_types</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;dummies and msym must have the same number of elements&#39;</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">num_tensors</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+        <span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">,</span> <span class="n">n_i</span><span class="p">,</span> <span class="n">sym_i</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c"># check that the BSGS is minimal;</span>
+        <span class="c"># this property is used in double_coset_can_rep;</span>
+        <span class="c"># if it is not minimal use canonicalize_naive</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_minimal_bsgs</span><span class="p">(</span><span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">):</span>
+            <span class="n">mbsgs</span> <span class="o">=</span> <span class="n">get_minimal_bsgs</span><span class="p">(</span><span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">mbsgs</span><span class="p">:</span>
+                <span class="n">can</span> <span class="o">=</span> <span class="n">canonicalize_naive</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">dummies</span><span class="p">,</span> <span class="n">msym</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">can</span>
+            <span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span> <span class="o">=</span> <span class="n">mbsgs</span>
+        <span class="n">v1</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">,</span> <span class="p">[[]]</span> <span class="o">*</span> <span class="n">n_i</span><span class="p">,</span> <span class="n">sym_i</span><span class="p">))</span>
+        <span class="n">num_tensors</span> <span class="o">+=</span> <span class="n">n_i</span>
+
+    <span class="k">if</span> <span class="n">num_types</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msym</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">dummies</span> <span class="o">=</span> <span class="p">[</span><span class="n">dummies</span><span class="p">]</span>
+        <span class="n">msym</span> <span class="o">=</span> <span class="p">[</span><span class="n">msym</span><span class="p">]</span>
+    <span class="n">flat_dummies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dumx</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">:</span>
+        <span class="n">flat_dummies</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dumx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">flat_dummies</span> <span class="ow">and</span> <span class="n">flat_dummies</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">flat_dummies</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">flat_dummies</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;dummies is not valid&#39;</span><span class="p">)</span>
+
+    <span class="c"># slot symmetry of the tensor</span>
+    <span class="n">size1</span><span class="p">,</span> <span class="n">sbase</span><span class="p">,</span> <span class="n">sgens</span> <span class="o">=</span> <span class="n">gens_products</span><span class="p">(</span><span class="o">*</span><span class="n">v1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">!=</span> <span class="n">size1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;g has size </span><span class="si">%d</span><span class="s">, generators have size </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size1</span><span class="p">))</span>
+    <span class="n">free</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flat_dummies</span><span class="p">]</span>
+    <span class="n">num_free</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">free</span><span class="p">)</span>
+
+    <span class="c"># g1 minimal tensor under slot symmetry</span>
+    <span class="n">g1</span> <span class="o">=</span> <span class="n">canonical_free</span><span class="p">(</span><span class="n">sbase</span><span class="p">,</span> <span class="n">sgens</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">num_free</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">flat_dummies</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g1</span>
+    <span class="c"># save the sign of g1</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">g1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="c"># the free indices are kept fixed.</span>
+    <span class="c"># Determine free_i, the list of slots of tensors which are fixed</span>
+    <span class="c"># since they are occupied by free indices, which are fixed.</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+        <span class="n">free_i</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">,</span> <span class="n">n_i</span><span class="p">,</span> <span class="n">sym_i</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">len_tens</span> <span class="o">=</span> <span class="n">gens_i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="c"># for each component tensor get a list od fixed islots</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_i</span><span class="p">):</span>
+            <span class="c"># get the elements corresponding to the component tensor</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">g1</span><span class="p">[</span><span class="n">start</span><span class="p">:(</span><span class="n">start</span> <span class="o">+</span> <span class="n">len_tens</span><span class="p">)]</span>
+            <span class="n">fr</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c"># get the positions of the fixed elements in h</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">free</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+                    <span class="n">fr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="n">free_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fr</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">+=</span> <span class="n">len_tens</span>
+        <span class="n">v1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_i</span><span class="p">,</span> <span class="n">gens_i</span><span class="p">,</span> <span class="n">free_i</span><span class="p">,</span> <span class="n">sym_i</span><span class="p">)</span>
+    <span class="c"># BSGS of the tensor with fixed free indices</span>
+    <span class="c"># if tensor_gens fails in gens_product, use canonicalize_naive</span>
+    <span class="n">size</span><span class="p">,</span> <span class="n">sbase</span><span class="p">,</span> <span class="n">sgens</span> <span class="o">=</span> <span class="n">gens_products</span><span class="p">(</span><span class="o">*</span><span class="n">v1</span><span class="p">)</span>
+
+    <span class="c"># reduce the permutations getting rid of the free indices</span>
+    <span class="n">pos_dummies</span> <span class="o">=</span> <span class="p">[</span><span class="n">g1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">flat_dummies</span><span class="p">]</span>
+    <span class="n">pos_free</span> <span class="o">=</span> <span class="p">[</span><span class="n">g1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_free</span><span class="p">)]</span>
+    <span class="n">size_red</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="n">num_free</span>
+    <span class="n">g1_red</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="n">num_free</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">g1</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">flat_dummies</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">sign</span><span class="p">:</span>
+        <span class="n">g1_red</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">size_red</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size_red</span> <span class="o">-</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g1_red</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">size_red</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size_red</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">map_slots</span> <span class="o">=</span> <span class="n">_get_map_slots</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">pos_free</span><span class="p">)</span>
+    <span class="n">sbase_red</span> <span class="o">=</span> <span class="p">[</span><span class="n">map_slots</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sbase</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pos_free</span><span class="p">]</span>
+    <span class="n">sgens_red</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">([</span><span class="n">map_slots</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">_array_form</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pos_free</span><span class="p">])</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">sgens</span><span class="p">]</span>
+    <span class="n">dummies_red</span> <span class="o">=</span> <span class="p">[[</span><span class="n">x</span> <span class="o">-</span> <span class="n">num_free</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">dummies</span><span class="p">]</span>
+    <span class="n">transv_red</span> <span class="o">=</span> <span class="n">get_transversals</span><span class="p">(</span><span class="n">sbase_red</span><span class="p">,</span> <span class="n">sgens_red</span><span class="p">)</span>
+    <span class="n">g1_red</span> <span class="o">=</span> <span class="n">_af_new</span><span class="p">(</span><span class="n">g1_red</span><span class="p">)</span>
+    <span class="n">g2</span> <span class="o">=</span> <span class="n">double_coset_can_rep</span><span class="p">(</span>
+        <span class="n">dummies_red</span><span class="p">,</span> <span class="n">msym</span><span class="p">,</span> <span class="n">sbase_red</span><span class="p">,</span> <span class="n">sgens_red</span><span class="p">,</span> <span class="n">transv_red</span><span class="p">,</span> <span class="n">g1_red</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">g2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="c"># lift to the case with the free indices</span>
+    <span class="n">g3</span> <span class="o">=</span> <span class="n">_lift_sgens</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">pos_free</span><span class="p">,</span> <span class="n">free</span><span class="p">,</span> <span class="n">g2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g3</span>
+
+</div>
+<span class="k">def</span> <span class="nf">perm_af_direct_product</span><span class="p">(</span><span class="n">gens1</span><span class="p">,</span> <span class="n">gens2</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    direct products of the generators gens1 and gens2</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import perm_af_direct_product</span>
+<span class="sd">    &gt;&gt;&gt; gens1 = [[1,0,2,3], [0,1,3,2]]</span>
+<span class="sd">    &gt;&gt;&gt; gens2 = [[1,0]]</span>
+<span class="sd">    &gt;&gt;&gt; perm_af_direct_product(gens1, gens2, False)</span>
+<span class="sd">    [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [0, 1, 2, 3, 5, 4]]</span>
+<span class="sd">    &gt;&gt;&gt; gens1 = [[1,0,2,3,5,4], [0,1,3,2,4,5]]</span>
+<span class="sd">    &gt;&gt;&gt; gens2 = [[1,0,2,3]]</span>
+<span class="sd">    &gt;&gt;&gt; perm_af_direct_product(gens1, gens2, True)</span>
+<span class="sd">    [[1, 0, 2, 3, 4, 5, 7, 6], [0, 1, 3, 2, 4, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gens1</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gens1</span><span class="p">]</span>
+    <span class="n">gens2</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gens2</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">s</span>
+    <span class="n">n2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">s</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n1</span><span class="p">))</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">signed</span><span class="p">:</span>
+        <span class="n">gens1</span> <span class="o">=</span> <span class="p">[</span><span class="n">gen</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">end</span> <span class="o">+</span> <span class="p">[</span><span class="n">gen</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">n2</span><span class="p">,</span> <span class="n">gen</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">n2</span><span class="p">]</span>
+                 <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens1</span><span class="p">]</span>
+        <span class="n">gens2</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">n1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">]</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gens1</span> <span class="o">=</span> <span class="p">[</span><span class="n">gen</span> <span class="o">+</span> <span class="n">end</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens1</span><span class="p">]</span>
+        <span class="n">gens2</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">n1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">]</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">gens2</span><span class="p">]</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">gens1</span> <span class="o">+</span> <span class="n">gens2</span>
+
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<div class="viewcode-block" id="bsgs_direct_product"><a class="viewcode-back" href="../../../modules/combinatorics/tensor_can.html#sympy.combinatorics.tensor_can.bsgs_direct_product">[docs]</a><span class="k">def</span> <span class="nf">bsgs_direct_product</span><span class="p">(</span><span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span><span class="p">,</span> <span class="n">base2</span><span class="p">,</span> <span class="n">gens2</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    direct product of two BSGS</span>
+
+<span class="sd">    base1    base of the first BSGS.</span>
+
+<span class="sd">    gens1    strong generating sequence of the first BSGS.</span>
+
+<span class="sd">    base2, gens2   similarly for the second BSGS.</span>
+
+<span class="sd">    signed   flag for signed permutations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import (get_symmetric_group_sgs, bsgs_direct_product)</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; base1, gens1 = get_symmetric_group_sgs(1)</span>
+<span class="sd">    &gt;&gt;&gt; base2, gens2 = get_symmetric_group_sgs(2)</span>
+<span class="sd">    &gt;&gt;&gt; bsgs_direct_product(base1, gens1, base2, gens2)</span>
+<span class="sd">    ([1], [Permutation(4)(1, 2)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">n1</span> <span class="o">=</span> <span class="n">gens1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">s</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">base1</span><span class="p">[:]</span>
+    <span class="n">base</span> <span class="o">+=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">n1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base2</span><span class="p">]</span>
+    <span class="n">gens1</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="o">.</span><span class="n">_array_form</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">gens1</span><span class="p">]</span>
+    <span class="n">gens2</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="o">.</span><span class="n">_array_form</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">gens2</span><span class="p">]</span>
+    <span class="n">gens</span> <span class="o">=</span> <span class="n">perm_af_direct_product</span><span class="p">(</span><span class="n">gens1</span><span class="p">,</span> <span class="n">gens2</span><span class="p">,</span> <span class="n">signed</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">id_af</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">gens</span> <span class="k">if</span> <span class="n">h</span> <span class="o">!=</span> <span class="n">id_af</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gens</span><span class="p">:</span>
+        <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">id_af</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="get_symmetric_group_sgs"><a class="viewcode-back" href="../../../modules/combinatorics/tensor_can.html#sympy.combinatorics.tensor_can.get_symmetric_group_sgs">[docs]</a><span class="k">def</span> <span class="nf">get_symmetric_group_sgs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">antisym</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return base, gens of the minimal BSGS for (anti)symmetric tensor</span>
+
+<span class="sd">    ``n``  rank of the tensor</span>
+
+<span class="sd">    ``antisym = False`` symmetric tensor</span>
+<span class="sd">    ``antisym = True``  antisymmetric tensor</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import get_symmetric_group_sgs</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; get_symmetric_group_sgs(3)</span>
+<span class="sd">    ([0, 1], [Permutation(4)(0, 1), Permutation(4)(1, 2)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)))]</span>
+    <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">Permutation</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">_array_form</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">antisym</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">]</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">]</span>
+</div>
+<span class="n">riemann_bsgs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="n">Permutation</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">Permutation</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                        <span class="n">Permutation</span><span class="p">(</span><span class="mi">5</span><span class="p">)(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">get_transversals</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return transversals for the group with BSGS base, gens</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">base</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">stabs</span> <span class="o">=</span> <span class="n">_distribute_gens_by_base</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">)</span>
+    <span class="n">orbits</span><span class="p">,</span> <span class="n">transversals</span> <span class="o">=</span> <span class="n">_orbits_transversals_from_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">stabs</span><span class="p">)</span>
+    <span class="n">transversals</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="o">.</span><span class="n">_array_form</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">y</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span>
+                    <span class="n">transversals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">transversals</span>
+
+
+<span class="k">def</span> <span class="nf">_is_minimal_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the BSGS has minimal base under lexigographic order.</span>
+
+<span class="sd">    base, gens BSGS</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import riemann_bsgs, _is_minimal_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; _is_minimal_bsgs(*riemann_bsgs)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; riemann_bsgs1 = ([2, 0], ([Permutation(5)(0,1)(4,5), Permutation(5)(0,2)(1,3)]))</span>
+<span class="sd">    &gt;&gt;&gt; _is_minimal_bsgs(*riemann_bsgs1)</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base1</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sgs1</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[:]</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">_array_form</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">sgs1</span><span class="p">):</span>
+            <span class="n">base1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">sgs1</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">sgs1</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">_array_form</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">base1</span> <span class="o">==</span> <span class="n">base</span>
+
+
+<span class="k">def</span> <span class="nf">get_minimal_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a minimal GSGS</span>
+
+<span class="sd">    base, gens BSGS</span>
+
+<span class="sd">    If base, gens is a minimal BSGS return it; else return a minimal BSGS</span>
+<span class="sd">    if it fails in finding one, it returns None</span>
+
+<span class="sd">    TODO: use baseswap in the case in which if it fails in finding a</span>
+<span class="sd">    minimal BSGS</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import get_minimal_bsgs</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; riemann_bsgs1 = ([2, 0], ([Permutation(5)(0,1)(4,5), Permutation(5)(0,2)(1,3)]))</span>
+<span class="sd">    &gt;&gt;&gt; get_minimal_bsgs(*riemann_bsgs1)</span>
+<span class="sd">    ([0, 2], [Permutation(0, 1)(4, 5), Permutation(5)(0, 2)(1, 3), Permutation(2, 3)(4, 5)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">(</span><span class="n">gens</span><span class="p">)</span>
+    <span class="n">base</span><span class="p">,</span> <span class="n">gens</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">schreier_sims_incremental</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_minimal_bsgs</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span>
+
+
+<span class="k">def</span> <span class="nf">tensor_gens</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">list_free_indices</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns size, res_base, res_gens BSGS for n tensors of the same type</span>
+
+<span class="sd">    base, gens BSGS for tensors of this type</span>
+<span class="sd">    list_free_indices  list of the slots occupied by fixed indices</span>
+<span class="sd">                       for each of the tensors</span>
+
+<span class="sd">    sym symmetry under commutation of two tensors</span>
+<span class="sd">    sym   None  no symmetry</span>
+<span class="sd">    sym   0     commuting</span>
+<span class="sd">    sym   1     anticommuting</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import tensor_gens, get_symmetric_group_sgs</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+
+<span class="sd">    two symmetric tensors with 3 indices without free indices</span>
+<span class="sd">    &gt;&gt;&gt; base, gens = get_symmetric_group_sgs(3)</span>
+<span class="sd">    &gt;&gt;&gt; tensor_gens(base, gens, [[], []])</span>
+<span class="sd">    (8, [0, 1, 3, 4], [Permutation(7)(0, 1), Permutation(7)(1, 2), Permutation(7)(3, 4), Permutation(7)(4, 5), Permutation(7)(0, 3)(1, 4)(2, 5)])</span>
+
+<span class="sd">    two symmetric tensors with 3 indices with free indices in slot 1 and 0</span>
+<span class="sd">    &gt;&gt;&gt; tensor_gens(base, gens, [[1],[0]])</span>
+<span class="sd">    (8, [0, 4], [Permutation(7)(0, 2), Permutation(7)(4, 5)])</span>
+
+<span class="sd">    four symmetric tensors with 3 indices, two of which with free indices</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get_bsgs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">free_indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        return the BSGS for G.pointwise_stabilizer(free_indices)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">free_indices</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">base</span><span class="p">[:],</span> <span class="n">gens</span><span class="p">[:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">pointwise_stabilizer</span><span class="p">(</span><span class="n">free_indices</span><span class="p">)</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">sgs</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">schreier_sims_incremental</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">base</span><span class="p">,</span> <span class="n">sgs</span>
+
+    <span class="c"># if not base there is no slot symmetry for the component tensors</span>
+    <span class="c"># if list_free_indices.count([]) &lt; 2 there is no commutation symmetry</span>
+    <span class="c"># so there is no resulting slot symmetry</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">base</span> <span class="ow">and</span> <span class="n">list_free_indices</span><span class="o">.</span><span class="n">count</span><span class="p">([])</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_free_indices</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">size</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)))]</span>
+
+    <span class="c"># if any(list_free_indices) one needs to compute the pointwise</span>
+    <span class="c"># stabilizer, so G is needed</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">list_free_indices</span><span class="p">):</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">PermutationGroup</span><span class="p">(</span><span class="n">gens</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># no_free list of lists of indices for component tensors without fixed</span>
+    <span class="c"># indices</span>
+    <span class="n">no_free</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">id_af</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">num_indices</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">list_free_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">no_free</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_indices</span><span class="p">)))</span>
+    <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span> <span class="o">=</span> <span class="n">_get_bsgs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">list_free_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_free_indices</span><span class="p">)):</span>
+        <span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span> <span class="o">=</span> <span class="n">_get_bsgs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">list_free_indices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span> <span class="o">=</span> <span class="n">bsgs_direct_product</span><span class="p">(</span><span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span><span class="p">,</span>
+                                                 <span class="n">base1</span><span class="p">,</span> <span class="n">gens1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">list_free_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">no_free</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">num_indices</span><span class="p">)))</span>
+        <span class="n">size</span> <span class="o">+=</span> <span class="n">num_indices</span>
+    <span class="n">nr</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">2</span>
+    <span class="n">res_gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">res_gens</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">_array_form</span> <span class="o">!=</span> <span class="n">id_af</span><span class="p">]</span>
+    <span class="c"># if sym there are no commuting tensors stop here</span>
+    <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">no_free</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res_gens</span><span class="p">:</span>
+            <span class="n">res_gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">id_af</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">size</span><span class="p">,</span> <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span>
+
+    <span class="c"># if the component tensors have moinimal BSGS, so is their direct</span>
+    <span class="c"># product P; the slot symmetry group is S = P*C, where C is the group</span>
+    <span class="c"># to (anti)commute the component tensors with no free indices</span>
+    <span class="c"># a stabilizer has the property S_i = P_i*C_i;</span>
+    <span class="c"># the BSGS of P*C has SGS_P + SGS_C and the base is</span>
+    <span class="c"># the ordered union of the bases of P and C.</span>
+    <span class="c"># If P has minimal BSGS, so has S with this base.</span>
+    <span class="n">base_comm</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">no_free</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="n">no_free</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ind2</span> <span class="o">=</span> <span class="n">no_free</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ind1</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ind2</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ind1</span><span class="p">)</span>
+        <span class="n">base_comm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ind1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ind2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nr</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">sym</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">nr</span><span class="p">,</span> <span class="n">nr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">nr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nr</span><span class="p">])</span>
+        <span class="n">res_gens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_af_new</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+    <span class="c"># each base is ordered; order the union of the two bases</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">base_comm</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res_base</span><span class="p">:</span>
+            <span class="n">res_base</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">res_base</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">res_gens</span><span class="p">:</span>
+        <span class="n">res_gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">_af_new</span><span class="p">(</span><span class="n">id_af</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">size</span><span class="p">,</span> <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span>
+
+
+<span class="k">def</span> <span class="nf">gens_products</span><span class="p">(</span><span class="o">*</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns size, res_base, res_gens BSGS for n tensors of different types</span>
+
+<span class="sd">    v is a sequence of (base_i, gens_i, free_i, sym_i)</span>
+<span class="sd">    where</span>
+<span class="sd">    base_i, gens_i  BSGS of tensor of type `i`</span>
+<span class="sd">    free_i          list of the fixed slots for each of the tensors</span>
+<span class="sd">                    of type `i`; if there are `n_i` tensors of type `i`</span>
+<span class="sd">                    and none of them have fixed slots, `free = [[]]*n_i`</span>
+<span class="sd">    sym   0 (1) if the tensors of type `i` (anti)commute among themselves</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics import Permutation</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, gens_products</span>
+<span class="sd">    &gt;&gt;&gt; Permutation.print_cyclic = True</span>
+<span class="sd">    &gt;&gt;&gt; base, gens = get_symmetric_group_sgs(2)</span>
+<span class="sd">    &gt;&gt;&gt; gens_products((base,gens,[[],[]],0))</span>
+<span class="sd">    (6, [0, 2], [Permutation(5)(0, 1), Permutation(5)(2, 3), Permutation(5)(0, 2)(1, 3)])</span>
+<span class="sd">    &gt;&gt;&gt; gens_products((base,gens,[[1],[]],0))</span>
+<span class="sd">    (6, [2], [Permutation(5)(2, 3)])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res_size</span><span class="p">,</span> <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span> <span class="o">=</span> <span class="n">tensor_gens</span><span class="p">(</span><span class="o">*</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+        <span class="n">size</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gens</span> <span class="o">=</span> <span class="n">tensor_gens</span><span class="p">(</span><span class="o">*</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span> <span class="o">=</span> <span class="n">bsgs_direct_product</span><span class="p">(</span><span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span>
+                                                 <span class="n">gens</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">res_size</span> <span class="o">=</span> <span class="n">res_gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">id_af</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">res_size</span><span class="p">))</span>
+    <span class="n">res_gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">res_gens</span> <span class="k">if</span> <span class="n">h</span> <span class="o">!=</span> <span class="n">id_af</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">res_gens</span><span class="p">:</span>
+        <span class="n">res_gens</span> <span class="o">=</span> <span class="p">[</span><span class="n">id_af</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res_size</span><span class="p">,</span> <span class="n">res_base</span><span class="p">,</span> <span class="n">res_gens</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" >sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

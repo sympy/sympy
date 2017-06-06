@@ -1,0 +1,591 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Number identification &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="index.html" />
+    <link rel="next" title="Precision and representation issues" href="technical.html" />
+    <link rel="prev" title="Matrices" href="matrices.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="technical.html" title="Precision and representation issues"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="number-identification">
+<h1>Number identification<a class="headerlink" href="#number-identification" title="Permalink to this headline">¶</a></h1>
+<p>Most function in mpmath are concerned with producing approximations from exact mathematical formulas. It is also useful to consider the inverse problem: given only a decimal approximation for a number, such as 0.7320508075688772935274463, is it possible to find an exact formula?</p>
+<p>Subject to certain restrictions, such &#8220;reverse engineering&#8221; is indeed possible thanks to the existence of <em>integer relation algorithms</em>. Mpmath implements the PSLQ algorithm (developed by H. Ferguson), which is one such algorithm.</p>
+<p>Automated number recognition based on PSLQ is not a silver bullet. Any occurring transcendental constants (<span class="math">\(\pi\)</span>, <span class="math">\(e\)</span>, etc) must be guessed by the user, and the relation between those constants in the formula must be linear (such as <span class="math">\(x = 3 \pi + 4 e\)</span>). More complex formulas can be found by combining PSLQ with functional transformations; however, this is only feasible to a limited extent since the computation time grows exponentially with the number of operations that need to be combined.</p>
+<p>The number identification facilities in mpmath are inspired by the <a class="reference external" href="http://oldweb.cecm.sfu.ca/projects/ISC/ISCmain.html">Inverse Symbolic Calculator</a> (ISC). The ISC is more powerful than mpmath, as it uses a lookup table of millions of precomputed constants (thereby mitigating the problem with exponential complexity).</p>
+<div class="section" id="constant-recognition">
+<h2>Constant recognition<a class="headerlink" href="#constant-recognition" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="identify">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt><a class="headerlink" href="#identify" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.identify">
+<tt class="descclassname">mpmath.</tt><tt class="descname">identify</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>constants=</em><span class="optional">[</span><span class="optional">]</span>, <em>tol=None</em>, <em>maxcoeff=1000</em>, <em>full=False</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#mpmath.identify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a real number <span class="math">\(x\)</span>, <tt class="docutils literal"><span class="pre">identify(x)</span></tt> attempts to find an exact
+formula for <span class="math">\(x\)</span>. This formula is returned as a string. If no match
+is found, <tt class="docutils literal"><span class="pre">None</span></tt> is returned. With <tt class="docutils literal"><span class="pre">full=True</span></tt>, a list of
+matching formulas is returned.</p>
+<p>As a simple example, <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> will find an algebraic
+formula for the golden ratio:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+<span class="go">&#39;((1+sqrt(5))/2)&#39;</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> can identify simple algebraic numbers and simple
+combinations of given base constants, as well as certain basic
+transformations thereof. More specifically, <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a>
+looks for the following:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Fractions</li>
+<li>Quadratic algebraic numbers</li>
+<li>Rational linear combinations of the base constants</li>
+<li>Any of the above after first transforming <span class="math">\(x\)</span> into <span class="math">\(f(x)\)</span> where
+<span class="math">\(f(x)\)</span> is <span class="math">\(1/x\)</span>, <span class="math">\(\sqrt x\)</span>, <span class="math">\(x^2\)</span>, <span class="math">\(\log x\)</span> or <span class="math">\(\exp x\)</span>, either
+directly or with <span class="math">\(x\)</span> or <span class="math">\(f(x)\)</span> multiplied or divided by one of
+the base constants</li>
+<li>Products of fractional powers of the base constants and
+small integers</li>
+</ol>
+</div></blockquote>
+<p>Base constants can be given as a list of strings representing mpmath
+expressions (<a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> will <tt class="docutils literal"><span class="pre">eval</span></tt> the strings to numerical
+values and use the original strings for the output), or as a dict of
+formula:value pairs.</p>
+<p>In order not to produce spurious results, <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> should
+be used with high precision; preferably 50 digits or more.</p>
+<p><strong>Examples</strong></p>
+<p>Simple identifications can be performed safely at standard
+precision. Here the default recognition of rational, algebraic,
+and exp/log of algebraic numbers is demonstrated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mf">0.22222222222222222</span><span class="p">)</span>
+<span class="go">&#39;(2/9)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mf">1.9662210973805663</span><span class="p">)</span>
+<span class="go">&#39;sqrt(((24+sqrt(48))/8))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mf">4.1132503787829275</span><span class="p">)</span>
+<span class="go">&#39;exp((sqrt(8)/2))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mf">0.881373587019543</span><span class="p">)</span>
+<span class="go">&#39;log(((2+sqrt(8))/2))&#39;</span>
+</pre></div>
+</div>
+<p>By default, <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> does not recognize <span class="math">\(\pi\)</span>. At standard
+precision it finds a not too useful approximation. At slightly
+increased precision, this approximation is no longer accurate
+enough and <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> more correctly returns <tt class="docutils literal"><span class="pre">None</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">&#39;(2**(176/117)*3**(20/117)*5**(35/39))/(7**(92/117))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>Numbers such as <span class="math">\(\pi\)</span>, and simple combinations of user-defined
+constants, can be identified if they are provided explicitly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">e</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;pi&#39;</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">])</span>
+<span class="go">&#39;(3*pi + (-2)*e)&#39;</span>
+</pre></div>
+</div>
+<p>Here is an example using a dict of constants. Note that the
+constants need not be &#8220;atomic&#8221;; <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> can just
+as well express the given number in terms of expressions
+given by formulas:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="o">+</span><span class="n">e</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span><span class="n">pi</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="n">e</span><span class="p">})</span>
+<span class="go">&#39;((-2) + 1*a + (1/2)*b)&#39;</span>
+</pre></div>
+</div>
+<p>Next, we attempt some identifications with a set of base constants.
+It is necessary to increase the precision a bit.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;sqrt(2)&#39;</span><span class="p">,</span><span class="s">&#39;pi&#39;</span><span class="p">,</span><span class="s">&#39;log(2)&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;(1/4)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">7</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;(2*sqrt(2) + 3*pi + (5/7)*log(2))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;exp((2 + 1*pi))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;((3/7) + (-1/7)*sqrt(2))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">+</span><span class="mi">4</span><span class="p">),</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;sqrt(2)/(4 + 3*pi)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">5</span><span class="o">**</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+<span class="go">&#39;5**(1/3)*pi*log(2)**2&#39;</span>
+</pre></div>
+</div>
+<p>An example of an erroneous solution being found when too low
+precision is used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">e</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)),</span> <span class="p">[</span><span class="s">&#39;pi&#39;</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">,</span> <span class="s">&#39;sqrt(2)&#39;</span><span class="p">])</span>
+<span class="go">&#39;((11/25) + (-158/75)*pi + (76/75)*e + (44/15)*sqrt(2))&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">e</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)),</span> <span class="p">[</span><span class="s">&#39;pi&#39;</span><span class="p">,</span> <span class="s">&#39;e&#39;</span><span class="p">,</span> <span class="s">&#39;sqrt(2)&#39;</span><span class="p">])</span>
+<span class="go">&#39;1/(3*pi + (-4)*e + 2*sqrt(2))&#39;</span>
+</pre></div>
+</div>
+<p><strong>Finding approximate solutions</strong></p>
+<p>The tolerance <tt class="docutils literal"><span class="pre">tol</span></tt> defaults to 3/4 of the working precision.
+Lowering the tolerance is useful for finding approximate matches.
+We can for example try to generate approximations for pi:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+<span class="go">&#39;(22/7)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="go">&#39;(355/113)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+<span class="go">&#39;(5**(339/269))/(2**(64/269)*3**(13/269)*7**(92/269))&#39;</span>
+</pre></div>
+</div>
+<p>With <tt class="docutils literal"><span class="pre">full=True</span></tt>, and by supplying a few base constants,
+<tt class="docutils literal"><span class="pre">identify</span></tt> can generate almost endless lists of approximations
+for any number (the output below has been truncated to show only
+the first few):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">identify</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;e&#39;</span><span class="p">,</span> <span class="s">&#39;catalan&#39;</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">... </span> 
+<span class="go">e/log((6 + (-4/3)*e))</span>
+<span class="go">(3**3*5*e*catalan**2)/(2*7**2)</span>
+<span class="go">sqrt(((-13) + 1*e + 22*catalan))</span>
+<span class="go">log(((-6) + 24*e + 4*catalan)/e)</span>
+<span class="go">exp(catalan*((-1/5) + (8/15)*e))</span>
+<span class="go">catalan*(6 + (-6)*e + 15*catalan)</span>
+<span class="go">sqrt((5 + 26*e + (-3)*catalan))/e</span>
+<span class="go">e*sqrt(((-27) + 2*e + 25*catalan))</span>
+<span class="go">log(((-1) + (-11)*e + 59*catalan))</span>
+<span class="go">((3/20) + (21/20)*e + (3/20)*catalan)</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>The numerical values are roughly as close to <span class="math">\(\pi\)</span> as permitted by the
+specified tolerance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="mi">6</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">e</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3.14157719846001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">135</span><span class="o">*</span><span class="n">e</span><span class="o">*</span><span class="n">catalan</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">98</span>
+<span class="go">3.14166950419369</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="o">-</span><span class="mi">13</span><span class="o">+</span><span class="mi">22</span><span class="o">*</span><span class="n">catalan</span><span class="p">)</span>
+<span class="go">3.14158000062992</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">24</span><span class="o">*</span><span class="n">e</span><span class="o">-</span><span class="mi">6</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">catalan</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+<span class="go">3.14158791577159</span>
+</pre></div>
+</div>
+<p><strong>Symbolic processing</strong></p>
+<p>The output formula can be evaluated as a Python expression.
+Note however that if fractions (like &#8216;2/3&#8217;) are present in
+the formula, Python&#8217;s <tt class="xref py py-func docutils literal"><span class="pre">eval()</span></tt> may erroneously perform
+integer division. Note also that the output is not necessarily
+in the algebraically simplest form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">&#39;(sqrt(8)/2)&#39;</span>
+</pre></div>
+</div>
+<p>As a solution to both problems, consider using SymPy&#8217;s
+<tt class="xref py py-func docutils literal"><span class="pre">sympify()</span></tt> to convert the formula into a symbolic expression.
+SymPy can be used to pretty-print or further simplify the formula
+symbolically:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sympify</span><span class="p">(</span><span class="n">identify</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">sqrt(2)</span>
+</pre></div>
+</div>
+<p>Sometimes <a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> can simplify an expression further than
+a symbolic algorithm:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">simplify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="s">&#39;-1/(-3/2+(1/2)*sqrt(5))*sqrt(3/2-1/2*sqrt(5))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">1/sqrt(3/2 - sqrt(5)/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">2/sqrt(6 - 2*sqrt(5))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">identify</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">30</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">1/2 + sqrt(5)/2</span>
+</pre></div>
+</div>
+<p>(In fact, this functionality is available directly in SymPy as the
+function <tt class="xref py py-func docutils literal"><span class="pre">nsimplify()</span></tt>, which is essentially a wrapper for
+<a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a>.)</p>
+<p><strong>Miscellaneous issues and limitations</strong></p>
+<p>The input <span class="math">\(x\)</span> must be a real number. All base constants must be
+positive real numbers and must not be rationals or rational linear
+combinations of each other.</p>
+<p>The worst-case computation time grows quickly with the number of
+base constants. Already with 3 or 4 base constants,
+<a class="reference internal" href="#mpmath.identify" title="mpmath.identify"><tt class="xref py py-func docutils literal"><span class="pre">identify()</span></tt></a> may require several seconds to finish. To search
+for relations among a large number of constants, you should
+consider using <a class="reference internal" href="#mpmath.pslq" title="mpmath.pslq"><tt class="xref py py-func docutils literal"><span class="pre">pslq()</span></tt></a> directly.</p>
+<p>The extended transformations are applied to x, not the constants
+separately. As a result, <tt class="docutils literal"><span class="pre">identify</span></tt> will for example be able to
+recognize <tt class="docutils literal"><span class="pre">exp(2*pi+3)</span></tt> with <tt class="docutils literal"><span class="pre">pi</span></tt> given as a base constant, but
+not <tt class="docutils literal"><span class="pre">2*exp(pi)+3</span></tt>. It will be able to recognize the latter if
+<tt class="docutils literal"><span class="pre">exp(pi)</span></tt> is given explicitly as a base constant.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="algebraic-identification">
+<h2>Algebraic identification<a class="headerlink" href="#algebraic-identification" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="findpoly">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt><a class="headerlink" href="#findpoly" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.findpoly">
+<tt class="descclassname">mpmath.</tt><tt class="descname">findpoly</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>n=1</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.findpoly" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">findpoly(x,</span> <span class="pre">n)</span></tt> returns the coefficients of an integer
+polynomial <span class="math">\(P\)</span> of degree at most <span class="math">\(n\)</span> such that <span class="math">\(P(x) \approx 0\)</span>.
+If no polynomial having <span class="math">\(x\)</span> as a root can be found,
+<a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> returns <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+<p><a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> works by successively calling <a class="reference internal" href="#mpmath.pslq" title="mpmath.pslq"><tt class="xref py py-func docutils literal"><span class="pre">pslq()</span></tt></a> with
+the vectors <span class="math">\([1, x]\)</span>, <span class="math">\([1, x, x^2]\)</span>, <span class="math">\([1, x, x^2, x^3]\)</span>, ...,
+<span class="math">\([1, x, x^2, .., x^n]\)</span> as input. Keyword arguments given to
+<a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> are forwarded verbatim to <a class="reference internal" href="#mpmath.pslq" title="mpmath.pslq"><tt class="xref py py-func docutils literal"><span class="pre">pslq()</span></tt></a>. In
+particular, you can specify a tolerance for <span class="math">\(P(x)\)</span> with <tt class="docutils literal"><span class="pre">tol</span></tt>
+and a maximum permitted coefficient size with <tt class="docutils literal"><span class="pre">maxcoeff</span></tt>.</p>
+<p>For large values of <span class="math">\(n\)</span>, it is recommended to run <a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a>
+at high precision; preferably 50 digits or more.</p>
+<p><strong>Examples</strong></p>
+<p>By default (degree <span class="math">\(n = 1\)</span>), <a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> simply finds a linear
+polynomial with a rational root:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="go">[-10, 7]</span>
+</pre></div>
+</div>
+<p>The generated coefficient list is valid input to <tt class="docutils literal"><span class="pre">polyval</span></tt> and
+<tt class="docutils literal"><span class="pre">polyroots</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">polyval</span><span class="p">(</span><span class="n">findpoly</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">phi</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">-2.0e-16</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">polyroots</span><span class="p">(</span><span class="n">findpoly</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="mi">2</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">-0.618033988749895</span>
+<span class="go">1.61803398874989</span>
+</pre></div>
+</div>
+<p>Numbers of the form <span class="math">\(m + n \sqrt p\)</span> for integers <span class="math">\((m, n, p)\)</span> are
+solutions to quadratic equations. As we find here, <span class="math">\(1+\sqrt 2\)</span>
+is a root of the polynomial <span class="math">\(x^2 - 2x - 1\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">[1, -2, -1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">2.4142135623731</span>
+</pre></div>
+</div>
+<p>Despite only containing square roots, the following number results
+in a polynomial of degree 4:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[1, 0, -10, 0, 1]</span>
+</pre></div>
+</div>
+<p>In fact, <span class="math">\(x^4 - 10x^2 + 1\)</span> is the <em>minimal polynomial</em> of
+<span class="math">\(r = \sqrt 2 + \sqrt 3\)</span>, meaning that a rational polynomial of
+lower degree having <span class="math">\(r\)</span> as a root does not exist. Given sufficient
+precision, <a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> will usually find the correct
+minimal polynomial of a given algebraic number.</p>
+<p><strong>Non-algebraic numbers</strong></p>
+<p>If <a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> fails to find a polynomial with given
+coefficient size and tolerance constraints, that means no such
+polynomial exists.</p>
+<p>We can verify that <span class="math">\(\pi\)</span> is not an algebraic number of degree 3 with
+coefficients less than 1000:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>It is always possible to find an algebraic approximation of a number
+using one (or several) of the following methods:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Increasing the permitted degree</li>
+<li>Allowing larger coefficients</li>
+<li>Reducing the tolerance</li>
+</ol>
+</div></blockquote>
+<p>One example of each method is shown below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[95, -545, 863, -183, -298]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">maxcoeff</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="go">[836, -1734, -2658, -457]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
+<span class="go">[-4, 22, -29, -2]</span>
+</pre></div>
+</div>
+<p>It is unknown whether Euler&#8217;s constant is transcendental (or even
+irrational). We can use <a class="reference internal" href="#mpmath.findpoly" title="mpmath.findpoly"><tt class="xref py py-func docutils literal"><span class="pre">findpoly()</span></tt></a> to check that if is
+an algebraic number, its minimal polynomial must have degree
+at least 7 and a coefficient of magnitude at least 1000000:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findpoly</span><span class="p">(</span><span class="n">euler</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">maxcoeff</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-100</span><span class="p">,</span> <span class="n">maxsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>Note that the high precision and strict tolerance is necessary
+for such high-degree runs, since otherwise unwanted low-accuracy
+approximations will be detected. It may also be necessary to set
+maxsteps high to prevent a premature exit (before the coefficient
+bound has been reached). Running with <tt class="docutils literal"><span class="pre">verbose=True</span></tt> to get an
+idea what is happening can be useful.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="integer-relations-pslq">
+<h2>Integer relations (PSLQ)<a class="headerlink" href="#integer-relations-pslq" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pslq">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">pslq()</span></tt><a class="headerlink" href="#pslq" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.pslq">
+<tt class="descclassname">mpmath.</tt><tt class="descname">pslq</tt><big>(</big><em>ctx</em>, <em>x</em>, <em>tol=None</em>, <em>maxcoeff=1000</em>, <em>maxsteps=100</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#mpmath.pslq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a vector of real numbers <span class="math">\(x = [x_0, x_1, ..., x_n]\)</span>, <tt class="docutils literal"><span class="pre">pslq(x)</span></tt>
+uses the PSLQ algorithm to find a list of integers
+<span class="math">\([c_0, c_1, ..., c_n]\)</span> such that</p>
+<div class="math">
+\[\begin{split}|c_1 x_1 + c_2 x_2 + ... + c_n x_n| &lt; \mathrm{tol}\end{split}\]</div>
+<p>and such that <span class="math">\(\max |c_k| &lt; \mathrm{maxcoeff}\)</span>. If no such vector
+exists, <a class="reference internal" href="#mpmath.pslq" title="mpmath.pslq"><tt class="xref py py-func docutils literal"><span class="pre">pslq()</span></tt></a> returns <tt class="docutils literal"><span class="pre">None</span></tt>. The tolerance defaults to
+3/4 of the working precision.</p>
+<p><strong>Examples</strong></p>
+<p>Find rational approximations for <span class="math">\(\pi\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pi</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="go">[22, 7]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pi</span><span class="p">],</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+<span class="go">[355, 113]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span><span class="o">/</span><span class="mi">7</span><span class="p">;</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">355</span><span class="p">)</span><span class="o">/</span><span class="mi">113</span><span class="p">;</span> <span class="o">+</span><span class="n">pi</span>
+<span class="go">3.14285714285714</span>
+<span class="go">3.14159292035398</span>
+<span class="go">3.14159265358979</span>
+</pre></div>
+</div>
+<p>Pi is not a rational number with denominator less than 1000:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pi</span><span class="p">])</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>To within the standard precision, it can however be approximated
+by at least one rational number with denominator less than <span class="math">\(10^{12}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">pslq</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">pi</span><span class="p">],</span> <span class="n">maxcoeff</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">12</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="k">print</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">238410049439</span>
+<span class="go">75888275702</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="n">q</span>
+<span class="go">3.14159265358979</span>
+</pre></div>
+</div>
+<p>The PSLQ algorithm can be applied to long vectors. For example,
+we can investigate the rational (in)dependence of integer square
+roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+<span class="go">[2, 0, 0, 0, 0, 0, -1]</span>
+</pre></div>
+</div>
+<p><strong>Machin formulas</strong></p>
+<p>A famous formula for <span class="math">\(\pi\)</span> is Machin&#8217;s,</p>
+<div class="math">
+\[\frac{\pi}{4} = 4 \operatorname{acot} 5 - \operatorname{acot} 239\]</div>
+<p>There are actually infinitely many formulas of this type. Two
+others are</p>
+<div class="math">
+\[\frac{\pi}{4} = \operatorname{acot} 1\]\[\frac{\pi}{4} = 12 \operatorname{acot} 49 + 32 \operatorname{acot} 57
+    + 5 \operatorname{acot} 239 + 12 \operatorname{acot} 110443\]</div>
+<p>We can easily verify the formulas using the PSLQ algorithm:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">acot</span><span class="p">(</span><span class="mi">1</span><span class="p">)])</span>
+<span class="go">[1, -1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">acot</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="n">acot</span><span class="p">(</span><span class="mi">239</span><span class="p">)])</span>
+<span class="go">[1, -4, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">acot</span><span class="p">(</span><span class="mi">49</span><span class="p">),</span> <span class="n">acot</span><span class="p">(</span><span class="mi">57</span><span class="p">),</span> <span class="n">acot</span><span class="p">(</span><span class="mi">239</span><span class="p">),</span> <span class="n">acot</span><span class="p">(</span><span class="mi">110443</span><span class="p">)])</span>
+<span class="go">[1, -12, -32, 5, -12]</span>
+</pre></div>
+</div>
+<p>We could try to generate a custom Machin-like formula by running
+the PSLQ algorithm with a few inverse cotangent values, for example
+acot(2), acot(3) ... acot(10). Unfortunately, there is a linear
+dependence among these values, resulting in only that dependence
+being detected, with a zero coefficient for <span class="math">\(\pi\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">pi</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">acot</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">11</span><span class="p">)])</span>
+<span class="go">[0, 1, -1, 0, 0, 0, -1, 0, 0, 0]</span>
+</pre></div>
+</div>
+<p>We get better luck by removing linearly dependent terms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pslq</span><span class="p">([</span><span class="n">pi</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">acot</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">11</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)])</span>
+<span class="go">[1, -8, 0, 0, 4, 0, 0, 0]</span>
+</pre></div>
+</div>
+<p>In other words, we found the following formula:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">8</span><span class="o">*</span><span class="n">acot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">acot</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">3.14159265358979323846264338328</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">pi</span>
+<span class="go">3.14159265358979323846264338328</span>
+</pre></div>
+</div>
+<p><strong>Algorithm</strong></p>
+<p>This is a fairly direct translation to Python of the pseudocode given by
+David Bailey, &#8220;The PSLQ Integer Relation Algorithm&#8221;:
+<a class="reference external" href="http://www.cecm.sfu.ca/organics/papers/bailey/paper/html/node3.html">http://www.cecm.sfu.ca/organics/papers/bailey/paper/html/node3.html</a></p>
+<p>The present implementation uses fixed-point instead of floating-point
+arithmetic, since this is significantly (about 7x) faster.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Number identification</a><ul>
+<li><a class="reference internal" href="#constant-recognition">Constant recognition</a><ul>
+<li><a class="reference internal" href="#identify"><tt class="docutils literal"><span class="pre">identify()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#algebraic-identification">Algebraic identification</a><ul>
+<li><a class="reference internal" href="#findpoly"><tt class="docutils literal"><span class="pre">findpoly()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integer-relations-pslq">Integer relations (PSLQ)</a><ul>
+<li><a class="reference internal" href="#pslq"><tt class="docutils literal"><span class="pre">pslq()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="previous chapter">Matrices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="technical.html"
+                        title="next chapter">Precision and representation issues</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/identification.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="technical.html" title="Precision and representation issues"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

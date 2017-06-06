@@ -1,0 +1,635 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.operator &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.operator</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Quantum mechanical operators.</span>
+
+<span class="sd">TODO:</span>
+
+<span class="sd">* Fix early 0 in apply_operators.</span>
+<span class="sd">* Debug and test apply_operators.</span>
+<span class="sd">* Get cse working with classes in this file.</span>
+<span class="sd">* Doctests and documentation of special methods for InnerProduct, Commutator,</span>
+<span class="sd">  AntiCommutator, represent, apply_operators.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Derivative</span><span class="p">,</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.pretty.stringpict</span> <span class="kn">import</span> <span class="n">prettyForm</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QExpr</span><span class="p">,</span> <span class="n">dispatch_method</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;Operator&#39;</span><span class="p">,</span>
+    <span class="s">&#39;HermitianOperator&#39;</span><span class="p">,</span>
+    <span class="s">&#39;UnitaryOperator&#39;</span><span class="p">,</span>
+    <span class="s">&#39;OuterProduct&#39;</span><span class="p">,</span>
+    <span class="s">&#39;DifferentialOperator&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Operators and outer products</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Operator"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.Operator">[docs]</a><span class="k">class</span> <span class="nc">Operator</span><span class="p">(</span><span class="n">QExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for non-commuting quantum operators.</span>
+
+<span class="sd">    An operator maps between quantum states [1]_. In quantum mechanics,</span>
+<span class="sd">    observables (including, but not limited to, measured physical values) are</span>
+<span class="sd">    represented as Hermitian operators [2]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : tuple</span>
+<span class="sd">        The list of numbers or parameters that uniquely specify the</span>
+<span class="sd">        operator. For time-dependent operators, this will include the time.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Create an operator and examine its attributes::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum import Operator</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols, I</span>
+<span class="sd">        &gt;&gt;&gt; A = Operator(&#39;A&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; A</span>
+<span class="sd">        A</span>
+<span class="sd">        &gt;&gt;&gt; A.hilbert_space</span>
+<span class="sd">        H</span>
+<span class="sd">        &gt;&gt;&gt; A.label</span>
+<span class="sd">        (A,)</span>
+<span class="sd">        &gt;&gt;&gt; A.is_commutative</span>
+<span class="sd">        False</span>
+
+<span class="sd">    Create another operator and do some arithmetic operations::</span>
+
+<span class="sd">        &gt;&gt;&gt; B = Operator(&#39;B&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; C = 2*A*A + I*B</span>
+<span class="sd">        &gt;&gt;&gt; C</span>
+<span class="sd">        2*A**2 + I*B</span>
+
+<span class="sd">    Operators don&#39;t commute::</span>
+
+<span class="sd">        &gt;&gt;&gt; A.is_commutative</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; B.is_commutative</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; A*B == B*A</span>
+<span class="sd">        False</span>
+
+<span class="sd">    Polymonials of operators respect the commutation properties::</span>
+
+<span class="sd">        &gt;&gt;&gt; e = (A+B)**3</span>
+<span class="sd">        &gt;&gt;&gt; e.expand()</span>
+<span class="sd">        A*B*A + A*B**2 + A**2*B + A**3 + B*A*B + B*A**2 + B**2*A + B**3</span>
+
+<span class="sd">    Operator inverses are handle symbolically::</span>
+
+<span class="sd">        &gt;&gt;&gt; A.inv()</span>
+<span class="sd">        A**(-1)</span>
+<span class="sd">        &gt;&gt;&gt; A*A.inv()</span>
+<span class="sd">        1</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Operator_%28physics%29</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Observable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;O&quot;</span><span class="p">,)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Printing</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="n">_label_separator</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_print_operator_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">_print_operator_name_latex</span> <span class="o">=</span> <span class="n">_print_operator_name</span>
+
+    <span class="k">def</span> <span class="nf">_print_operator_name_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_operator_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_contents_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_operator_name_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">label_pform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">label_pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span>
+                <span class="o">*</span><span class="n">label_pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">((</span><span class="n">label_pform</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">pform</span>
+
+    <span class="k">def</span> <span class="nf">_print_contents_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_latex</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">r&#39;</span><span class="si">%s</span><span class="s">\left(</span><span class="si">%s</span><span class="s">\right)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_operator_name_latex</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_latex</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># _eval_* methods</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate [self, other] if known, return None if not known.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">dispatch_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_eval_commutator&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_anticommutator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate [self, other] if known.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">dispatch_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_eval_anticommutator&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Operator application</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dispatch_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;_apply_operator&#39;</span><span class="p">,</span> <span class="n">ket</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">matrix_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;matrix_elements is not defined&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">()</span>
+
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">inverse</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="HermitianOperator"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.HermitianOperator">[docs]</a><span class="k">class</span> <span class="nc">HermitianOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Hermitian operator that satisfies H == Dagger(H).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : tuple</span>
+<span class="sd">        The list of numbers or parameters that uniquely specify the</span>
+<span class="sd">        operator. For time-dependent operators, this will include the time.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import Dagger, HermitianOperator</span>
+<span class="sd">    &gt;&gt;&gt; H = HermitianOperator(&#39;H&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; Dagger(H)</span>
+<span class="sd">    H</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_hermitian</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">UnitaryOperator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Operator</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">UnitaryOperator</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">exp</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Operator</span><span class="o">.</span><span class="n">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="p">(</span><span class="n">Operator</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Operator</span><span class="o">.</span><span class="n">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="UnitaryOperator"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.UnitaryOperator">[docs]</a><span class="k">class</span> <span class="nc">UnitaryOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A unitary operator that satisfies U*Dagger(U) == 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : tuple</span>
+<span class="sd">        The list of numbers or parameters that uniquely specify the</span>
+<span class="sd">        operator. For time-dependent operators, this will include the time.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import Dagger, UnitaryOperator</span>
+<span class="sd">    &gt;&gt;&gt; U = UnitaryOperator(&#39;U&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; U*Dagger(U)</span>
+<span class="sd">    1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_inverse</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="OuterProduct"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.OuterProduct">[docs]</a><span class="k">class</span> <span class="nc">OuterProduct</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An unevaluated outer product between a ket and bra.</span>
+
+<span class="sd">    This constructs an outer product between any subclass of ``KetBase`` and</span>
+<span class="sd">    ``BraBase`` as ``|a&gt;&lt;b|``. An ``OuterProduct`` inherits from Operator as they act as</span>
+<span class="sd">    operators in quantum expressions.  For reference see [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    ket : KetBase</span>
+<span class="sd">        The ket on the left side of the outer product.</span>
+<span class="sd">    bar : BraBase</span>
+<span class="sd">        The bra on the right side of the outer product.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Create a simple outer product by hand and take its dagger::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum import Ket, Bra, OuterProduct, Dagger</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum import Operator</span>
+
+<span class="sd">        &gt;&gt;&gt; k = Ket(&#39;k&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; b = Bra(&#39;b&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; op = OuterProduct(k, b)</span>
+<span class="sd">        &gt;&gt;&gt; op</span>
+<span class="sd">        |k&gt;&lt;b|</span>
+<span class="sd">        &gt;&gt;&gt; op.hilbert_space</span>
+<span class="sd">        H</span>
+<span class="sd">        &gt;&gt;&gt; op.ket</span>
+<span class="sd">        |k&gt;</span>
+<span class="sd">        &gt;&gt;&gt; op.bra</span>
+<span class="sd">        &lt;b|</span>
+<span class="sd">        &gt;&gt;&gt; Dagger(op)</span>
+<span class="sd">        |b&gt;&lt;k|</span>
+
+<span class="sd">    In simple products of kets and bras outer products will be automatically</span>
+<span class="sd">    identified and created::</span>
+
+<span class="sd">        &gt;&gt;&gt; k*b</span>
+<span class="sd">        |k&gt;&lt;b|</span>
+
+<span class="sd">    But in more complex expressions, outer products are not automatically</span>
+<span class="sd">    created::</span>
+
+<span class="sd">        &gt;&gt;&gt; A = Operator(&#39;A&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; A*k*b</span>
+<span class="sd">        A*|k&gt;*&lt;b|</span>
+
+<span class="sd">    A user can force the creation of an outer product in a complex expression</span>
+<span class="sd">    by using parentheses to group the ket and bra::</span>
+
+<span class="sd">        &gt;&gt;&gt; A*(k*b)</span>
+<span class="sd">        A*|k&gt;&lt;b|</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Outer_product</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">old_assumptions</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">KetBase</span><span class="p">,</span> <span class="n">BraBase</span>
+        <span class="n">ket</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bra</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ket</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;KetBase subclass expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ket</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bra</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;BraBase subclass expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ket</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ket</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span> <span class="o">==</span> <span class="n">bra</span><span class="o">.</span><span class="n">__class__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s">&#39;ket and bra are not dual classes: </span><span class="si">%r</span><span class="s">, </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">ket</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">bra</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c"># TODO: make sure the hilbert spaces of the bra and ket are compatible</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">old_assumptions</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">hilbert_space</span> <span class="o">=</span> <span class="n">ket</span><span class="o">.</span><span class="n">hilbert_space</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OuterProduct.ket"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.OuterProduct.ket">[docs]</a>    <span class="k">def</span> <span class="nf">ket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the ket on the left side of the outer product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OuterProduct.bra"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.OuterProduct.bra">[docs]</a>    <span class="k">def</span> <span class="nf">bra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the bra on the right side of the outer product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">OuterProduct</span><span class="p">(</span><span class="n">Dagger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="p">),</span> <span class="n">Dagger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_sympystr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympyrepr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="o">.</span><span class="n">_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="o">.</span><span class="n">_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_latex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">printer</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">k</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">def</span> <span class="nf">_represent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="o">.</span><span class="n">_represent</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="o">.</span><span class="n">_represent</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">k</span><span class="o">*</span><span class="n">b</span>
+
+    <span class="k">def</span> <span class="nf">_eval_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># TODO if operands are tensorproducts this may be will be handled</span>
+        <span class="c"># differently.</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ket</span><span class="o">.</span><span class="n">_eval_trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="DifferentialOperator"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.DifferentialOperator">[docs]</a><span class="k">class</span> <span class="nc">DifferentialOperator</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An operator for representing the differential operator, i.e. d/dx</span>
+
+<span class="sd">    It is initialized by passing two arguments. The first is an arbitrary</span>
+<span class="sd">    expression that involves a function, such as ``Derivative(f(x), x)``. The</span>
+<span class="sd">    second is the function (e.g. ``f(x)``) which we are to replace with the</span>
+<span class="sd">    ``Wavefunction`` that this ``DifferentialOperator`` is applied to.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr : Expr</span>
+<span class="sd">           The arbitrary expression which the appropriate Wavefunction is to be</span>
+<span class="sd">           substituted into</span>
+
+<span class="sd">    func : Expr</span>
+<span class="sd">           A function (e.g. f(x)) which is to be replaced with the appropriate</span>
+<span class="sd">           Wavefunction when this DifferentialOperator is applied</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    You can define a completely arbitrary expression and specify where the</span>
+<span class="sd">    Wavefunction is to be substituted</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Derivative, Function, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.operator import DifferentialOperator</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.state import Wavefunction</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.qapply import qapply</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))</span>
+<span class="sd">    &gt;&gt;&gt; w = Wavefunction(x**2, x)</span>
+<span class="sd">    &gt;&gt;&gt; d.function</span>
+<span class="sd">    f(x)</span>
+<span class="sd">    &gt;&gt;&gt; d.variables</span>
+<span class="sd">    (x,)</span>
+<span class="sd">    &gt;&gt;&gt; qapply(d*w)</span>
+<span class="sd">    Wavefunction(2, x)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="DifferentialOperator.variables"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.DifferentialOperator.variables">[docs]</a>    <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the variables with which the function in the specified</span>
+<span class="sd">        arbitrary expression is evaluated</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.operator import DifferentialOperator</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol, Function, Derivative</span>
+<span class="sd">        &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))</span>
+<span class="sd">        &gt;&gt;&gt; d.variables</span>
+<span class="sd">        (x,)</span>
+<span class="sd">        &gt;&gt;&gt; y = Symbol(&#39;y&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(Derivative(f(x, y), x) +</span>
+<span class="sd">        ...                          Derivative(f(x, y), y), f(x, y))</span>
+<span class="sd">        &gt;&gt;&gt; d.variables</span>
+<span class="sd">        (x, y)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">args</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="DifferentialOperator.function"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.DifferentialOperator.function">[docs]</a>    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the function which is to be replaced with the Wavefunction</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.operator import DifferentialOperator</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Function, Symbol, Derivative</span>
+<span class="sd">        &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(Derivative(f(x), x), f(x))</span>
+<span class="sd">        &gt;&gt;&gt; d.function</span>
+<span class="sd">        f(x)</span>
+<span class="sd">        &gt;&gt;&gt; y = Symbol(&#39;y&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(Derivative(f(x, y), x) +</span>
+<span class="sd">        ...                          Derivative(f(x, y), y), f(x, y))</span>
+<span class="sd">        &gt;&gt;&gt; d.function</span>
+<span class="sd">        f(x, y)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="DifferentialOperator.expr"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.DifferentialOperator.expr">[docs]</a>    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the arbitary expression which is to have the Wavefunction</span>
+<span class="sd">        substituted into it</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.quantum.operator import DifferentialOperator</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Function, Symbol, Derivative</span>
+<span class="sd">        &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(Derivative(f(x), x), f(x))</span>
+<span class="sd">        &gt;&gt;&gt; d.expr</span>
+<span class="sd">        Derivative(f(x), x)</span>
+<span class="sd">        &gt;&gt;&gt; y = Symbol(&#39;y&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; d = DifferentialOperator(Derivative(f(x, y), x) +</span>
+<span class="sd">        ...                          Derivative(f(x, y), y), f(x, y))</span>
+<span class="sd">        &gt;&gt;&gt; d.expr</span>
+<span class="sd">        Derivative(f(x, y), x) + Derivative(f(x, y), y)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="DifferentialOperator.free_symbols"><a class="viewcode-back" href="../../../../modules/physics/quantum/operator.html#sympy.physics.quantum.operator.DifferentialOperator.free_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the free symbols of the expression.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply_operator_Wavefunction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+        <span class="n">wf_vars</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span>
+        <span class="n">new_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">var</span><span class="p">))</span>
+        <span class="n">new_expr</span> <span class="o">=</span> <span class="n">new_expr</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">new_expr</span><span class="p">,</span> <span class="o">*</span><span class="n">wf_vars</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="n">new_expr</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DifferentialOperator</span><span class="p">(</span><span class="n">new_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c">#-------------------------------------------------------------------------</span>
+    <span class="c"># Printing</span>
+    <span class="c">#-------------------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_operator_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_label</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_pretty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_operator_name_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">label_pform</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_label_pretty</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">label_pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">label_pform</span><span class="o">.</span><span class="n">parens</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">pform</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">pform</span><span class="o">.</span><span class="n">right</span><span class="p">((</span><span class="n">label_pform</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">pform</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

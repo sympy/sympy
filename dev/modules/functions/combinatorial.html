@@ -1,0 +1,1164 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Combinatorial &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Functions Module" href="index.html" />
+    <link rel="next" title="Special" href="special.html" />
+    <link rel="prev" title="Elementary" href="elementary.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="special.html" title="Special"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="elementary.html" title="Elementary"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Functions Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="combinatorial">
+<h1>Combinatorial<a class="headerlink" href="#combinatorial" title="Permalink to this headline">¶</a></h1>
+<p>This module implements various combinatorial functions.</p>
+<div class="section" id="bell">
+<h2>bell<a class="headerlink" href="#bell" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.bell">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">bell</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#bell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.bell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bell numbers / Bell polynomials</p>
+<p>The Bell numbers satisfy <span class="math">\(B_0 = 1\)</span> and</p>
+<div class="math">
+\[B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k.\]</div>
+<p>They are also given by:</p>
+<div class="math">
+\[B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}.\]</div>
+<p>The Bell polynomials are given by <span class="math">\(B_0(x) = 1\)</span> and</p>
+<div class="math">
+\[B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x).\]</div>
+<p>The second kind of Bell polynomials (are sometimes called &#8220;partial&#8221; Bell
+polynomials or incomplete Bell polynomials) are defined as</p>
+<div class="math">
+\[B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
+\sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
+    \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
+    \left(\frac{x_1}{1!} \right)^{j_1}
+    \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
+    \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.\]</div>
+<ul class="simple">
+<li>bell(n) gives the <span class="math">\(n^{th}\)</span> Bell number, <span class="math">\(B_n\)</span>.</li>
+<li>bell(n, x) gives the <span class="math">\(n^{th}\)</span> Bell polynomial, <span class="math">\(B_n(x)\)</span>.</li>
+<li>bell(n, k, (x1, x2, ...)) gives Bell polynomials of the second kind,
+<span class="math">\(B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})\)</span>.</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Not to be confused with Bernoulli numbers and Bernoulli polynomials,
+which use the same notation.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r28" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R28]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Bell_number">http://en.wikipedia.org/wiki/Bell_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r29" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R29]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/BellNumber.html">http://mathworld.wolfram.com/BellNumber.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r30" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R30]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/BellPolynomial.html">http://mathworld.wolfram.com/BellPolynomial.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">bell</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">symbols</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">bell</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)]</span>
+<span class="go">[1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">846749014511809332450147</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">))</span>
+<span class="go">t**4 + 6*t**3 + 7*t**2 + t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bell</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x:6&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>
+<span class="go">6*x1*x5 + 15*x2*x4 + 10*x3**2</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="bernoulli">
+<h2>bernoulli<a class="headerlink" href="#bernoulli" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.bernoulli">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">bernoulli</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#bernoulli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.bernoulli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bernoulli numbers / Bernoulli polynomials</p>
+<p>The Bernoulli numbers are a sequence of rational numbers
+defined by B_0 = 1 and the recursive relation (n &gt; 0):</p>
+<div class="highlight-python"><pre>      n
+     ___
+    \      / n + 1 \
+0 =  )     |       | * B .
+    /___   \   k   /    k
+    k = 0</pre>
+</div>
+<p>They are also commonly defined by their exponential generating
+function, which is x/(exp(x) - 1). For odd indices &gt; 1, the
+Bernoulli numbers are zero.</p>
+<p>The Bernoulli polynomials satisfy the analogous formula:</p>
+<div class="highlight-python"><pre>          n
+         ___
+        \      / n \         n-k
+B (x) =  )     |   | * B  * x   .
+ n      /___   \ k /    k
+        k = 0</pre>
+</div>
+<p>Bernoulli numbers and Bernoulli polynomials are related as
+B_n(0) = B_n.</p>
+<p>We compute Bernoulli numbers using Ramanujan&#8217;s formula:</p>
+<div class="highlight-python"><pre>                         / n + 3 \
+B   =  (A(n) - S(n))  /  |       |
+ n                       \   n   /</pre>
+</div>
+<p>where A(n) = (n+3)/3 when n = 0 or 2 (mod 6), A(n) = -(n+3)/6
+when n = 4 (mod 6), and:</p>
+<div class="highlight-python"><pre>       [n/6]
+        ___
+       \      /  n + 3  \
+S(n) =  )     |         | * B
+       /___   \ n - 6*k /    n-6*k
+       k = 1</pre>
+</div>
+<p>This formula is similar to the sum given in the definition, but
+cuts 2/3 of the terms. For Bernoulli polynomials, we use the
+formula in the definition.</p>
+<ul class="simple">
+<li>bernoulli(n) gives the nth Bernoulli number, B_n</li>
+<li>bernoulli(n, x) gives the nth Bernoulli polynomial in x, B_n(x)</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r31" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R31]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Bernoulli_number">http://en.wikipedia.org/wiki/Bernoulli_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r32" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R32]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Bernoulli_polynomial">http://en.wikipedia.org/wiki/Bernoulli_polynomial</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r33" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[R33]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/BernoulliNumber.html">http://mathworld.wolfram.com/BernoulliNumber.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r34" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[R34]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/BernoulliPolynomial.html">http://mathworld.wolfram.com/BernoulliPolynomial.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">bernoulli</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)]</span>
+<span class="go">[1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">1000001</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="binomial">
+<h2>binomial<a class="headerlink" href="#binomial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.binomial">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">binomial</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#binomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.binomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the binomial coefficient. It can be defined
+in two ways depending on its desired interpretation:</p>
+<blockquote>
+<div>C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!</div></blockquote>
+<p>First, in a strict combinatorial sense it defines the
+number of ways we can choose &#8216;k&#8217; elements from a set of
+&#8216;n&#8217; elements. In this case both arguments are nonnegative
+integers and binomial is computed using an efficient
+algorithm based on prime factorization.</p>
+<p>The other definition is generalization for arbitrary &#8216;n&#8217;,
+however &#8216;k&#8217; must also be nonnegative. This case is very
+useful when evaluating summations.</p>
+<p>For the sake of convenience for negative &#8216;k&#8217; this function
+will return zero no matter what valued is the other argument.</p>
+<p>To expand the binomial when n is a symbol, use either
+expand_func() or expand(func=True). The former will keep the
+polynomial in factored form while the latter will expand the
+polynomial itself. See examples for details.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">expand_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="go">6435</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">binomial</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span>
+<span class="go">[1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">binomial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[1, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">binomial</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+<span class="go">[1, 2, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">binomial</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="go">[1, 3, 3, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">binomial</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="go">[1, 4, 6, 4, 1]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">-5/128</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">binomial(n, 3)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">n**3/6 - n**2/2 + n/3</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expand_func</span><span class="p">(</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">n*(n - 2)*(n - 1)/6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="catalan">
+<h2>catalan<a class="headerlink" href="#catalan" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.catalan">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">catalan</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#catalan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.catalan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catalan numbers</p>
+<p>The n-th catalan number is given by:</p>
+<div class="highlight-python"><pre>       1   / 2*n \
+C  = ----- |     |
+ n   n + 1 \  n  /</pre>
+</div>
+<ul class="simple">
+<li>catalan(n) gives the n-th Catalan number, C_n</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt>, <a class="reference internal" href="#sympy.functions.combinatorial.factorials.binomial" title="sympy.functions.combinatorial.factorials.binomial"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.combinatorial.factorials.binomial</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r35" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[R35]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Catalan_number">http://en.wikipedia.org/wiki/Catalan_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r36" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id9">[R36]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/CatalanNumber.html">http://mathworld.wolfram.com/CatalanNumber.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r37" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10">[R37]</a></td><td><a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/CatalanNumber/">http://functions.wolfram.com/GammaBetaErf/CatalanNumber/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r38" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[R38]</a></td><td><a class="reference external" href="http://geometer.org/mathcircles/catalan.pdf">http://geometer.org/mathcircles/catalan.pdf</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Symbol</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">hyper</span><span class="p">,</span> <span class="n">polygamma</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">catalan</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">combsimp</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">I</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span> <span class="n">catalan</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span> <span class="p">]</span>
+<span class="go">[1, 2, 5, 14, 42, 132, 429, 1430, 4862]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">catalan(n)</span>
+</pre></div>
+</div>
+<p>Catalan numbers can be transformed into several other, identical
+expressions involving other mathematical functions</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">binomial</span><span class="p">)</span>
+<span class="go">binomial(2*n, n)/(n + 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+<span class="go">4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">hyper</span><span class="p">)</span>
+<span class="go">hyper((-n + 1, -n), (2,), 1)</span>
+</pre></div>
+</div>
+<p>For some non-integer values of n we can get closed form
+expressions by rewriting in terms of gamma functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+<span class="go">8/(3*pi)</span>
+</pre></div>
+</div>
+<p>We can differentiate the Catalan numbers C(n) interpreted as a
+continuous real funtion in n:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">(polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)</span>
+</pre></div>
+</div>
+<p>As a more advanced example consider the following ratio
+between consecutive numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">combsimp</span><span class="p">((</span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">catalan</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">binomial</span><span class="p">))</span>
+<span class="go">2*(2*n + 1)/(n + 2)</span>
+</pre></div>
+</div>
+<p>The Catalan numbers can be generalized to complex numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+<span class="go">4**I*gamma(1/2 + I)/(sqrt(pi)*gamma(2 + I))</span>
+</pre></div>
+</div>
+<p>and evaluated with arbitrary precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">catalan</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">0.39764993382373624267 - 0.020884341620842555705*I</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="euler">
+<h2>euler<a class="headerlink" href="#euler" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.euler">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">euler</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#euler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.euler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Euler numbers</p>
+<p>The euler numbers are given by:</p>
+<div class="highlight-python"><pre>        2*n+1   k
+         ___   ___            j          2*n+1
+        \     \     / k \ (-1)  * (k-2*j)
+E   = I  )     )    |   | --------------------
+ 2n     /___  /___  \ j /      k    k
+        k = 1 j = 0           2  * I  * k
+
+E     = 0
+ 2n+1</pre>
+</div>
+<ul class="simple">
+<li>euler(n) gives the n-th Euler number, E_n</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r39" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[R39]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Euler_numbers">http://en.wikipedia.org/wiki/Euler_numbers</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r40" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id13">[R40]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/EulerNumber.html">http://mathworld.wolfram.com/EulerNumber.html</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r41" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id14">[R41]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Alternating_permutation">http://en.wikipedia.org/wiki/Alternating_permutation</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r42" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id15">[R42]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/AlternatingPermutation.html">http://mathworld.wolfram.com/AlternatingPermutation.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">euler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">euler</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="go">[1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;n&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">euler</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+<span class="go">euler(3*n)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="factorial">
+<h2>factorial<a class="headerlink" href="#factorial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.factorial">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">factorial</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#factorial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.factorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of factorial function over nonnegative integers.
+For the sake of convenience and simplicity of procedures using
+this function it is defined for negative integers and returns
+zero in this case.</p>
+<p>The factorial is very important in combinatorics where it gives
+the number of ways in which &#8216;n&#8217; objects can be permuted. It also
+arises in calculus, probability, number theory etc.</p>
+<p>There is strict relation of factorial with gamma function. In
+fact n! = gamma(n+1) for nonnegative integers. Rewrite of this
+kind is very useful in case of combinatorial simplification.</p>
+<p>Computation of the factorial is done using two algorithms. For
+small arguments naive product is evaluated. However for bigger
+input algorithm Prime-Swing is used. It is the fastest algorithm
+known and computes n! via prime factorization of special class
+of numbers, called here the &#8216;Swing Numbers&#8217;.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">factorial2</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">RisingFactorial</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">FallingFactorial</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">5040</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">factorial(n)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+<span class="go">factorial(2*n)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="factorial2-double-factorial">
+<h2>factorial2 / double factorial<a class="headerlink" href="#factorial2-double-factorial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.factorial2">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">factorial2</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#factorial2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.factorial2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The double factorial n!!, not to be confused with (n!)!</p>
+<p>The double factorial is defined for integers &gt;= -1 as:</p>
+<div class="highlight-python"><pre>       ,
+      |  n*(n - 2)*(n - 4)* ... * 1    for n odd
+n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n even
+      |  1                             for n = 0, -1
+       `</pre>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">factorial</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">RisingFactorial</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">FallingFactorial</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial2</span><span class="p">,</span> <span class="n">var</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">)</span>
+<span class="go">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorial2</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">factorial2(n + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorial2</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorial2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fallingfactorial">
+<h2>FallingFactorial<a class="headerlink" href="#fallingfactorial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.FallingFactorial">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">FallingFactorial</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#FallingFactorial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.FallingFactorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Falling factorial (related to rising factorial) is a double valued
+function arising in concrete mathematics, hypergeometric functions
+and series expansions. It is defined by</p>
+<blockquote>
+<div>ff(x, k) = x * (x-1) * ... * (x - k+1)</div></blockquote>
+<p>where &#8216;x&#8217; can be arbitrary expression and &#8216;k&#8217; is an integer. For
+more information check &#8220;Concrete mathematics&#8221; by Graham, pp. 66
+or visit <a class="reference external" href="http://mathworld.wolfram.com/FallingFactorial.html">http://mathworld.wolfram.com/FallingFactorial.html</a> page.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">120</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">factorial</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">factorial2</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">RisingFactorial</span></tt></p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="fibonacci">
+<h2>fibonacci<a class="headerlink" href="#fibonacci" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.fibonacci">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">fibonacci</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#fibonacci"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.fibonacci" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fibonacci numbers / Fibonacci polynomials</p>
+<p>The Fibonacci numbers are the integer sequence defined by the
+initial terms F_0 = 0, F_1 = 1 and the two-term recurrence
+relation F_n = F_{n-1} + F_{n-2}.</p>
+<p>The Fibonacci polynomials are defined by F_1(x) = 1,
+F_2(x) = x, and F_n(x) = x*F_{n-1}(x) + F_{n-2}(x) for n &gt; 2.
+For all positive integers n, F_n(1) = F_n.</p>
+<ul class="simple">
+<li>fibonacci(n) gives the nth Fibonacci number, F_n</li>
+<li>fibonacci(n, x) gives the nth Fibonacci polynomial in x, F_n(x)</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r43" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id16">[R43]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Fibonacci_number">http://en.wikipedia.org/wiki/Fibonacci_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r44" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id17">[R44]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/FibonacciNumber.html">http://mathworld.wolfram.com/FibonacciNumber.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">fibonacci</span><span class="p">,</span> <span class="n">Symbol</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">fibonacci</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)]</span>
+<span class="go">[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">))</span>
+<span class="go">t**4 + 3*t**2 + 1</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="harmonic">
+<h2>harmonic<a class="headerlink" href="#harmonic" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.harmonic">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">harmonic</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#harmonic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.harmonic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Harmonic numbers</p>
+<p>The nth harmonic number is given by <span class="math">\(\operatorname{H}_{n} =
+1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}\)</span>.</p>
+<p>More generally:</p>
+<div class="math">
+\[\operatorname{H}_{n,m} = \sum_{k=1}^{n} \frac{1}{k^m}\]</div>
+<p>As <span class="math">\(n \rightarrow \infty\)</span>, <span class="math">\(\operatorname{H}_{n,m} \rightarrow \zeta(m)\)</span>,
+the Riemann zeta function.</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">harmonic(n)</span></tt> gives the nth harmonic number, <span class="math">\(\operatorname{H}_n\)</span></li>
+<li><tt class="docutils literal"><span class="pre">harmonic(n,</span> <span class="pre">m)</span></tt> gives the nth generalized harmonic number
+of order <span class="math">\(m\)</span>, <span class="math">\(\operatorname{H}_{n,m}\)</span>, where
+<tt class="docutils literal"><span class="pre">harmonic(n)</span> <span class="pre">==</span> <span class="pre">harmonic(n,</span> <span class="pre">1)</span></tt></li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">lucas</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r45" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id18">[R45]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Harmonic_number">http://en.wikipedia.org/wiki/Harmonic_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r46" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id19">[R46]</a></td><td><a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/">http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r47" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id20">[R47]</a></td><td><a class="reference external" href="http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/">http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">harmonic</span><span class="p">,</span> <span class="n">oo</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)]</span>
+<span class="go">[0, 1, 3/2, 11/6, 25/12, 137/60]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)]</span>
+<span class="go">[0, 1, 5/4, 49/36, 205/144, 5269/3600]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">oo</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">pi**2/6</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;n&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">Sum</span><span class="p">)</span>
+<span class="go">Sum(1/_k, (_k, 1, n))</span>
+</pre></div>
+</div>
+<p>We can rewrite harmonic numbers in terms of polygamma functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">digamma</span><span class="p">,</span> <span class="n">polygamma</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">digamma</span><span class="p">)</span>
+<span class="go">polygamma(0, n + 1) + EulerGamma</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span>
+<span class="go">polygamma(0, n + 1) + EulerGamma</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span>
+<span class="go">polygamma(2, n + 1)/2 - polygamma(2, 1)/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">polygamma</span><span class="p">)</span>
+<span class="go">(-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)</span>
+</pre></div>
+</div>
+<p>Integer offsets in the argument can be pulled out:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">expand_func</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expand_func</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expand_func</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n</span>
+</pre></div>
+</div>
+<p>Some limits can be computed as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">limit</span><span class="p">,</span> <span class="n">oo</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">oo</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">pi**2/6</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">-polygamma(2, 1)/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">harmonic</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">m</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">zeta(n)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="lucas">
+<h2>lucas<a class="headerlink" href="#lucas" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.numbers.lucas">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">lucas</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#lucas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.lucas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lucas numbers</p>
+<p>Lucas numbers satisfy a recurrence relation similar to that of
+the Fibonacci sequence, in which each term is the sum of the
+preceding two. They are generated by choosing the initial
+values L_0 = 2 and L_1 = 1.</p>
+<ul class="simple">
+<li>lucas(n) gives the nth Lucas number</li>
+</ul>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">bell</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">bernoulli</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">catalan</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">euler</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">fibonacci</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">harmonic</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r48" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id21">[R48]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Lucas_number">http://en.wikipedia.org/wiki/Lucas_number</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r49" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id22">[R49]</a></td><td><a class="reference external" href="http://mathworld.wolfram.com/LucasNumber.html">http://mathworld.wolfram.com/LucasNumber.html</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">lucas</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">lucas</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)]</span>
+<span class="go">[2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="multifactorial">
+<h2>MultiFactorial<a class="headerlink" href="#multifactorial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.MultiFactorial">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">MultiFactorial</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#MultiFactorial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.MultiFactorial" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="risingfactorial">
+<h2>RisingFactorial<a class="headerlink" href="#risingfactorial" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.functions.combinatorial.factorials.RisingFactorial">
+<em class="property">class </em><tt class="descclassname">sympy.functions.combinatorial.factorials.</tt><tt class="descname">RisingFactorial</tt><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/factorials.html#RisingFactorial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.factorials.RisingFactorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rising factorial (also called Pochhammer symbol) is a double valued
+function arising in concrete mathematics, hypergeometric functions
+and series expansions. It is defined by:</p>
+<blockquote>
+<div>rf(x, k) = x * (x+1) * ... * (x + k-1)</div></blockquote>
+<p>where &#8216;x&#8217; can be arbitrary expression and &#8216;k&#8217; is an integer. For
+more information check &#8220;Concrete mathematics&#8221; by Graham, pp. 66
+or visit <a class="reference external" href="http://mathworld.wolfram.com/RisingFactorial.html">http://mathworld.wolfram.com/RisingFactorial.html</a> page.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">factorial</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">factorial2</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">FallingFactorial</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">rf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">120</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="stirling">
+<h2>stirling<a class="headerlink" href="#stirling" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.functions.combinatorial.numbers.stirling">
+<tt class="descclassname">sympy.functions.combinatorial.numbers.</tt><tt class="descname">stirling</tt><big>(</big><em>n</em>, <em>k</em>, <em>d=None</em>, <em>kind=2</em>, <em>signed=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/functions/combinatorial/numbers.html#stirling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.functions.combinatorial.numbers.stirling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Stirling number S(n, k) of the first or second (default) kind.</p>
+<p>The sum of all Stirling numbers of the second kind for k = 1
+through n is bell(n). The recurrence relationship for these numbers
+is:</p>
+<div class="highlight-python"><pre>{0}       {n}   {0}      {n + 1}     {n}   {  n  }
+{ } = 1;  { } = { } = 0; {     } = j*{ } + {     }
+{0}       {0}   {k}      {  k  }     {k}   {k - 1}</pre>
+</div>
+<dl class="docutils">
+<dt>where <tt class="docutils literal"><span class="pre">j</span></tt> is::</dt>
+<dd><tt class="docutils literal"><span class="pre">n</span></tt> for Stirling numbers of the first kind
+<tt class="docutils literal"><span class="pre">-n</span></tt> for signed Stirling numbers of the first kind
+<tt class="docutils literal"><span class="pre">k</span></tt> for Stirling numbers of the second kind</dd>
+</dl>
+<p>The first kind of Stirling number counts the number of permutations of
+<tt class="docutils literal"><span class="pre">n</span></tt> distinct items that have <tt class="docutils literal"><span class="pre">k</span></tt> cycles; the second kind counts the
+ways in which <tt class="docutils literal"><span class="pre">n</span></tt> distinct items can be partitioned into <tt class="docutils literal"><span class="pre">k</span></tt> parts.
+If <tt class="docutils literal"><span class="pre">d</span></tt> is given, the &#8220;reduced Stirling number of the second kind&#8221; is
+returned: <tt class="docutils literal"><span class="pre">S^{d}(n,</span> <span class="pre">k)</span> <span class="pre">=</span> <span class="pre">S(n</span> <span class="pre">-</span> <span class="pre">d</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">k</span> <span class="pre">-</span> <span class="pre">d</span> <span class="pre">+</span> <span class="pre">1)</span></tt> with <tt class="docutils literal"><span class="pre">n</span> <span class="pre">&gt;=</span> <span class="pre">k</span> <span class="pre">&gt;=</span> <span class="pre">d</span></tt>.
+(This counts the ways to partition <tt class="docutils literal"><span class="pre">n</span></tt> consecutive integers into
+<tt class="docutils literal"><span class="pre">k</span></tt> groups with no pairwise difference less than <tt class="docutils literal"><span class="pre">d</span></tt>. See example
+below.)</p>
+<p>To obtain the signed Stirling numbers of the first kind, use keyword
+<tt class="docutils literal"><span class="pre">signed=True</span></tt>. Using this keyword automatically sets <tt class="docutils literal"><span class="pre">kind</span></tt> to 1.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../utilities/iterables.html#sympy.utilities.iterables.multiset_partitions" title="sympy.utilities.iterables.multiset_partitions"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.utilities.iterables.multiset_partitions</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r50" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id23">[R50]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind">http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r51" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id24">[R51]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind">http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.numbers</span> <span class="kn">import</span> <span class="n">stirling</span><span class="p">,</span> <span class="n">bell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics</span> <span class="kn">import</span> <span class="n">Permutation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_partitions</span><span class="p">,</span> <span class="n">permutations</span>
+</pre></div>
+</div>
+<p>First kind (unsigned by default):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">stirling</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]</span>
+<span class="go">[0, 120, 274, 225, 85, 15, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">perms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">permutations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">Permutation</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">cycles</span> <span class="o">==</span> <span class="n">i</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">perms</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="go">[0, 6, 11, 6, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">stirling</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="go">[0, 6, 11, 6, 1]</span>
+</pre></div>
+</div>
+<p>First kind (signed):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">stirling</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+<span class="go">[0, -6, 11, -6, 1]</span>
+</pre></div>
+</div>
+<p>Second kind:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">stirling</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)]</span>
+<span class="go">[0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">==</span> <span class="n">bell</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">==</span> <span class="n">stirling</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Reduced second kind:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">subsets</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">delta</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="n">oo</span>
+<span class="gp">... </span>   <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subsets</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parts</span> <span class="o">=</span> <span class="n">multiset_partitions</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">delta</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">d</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">p</span><span class="p">))</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stirling</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="enumeration">
+<h1>Enumeration<a class="headerlink" href="#enumeration" title="Permalink to this headline">¶</a></h1>
+<p>Three functions are available. Each of them attempts to efficiently compute
+a given combinatorial quantity for a given set or multiset which can be
+entered as an integer, sequence or multiset (dictionary with
+elements as keys and multiplicities as values). The <tt class="docutils literal"><span class="pre">k</span></tt> parameter indicates
+the number of elements to pick (or the number of partitions to make). When
+<tt class="docutils literal"><span class="pre">k</span></tt> is None, the sum of the enumeration for all <tt class="docutils literal"><span class="pre">k</span></tt> (from 0 through the
+number of items represented by <tt class="docutils literal"><span class="pre">n</span></tt>) is returned. A <tt class="docutils literal"><span class="pre">replacement</span></tt> parameter
+is recognized for combinations and permutations; this indicates that any item
+may appear with multiplicity as high as the number of items in the original
+set.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.combinatorial.numbers</span> <span class="kn">import</span> <span class="n">nC</span><span class="p">,</span> <span class="n">nP</span><span class="p">,</span> <span class="n">nT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="s">&#39;baby&#39;</span>
+</pre></div>
+</div>
+<div class="section" id="nc">
+<h2>nC<a class="headerlink" href="#nc" title="Permalink to this headline">¶</a></h2>
+<p>Calculate the number of combinations of length <tt class="docutils literal"><span class="pre">k</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">nC</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">nC</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<span class="go">([1, 3, 4, 3, 1], 12)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="s">&#39;aaa&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="s">&#39;abc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="np">
+<h2>nP<a class="headerlink" href="#np" title="Permalink to this headline">¶</a></h2>
+<p>Calculate the number of permutations of length <tt class="docutils literal"><span class="pre">k</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">nP</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">nP</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<span class="go">([1, 3, 7, 12, 12], 35)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="s">&#39;aaa&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="s">&#39;abc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nC</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nt">
+<h2>nT<a class="headerlink" href="#nt" title="Permalink to this headline">¶</a></h2>
+<p>Calculate the number of partitions that have <tt class="docutils literal"><span class="pre">k</span></tt> parts.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">nT</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">nT</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<span class="go">([0, 1, 5, 4, 1], 11)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nT</span><span class="p">(</span><span class="s">&#39;aaa&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nT</span><span class="p">(</span><span class="s">&#39;abc&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nT</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>Note that the integer for <tt class="docutils literal"><span class="pre">n</span></tt> indicates <em>identical</em> items for <tt class="docutils literal"><span class="pre">nT</span></tt> but
+indicates <tt class="docutils literal"><span class="pre">n</span></tt> <em>different</em> items for <tt class="docutils literal"><span class="pre">nC</span></tt> and <tt class="docutils literal"><span class="pre">nP</span></tt>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Combinatorial</a><ul>
+<li><a class="reference internal" href="#bell">bell</a></li>
+<li><a class="reference internal" href="#bernoulli">bernoulli</a></li>
+<li><a class="reference internal" href="#binomial">binomial</a></li>
+<li><a class="reference internal" href="#catalan">catalan</a></li>
+<li><a class="reference internal" href="#euler">euler</a></li>
+<li><a class="reference internal" href="#factorial">factorial</a></li>
+<li><a class="reference internal" href="#factorial2-double-factorial">factorial2 / double factorial</a></li>
+<li><a class="reference internal" href="#fallingfactorial">FallingFactorial</a></li>
+<li><a class="reference internal" href="#fibonacci">fibonacci</a></li>
+<li><a class="reference internal" href="#harmonic">harmonic</a></li>
+<li><a class="reference internal" href="#lucas">lucas</a></li>
+<li><a class="reference internal" href="#multifactorial">MultiFactorial</a></li>
+<li><a class="reference internal" href="#risingfactorial">RisingFactorial</a></li>
+<li><a class="reference internal" href="#stirling">stirling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enumeration">Enumeration</a><ul>
+<li><a class="reference internal" href="#nc">nC</a></li>
+<li><a class="reference internal" href="#np">nP</a></li>
+<li><a class="reference internal" href="#nt">nT</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="elementary.html"
+                        title="previous chapter">Elementary</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="special.html"
+                        title="next chapter">Special</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/functions/combinatorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="special.html" title="Special"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="elementary.html" title="Elementary"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Functions Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

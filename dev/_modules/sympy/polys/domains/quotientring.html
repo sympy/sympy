@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.domains.quotientring &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy.polys.domains" href="../domains.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" accesskey="U">sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.domains.quotientring</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implementation of :class:`QuotientRing` class.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.domains.ring</span> <span class="kn">import</span> <span class="n">Ring</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">NotReversible</span><span class="p">,</span> <span class="n">CoercionFailed</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.agca.modules</span> <span class="kn">import</span> <span class="n">FreeModuleQuotientRing</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="c"># TODO</span>
+<span class="c"># - successive quotients (when quotient ideals are implemented)</span>
+<span class="c"># - poly rings over quotients?</span>
+<span class="c"># - division by non-units in integral domains?</span>
+
+<span class="nd">@public</span>
+<span class="k">class</span> <span class="nc">QuotientRingElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing elements of (commutative) quotient rings.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - ring - containing ring</span>
+<span class="sd">    - data - element of ring.ring (i.e. base ring) representing self</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">ring</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; + &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">base_ideal</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">ring</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">om</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">CoercionFailed</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="n">om</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">__radd__</span> <span class="o">=</span> <span class="n">__add__</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="o">-</span><span class="n">om</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">CoercionFailed</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="n">o</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__mul__</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">*</span><span class="n">o</span>
+
+    <span class="n">__rtruediv__</span> <span class="o">=</span> <span class="n">__rdiv__</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">CoercionFailed</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">revert</span><span class="p">(</span><span class="n">o</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span>
+
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">**</span><span class="n">oth</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">ring</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">is_zero</span><span class="p">(</span><span class="bp">self</span> <span class="o">-</span> <span class="n">om</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="QuotientRing"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.domains.quotientring.QuotientRing">[docs]</a><span class="k">class</span> <span class="nc">QuotientRing</span><span class="p">(</span><span class="n">Ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing (commutative) quotient rings.</span>
+
+<span class="sd">    You should not usually instantiate this by hand, instead use the constructor</span>
+<span class="sd">    from the base ring in the construction.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; I = QQ.old_poly_ring(x).ideal(x**3 + 1)</span>
+<span class="sd">    &gt;&gt;&gt; QQ.old_poly_ring(x).quotient_ring(I)</span>
+<span class="sd">    QQ[x]/&lt;x**3 + 1&gt;</span>
+
+<span class="sd">    Shorter versions are possible:</span>
+
+<span class="sd">    &gt;&gt;&gt; QQ.old_poly_ring(x)/I</span>
+<span class="sd">    QQ[x]/&lt;x**3 + 1&gt;</span>
+
+<span class="sd">    &gt;&gt;&gt; QQ.old_poly_ring(x)/[x**3 + 1]</span>
+<span class="sd">    QQ[x]/&lt;x**3 + 1&gt;</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - ring - the base ring</span>
+<span class="sd">    - base_ideal - the ideal used to form the quotient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">has_assoc_Ring</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">has_assoc_Field</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">QuotientRingElement</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">ideal</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ideal</span><span class="o">.</span><span class="n">ring</span> <span class="o">==</span> <span class="n">ring</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Ideal must belong to </span><span class="si">%s</span><span class="s">, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">ideal</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">ring</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span> <span class="o">=</span> <span class="n">ideal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">zero</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">one</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct an element of `self` domain from `a`. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="c"># TODO optionally disable reduction?</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span><span class="o">.</span><span class="n">reduce_element</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns `True` if two domains are equivalent. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">QuotientRing</span><span class="p">)</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">ring</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">base_ideal</span>
+
+    <span class="k">def</span> <span class="nf">from_ZZ_python</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a Python `int` object to `dtype`. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">K1</span><span class="p">(</span><span class="n">K1</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">))</span>
+
+    <span class="n">from_QQ_python</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+    <span class="n">from_ZZ_gmpy</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+    <span class="n">from_QQ_gmpy</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+    <span class="n">from_RealField</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+    <span class="n">from_GlobalPolynomialRing</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+    <span class="n">from_FractionField</span> <span class="o">=</span> <span class="n">from_ZZ_python</span>
+
+    <span class="k">def</span> <span class="nf">from_sympy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">to_sympy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">to_sympy</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">from_QuotientRing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">K0</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">a</span>
+
+    <span class="k">def</span> <span class="nf">poly_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a polynomial ring, i.e. `K[X]`. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;nested domains not allowed&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">frac_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a fraction field, i.e. `K(X)`. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;nested domains not allowed&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute a**(-1), if possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">I</span><span class="o">.</span><span class="n">in_terms_of_generators</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c"># 1 not in I</span>
+            <span class="k">raise</span> <span class="n">NotReversible</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> not a unit in </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_ideal</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">free_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a free module of rank ``rank`` over ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)</span>
+<span class="sd">        (QQ[x]/&lt;x**2 + 1&gt;)**2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FreeModuleQuotientRing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" >sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

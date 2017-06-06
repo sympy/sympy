@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.simplify.epathtools &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.simplify.epathtools</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tools for manipulation of expressions using paths. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span>
+
+
+<div class="viewcode-block" id="EPath"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.epathtools.EPath">[docs]</a><span class="k">class</span> <span class="nc">EPath</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Manipulate expressions using paths.</span>
+
+<span class="sd">    EPath grammar in EBNF notation::</span>
+
+<span class="sd">        literal   ::= /[A-Za-z_][A-Za-z_0-9]*/</span>
+<span class="sd">        number    ::= /-?\d+/</span>
+<span class="sd">        type      ::= literal</span>
+<span class="sd">        attribute ::= literal &quot;?&quot;</span>
+<span class="sd">        all       ::= &quot;*&quot;</span>
+<span class="sd">        slice     ::= &quot;[&quot; number? (&quot;:&quot; number? (&quot;:&quot; number?)?)? &quot;]&quot;</span>
+<span class="sd">        range     ::= all | slice</span>
+<span class="sd">        query     ::= (type | attribute) (&quot;|&quot; (type | attribute))*</span>
+<span class="sd">        selector  ::= range | query range?</span>
+<span class="sd">        path      ::= &quot;/&quot; selector (&quot;/&quot; selector)*</span>
+
+<span class="sd">    See the docstring of the epath() function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;_path&quot;</span><span class="p">,</span> <span class="s">&quot;_epath&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct new EPath. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">EPath</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">path</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;empty EPath&quot;</span><span class="p">)</span>
+
+        <span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;/&#39;</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;non-root EPath&quot;</span><span class="p">)</span>
+
+        <span class="n">epath</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">selector</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">):</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">selector</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;empty selector&quot;</span><span class="p">)</span>
+
+            <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">selector</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;_&#39;</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;|&#39;</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&#39;?&#39;</span><span class="p">:</span>
+                    <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="n">index</span><span class="p">:</span>
+                <span class="n">elements</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[</span><span class="n">index</span><span class="p">:]</span>
+
+                <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;|&#39;</span><span class="p">):</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">element</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;empty element&quot;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;?&#39;</span><span class="p">):</span>
+                        <span class="n">attrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+            <span class="n">span</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="k">if</span> <span class="n">selector</span> <span class="o">==</span> <span class="s">&#39;*&#39;</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;[&#39;</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;expected &#39;]&#39;, got EOL&quot;</span><span class="p">)</span>
+
+                    <span class="n">_span</span><span class="p">,</span> <span class="n">span</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">i</span><span class="p">],</span> <span class="p">[]</span>
+
+                    <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_span</span><span class="p">:</span>
+                        <span class="n">span</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_span</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">_span</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">elt</span><span class="p">:</span>
+                                <span class="n">span</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">span</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">elt</span><span class="p">))</span>
+
+                        <span class="n">span</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">span</span><span class="p">)</span>
+
+                    <span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+                <span class="k">if</span> <span class="n">selector</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;trailing characters in selector&quot;</span><span class="p">)</span>
+
+            <span class="n">epath</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">span</span><span class="p">))</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+
+        <span class="n">obj</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">_path</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_epath</span> <span class="o">=</span> <span class="n">epath</span>
+
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%r</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_ordered_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sort ``expr.args`` using printing order. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_ordered_terms</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_ordered_factors</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">_hasattrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if ``expr`` has any of ``attrs``. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_hastypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if ``expr`` is any of ``types``. &quot;&quot;&quot;</span>
+        <span class="n">_types</span> <span class="o">=</span> <span class="p">[</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">mro</span><span class="p">()</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">_types</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_has</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply ``_hasattrs`` and ``_hastypes`` to ``expr``. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">attrs</span> <span class="ow">or</span> <span class="n">types</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">attrs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasattrs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">types</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hastypes</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="EPath.apply"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.epathtools.EPath.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify parts of an expression selected by a path.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.simplify.epathtools import EPath</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import sin, cos, E</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y, z, t</span>
+
+<span class="sd">        &gt;&gt;&gt; path = EPath(&quot;/*/[0]/Symbol&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; expr = [((x, 1), 2), ((3, y), z)]</span>
+
+<span class="sd">        &gt;&gt;&gt; path.apply(expr, lambda expr: expr**2)</span>
+<span class="sd">        [((x**2, 1), 2), ((3, y**2), z)]</span>
+
+<span class="sd">        &gt;&gt;&gt; path = EPath(&quot;/*/*/Symbol&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; expr = t + sin(x + 1) + cos(x + y + E)</span>
+
+<span class="sd">        &gt;&gt;&gt; path.apply(expr, lambda expr: 2*expr)</span>
+<span class="sd">        t + sin(2*x + 1) + cos(2*x + 2*y + E)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">selector</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">span</span> <span class="o">=</span> <span class="n">selector</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                        <span class="n">args</span><span class="p">,</span> <span class="n">basic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ordered_args</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="bp">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">expr</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+                    <span class="n">args</span><span class="p">,</span> <span class="n">basic</span> <span class="o">=</span> <span class="n">expr</span><span class="p">,</span> <span class="bp">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">expr</span>
+
+                <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">span</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">span</span><span class="p">)</span> <span class="o">==</span> <span class="nb">slice</span><span class="p">:</span>
+                        <span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">span</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">span</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">indices</span> <span class="o">=</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+                        <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_apply</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">basic</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">_args</span><span class="p">,</span> <span class="n">_kwargs</span> <span class="o">=</span> <span class="n">args</span> <span class="ow">or</span> <span class="p">(),</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">_args</span><span class="p">,</span> <span class="o">**</span><span class="n">_kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epath</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_func</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EPath.select"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.epathtools.EPath.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve parts of an expression selected by a path.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.simplify.epathtools import EPath</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import sin, cos, E</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y, z, t</span>
+
+<span class="sd">        &gt;&gt;&gt; path = EPath(&quot;/*/[0]/Symbol&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; expr = [((x, 1), 2), ((3, y), z)]</span>
+
+<span class="sd">        &gt;&gt;&gt; path.select(expr)</span>
+<span class="sd">        [x, y]</span>
+
+<span class="sd">        &gt;&gt;&gt; path = EPath(&quot;/*/*/Symbol&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; expr = t + sin(x + 1) + cos(x + y + E)</span>
+
+<span class="sd">        &gt;&gt;&gt; path.select(expr)</span>
+<span class="sd">        [x, x, y]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">_select</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">selector</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">span</span> <span class="o">=</span> <span class="n">selector</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ordered_args</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">expr</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span>
+
+                <span class="k">if</span> <span class="n">span</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">span</span><span class="p">)</span> <span class="o">==</span> <span class="nb">slice</span><span class="p">:</span>
+                        <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">span</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="n">span</span><span class="p">]]</span>
+                        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                            <span class="k">return</span>
+
+                <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+                        <span class="n">_select</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+
+        <span class="n">_select</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_epath</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div></div>
+<div class="viewcode-block" id="epath"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.epathtools.epath">[docs]</a><span class="k">def</span> <span class="nf">epath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Manipulate parts of an expression selected by a path.</span>
+
+<span class="sd">    This function allows to manipulate large nested expressions in single</span>
+<span class="sd">    line of code, utilizing techniques to those applied in XML processing</span>
+<span class="sd">    standards (e.g. XPath).</span>
+
+<span class="sd">    If ``func`` is ``None``, :func:`epath` retrieves elements selected by</span>
+<span class="sd">    the ``path``. Otherwise it applies ``func`` to each matching element.</span>
+
+<span class="sd">    Note that it is more efficient to create an EPath object and use the select</span>
+<span class="sd">    and apply methods of that object, since this will compile the path string</span>
+<span class="sd">    only once.  This function should only be used as a convenient shortcut for</span>
+<span class="sd">    interactive use.</span>
+
+<span class="sd">    This is the supported syntax:</span>
+
+<span class="sd">    * select all: ``/*``</span>
+<span class="sd">          Equivalent of ``for arg in args:``.</span>
+<span class="sd">    * select slice: ``/[0]`` or ``/[1:5]`` or ``/[1:5:2]``</span>
+<span class="sd">          Supports standard Python&#39;s slice syntax.</span>
+<span class="sd">    * select by type: ``/list`` or ``/list|tuple``</span>
+<span class="sd">          Emulates :func:`isinstance`.</span>
+<span class="sd">    * select by attribute: ``/__iter__?``</span>
+<span class="sd">          Emulates :func:`hasattr`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    path : str | EPath</span>
+<span class="sd">        A path as a string or a compiled EPath.</span>
+<span class="sd">    expr : Basic | iterable</span>
+<span class="sd">        An expression or a container of expressions.</span>
+<span class="sd">    func : callable (optional)</span>
+<span class="sd">        A callable that will be applied to matching parts.</span>
+<span class="sd">    args : tuple (optional)</span>
+<span class="sd">        Additional positional arguments to ``func``.</span>
+<span class="sd">    kwargs : dict (optional)</span>
+<span class="sd">        Additional keyword arguments to ``func``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.epathtools import epath</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import sin, cos, E</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z, t</span>
+
+<span class="sd">    &gt;&gt;&gt; path = &quot;/*/[0]/Symbol&quot;</span>
+<span class="sd">    &gt;&gt;&gt; expr = [((x, 1), 2), ((3, y), z)]</span>
+
+<span class="sd">    &gt;&gt;&gt; epath(path, expr)</span>
+<span class="sd">    [x, y]</span>
+<span class="sd">    &gt;&gt;&gt; epath(path, expr, lambda expr: expr**2)</span>
+<span class="sd">    [((x**2, 1), 2), ((3, y**2), z)]</span>
+
+<span class="sd">    &gt;&gt;&gt; path = &quot;/*/*/Symbol&quot;</span>
+<span class="sd">    &gt;&gt;&gt; expr = t + sin(x + 1) + cos(x + y + E)</span>
+
+<span class="sd">    &gt;&gt;&gt; epath(path, expr)</span>
+<span class="sd">    [x, x, y]</span>
+<span class="sd">    &gt;&gt;&gt; epath(path, expr, lambda expr: 2*expr)</span>
+<span class="sd">    t + sin(2*x + 1) + cos(2*x + 2*y + E)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_epath</span> <span class="o">=</span> <span class="n">EPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_epath</span>
+    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_epath</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_epath</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

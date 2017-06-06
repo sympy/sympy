@@ -1,0 +1,1067 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Powers and logarithms &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Trigonometric functions" href="trigonometric.html" />
+    <link rel="prev" title="Mathematical constants" href="constants.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="trigonometric.html" title="Trigonometric functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Mathematical constants"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="powers-and-logarithms">
+<h1>Powers and logarithms<a class="headerlink" href="#powers-and-logarithms" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nth-roots">
+<h2>Nth roots<a class="headerlink" href="#nth-roots" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sqrt">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">sqrt()</span></tt><a class="headerlink" href="#sqrt" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.sqrt">
+<tt class="descclassname">mpmath.</tt><tt class="descname">sqrt</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">sqrt(x)</span></tt> gives the principal square root of <span class="math">\(x\)</span>, <span class="math">\(\sqrt x\)</span>.
+For positive real numbers, the principal root is simply the
+positive square root. For arbitrary complex numbers, the principal
+square root is defined to satisfy <span class="math">\(\sqrt x = \exp(\log(x)/2)\)</span>.
+The function thus has a branch cut along the negative half real axis.</p>
+<p>For all mpmath numbers <tt class="docutils literal"><span class="pre">x</span></tt>, calling <tt class="docutils literal"><span class="pre">sqrt(x)</span></tt> is equivalent to
+performing <tt class="docutils literal"><span class="pre">x**0.5</span></tt>.</p>
+<p><strong>Examples</strong></p>
+<p>Basic examples and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">3.16227766016838</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">10.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">(0.0 + 2.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.09868411346781 + 0.455089860562227j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>Square root evaluation is fast at huge precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]</span>
+<span class="go">&#39;9329332814&#39;</span>
+</pre></div>
+</div>
+<p><tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.sqrt()</span></tt> supports interval arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">([</span><span class="mi">16</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
+<span class="go">[4.0, 10.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[1.4142135623730949234, 1.4142135623730951455]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="go">[1.9999999999999995559, 2.0000000000000004441]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="hypot">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">hypot()</span></tt><a class="headerlink" href="#hypot" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.hypot">
+<tt class="descclassname">mpmath.</tt><tt class="descname">hypot</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#mpmath.hypot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Euclidean norm of the vector <span class="math">\((x, y)\)</span>, equal
+to <span class="math">\(\sqrt{x^2 + y^2}\)</span>. Both <span class="math">\(x\)</span> and <span class="math">\(y\)</span> must be real.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="cbrt">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">cbrt()</span></tt><a class="headerlink" href="#cbrt" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.cbrt">
+<tt class="descclassname">mpmath.</tt><tt class="descname">cbrt</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.cbrt" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">cbrt(x)</span></tt> computes the cube root of <span class="math">\(x\)</span>, <span class="math">\(x^{1/3}\)</span>. This
+function is faster and more accurate than raising to a floating-point
+fraction:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">125</span><span class="o">**</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.9999999999999991&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cbrt</span><span class="p">(</span><span class="mi">125</span><span class="p">)</span>
+<span class="go">mpf(&#39;5.0&#39;)</span>
+</pre></div>
+</div>
+<p>Every nonzero complex number has three cube roots. This function
+returns the cube root defined by <span class="math">\(\exp(\log(x)/3)\)</span> where the
+principal branch of the natural logarithm is used. Note that this
+does not give a real cube root for negative real numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cbrt</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(0.5 + 0.866025403784439j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="root">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">root()</span></tt><a class="headerlink" href="#root" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.root">
+<tt class="descclassname">mpmath.</tt><tt class="descname">root</tt><big>(</big><em>z</em>, <em>n</em>, <em>k=0</em><big>)</big><a class="headerlink" href="#mpmath.root" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">root(z,</span> <span class="pre">n,</span> <span class="pre">k=0)</span></tt> computes an <span class="math">\(n\)</span>-th root of <span class="math">\(z\)</span>, i.e. returns a number
+<span class="math">\(r\)</span> that (up to possible approximation error) satisfies <span class="math">\(r^n = z\)</span>.
+(<tt class="docutils literal"><span class="pre">nthroot</span></tt> is available as an alias for <tt class="docutils literal"><span class="pre">root</span></tt>.)</p>
+<p>Every complex number <span class="math">\(z \ne 0\)</span> has <span class="math">\(n\)</span> distinct <span class="math">\(n\)</span>-th roots, which are
+equidistant points on a circle with radius <span class="math">\(|z|^{1/n}\)</span>, centered around the
+origin. A specific root may be selected using the optional index
+<span class="math">\(k\)</span>. The roots are indexed counterclockwise, starting with <span class="math">\(k = 0\)</span> for the root
+closest to the positive real half-axis.</p>
+<p>The <span class="math">\(k = 0\)</span> root is the so-called principal <span class="math">\(n\)</span>-th root, often denoted by
+<span class="math">\(\sqrt[n]{z}\)</span> or <span class="math">\(z^{1/n}\)</span>, and also given by <span class="math">\(\exp(\log(z) / n)\)</span>. If <span class="math">\(z\)</span> is
+a positive real number, the principal root is just the unique positive
+<span class="math">\(n\)</span>-th root of <span class="math">\(z\)</span>. Under some circumstances, non-principal real roots exist:
+for positive real <span class="math">\(z\)</span>, <span class="math">\(n\)</span> even, there is a negative root given by <span class="math">\(k = n/2\)</span>;
+for negative real <span class="math">\(z\)</span>, <span class="math">\(n\)</span> odd, there is a negative root given by <span class="math">\(k = (n-1)/2\)</span>.</p>
+<p>To obtain all roots with a simple expression, use
+<tt class="docutils literal"><span class="pre">[root(z,n,k)</span> <span class="pre">for</span> <span class="pre">k</span> <span class="pre">in</span> <span class="pre">range(n)]</span></tt>.</p>
+<p>An important special case, <tt class="docutils literal"><span class="pre">root(1,</span> <span class="pre">n,</span> <span class="pre">k)</span></tt> returns the <span class="math">\(k\)</span>-th <span class="math">\(n\)</span>-th root of
+unity, <span class="math">\(\zeta_k = e^{2 \pi i k / n}\)</span>. Alternatively, <a class="reference internal" href="#mpmath.unitroots" title="mpmath.unitroots"><tt class="xref py py-func docutils literal"><span class="pre">unitroots()</span></tt></a>
+provides a slightly more convenient way to obtain the roots of unity,
+including the option to compute only the primitive roots of unity.</p>
+<p>Both <span class="math">\(k\)</span> and <span class="math">\(n\)</span> should be integers; <span class="math">\(k\)</span> outside of <tt class="docutils literal"><span class="pre">range(n)</span></tt> will be
+reduced modulo <span class="math">\(n\)</span>. If <span class="math">\(n\)</span> is negative, <span class="math">\(x^{-1/n} = 1/x^{1/n}\)</span> (or
+the equivalent reciprocal for a non-principal root with <span class="math">\(k \ne 0\)</span>) is computed.</p>
+<p><a class="reference internal" href="#mpmath.root" title="mpmath.root"><tt class="xref py py-func docutils literal"><span class="pre">root()</span></tt></a> is implemented to use Newton&#8217;s method for small
+<span class="math">\(n\)</span>. At high precision, this makes <span class="math">\(x^{1/n}\)</span> not much more
+expensive than the regular exponentiation, <span class="math">\(x^n\)</span>. For very large
+<span class="math">\(n\)</span>, <tt class="xref py py-func docutils literal"><span class="pre">nthroot()</span></tt> falls back to use the exponential function.</p>
+<p><strong>Examples</strong></p>
+<p><tt class="xref py py-func docutils literal"><span class="pre">nthroot()</span></tt>/<a class="reference internal" href="#mpmath.root" title="mpmath.root"><tt class="xref py py-func docutils literal"><span class="pre">root()</span></tt></a> is faster and more accurate than raising to a
+floating-point fraction:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">16807</span> <span class="o">**</span> <span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">mpf(&#39;7.0000000000000009&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">16807</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">mpf(&#39;7.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nthroot</span><span class="p">(</span><span class="mi">16807</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>    <span class="c"># Alias</span>
+<span class="go">mpf(&#39;7.0&#39;)</span>
+</pre></div>
+</div>
+<p>A high-precision root:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nthroot</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">1.584893192461113485202101373391507013269442133825</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nthroot</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">**</span> <span class="mi">5</span>
+<span class="go">10.0</span>
+</pre></div>
+</div>
+<p>Computing principal and non-principal square and cube roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.16227766016838</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">-3.16227766016838</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(1.07721734501594 + 1.86579517236206j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">-2.15443469003188</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">(1.07721734501594 - 1.86579517236206j)</span>
+</pre></div>
+</div>
+<p>All the 7th roots of a complex number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">[</span><span class="n">root</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">**</span><span class="mi">7</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">(1.24747270589553 + 0.166227124177353j) (3.0 + 4.0j)</span>
+<span class="go">(0.647824911301003 + 1.07895435170559j) (3.0 + 4.0j)</span>
+<span class="go">(-0.439648254723098 + 1.17920694574172j) (3.0 + 4.0j)</span>
+<span class="go">(-1.19605731775069 + 0.391492658196305j) (3.0 + 4.0j)</span>
+<span class="go">(-1.05181082538903 - 0.691023585965793j) (3.0 + 4.0j)</span>
+<span class="go">(-0.115529328478668 - 1.25318497558335j) (3.0 + 4.0j)</span>
+<span class="go">(0.907748109144957 - 0.871672518271819j) (3.0 + 4.0j)</span>
+</pre></div>
+</div>
+<p>Cube roots of unity:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> <span class="k">print</span><span class="p">(</span><span class="n">root</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">1.0</span>
+<span class="go">(-0.5 + 0.866025403784439j)</span>
+<span class="go">(-0.5 - 0.866025403784439j)</span>
+</pre></div>
+</div>
+<p>Some exact high order roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">75</span><span class="o">**</span><span class="mi">210</span><span class="p">,</span> <span class="mi">105</span><span class="p">)</span>
+<span class="go">5625.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">96</span><span class="p">)</span>
+<span class="go">(0.0 - 1.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">4</span><span class="o">**</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">96</span><span class="p">)</span>
+<span class="go">(0.0 - 4.0j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="unitroots">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">unitroots()</span></tt><a class="headerlink" href="#unitroots" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.unitroots">
+<tt class="descclassname">mpmath.</tt><tt class="descname">unitroots</tt><big>(</big><em>n</em>, <em>primitive=False</em><big>)</big><a class="headerlink" href="#mpmath.unitroots" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">unitroots(n)</span></tt> returns <span class="math">\(\zeta_0, \zeta_1, \ldots, \zeta_{n-1}\)</span>,
+all the distinct <span class="math">\(n\)</span>-th roots of unity, as a list. If the option
+<em>primitive=True</em> is passed, only the primitive roots are returned.</p>
+<p>Every <span class="math">\(n\)</span>-th root of unity satisfies <span class="math">\((\zeta_k)^n = 1\)</span>. There are <span class="math">\(n\)</span> distinct
+roots for each <span class="math">\(n\)</span> (<span class="math">\(\zeta_k\)</span> and <span class="math">\(\zeta_j\)</span> are the same when
+<span class="math">\(k = j \pmod n\)</span>), which form a regular polygon with vertices on the unit
+circle. They are ordered counterclockwise with increasing <span class="math">\(k\)</span>, starting
+with <span class="math">\(\zeta_0 = 1\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>The roots of unity up to <span class="math">\(n = 4\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">[1.0, -1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[1.0, (-0.5 + 0.866025j), (-0.5 - 0.866025j)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">[1.0, (0.0 + 1.0j), -1.0, (0.0 - 1.0j)]</span>
+</pre></div>
+</div>
+<p>Roots of unity form a geometric series that sums to 0:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">fsum</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">25</span><span class="p">)))</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Primitive roots up to <span class="math">\(n = 4\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[-1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(-0.5 + 0.866025j), (-0.5 - 0.866025j)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(0.0 + 1.0j), (0.0 - 1.0j)]</span>
+</pre></div>
+</div>
+<p>There are only four primitive 12th roots:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(0.866025 + 0.5j), (-0.866025 + 0.5j), (-0.866025 - 0.5j), (0.866025 - 0.5j)]</span>
+</pre></div>
+</div>
+<p>The <span class="math">\(n\)</span>-th roots of unity form a group, the cyclic group of order <span class="math">\(n\)</span>.
+Any primitive root <span class="math">\(r\)</span> is a generator for this group, meaning that
+<span class="math">\(r^0, r^1, \ldots, r^{n-1}\)</span> gives the whole set of unit roots (in
+some permuted order):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">unitroots</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">1.0</span>
+<span class="go">(0.5 + 0.866025403784439j)</span>
+<span class="go">(-0.5 + 0.866025403784439j)</span>
+<span class="go">-1.0</span>
+<span class="go">(-0.5 - 0.866025403784439j)</span>
+<span class="go">(0.5 - 0.866025403784439j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">unitroots</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span> <span class="k">print</span><span class="p">(</span><span class="n">chop</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="n">k</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">1.0</span>
+<span class="go">(0.5 - 0.866025403784439j)</span>
+<span class="go">(-0.5 - 0.866025403784439j)</span>
+<span class="go">-1.0</span>
+<span class="go">(-0.5 + 0.866025403784438j)</span>
+<span class="go">(0.5 + 0.866025403784438j)</span>
+</pre></div>
+</div>
+<p>The number of primitive roots equals the Euler totient function <span class="math">\(\phi(n)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">unitroots</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">primitive</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">20</span><span class="p">)]</span>
+<span class="go">[1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16, 6, 18]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="exponentiation">
+<h2>Exponentiation<a class="headerlink" href="#exponentiation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="exp">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">exp()</span></tt><a class="headerlink" href="#exp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.exp">
+<tt class="descclassname">mpmath.</tt><tt class="descname">exp</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the exponential function,</p>
+<div class="math">
+\[\exp(x) = e^x = \sum_{k=0}^{\infty} \frac{x^k}{k!}.\]</div>
+<p>For complex numbers, the exponential function also satisfies</p>
+<div class="math">
+\[\exp(x+yi) = e^x (\cos y + i \sin y).\]</div>
+<p><strong>Basic examples</strong></p>
+<p>Some values of the exponential function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2.718281828459045235360287</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.3678794411714423215955238</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Arguments can be arbitrarily large:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>
+<span class="go">8.806818225662921587261496e+4342</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">10000</span><span class="p">)</span>
+<span class="go">1.135483865314736098540939e-4343</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for interval arguments via
+<tt class="xref py py-func docutils literal"><span class="pre">mpmath.iv.exp()</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">[0.0, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[1.0, 2.71828182845904523536028749558]</span>
+</pre></div>
+</div>
+<p>The exponential function can be evaluated efficiently to arbitrary
+precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>  
+<span class="go">23.140692632779269005729...8984304016040616</span>
+</pre></div>
+</div>
+<p><strong>Functional properties</strong></p>
+<p>Numerical verification of Euler&#8217;s identity for the complex
+exponential function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+<span class="go">(0.0 + 1.22464679914735e-16j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>This recovers the coefficients (reciprocal factorials) in the
+Maclaurin series expansion of exp:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">[1.0, 1.0, 0.5, 0.166667, 0.0416667, 0.00833333]</span>
+</pre></div>
+</div>
+<p>The exponential function is its own derivative and antiderivative:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">23.1406926327793</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
+<span class="go">23.1406926327793</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">pi</span><span class="p">])</span>
+<span class="go">23.1406926327793</span>
+</pre></div>
+</div>
+<p>The exponential function can be evaluated using various methods,
+including direct summation of the series, limits, and solving
+the defining differential equation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">pi</span><span class="o">**</span><span class="n">k</span><span class="o">/</span><span class="n">fac</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">23.1406926327793</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">pi</span><span class="o">/</span><span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+<span class="go">23.1406926327793</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">23.1406926327793</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="power">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">power()</span></tt><a class="headerlink" href="#power" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.power">
+<tt class="descclassname">mpmath.</tt><tt class="descname">power</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#mpmath.power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts <span class="math">\(x\)</span> and <span class="math">\(y\)</span> to mpmath numbers and evaluates
+<span class="math">\(x^y = \exp(y \log(x))\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.41421356237309504880168872421</span>
+</pre></div>
+</div>
+<p>This shows the leading few digits of a large Mersenne prime
+(performing the exact calculation <tt class="docutils literal"><span class="pre">2**43112609-1</span></tt> and
+displaying the result in Python would be very slow):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">43112609</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+<span class="go">3.16470269330255923143453723949e+12978188</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="expj">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">expj()</span></tt><a class="headerlink" href="#expj" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.expj">
+<tt class="descclassname">mpmath.</tt><tt class="descname">expj</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.expj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function for computing <span class="math">\(e^{ix}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expj</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(1.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expj</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(0.5403023058681397174009366 - 0.8414709848078965066525023j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expj</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.3678794411714423215955238 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expj</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.1987661103464129406288032 + 0.3095598756531121984439128j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="expjpi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">expjpi()</span></tt><a class="headerlink" href="#expjpi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.expjpi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">expjpi</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.expjpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function for computing <span class="math">\(e^{i \pi x}\)</span>.
+Evaluation is accurate near zeros (see also <a class="reference internal" href="trigonometric.html#mpmath.cospi" title="mpmath.cospi"><tt class="xref py py-func docutils literal"><span class="pre">cospi()</span></tt></a>,
+<a class="reference internal" href="trigonometric.html#mpmath.sinpi" title="mpmath.sinpi"><tt class="xref py py-func docutils literal"><span class="pre">sinpi()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(1.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(-1.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">(0.0 + 1.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(-1.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.04321391826377224977441774 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expjpi</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.04321391826377224977441774 + 0.0j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="expm1">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">expm1()</span></tt><a class="headerlink" href="#expm1" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.expm1">
+<tt class="descclassname">mpmath.</tt><tt class="descname">expm1</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.expm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes <span class="math">\(e^x - 1\)</span>, accurately for small <span class="math">\(x\)</span>.</p>
+<p>Unlike the expression <tt class="docutils literal"><span class="pre">exp(x)</span> <span class="pre">-</span> <span class="pre">1</span></tt>, <tt class="docutils literal"><span class="pre">expm1(x)</span></tt> does not suffer from
+potentially catastrophic cancellation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mf">1e-10</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="k">print</span><span class="p">(</span><span class="n">expm1</span><span class="p">(</span><span class="mf">1e-10</span><span class="p">))</span>
+<span class="go">1.00000008274037e-10</span>
+<span class="go">1.00000000005e-10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="k">print</span><span class="p">(</span><span class="n">expm1</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">))</span>
+<span class="go">0.0</span>
+<span class="go">1.0e-20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ZeroDivisionError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="n">expm1</span><span class="p">(</span><span class="mf">1e-20</span><span class="p">)</span>
+<span class="go">1.0e+20</span>
+</pre></div>
+</div>
+<p>Evaluation works for extremely tiny values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expm1</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expm1</span><span class="p">(</span><span class="s">&#39;1e-10000000&#39;</span><span class="p">)</span>
+<span class="go">1.0e-10000000</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="powm1">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">powm1()</span></tt><a class="headerlink" href="#powm1" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.powm1">
+<tt class="descclassname">mpmath.</tt><tt class="descname">powm1</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#mpmath.powm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes <span class="math">\(x^y - 1\)</span>, accurately when <span class="math">\(x^y\)</span> is very close to 1.</p>
+<p>This avoids potentially catastrophic cancellation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">power</span><span class="p">(</span><span class="mf">0.99999995</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="mf">0.99999995</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">)</span>
+<span class="go">-5.00000012791934e-18</span>
+</pre></div>
+</div>
+<p>Powers exactly equal to 1, and only those powers, yield 0 exactly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(0.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="n">fadd</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1e-100</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">-4.0e-100</span>
+</pre></div>
+</div>
+<p>Evaluation works for extremely tiny <span class="math">\(y\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;1e-100000&#39;</span><span class="p">)</span>
+<span class="go">6.93147180559945e-100001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">powm1</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="s">&#39;1e-1000&#39;</span><span class="p">)</span>
+<span class="go">(-1.23370055013617e-2000 + 1.5707963267949e-1000j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="logarithms">
+<h2>Logarithms<a class="headerlink" href="#logarithms" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="log">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">log()</span></tt><a class="headerlink" href="#log" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.log">
+<tt class="descclassname">mpmath.</tt><tt class="descname">log</tt><big>(</big><em>x</em>, <em>b=None</em><big>)</big><a class="headerlink" href="#mpmath.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the base-<span class="math">\(b\)</span> logarithm of <span class="math">\(x\)</span>, <span class="math">\(\log_b(x)\)</span>. If <span class="math">\(b\)</span> is
+unspecified, <a class="reference internal" href="#mpmath.log" title="mpmath.log"><tt class="xref py py-func docutils literal"><span class="pre">log()</span></tt></a> computes the natural (base <span class="math">\(e\)</span>) logarithm
+and is equivalent to <a class="reference internal" href="#mpmath.ln" title="mpmath.ln"><tt class="xref py py-func docutils literal"><span class="pre">ln()</span></tt></a>. In general, the base <span class="math">\(b\)</span> logarithm
+is defined in terms of the natural logarithm as
+<span class="math">\(\log_b(x) = \ln(x)/\ln(b)\)</span>.</p>
+<p>By convention, we take <span class="math">\(\log(0) = -\infty\)</span>.</p>
+<p>The natural logarithm is real if <span class="math">\(x &gt; 0\)</span> and complex if <span class="math">\(x &lt; 0\)</span> or if
+<span class="math">\(x\)</span> is complex. The principal branch of the complex logarithm is
+used, meaning that <span class="math">\(\Im(\ln(x)) = -\pi &lt; \arg(x) \le \pi\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.693147180559945</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">3.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 + 1.5707963267949j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(0.0 + 3.14159265358979j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>The natural logarithm is the antiderivative of <span class="math">\(1/x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">1.6094379124341</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">1.6094379124341</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">0.1</span>
+</pre></div>
+</div>
+<p>The Taylor series expansion of the natural logarithm around
+<span class="math">\(x = 1\)</span> has coefficients <span class="math">\((-1)^{n+1}/n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">[0.0, 1.0, -0.5, 0.333333, -0.25, 0.2, -0.166667, 0.142857]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.log" title="mpmath.log"><tt class="xref py py-func docutils literal"><span class="pre">log()</span></tt></a> supports arbitrary precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">1.1447298858494001741434273513530587116472948129153</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.33333333333333333333333333333333333333333333333333</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.609437912434100374600759 + 0.9272952180016122324285125j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ln">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ln()</span></tt><a class="headerlink" href="#ln" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ln">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ln</tt><big>(</big><em>x</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.ln" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the base-<span class="math">\(b\)</span> logarithm of <span class="math">\(x\)</span>, <span class="math">\(\log_b(x)\)</span>. If <span class="math">\(b\)</span> is
+unspecified, <a class="reference internal" href="#mpmath.log" title="mpmath.log"><tt class="xref py py-func docutils literal"><span class="pre">log()</span></tt></a> computes the natural (base <span class="math">\(e\)</span>) logarithm
+and is equivalent to <a class="reference internal" href="#mpmath.ln" title="mpmath.ln"><tt class="xref py py-func docutils literal"><span class="pre">ln()</span></tt></a>. In general, the base <span class="math">\(b\)</span> logarithm
+is defined in terms of the natural logarithm as
+<span class="math">\(\log_b(x) = \ln(x)/\ln(b)\)</span>.</p>
+<p>By convention, we take <span class="math">\(\log(0) = -\infty\)</span>.</p>
+<p>The natural logarithm is real if <span class="math">\(x &gt; 0\)</span> and complex if <span class="math">\(x &lt; 0\)</span> or if
+<span class="math">\(x\)</span> is complex. The principal branch of the complex logarithm is
+used, meaning that <span class="math">\(\Im(\ln(x)) = -\pi &lt; \arg(x) \le \pi\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.693147180559945</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">3.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 + 1.5707963267949j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(0.0 + 3.14159265358979j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>The natural logarithm is the antiderivative of <span class="math">\(1/x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">1.6094379124341</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">1.6094379124341</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">0.1</span>
+</pre></div>
+</div>
+<p>The Taylor series expansion of the natural logarithm around
+<span class="math">\(x = 1\)</span> has coefficients <span class="math">\((-1)^{n+1}/n\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">[0.0, 1.0, -0.5, 0.333333, -0.25, 0.2, -0.166667, 0.142857]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.log" title="mpmath.log"><tt class="xref py py-func docutils literal"><span class="pre">log()</span></tt></a> supports arbitrary precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">1.1447298858494001741434273513530587116472948129153</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.33333333333333333333333333333333333333333333333333</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.609437912434100374600759 + 0.9272952180016122324285125j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="log10">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">log10()</span></tt><a class="headerlink" href="#log10" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.log10">
+<tt class="descclassname">mpmath.</tt><tt class="descname">log10</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#mpmath.log10" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the base-10 logarithm of <span class="math">\(x\)</span>, <span class="math">\(\log_{10}(x)\)</span>. <tt class="docutils literal"><span class="pre">log10(x)</span></tt>
+is equivalent to <tt class="docutils literal"><span class="pre">log(x,</span> <span class="pre">10)</span></tt>.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="lambert-w-function">
+<h2>Lambert W function<a class="headerlink" href="#lambert-w-function" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="lambertw">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">lambertw()</span></tt><a class="headerlink" href="#lambertw" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.lambertw">
+<tt class="descclassname">mpmath.</tt><tt class="descname">lambertw</tt><big>(</big><em>z</em>, <em>k=0</em><big>)</big><a class="headerlink" href="#mpmath.lambertw" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Lambert W function <span class="math">\(W(z)\)</span> is defined as the inverse function
+of <span class="math">\(w \exp(w)\)</span>. In other words, the value of <span class="math">\(W(z)\)</span> is such that
+<span class="math">\(z = W(z) \exp(W(z))\)</span> for any complex number <span class="math">\(z\)</span>.</p>
+<p>The Lambert W function is a multivalued function with infinitely
+many branches <span class="math">\(W_k(z)\)</span>, indexed by <span class="math">\(k \in \mathbb{Z}\)</span>. Each branch
+gives a different solution <span class="math">\(w\)</span> of the equation <span class="math">\(z = w \exp(w)\)</span>.
+All branches are supported by <a class="reference internal" href="#mpmath.lambertw" title="mpmath.lambertw"><tt class="xref py py-func docutils literal"><span class="pre">lambertw()</span></tt></a>:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">lambertw(z)</span></tt> gives the principal solution (branch 0)</li>
+<li><tt class="docutils literal"><span class="pre">lambertw(z,</span> <span class="pre">k)</span></tt> gives the solution on branch <span class="math">\(k\)</span></li>
+</ul>
+<p>The Lambert W function has two partially real branches: the
+principal branch (<span class="math">\(k = 0\)</span>) is real for real <span class="math">\(z &gt; -1/e\)</span>, and the
+<span class="math">\(k = -1\)</span> branch is real for <span class="math">\(-1/e &lt; z &lt; 0\)</span>. All branches except
+<span class="math">\(k = 0\)</span> have a logarithmic singularity at <span class="math">\(z = 0\)</span>.</p>
+<p>The definition, implementation and choice of branches
+is based on <a class="reference internal" href="../references.html#corless">[Corless]</a>.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Branches 0 and -1 of the Lambert W function</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">lambertw</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">lambertw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../_images/lambertw.png" src="../../../_images/lambertw.png" />
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Principal branch of the Lambert W function W(z)</span>
+<span class="n">cplot</span><span class="p">(</span><span class="n">lambertw</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">50000</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../_images/lambertw_c.png" src="../../../_images/lambertw_c.png" />
+<p><strong>Basic examples</strong></p>
+<p>The Lambert W function is the inverse of <span class="math">\(w \exp(w)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">lambertw</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">0.5671432904097838729999687</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>Any branch gives a valid inverse:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">lambertw</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">(-2.853581755409037807206819 + 17.11353553941214591260783j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">lambertw</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">(-5.047020464221569709378686 + 155.4763860949415867162066j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">w</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p><strong>Applications to equation-solving</strong></p>
+<p>The Lambert W function may be used to solve various kinds of
+equations, such as finding the value of the infinite power
+tower <span class="math">\(z^{z^{z^{\ldots}}}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">tower</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">z</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">z</span> <span class="o">**</span> <span class="n">tower</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tower</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mi">100</span><span class="p">)</span>
+<span class="go">0.6411857445049859844862005</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.6411857445049859844862005</span>
+</pre></div>
+</div>
+<p><strong>Properties</strong></p>
+<p>The Lambert W function grows roughly like the natural logarithm
+for large arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span> <span class="n">log</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">5.249602852401596227126056</span>
+<span class="go">6.907755278982137052053974</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">);</span> <span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">224.8431064451185015393731</span>
+<span class="go">230.2585092994045684017991</span>
+</pre></div>
+</div>
+<p>The principal branch of the Lambert W function has a rational
+Taylor series expansion around <span class="math">\(z = 0\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">taylor</span><span class="p">(</span><span class="n">lambertw</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">[0.0, 1.0, -1.0, 1.5, -2.666666667, 5.208333333, -10.8]</span>
+</pre></div>
+</div>
+<p>Some special values and limits are:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.5671432904097838729999687</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">-inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(+inf + 12.56637061435917295385057j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(+inf + 18.84955592153875943077586j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(+inf + 21.9911485751285526692385j)</span>
+</pre></div>
+</div>
+<p>The <span class="math">\(k = 0\)</span> and <span class="math">\(k = -1\)</span> branches join at <span class="math">\(z = -1/e\)</span> where
+<span class="math">\(W(z) = -1\)</span> for both branches. Since <span class="math">\(-1/e\)</span> can only be represented
+approximately with binary floating-point numbers, evaluating the
+Lambert W function at this point only gives <span class="math">\(-1\)</span> approximately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">e</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">-0.9999999999998371330228251</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">e</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-1.000000000000162866977175</span>
+</pre></div>
+</div>
+<p>If <span class="math">\(-1/e\)</span> happens to round in the negative direction, there might be
+a small imaginary part:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">e</span><span class="p">)</span>
+<span class="go">(-1.0 + 8.22007971483662e-9j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambertw</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">e</span><span class="o">+</span><span class="n">eps</span><span class="p">)</span>
+<span class="go">-0.999999966242188</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="../references.html#corless">[Corless]</a></li>
+</ol>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="arithmetic-geometric-mean">
+<h2>Arithmetic-geometric mean<a class="headerlink" href="#arithmetic-geometric-mean" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="agm">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">agm()</span></tt><a class="headerlink" href="#agm" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.agm">
+<tt class="descclassname">mpmath.</tt><tt class="descname">agm</tt><big>(</big><em>a</em>, <em>b=1</em><big>)</big><a class="headerlink" href="#mpmath.agm" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">agm(a,</span> <span class="pre">b)</span></tt> computes the arithmetic-geometric mean of <span class="math">\(a\)</span> and
+<span class="math">\(b\)</span>, defined as the limit of the following iteration:</p>
+<div class="math">
+\[a_0 = a\]\[b_0 = b\]\[a_{n+1} = \frac{a_n+b_n}{2}\]\[b_{n+1} = \sqrt{a_n b_n}\]</div>
+<p>This function can be called with a single argument, computing
+<span class="math">\(\mathrm{agm}(a,1) = \mathrm{agm}(1,a)\)</span>.</p>
+<p><strong>Examples</strong></p>
+<p>It is a well-known theorem that the geometric mean of
+two distinct positive numbers is less than the arithmetic
+mean. It follows that the arithmetic-geometric mean lies
+between the two means:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">)</span>
+<span class="go">3.46410161513775</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+<span class="go">3.48202767635957</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="go">3.5</span>
+</pre></div>
+</div>
+<p>The arithmetic-geometric mean is scale-invariant:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">e</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">29.261085515723</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">10</span><span class="o">*</span><span class="n">agm</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
+<span class="go">29.261085515723</span>
+</pre></div>
+</div>
+<p>As an order-of-magnitude estimate, <span class="math">\(\mathrm{agm}(1,x) \approx x\)</span>
+for large <span class="math">\(x\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">643448704.760133</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">1.34814309345871e+48</span>
+</pre></div>
+</div>
+<p>For tiny <span class="math">\(x\)</span>, <span class="math">\(\mathrm{agm}(1,x) \approx -\pi/(2 \log(x/4))\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="s">&#39;0.01&#39;</span><span class="p">)</span>
+<span class="go">0.262166887202249</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="s">&#39;0.0025&#39;</span><span class="p">)</span>
+<span class="go">0.262172347753122</span>
+</pre></div>
+</div>
+<p>The arithmetic-geometric mean can also be computed for complex
+numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">agm</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(2.51055133276184 + 0.547394054060638j)</span>
+</pre></div>
+</div>
+<p>The AGM iteration converges very quickly (each step doubles
+the number of correct digits), so <a class="reference internal" href="#mpmath.agm" title="mpmath.agm"><tt class="xref py py-func docutils literal"><span class="pre">agm()</span></tt></a> supports efficient
+high-precision evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">agm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">)[</span><span class="o">-</span><span class="mi">10</span><span class="p">:]</span>
+<span class="go">&#39;1679581912&#39;</span>
+</pre></div>
+</div>
+<p><strong>Mathematical relations</strong></p>
+<p>The arithmetic-geometric mean may be used to evaluate the
+following two parametric definite integrals:</p>
+<div class="math">
+\[I_1 = \int_0^{\infty}
+  \frac{1}{\sqrt{(x^2+a^2)(x^2+b^2)}} \,dx\]\[I_2 = \int_0^{\pi/2}
+  \frac{1}{\sqrt{a^2 \cos^2(x) + b^2 \sin^2(x)}} \,dx\]</div>
+<p>We have:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">**-</span><span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">((</span><span class="n">a</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**-</span><span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f1</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">0.451115405388492</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">0.451115405388492</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">agm</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">))</span>
+<span class="go">0.451115405388492</span>
+</pre></div>
+</div>
+<p>A formula for <span class="math">\(\Gamma(1/4)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">3.62560990822191</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="n">agm</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="go">3.62560990822191</span>
+</pre></div>
+</div>
+<p><strong>Possible issues</strong></p>
+<p>The branch cut chosen for complex <span class="math">\(a\)</span> and <span class="math">\(b\)</span> is somewhat
+arbitrary.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Powers and logarithms</a><ul>
+<li><a class="reference internal" href="#nth-roots">Nth roots</a><ul>
+<li><a class="reference internal" href="#sqrt"><tt class="docutils literal"><span class="pre">sqrt()</span></tt></a></li>
+<li><a class="reference internal" href="#hypot"><tt class="docutils literal"><span class="pre">hypot()</span></tt></a></li>
+<li><a class="reference internal" href="#cbrt"><tt class="docutils literal"><span class="pre">cbrt()</span></tt></a></li>
+<li><a class="reference internal" href="#root"><tt class="docutils literal"><span class="pre">root()</span></tt></a></li>
+<li><a class="reference internal" href="#unitroots"><tt class="docutils literal"><span class="pre">unitroots()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exponentiation">Exponentiation</a><ul>
+<li><a class="reference internal" href="#exp"><tt class="docutils literal"><span class="pre">exp()</span></tt></a></li>
+<li><a class="reference internal" href="#power"><tt class="docutils literal"><span class="pre">power()</span></tt></a></li>
+<li><a class="reference internal" href="#expj"><tt class="docutils literal"><span class="pre">expj()</span></tt></a></li>
+<li><a class="reference internal" href="#expjpi"><tt class="docutils literal"><span class="pre">expjpi()</span></tt></a></li>
+<li><a class="reference internal" href="#expm1"><tt class="docutils literal"><span class="pre">expm1()</span></tt></a></li>
+<li><a class="reference internal" href="#powm1"><tt class="docutils literal"><span class="pre">powm1()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logarithms">Logarithms</a><ul>
+<li><a class="reference internal" href="#log"><tt class="docutils literal"><span class="pre">log()</span></tt></a></li>
+<li><a class="reference internal" href="#ln"><tt class="docutils literal"><span class="pre">ln()</span></tt></a></li>
+<li><a class="reference internal" href="#log10"><tt class="docutils literal"><span class="pre">log10()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lambert-w-function">Lambert W function</a><ul>
+<li><a class="reference internal" href="#lambertw"><tt class="docutils literal"><span class="pre">lambertw()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#arithmetic-geometric-mean">Arithmetic-geometric mean</a><ul>
+<li><a class="reference internal" href="#agm"><tt class="docutils literal"><span class="pre">agm()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="constants.html"
+                        title="previous chapter">Mathematical constants</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="trigonometric.html"
+                        title="next chapter">Trigonometric functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/powers.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="trigonometric.html" title="Trigonometric functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Mathematical constants"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

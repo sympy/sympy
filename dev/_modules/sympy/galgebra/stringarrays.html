@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.galgebra.stringarrays &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.galgebra.stringarrays</h1><div class="highlight"><pre>
+<span class="c"># sympy/galgebra/stringarrays.py</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">stringarrays.py are a group of helper functions to convert string</span>
+<span class="sd">input to vector and multivector class function to arrays of SymPy</span>
+<span class="sd">symbols.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">operator</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Function</span>
+
+
+<div class="viewcode-block" id="str_array"><a class="viewcode-back" href="../../../modules/galgebra/stringarrays.html#sympy.galgebra.stringarrays.str_array">[docs]</a><span class="k">def</span> <span class="nf">str_array</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate one dimensional (list of strings) or two dimensional (list</span>
+<span class="sd">    of list of strings) string array.</span>
+
+<span class="sd">    For one dimensional arrays: -</span>
+
+<span class="sd">        base is string of variable names separated by blanks such as</span>
+<span class="sd">        base = &#39;a b c&#39; which produces the string list [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;] or</span>
+<span class="sd">        it is a string with no blanks than in conjunction with the</span>
+<span class="sd">        integer n generates -</span>
+
+<span class="sd">            str_array(&#39;v&#39;,n=-3) = [&#39;v_1&#39;,&#39;v_2&#39;,&#39;v_3&#39;]</span>
+<span class="sd">            str_array(&#39;v&#39;,n=3) = [&#39;v__1&#39;,&#39;v__2&#39;,&#39;v__3&#39;].</span>
+
+<span class="sd">        In the case of LaTeX printing the &#39;_&#39; would give a subscript and</span>
+<span class="sd">        the &#39;__&#39; a super script.</span>
+
+<span class="sd">    For two dimensional arrays: -</span>
+
+<span class="sd">        base is string where elements are separated by spaces and rows by</span>
+<span class="sd">        commas so that -</span>
+
+<span class="sd">            str_array(&#39;a b,c d&#39;) = [[&#39;a&#39;,&#39;b&#39;],[&#39;c&#39;,&#39;d&#39;]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">base_array</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">base_split</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">base_arg</span> <span class="ow">in</span> <span class="n">base_split</span><span class="p">:</span>
+                <span class="n">base_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">base_arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">))))</span>
+            <span class="k">return</span> <span class="n">base_array</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">base</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;+&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s">&#39;__&#39;</span> <span class="o">+</span> <span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s">&#39;__&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="symbol_array"><a class="viewcode-back" href="../../../modules/galgebra/stringarrays.html#sympy.galgebra.stringarrays.symbol_array">[docs]</a><span class="k">def</span> <span class="nf">symbol_array</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a string arrary with str_array and replaces each string in</span>
+<span class="sd">    array with Symbol of same name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">symbol_str_lst</span> <span class="o">=</span> <span class="n">str_array</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">symbol_str</span> <span class="ow">in</span> <span class="n">symbol_str_lst</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="n">symbol_str</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="fct_sym_array"><a class="viewcode-back" href="../../../modules/galgebra/stringarrays.html#sympy.galgebra.stringarrays.fct_sym_array">[docs]</a><span class="k">def</span> <span class="nf">fct_sym_array</span><span class="p">(</span><span class="n">str_lst</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct list of symbols or functions with names in &#39;str_lst&#39;.  If</span>
+<span class="sd">    &#39;coords&#39; are given (tuple of symbols) function list constructed,</span>
+<span class="sd">    otherwise a symbol list is constructed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">coords</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fs_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sym_str</span> <span class="ow">in</span> <span class="n">str_lst</span><span class="p">:</span>
+            <span class="n">fs_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Symbol</span><span class="p">(</span><span class="n">sym_str</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fs_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fct_str</span> <span class="ow">in</span> <span class="n">str_lst</span><span class="p">:</span>
+            <span class="n">fs_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">fct_str</span><span class="p">)(</span><span class="o">*</span><span class="n">coords</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fs_lst</span>
+
+</div>
+<div class="viewcode-block" id="str_combinations"><a class="viewcode-back" href="../../../modules/galgebra/stringarrays.html#sympy.galgebra.stringarrays.str_combinations">[docs]</a><span class="k">def</span> <span class="nf">str_combinations</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;_&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a list of strings of the form &#39;base+mode+indexes&#39; where the</span>
+<span class="sd">    indexes are formed by converting &#39;lst&#39; to a list of strings and then</span>
+<span class="sd">    forming the &#39;indexes&#39; by concatenating combinations of elements from</span>
+<span class="sd">    &#39;lst&#39; taken &#39;rank&#39; at a time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">str_lst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">base</span> <span class="o">+</span> <span class="n">mode</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>
+                        <span class="n">combinations</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">lst</span><span class="p">),</span> <span class="n">rank</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="n">str_lst</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

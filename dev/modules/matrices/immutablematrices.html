@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Immutable Matrices &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Matrices" href="index.html" />
+    <link rel="next" title="Matrix Expressions" href="expressions.html" />
+    <link rel="prev" title="Sparse Matrices" href="sparse.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="expressions.html" title="Matrix Expressions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sparse.html" title="Sparse Matrices"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Matrices</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy">
+<span id="immutable-matrices"></span><h1>Immutable Matrices<a class="headerlink" href="#module-sympy" title="Permalink to this headline">¶</a></h1>
+<p>The standard <tt class="xref py py-class docutils literal"><span class="pre">Matrix</span></tt> class in SymPy is mutable. This is important for
+performance reasons but means that standard matrices can not interact well with
+the rest of SymPy. This is because the <tt class="xref py py-class docutils literal"><span class="pre">Basic</span></tt> object, from which most
+SymPy classes inherit, is immutable.</p>
+<p>The mission of the <tt class="xref py py-class docutils literal"><span class="pre">ImmutableMatrix</span></tt> class is to bridge the tension
+between performance/mutability and safety/immutability. Immutable matrices can
+do almost everything that normal matrices can do but they inherit from
+<tt class="xref py py-class docutils literal"><span class="pre">Basic</span></tt> and can thus interact more naturally with the rest of SymPy.
+<tt class="xref py py-class docutils literal"><span class="pre">ImmutableMatrix</span></tt> also inherits from <tt class="xref py py-class docutils literal"><span class="pre">MatrixExpr</span></tt>, allowing it to
+interact freely with SymPy&#8217;s Matrix Expression module.</p>
+<p>You can turn any Matrix-like object into an <tt class="xref py py-class docutils literal"><span class="pre">ImmutableMatrix</span></tt> by calling
+the constructor</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">ImmutableMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">IM</span> <span class="o">=</span> <span class="n">ImmutableMatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">IM</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2, 3],</span>
+<span class="go">[4, 0, 6],</span>
+<span class="go">[7, 8, 9]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">IM</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">Can not set values in Immutable Matrix. Use Matrix instead.</span>
+</pre></div>
+</div>
+<div class="section" id="module-sympy.matrices.immutable">
+<span id="immutablematrix-class-reference"></span><h2>ImmutableMatrix Class Reference<a class="headerlink" href="#module-sympy.matrices.immutable" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.matrices.immutable.ImmutableMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.immutable.</tt><tt class="descname">ImmutableMatrix</tt><a class="reference internal" href="../../_modules/sympy/matrices/immutable.html#ImmutableMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.immutable.ImmutableMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an immutable version of a matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ImmutableMatrix</span><span class="p">(</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">Cannot set values of ImmutableDenseMatrix</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.matrices.immutable.ImmutableMatrix.C">
+<tt class="descname">C</tt><a class="headerlink" href="#sympy.matrices.immutable.ImmutableMatrix.C" title="Permalink to this definition">¶</a></dt>
+<dd><p>By-element conjugation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.immutable.ImmutableMatrix.adjoint">
+<tt class="descname">adjoint</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.matrices.immutable.ImmutableMatrix.adjoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conjugate transpose or Hermitian conjugation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.immutable.ImmutableMatrix.as_mutable">
+<tt class="descname">as_mutable</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.matrices.immutable.ImmutableMatrix.as_mutable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a mutable version of this matrix</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">ImmutableMatrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span> <span class="c"># Can set values in Y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2],</span>
+<span class="go">[3, 5]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.immutable.ImmutableMatrix.equals">
+<tt class="descname">equals</tt><big>(</big><em>other</em>, <em>failing_expression=False</em><big>)</big><a class="headerlink" href="#sympy.matrices.immutable.ImmutableMatrix.equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies <tt class="docutils literal"><span class="pre">equals</span></tt> to corresponding elements of the matrices,
+trying to prove that the elements are equivalent, returning True
+if they are, False if any pair is not, and None (or the first
+failing expression if failing_expression is True) if it cannot
+be decided if the expressions are equivalent or not. This is, in
+general, an expensive operation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.expr.equals</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">==</span> <span class="n">B</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Immutable Matrices</a><ul>
+<li><a class="reference internal" href="#module-sympy.matrices.immutable">ImmutableMatrix Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sparse.html"
+                        title="previous chapter">Sparse Matrices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="expressions.html"
+                        title="next chapter">Matrix Expressions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/matrices/immutablematrices.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="expressions.html" title="Matrix Expressions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sparse.html" title="Sparse Matrices"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Matrices</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

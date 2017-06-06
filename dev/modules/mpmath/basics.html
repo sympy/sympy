@@ -1,0 +1,387 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Basic usage &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="index.html" />
+    <link rel="next" title="Contexts" href="contexts.html" />
+    <link rel="prev" title="Setting up mpmath" href="setup.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="contexts.html" title="Contexts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="setup.html" title="Setting up mpmath"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="basic-usage">
+<h1>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
+<p>In interactive code examples that follow, it will be assumed that
+all items in the <tt class="docutils literal"><span class="pre">mpmath</span></tt> namespace have been imported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Importing everything can be convenient, especially when using mpmath interactively, but be
+careful when mixing mpmath with other libraries! To avoid inadvertently overriding
+other functions or objects, explicitly import only the needed objects, or use
+the <tt class="docutils literal"><span class="pre">mpmath.</span></tt> or <tt class="docutils literal"><span class="pre">mp.</span></tt> namespaces:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span>
+<span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">mpmath</span>
+<span class="n">mpmath</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">mpmath</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="n">mp</span>    <span class="c"># mp context object -- to be explained</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">mp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="number-types">
+<h2>Number types<a class="headerlink" href="#number-types" title="Permalink to this headline">¶</a></h2>
+<p>Mpmath provides the following numerical types:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Class</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">mpf</span></tt></td>
+<td>Real float</td>
+</tr>
+<tr class="row-odd"><td><tt class="docutils literal"><span class="pre">mpc</span></tt></td>
+<td>Complex float</td>
+</tr>
+<tr class="row-even"><td><tt class="docutils literal"><span class="pre">matrix</span></tt></td>
+<td>Matrix</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The following section will provide a very short introduction to the types <tt class="docutils literal"><span class="pre">mpf</span></tt> and <tt class="docutils literal"><span class="pre">mpc</span></tt>. Intervals and matrices are described further in the documentation chapters on interval arithmetic and matrices / linear algebra.</p>
+<p>The <tt class="docutils literal"><span class="pre">mpf</span></tt> type is analogous to Python&#8217;s built-in <tt class="docutils literal"><span class="pre">float</span></tt>. It holds a real number or one of the special values <tt class="docutils literal"><span class="pre">inf</span></tt> (positive infinity), <tt class="docutils literal"><span class="pre">-inf</span></tt> (negative infinity) and <tt class="docutils literal"><span class="pre">nan</span></tt> (not-a-number, indicating an indeterminate result). You can create <tt class="docutils literal"><span class="pre">mpf</span></tt> instances from strings, integers, floats, and other <tt class="docutils literal"><span class="pre">mpf</span></tt> instances:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">mpf(&#39;4.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">mpf(&#39;2.5&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="s">&quot;1.25e6&quot;</span><span class="p">)</span>
+<span class="go">mpf(&#39;1250000.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">mpf(&#39;2.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="s">&quot;inf&quot;</span><span class="p">)</span>
+<span class="go">mpf(&#39;+inf&#39;)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">mpc</span></tt> type represents a complex number in rectangular form as a pair of <tt class="docutils literal"><span class="pre">mpf</span></tt> instances. It can be constructed from a Python <tt class="docutils literal"><span class="pre">complex</span></tt>, a real number, or a pair of real numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;2.0&#39;, imag=&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpc</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">imag</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+</pre></div>
+</div>
+<p>You can mix <tt class="docutils literal"><span class="pre">mpf</span></tt> and <tt class="docutils literal"><span class="pre">mpc</span></tt> instances with each other and with Python numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">mpf</span><span class="p">(</span><span class="s">&#39;2.5&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1.0</span>
+<span class="go">mpf(&#39;9.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>      <span class="c"># Set precision (see below)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpc</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+<span class="go">mpc(real=&#39;0.70710678118654757&#39;, imag=&#39;0.70710678118654757&#39;)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-the-precision">
+<h2>Setting the precision<a class="headerlink" href="#setting-the-precision" title="Permalink to this headline">¶</a></h2>
+<p>Mpmath uses a global working precision; it does not keep track of the precision or accuracy of individual numbers. Performing an arithmetic operation or calling <tt class="docutils literal"><span class="pre">mpf()</span></tt> rounds the result to the current working precision. The working precision is controlled by a context object called <tt class="docutils literal"><span class="pre">mp</span></tt>, which has the following default state:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mp</span>
+<span class="go">Mpmath settings:</span>
+<span class="go">  mp.prec = 53                [default: 53]</span>
+<span class="go">  mp.dps = 15                 [default: 15]</span>
+<span class="go">  mp.trap_complex = False     [default: False]</span>
+</pre></div>
+</div>
+<p>The term <strong>prec</strong> denotes the binary precision (measured in bits) while <strong>dps</strong> (short for <em>decimal places</em>) is the decimal precision. Binary and decimal precision are related roughly according to the formula <tt class="docutils literal"><span class="pre">prec</span> <span class="pre">=</span> <span class="pre">3.33*dps</span></tt>. For example, it takes a precision of roughly 333 bits to hold an approximation of pi that is accurate to 100 decimal places (actually slightly more than 333 bits is used).</p>
+<p>Changing either precision property of the <tt class="docutils literal"><span class="pre">mp</span></tt> object automatically updates the other; usually you just want to change the <tt class="docutils literal"><span class="pre">dps</span></tt> value:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span>
+<span class="go">336</span>
+</pre></div>
+</div>
+<p>When the precision has been set, all <tt class="docutils literal"><span class="pre">mpf</span></tt> operations are carried out at that precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
+<span class="go">mpf(&#39;0.16666666666666666666666666666666666666666666666666656&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="n">mpf</span><span class="p">(</span><span class="s">&#39;0.5&#39;</span><span class="p">)</span>
+<span class="go">mpf(&#39;1.414213562373095048801688713&#39;)</span>
+</pre></div>
+</div>
+<p>The precision of complex arithmetic is also controlled by the <tt class="docutils literal"><span class="pre">mp</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
+<span class="go">mpc(real=&#39;0.3333333333321&#39;, imag=&#39;0.6666666666642&#39;)</span>
+</pre></div>
+</div>
+<p>There is no restriction on the magnitude of numbers. An <tt class="docutils literal"><span class="pre">mpf</span></tt> can for example hold an approximation of a large Mersenne prime:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">32582657</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="go">1.24575026015369e+9808357</span>
+</pre></div>
+</div>
+<p>Or why not 1 googolplex:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">100</span><span class="p">)</span>  
+<span class="go">1.0e+100000000000000000000000000000000000000000000000000...</span>
+</pre></div>
+</div>
+<p>The (binary) exponent is stored exactly and is independent of the precision.</p>
+<div class="section" id="temporarily-changing-the-precision">
+<h3>Temporarily changing the precision<a class="headerlink" href="#temporarily-changing-the-precision" title="Permalink to this headline">¶</a></h3>
+<p>It is often useful to change the precision during only part of a calculation. A way to temporarily increase the precision and then restore it is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">+=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># do_something()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">-=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>In Python 2.5, the <tt class="docutils literal"><span class="pre">with</span></tt> statement along with the mpmath functions <tt class="docutils literal"><span class="pre">workprec</span></tt>, <tt class="docutils literal"><span class="pre">workdps</span></tt>, <tt class="docutils literal"><span class="pre">extraprec</span></tt> and <tt class="docutils literal"><span class="pre">extradps</span></tt> can be used to temporarily change precision in a more safe manner:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">with_statement</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">workdps</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>  
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">7</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">extradps</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">7</span>
+<span class="gp">...</span>
+<span class="go">0.14285714285714285714</span>
+<span class="go">0.142857142857142857142857142857</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">with</span></tt> statement ensures that the precision gets reset when exiting the block, even in the case that an exception is raised. (The effect of the <tt class="docutils literal"><span class="pre">with</span></tt> statement can be emulated in Python 2.4 by using a <tt class="docutils literal"><span class="pre">try/finally</span></tt> block.)</p>
+<p>The <tt class="docutils literal"><span class="pre">workprec</span></tt> family of functions can also be used as function decorators:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@workdps</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">f</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">()</span>
+<span class="go">mpf(&#39;0.33333331346511841&#39;)</span>
+</pre></div>
+</div>
+<p>Some functions accept the <tt class="docutils literal"><span class="pre">prec</span></tt> and <tt class="docutils literal"><span class="pre">dps</span></tt> keyword arguments and this will override the global working precision. Note that this will not affect the precision at which the result is printed, so to get all digits, you must either use increase precision afterward when printing or use <tt class="docutils literal"><span class="pre">nstr</span></tt>/<tt class="docutils literal"><span class="pre">nprint</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2.71828182845905</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>      <span class="c"># Extra digits won&#39;t be printed</span>
+<span class="go">2.71828182845905</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">50</span><span class="p">),</span> <span class="mi">50</span><span class="p">)</span>
+<span class="go">2.7182818284590452353602874713526624977572470937</span>
+</pre></div>
+</div>
+<p>Finally, instead of using the global context object <tt class="docutils literal"><span class="pre">mp</span></tt>, you can create custom contexts and work with methods of those instances instead of global functions. The working precision will be local to each context object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp2</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
+<span class="go">0.3333333333</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mp2</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
+<span class="go">0.33333333333333333333</span>
+</pre></div>
+</div>
+<p><strong>Note</strong>: the ability to create multiple contexts is a new feature that is only partially implemented. Not all mpmath functions are yet available as context-local methods. In the present version, you are likely to encounter bugs if you try mixing different contexts.</p>
+</div>
+</div>
+<div class="section" id="providing-correct-input">
+<h2>Providing correct input<a class="headerlink" href="#providing-correct-input" title="Permalink to this headline">¶</a></h2>
+<p>Note that when creating a new <tt class="docutils literal"><span class="pre">mpf</span></tt>, the value will at most be as accurate as the input. <em>Be careful when mixing mpmath numbers with Python floats</em>. When working at high precision, fractional <tt class="docutils literal"><span class="pre">mpf</span></tt> values should be created from strings or integers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mf">10.9</span><span class="p">)</span>   <span class="c"># bad</span>
+<span class="go">mpf(&#39;10.9000000000000003552713678800501&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="s">&#39;10.9&#39;</span><span class="p">)</span>  <span class="c"># good</span>
+<span class="go">mpf(&#39;10.8999999999999999999999999999997&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mi">109</span><span class="p">)</span> <span class="o">/</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>   <span class="c"># also good</span>
+<span class="go">mpf(&#39;10.8999999999999999999999999999997&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+</pre></div>
+</div>
+<p>(Binary fractions such as 0.5, 1.5, 0.75, 0.125, etc, are generally safe as input, however, since those can be represented exactly by Python floats.)</p>
+</div>
+<div class="section" id="printing">
+<h2>Printing<a class="headerlink" href="#printing" title="Permalink to this headline">¶</a></h2>
+<p>By default, the <tt class="docutils literal"><span class="pre">repr()</span></tt> of a number includes its type signature. This way <tt class="docutils literal"><span class="pre">eval</span></tt> can be used to recreate a number from its string representation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">eval</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)))</span>
+<span class="go">mpf(&#39;2.5&#39;)</span>
+</pre></div>
+</div>
+<p>Prettier output can be obtained by using <tt class="docutils literal"><span class="pre">str()</span></tt> or <tt class="docutils literal"><span class="pre">print</span></tt>, which hide the <tt class="docutils literal"><span class="pre">mpf</span></tt> and <tt class="docutils literal"><span class="pre">mpc</span></tt> signatures and also suppress rounding artifacts in the last few digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="s">&quot;3.14159&quot;</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.1415899999999999&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mpf</span><span class="p">(</span><span class="s">&quot;3.14159&quot;</span><span class="p">)</span>
+<span class="go">3.14159</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mpc</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+<span class="go">(0.707106781186548 + 0.707106781186548j)</span>
+</pre></div>
+</div>
+<p>Setting the <tt class="docutils literal"><span class="pre">mp.pretty</span></tt> option will use the <tt class="docutils literal"><span class="pre">str()</span></tt>-style output for <tt class="docutils literal"><span class="pre">repr()</span></tt> as well:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="go">0.6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span><span class="p">(</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="go">mpf(&#39;0.59999999999999998&#39;)</span>
+</pre></div>
+</div>
+<p>The number of digits with which numbers are printed by default is determined by the working precision. To specify the number of digits to show without changing the working precision, use <a class="reference internal" href="general.html#mpmath.nstr" title="mpmath.nstr"><tt class="xref py py-func docutils literal"><span class="pre">mpmath.nstr()</span></tt></a> and <a class="reference internal" href="general.html#mpmath.nprint" title="mpmath.nprint"><tt class="xref py py-func docutils literal"><span class="pre">mpmath.nprint()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">mpf(&#39;0.16666666666666666&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nstr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="go">&#39;0.16666667&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="go">0.16666667</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nstr</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="go">&#39;0.16666666666666665741480812812369549646973609924316&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic usage</a><ul>
+<li><a class="reference internal" href="#number-types">Number types</a></li>
+<li><a class="reference internal" href="#setting-the-precision">Setting the precision</a><ul>
+<li><a class="reference internal" href="#temporarily-changing-the-precision">Temporarily changing the precision</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#providing-correct-input">Providing correct input</a></li>
+<li><a class="reference internal" href="#printing">Printing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="setup.html"
+                        title="previous chapter">Setting up mpmath</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="contexts.html"
+                        title="next chapter">Contexts</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/basics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="contexts.html" title="Contexts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="setup.html" title="Setting up mpmath"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

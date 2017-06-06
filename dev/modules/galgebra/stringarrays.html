@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>String manipulation for Geometric Algebra &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Geometric Algebra Module" href="index.html" />
+    <link rel="next" title="Debug code for Geometric Algebra" href="debug.html" />
+    <link rel="prev" title="Noncommutative utilities for Geometric Algebra" href="ncutil.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="debug.html" title="Debug code for Geometric Algebra"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ncutil.html" title="Noncommutative utilities for Geometric Algebra"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.galgebra.stringarrays">
+<span id="string-manipulation-for-geometric-algebra"></span><h1>String manipulation for Geometric Algebra<a class="headerlink" href="#module-sympy.galgebra.stringarrays" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="function-reference">
+<h2>Function Reference<a class="headerlink" href="#function-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.galgebra.stringarrays.fct_sym_array">
+<tt class="descclassname">sympy.galgebra.stringarrays.</tt><tt class="descname">fct_sym_array</tt><big>(</big><em>str_lst</em>, <em>coords=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/stringarrays.html#fct_sym_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.stringarrays.fct_sym_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct list of symbols or functions with names in &#8216;str_lst&#8217;.  If
+&#8216;coords&#8217; are given (tuple of symbols) function list constructed,
+otherwise a symbol list is constructed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.stringarrays.str_array">
+<tt class="descclassname">sympy.galgebra.stringarrays.</tt><tt class="descname">str_array</tt><big>(</big><em>base</em>, <em>n=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/stringarrays.html#str_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.stringarrays.str_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate one dimensional (list of strings) or two dimensional (list
+of list of strings) string array.</p>
+<p>For one dimensional arrays: -</p>
+<blockquote>
+<div><p>base is string of variable names separated by blanks such as
+base = &#8216;a b c&#8217; which produces the string list [&#8216;a&#8217;,&#8217;b&#8217;,&#8217;c&#8217;] or
+it is a string with no blanks than in conjunction with the
+integer n generates -</p>
+<blockquote>
+<div>str_array(&#8216;v&#8217;,n=-3) = [&#8216;v_1&#8217;,&#8217;v_2&#8217;,&#8217;v_3&#8217;]
+str_array(&#8216;v&#8217;,n=3) = [&#8216;v__1&#8217;,&#8217;v__2&#8217;,&#8217;v__3&#8217;].</div></blockquote>
+<p>In the case of LaTeX printing the &#8216;_&#8217; would give a subscript and
+the &#8216;__&#8217; a super script.</p>
+</div></blockquote>
+<p>For two dimensional arrays: -</p>
+<blockquote>
+<div><p>base is string where elements are separated by spaces and rows by
+commas so that -</p>
+<blockquote>
+<div>str_array(&#8216;a b,c d&#8217;) = [[&#8216;a&#8217;,&#8217;b&#8217;],[&#8216;c&#8217;,&#8217;d&#8217;]]</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.stringarrays.str_combinations">
+<tt class="descclassname">sympy.galgebra.stringarrays.</tt><tt class="descname">str_combinations</tt><big>(</big><em>base</em>, <em>lst</em>, <em>rank=1</em>, <em>mode='_'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/stringarrays.html#str_combinations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.stringarrays.str_combinations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a list of strings of the form &#8216;base+mode+indexes&#8217; where the
+indexes are formed by converting &#8216;lst&#8217; to a list of strings and then
+forming the &#8216;indexes&#8217; by concatenating combinations of elements from
+&#8216;lst&#8217; taken &#8216;rank&#8217; at a time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.galgebra.stringarrays.symbol_array">
+<tt class="descclassname">sympy.galgebra.stringarrays.</tt><tt class="descname">symbol_array</tt><big>(</big><em>base</em>, <em>n=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/galgebra/stringarrays.html#symbol_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.galgebra.stringarrays.symbol_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a string arrary with str_array and replaces each string in
+array with Symbol of same name.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">String manipulation for Geometric Algebra</a><ul>
+<li><a class="reference internal" href="#function-reference">Function Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ncutil.html"
+                        title="previous chapter">Noncommutative utilities for Geometric Algebra</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="debug.html"
+                        title="next chapter">Debug code for Geometric Algebra</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/galgebra/stringarrays.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="debug.html" title="Debug code for Geometric Algebra"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ncutil.html" title="Noncommutative utilities for Geometric Algebra"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Geometric Algebra Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
