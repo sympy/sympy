@@ -330,6 +330,11 @@ class Basic(with_metaclass(ManagedProperties)):
 
         return self._hashable_content() == other._hashable_content()
 
+    def __call__(self, other):
+        """
+        Give a better error message than the built-in one.
+        """
+        raise TypeError("'%s' object is not callable. Perhaps you forgot a '*'?" % self.__class__.__name__)
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
 
