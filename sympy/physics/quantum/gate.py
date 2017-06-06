@@ -921,8 +921,8 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     def _pretty(self, printer, *args):
         return Gate._pretty(self, printer, *args)
 
-    def _latex(self, printer, *args):
-        return Gate._latex(self, printer, *args)
+    def _print_contents_latex(self, printer, *args):
+        return Gate._print_contents_latex(self, printer, *args)
 
     #-------------------------------------------------------------------------
     # Commutator/AntiCommutator
