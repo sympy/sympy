@@ -107,7 +107,7 @@ def rawlines(s):
 size = getattr(sys, "maxint", None)
 if size is None:  # Python 3 doesn't have maxint
     size = sys.maxsize
-if size > 2**32:
+if size > 1<<32:
     ARCH = "64-bit"
 else:
     ARCH = "32-bit"
