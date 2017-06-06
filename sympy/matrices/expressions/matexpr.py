@@ -445,6 +445,78 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
+    def explicit(self):
+        from sympy.core import Symbol,var
+	from sympy.matrices import Matrix
+
+	"""Returns the explicit Matrix representation of a MatrixSymbol of arbitrary size
+	
+	Examples
+
+	========
+
+	>>> from sympy import *
+
+	>>> m, n = symbols('m n')
+
+	>>> A = MatrixSymbol('A',m,n)
+	
+	>>> C = MatrixSymbol('C',3,n)
+
+	>>> A.explicit()
+	
+	[A(1, 1) A(1, 2) ... A(1, n)]
+	[			    ]	
+	[A(2, 1) A(2, 2) ... A(2, n)]
+	[                           ]
+	[  ...     ...   ...    ... ]
+	[                           ]
+	[A(m, 1) A(m, 2) ... A(m, n)]
+	
+	>>> C.explicit()
+	
+	[C(1, 1) C(1, 2) ... C(1, n)]
+	[			    ]	
+	[C(2, 1) C(2, 2) ... C(2, n)]
+	[                           ]
+	[C(3, 1) C(3, 2) ... C(3, n)]
+	
+	"""
+	x, m, n = self.args
+		
+	if (((isinstance(m,Integer)==True) & (m<5)) | ((isinstance(n,Integer)==True) & (n<5))):
+            if((((isinstance(m,Integer)==True)&(m>4)) | (isinstance(m,Integer)==False))&(isinstance(n,Integer)==True)):
+	        d = [Symbol('...')]*n
+		a = Matrix([d]*4)
+		a[0,0] = Matrix(2,2,(x+"(1,1)",x+"(1,2)",x+"(2,1)",x+"(2,2)"))
+		a[3,0] = Matrix((x+"("+str(m)+',1'+")",x+"("+str(m)+',2'+")")).T
+		a[0,n-1] = Matrix((x+'(1,'+str(n)+")",x+'(2,'+str(n)+")"))
+		a[3,n-1] = Symbol(x+"("+str(m)+", "+str(n)+")")
+	    elif((((isinstance(n,Integer)==True)&(n>4)) | (isinstance(n,Integer)==False)) & (isinstance(m,Integer)==True)):
+		d = [Symbol('...')]*4
+		a = Matrix([d]*m)
+		a[0,0] = Matrix(2,2,(x+"(1,1)",x+"(1,2)",x+"(2,1)",x+"(2,2)"))
+		a[m-1,0] = Matrix((x+"("+str(m)+',1'+")",x+"("+str(m)+',2'+")")).T
+		a[0,3] = Matrix((x+'(1,'+str(n)+")",x+'(2,'+str(n)+")"))
+		a[m-1,3] = Symbol(x+"("+str(m)+", "+str(n)+")")
+	    else:
+		d = [Symbol('...')]*n
+		a = Matrix([d]*m)
+		a[0,0] = Matrix(2,2,(x+"(1,1)",x+"(1,2)",x+"(2,1)",x+"(2,2)"))
+		a[m-1,0] = Matrix((x+"("+str(m)+',1'+")",x+"("+str(m)+',2'+")")).T
+		a[0,n-1] = Matrix((x+'(1,'+str(n)+")",x+'(2,'+str(n)+")"))
+		a[m-1,n-1] = Symbol(x+"("+str(m)+", "+str(n)+")")
+	else:
+	    d = [Symbol('...')]*4
+	    a = Matrix([d]*4)
+	    a[0,0] = Matrix(2,2,(x+"(1,1)",x+"(1,2)",x+"(2,1)",x+"(2,2)"))
+	    a[3,0] = Matrix((x+"("+str(m)+',1'+")",x+"("+str(m)+',2'+")")).T
+	    a[0,3] = Matrix((x+'(1,'+str(n)+")",x+'(2,'+str(n)+")"))
+	    a[3,3] = Symbol(x+"("+str(m)+", "+str(n)+")")
+
+	return a
+
+
 class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
 
