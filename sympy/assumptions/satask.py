@@ -10,14 +10,15 @@ from sympy.assumptions.sathandlers import fact_registry
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
-    use_known_facts=True, iterations=oo):
+           use_known_facts=True, iterations=oo):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
-        use_known_facts=use_known_facts, iterations=iterations)
+                                            use_known_facts=use_known_facts,
+                                            iterations=iterations)
 
     can_be_true = satisfiable(And(proposition, assumptions,
-        relevant_facts, *context))
+                                  relevant_facts, *context))
     can_be_false = satisfiable(And(~proposition, assumptions,
-        relevant_facts, *context))
+                                   relevant_facts, *context))
 
     if can_be_true and can_be_false:
         return None
@@ -36,8 +37,8 @@ def satask(proposition, assumptions=True, context=global_assumptions,
 
 
 def get_relevant_facts(proposition, assumptions=(True,),
-    context=global_assumptions, use_known_facts=True, exprs=None,
-    relevant_facts=None):
+                       context=global_assumptions, use_known_facts=True,
+                       exprs=None, relevant_facts=None):
 
     newexprs = set()
     if not exprs:
@@ -61,13 +62,14 @@ def get_relevant_facts(proposition, assumptions=(True,),
             newfact = fact.rcall(expr)
             relevant_facts.add(newfact)
             newexprs |= set([key.args[0] for key in
-                newfact.atoms(AppliedPredicate)])
+                             newfact.atoms(AppliedPredicate)])
 
     return relevant_facts, newexprs - exprs
 
 
 def get_all_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True, iterations=oo):
+                           context=global_assumptions, use_known_facts=True,
+                           iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things. Hopefully this strategy won't lead to an
@@ -77,9 +79,11 @@ def get_all_relevant_facts(proposition, assumptions=True,
     exprs = None
     while exprs != set():
         (relevant_facts, exprs) = get_relevant_facts(proposition,
-                And.make_args(assumptions), context,
-                use_known_facts=use_known_facts, exprs=exprs,
-                relevant_facts=relevant_facts)
+                                                     And.make_args(assumptions),
+                                                     context,
+                                                     use_known_facts=use_known_facts,
+                                                     exprs=exprs,
+                                                     relevant_facts=relevant_facts)
         i += 1
         if i >= iterations:
             return And(*relevant_facts)
