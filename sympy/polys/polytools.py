@@ -4392,6 +4392,27 @@ def degree(f, *gens, **args):
     -oo
 
     """
+    if len(gens) is 0:
+        gens_present = False
+    else:
+        gens_present = True
+
+    polynomial=False
+
+    try:
+        polynomial = f.is_polynomial()
+    except:
+        pass
+
+    if f is polynomial:
+        if len(f.free_symbols) is 1: 
+            sym = f.free_symbols.pop()
+            if gens_present:
+                if sym is gens[0]:
+                    return -f.subs(sym, 1/sym).leadterm(sym)[1]
+            else:
+                return -f.subs(sym, 1/sym).leadterm(sym)[1]
+
     options.allowed_flags(args, ['gen', 'polys'])
 
     try:
