@@ -438,15 +438,21 @@ def init_session(ipython=None, pretty_print=True, order=None,
             # and False means don't add the line to IPython's history.
             ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-            #Enable interactive plotting using pylab.
+            # Enable interactive plotting using pylab.
             try:
-                ip.enable_pylab(import_all=False)
+                if IPython.__version__ >= '0.14':
+                    ip.enable_pylab(import_all=False, welcome_message=False)
+                else:
+                    ip.enable_pylab(import_all=False)
+            except TypeError:
+                raise
             except Exception:
                 # Causes an import error if matplotlib is not installed.
                 # Causes other errors (depending on the backend) if there
                 # is no display, or if there is some problem in the
                 # backend, so we have a bare "except Exception" here
                 pass
+
         if not in_ipython:
             mainloop = ip.mainloop
 
