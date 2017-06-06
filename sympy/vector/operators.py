@@ -1,4 +1,5 @@
-from sympy.core import Expr, sympify
+from sympy.core.basic import Basic
+from sympy.core import  sympify
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -18,7 +19,7 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
     return list(expr.atoms(CoordSysCartesian))[0]
 
 
-class Gradient(Expr):
+class Gradient(Basic):
     """
     Represents unevaluated Gradient.
 
@@ -35,7 +36,7 @@ class Gradient(Expr):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Expr.__new__(cls, expr)
+        obj = Basic.__new__(cls, expr)
         obj._expr = expr
         return obj
 
@@ -43,7 +44,7 @@ class Gradient(Expr):
         return gradient(self._expr)
 
 
-class Divergence(Expr):
+class Divergence(Basic):
     """
     Represents unevaluated Divergence.
 
@@ -60,7 +61,7 @@ class Divergence(Expr):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Expr.__new__(cls, expr)
+        obj = Basic.__new__(cls, expr)
         obj._expr = expr
         return obj
 
@@ -68,7 +69,7 @@ class Divergence(Expr):
         return divergence(self._expr)
 
 
-class Curl(Expr):
+class Curl(Basic):
     """
     Represents unevaluated Curl.
 
@@ -85,7 +86,7 @@ class Curl(Expr):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Expr.__new__(cls, expr)
+        obj = Basic.__new__(cls, expr)
         obj._expr = expr
         return obj
 
@@ -125,7 +126,7 @@ def gradient(scalar, coord_sys=None):
     return _get_coord_sys_from_expr(scalar, coord_sys).delop(scalar).doit()
 
 
-def divergence(vect, coord_sys=None):
+def divergence(vector, coord_sys=None):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -154,10 +155,10 @@ def divergence(vect, coord_sys=None):
 
     """
 
-    return _get_coord_sys_from_expr(vect, coord_sys).delop.dot(vect).doit()
+    return _get_coord_sys_from_expr(vector, coord_sys).delop.dot(vector).doit()
 
 
-def curl(vect, coord_sys=None):
+def curl(vector, coord_sys=None):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -186,4 +187,4 @@ def curl(vect, coord_sys=None):
 
     """
 
-    return _get_coord_sys_from_expr(vect, coord_sys).delop.cross(vect).doit()
+    return _get_coord_sys_from_expr(vector, coord_sys).delop.cross(vector).doit()
