@@ -357,7 +357,7 @@ def merge_solution(var, var_t, solution):
     """
     sol = []
 
-    if None in solution:
+    if solution is None or None in solution:
         return ()
 
     solution = iter(solution)
