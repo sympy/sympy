@@ -119,6 +119,7 @@ modules = [
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.rubi',
     'sympy.sandbox',
     'sympy.series',
     'sympy.series.benchmarks',
