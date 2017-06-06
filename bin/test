@@ -44,8 +44,7 @@ def vararg_callback(option, opt_str, value, parser):
 
 
 parser = OptionParser()
-parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
-        default=False)
+parser.add_option("-v", "--verbose", action="store_true", dest="verbose",        default=False)
 parser.add_option("--pdb", action="store_true", dest="pdb",
         default=False, help="Run post mortem pdb on each failure")
 parser.add_option("--no-colors", action="store_false", dest="colors",
@@ -72,7 +71,7 @@ parser.add_option("--timeout", action="store", dest="timeout",
         default=False, help="Set a timeout for the all functions, in seconds. By default there is no timeout.", type='int')
 parser.add_option("--slow", action="store_true", dest="slow",
         default=False, help="Run only the slow functions.")
-parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
+parser.add_option("--no-subprocess", action="store_true", dest="subprocess",
                   default=True, help="Don't run the tests in a separate "
                   "subprocess.  This may prevent hash randomization from being enabled.")
 parser.add_option("-E", "--enhance-asserts", action="store_true", dest="enhance_asserts",
@@ -92,6 +91,7 @@ options, args = parser.parse_args()
 
 # Check this again here to give a better error message
 if options.split:
+    print(options.split)
     sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
     if not sp.match(options.split):
         parser.error("option --split: must be of the form a/b where a and b "
@@ -101,6 +101,9 @@ if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
+#hash_seed = os.getenv("PYTHONHASHSEED")
+# if not hash_seed:
+#         os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
 
 import sympy
 

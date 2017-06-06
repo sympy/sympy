@@ -194,10 +194,11 @@ def run_in_subprocess_with_hash_randomization(
     p.communicate()
     if p.returncode != 0:
         return False
-
+    
     hash_seed = os.getenv("PYTHONHASHSEED")
+    
     if not hash_seed:
-        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
+        os.environ["PYTHONHASHSEED"] = str(random.randint(1,2**32))
     else:
         if not force:
             return False
