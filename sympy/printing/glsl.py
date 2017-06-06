@@ -103,14 +103,7 @@ class GLSLPrinter(CodePrinter):
         if A.cols == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
-            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
-
-    def _print_MatrixBase(self, A):
-        if A.cols == 1:
-            return "[%s]" % ", ".join(self._print(a) for a in A)
-        else:
-            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
-
+            raise ValueError("GLSL does not support nested arrays.")
 
     _print_Matrix = \
         _print_MatrixElement = \
