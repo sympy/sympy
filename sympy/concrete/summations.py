@@ -19,7 +19,8 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.core.compatibility import range
-
+from sympy.assumptions.ask import ask
+from sympy.assumptions import Q
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""Represents unevaluated summation.
@@ -523,6 +524,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 dirich2 = _dirichlet_test(a_n)
                 if dirich2 is not None:
                     return dirich2
+            ### --------- Test bounded factor ------------###
+            if ask(Q.finite(a_n)) and Sum(b_n, (sym, interval.inf, interval.sup)).is_convergent():
+                return S.true
+            if ask(Q.finite(b_n)) and Sum(a_n, (sym, interval.inf, interval.sup)).is_convergent():
+                return S.true
 
         raise NotImplementedError("The algorithm to find the Sum convergence of %s "
                                   "is not yet implemented" % (sequence_term))
