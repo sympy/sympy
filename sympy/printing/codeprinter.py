@@ -354,7 +354,7 @@ class CodePrinter(StrPrinter):
 
     def _print_And(self, expr):
         PREC = precedence(expr)
-        return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
+        return (" %s " % self._operators['&']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
