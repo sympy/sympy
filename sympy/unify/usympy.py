@@ -49,7 +49,7 @@ def deconstruct(s, variables=()):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
-    return Compound(s.__class__,
+    return Compound(deconstruct(s.__class__, variables),
                     tuple(deconstruct(arg, variables) for arg in s.args))
 
 def construct(t):

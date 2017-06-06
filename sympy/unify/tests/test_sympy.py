@@ -153,3 +153,8 @@ def test_commutative_in_commutative():
     eq = sin(3)*sin(4)*sin(5) + 4*cos(3)*cos(4)
     pat = a*cos(b)*cos(c) + d*sin(b)*sin(c)
     assert next(unify(eq, pat, variables=(a,b,c,d)))
+
+def test_operators():
+    from sympy import sin, Function
+    g = Function('g')
+    assert next(unify(sin(x), g(x), variables=[g])) == {g: sin}
