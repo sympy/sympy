@@ -663,26 +663,27 @@ def _rewrite_gamma(f, s, a, b):
                                           (denom_gammas, bq, ap, False)]:
         while gammas:
             a, c = gammas.pop()
-            if a != -1 and a != +1:
-                # We use the gamma function multiplication theorem.
-                p = abs(S(a))
-                newa = a/p
-                newc = c/p
-                if not a.is_Integer:
-                    raise TypeError("a is not an integer")
-                for k in range(p):
-                    gammas += [(newa, newc + k/p)]
-                if is_numer:
-                    fac *= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
-                    exponentials += [p**a]
+            if a.is_Integer:
+                if a == +1:
+                    plus.append(1 - c)
+                elif a == -1:
+                    minus.append(c)
                 else:
-                    fac /= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
-                    exponentials += [p**(-a)]
-                continue
-            if a == +1:
-                plus.append(1 - c)
+                    # We use the gamma function multiplication theorem.
+                    p = abs(S(a))
+                    newa = a/p
+                    newc = c/p
+                    for k in range(p):
+                        gammas += [(newa, newc + k/p)]
+                    if is_numer:
+                        fac *= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
+                        exponentials += [p**a]
+                    else:
+                        fac /= (2*pi)**((1 - p)/2) * p**(c - S(1)/2)
+                        exponentials += [p**(-a)]
             else:
-                minus.append(c)
+                # case needs implementation
+                raise exception(fact)
 
     # 4)
     # TODO
@@ -957,10 +958,28 @@ def _simplifyconds(expr, s, a):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
-    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
-                       cos, Wild, symbols, polar_lift)
+    from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
+                       cos, Wild, symbols, polar_lift, Heaviside, Piecewise)
     s = Dummy('s')
-    F = integrate(exp(-s*t) * f, (t, 0, oo))
+
+    if f.has(Heaviside):
+        # This is a naive implementation of the 2nd shift formula
+        # for Laplace transforms.  Perhaps there should be a more
+        # systematic implementation.
+        # see https://code.google.com/p/sympy/issues/detail?id=3212
+        g = Wild('g', exclude=[s, s_])
+        a = Wild('a', exclude=[s, t, s_])
+        res = f.match(g*Heaviside(t + a))
+        if res == None:
+            F = integrate(exp(-s*t) * f, (t, 0, oo))
+        else:
+            gshifted = res[g].replace(t, t - res[a])
+            F = Piecewise( \
+                (integrate(exp(-s*t + s*res[a]) * gshifted, (t, 0, oo)), res[a]<0), \
+                (integrate(exp(-s*t) * res[g], (t, 0, oo)),res[a]>=0) \
+            )
+    else:
+        F = integrate(exp(-s*t) * f, (t, 0, oo))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), -oo, True
