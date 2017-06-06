@@ -84,7 +84,7 @@ radial velocity). ::
 
   >>> f_c = Matrix([P.pos_from(pN).magnitude() - L])
   >>> f_v = Matrix([P.vel(N).express(A).dot(A.x)])
-  >>> f_v.simplify()
+  >>> _ = f_v.simplify()
 
 The force on the system is just gravity, at point ``P``. ::
 

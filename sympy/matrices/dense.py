@@ -722,6 +722,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         for i in range(len(self._mat)):
             self._mat[i] = _simplify(self._mat[i], ratio=ratio,
                                      measure=measure)
+        return self
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
