@@ -582,7 +582,17 @@ class Number(AtomicExpr):
         return divmod(other, self)
 
     def __round__(self, *args):
-        return round(float(self), *args)
+        self = Float(self)*(10**int(args[0])) # Multiply up to desired decimal places
+        decimal_value = self - Integer(self)
+        self = Integer(self) # We don't need any of the other digits, so we can truncate them
+        if decimal_value >= 0.6:
+            self += 1
+        elif decimal_value >= 0.5 and self%2==1: # Banker's rounding | In the case of 0.5 round to nearest even integer.
+            self+=1
+        self = Float(self) / (10**int(args[0])) # Return it back to it's original form
+        if args[0]<14:
+            self=float(self) # Make sure we don't get extra precision when it's not required
+        return self
 
     def _as_mpf_val(self, prec):
         """Evaluation of mpf tuple accurate to at least prec bits."""
