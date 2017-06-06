@@ -15,7 +15,7 @@ known_functions = {
     'acos': 'acos',
     'asin': 'asin',
     'atan': 'atan',
-    'atan2': 'atan2',
+    'atan2': 'atan',
     'ceiling': 'ceil',
     'floor': 'floor',
     'sign': 'sign',
@@ -26,17 +26,13 @@ known_functions = {
     'mul': 'mul',
     'pow': 'pow',
     'abs': 'abs'
-    ''
 }
 
 class GLSLPrinter(CodePrinter):
     """
-    Rudimentary, generic GLSL printing tools.  Capable of printing with mul/add/sub functions instead of
-    operators.  Prints pow(b,n) instead of b**n.   Goals: support for emulated double/quad/octal
-    precision.
+    Rudimentary, generic GLSL printing tools.
 
-
-    Available settings:
+    Additional settings:
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
     _not_supported = set()
@@ -52,7 +48,7 @@ class GLSLPrinter(CodePrinter):
         'contract': True,
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-        'use_operators': True,
+        'use_operators': True
     }
 
     def __init__(self, settings={}):
@@ -242,6 +238,116 @@ class GLSLPrinter(CodePrinter):
         return s
 
 def glsl_code(expr,assign_to=None,**settings):
+    """Converts an expr to a string of GLSL code
+
+    Parameters
+    ==========
+
+    expr : Expr
+        A sympy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    use_operators: bool, optional
+        If set to False, then *,/,+,- operators will be replaced with functions
+        mul, add, and sub, which must be implemented by the user.  This is
+        intended for use with emulated quad/octal precision.
+        [default=True]
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where keys are ``FunctionClass`` instances and values are
+        their string representations. Alternatively, the dictionary value can
+        be a list of tuples i.e. [(argument_test, js_function_string)]. See
+        below for examples.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
+
+    Examples
+    ========
+
+    >>> from sympy import glsl_code, symbols, Rational, sin, ceiling, Abs
+    >>> x, tau = symbols("x, tau")
+    >>> glsl_code((2*tau)**Rational(7, 2))
+    '8*sqrt(2)*pow(tau, 3.5)'
+    >>> glsl_code(sin(x), assign_to="float s")
+    'float s = sin(x);'
+
+    Custom printing can be defined for certain types by passing a dictionary of
+    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
+    dictionary value can be a list of tuples i.e. [(argument_test,
+    js_function_string)].
+
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "Abs": [(lambda x: not x.is_Integer, "fabs"),
+    ...           (lambda x: x.is_Integer, "ABS")]
+    ... }
+    >>> glsl_code(Abs(x) + ceiling(x), user_functions=custom_functions)
+    'fabs(x) + CEIL(x)'
+
+    Addition, subtraction, multiplication and
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(glsl_code(expr, tau))
+    if (x > 0) {
+       tau = x + 1;
+    }
+    else {
+       tau = x;
+    }
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> glsl_code(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(glsl_code(mat, A))
+    A[0] = pow(x, 2.0);
+    if (x > 0) {
+       A[1] = x + 1;
+    }
+    else {
+       A[1] = x;
+    }
+    A[2] = sin(x);
+    """
     return GLSLPrinter(settings).doprint(expr,assign_to)
 
 def print_glsl(expr, **settings):
