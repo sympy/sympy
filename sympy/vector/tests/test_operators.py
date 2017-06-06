@@ -1,4 +1,4 @@
-from sympy.vector import CoordSysCartesian, Gradient, Divergence, Curl, VectorZero
+from sympy.vector import CoordSysCartesian, Gradient, Divergence, Curl, VectorZero, curl
 
 
 R = CoordSysCartesian('R')
