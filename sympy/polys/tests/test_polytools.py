@@ -3064,6 +3064,32 @@ def test_is_zero_dimensional():
     assert is_zero_dimensional(F, x, y, z) is True
 
 
+def test_issue_11175():
+    system = [sqrt(x**2 + y**2) - sqrt(10), x + y - 4]
+    assert is_zero_dimensional(system) is True
+    assert is_zero_dimensional(system, [x, y]) is True
+
+    x1 = 0
+    y1 = -620
+    r1 = 920
+    x2 = 126
+    y2 = 276
+    x3 = 51
+    y3 = 205
+    r3 = 104
+    v = [x, y, z]
+
+    g1 = sqrt((x - x1)**2 + (y - y1)**2) + z - r1
+    g2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    g3 = sqrt((x - x3)**2 + (y - y3)**2) + z - r3
+    G = [g1, g2, g3]
+    assert is_zero_dimensional(G, v) is True
+    assert is_zero_dimensional(G) is True
+
+    system = [x**2 + 2/y - 2, x + y - 3]
+    assert is_zero_dimensional(system, [x, y]) is True
+
+
 def test_GroebnerBasis():
     F = [x*y - 2*y, 2*y**2 - x**2]
 

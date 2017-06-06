@@ -6598,6 +6598,21 @@ def is_zero_dimensional(F, *gens, **args):
     Algorithms, 3rd edition, p. 230
 
     """
+    from sympy.solvers.solvers import unrad
+    from sympy.simplify import simplify
+
+    # Remove sqrt or radicals from `F` eqs, if present.
+    for eq in F:
+        eq_new = eq
+        without_radicals = unrad(simplify(eq))
+        if without_radicals:
+            eq_unrad, cov = without_radicals
+            if not cov:
+                eq_new = eq_unrad
+        # use the numerator
+        eq_new = eq_new.as_numer_denom()[0]
+        F.remove(eq)
+        F.append(eq_new)
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
 
