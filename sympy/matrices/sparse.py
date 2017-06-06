@@ -8,6 +8,7 @@ from sympy.core.expr import Expr
 from sympy.core.compatibility import is_sequence, as_int, range
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
+from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
 
@@ -249,6 +250,9 @@ class SparseMatrix(MatrixBase):
             scale = (r1*rv[:, 0])[0, 0]
             rv /= scale
         return self._new(rv)
+
+    def _eval_Abs(self):
+        return self.applyfunc(lambda x: Abs(x))
 
     def _eval_add(self, other):
         """If `other` is a SparseMatrix, add efficiently. Otherwise,
