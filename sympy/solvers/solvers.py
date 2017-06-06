@@ -1372,8 +1372,8 @@ def _solve(f, *symbols, **flags):
                 if candidate in result:
                     continue
                 try:
-                    v = (cond == True) or cond.subs(symbol, candidate)
-                except:
+                    v = (cond == True) or (cond.subs(symbol, candidate))
+                except Exception:
                     v = False
                 if v != False:
                     # Only include solutions that do not match the condition
@@ -1388,7 +1388,7 @@ def _solve(f, *symbols, **flags):
                             if other_cond.subs(symbol, candidate) == True:
                                 matches_other_piece = True
                                 break
-                        except:
+                        except Exception:
                             pass
                     if not matches_other_piece:
                         v = v == True or v.doit()

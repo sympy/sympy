@@ -713,5 +713,5 @@ def _check_strings(arg_name, arg):
         for s in arg:
             if not isinstance(s, string_types):
                 raise TypeError(errorstr)
-    except:
+    except TypeError:
         raise TypeError(errorstr)
