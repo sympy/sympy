@@ -8,6 +8,7 @@ from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit
 from .compatibility import reduce, as_int, default_sort_key, range
 from mpmath.libmp import mpf_log, prec_to_dps
+import os
 
 from collections import defaultdict
 
@@ -25,8 +26,8 @@ class Expr(Basic, EvalfMixin):
 
     sympy.core.basic.Basic
     """
-
-    __slots__ = []
+    if os.name != 'java':
+        __slots__ = []
 
     @property
     def _diff_wrt(self):
@@ -3273,7 +3274,8 @@ class AtomicExpr(Atom, Expr):
     is_number = False
     is_Atom = True
 
-    __slots__ = []
+    if os.name != 'java':
+        __slots__ = []
 
     def _eval_derivative(self, s):
         if self == s:
