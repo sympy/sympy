@@ -420,6 +420,24 @@ class MatrixSymbol(MatrixExpr):
     def name(self):
         return self.args[0]
 
+    @property
+    def matsym_print(self):
+        """
+	Returns the symbolic representation of MatrixSymbol of arbotrary size
+	Example
+	========
+	>>>from sympy import *
+	>>>m,n=symbols('m n')
+	>>>A=MatrixSymbol('A',m,n)
+	>>>A=matsym_print
+	[A11, A12, ..., A1n]
+	[A21, A22, ..., A2n]
+	[..., ..., ..., ...]
+	[Am1, Am2, ..., Amn]
+	
+	"""
+	return ("["+self.args[0]+"11"+", "+str(self.args[0])+"12"+", ..., "+self.args[0]+"1"+str(self.args[2])+"]"+"\n"+"["+self.args[0]+"2"+"1"+", "+str(self.args[0])+"2"+"2"+", ..., "+self.args[0]+"2"+str(self.args[2])+"]"+"\n"+"["+"..., ..., ..., ..."+"]"+"\n"+"["+self.args[0]+str(self.args[1])+"1"+", "+str(self.args[0])+str(self.args[1])+"2"+", ..., "+self.args[0]+str(self.args[1])+str(self.args[2])+"]")
+
     def _eval_subs(self, old, new):
         # only do substitutions in shape
         shape = Tuple(*self.shape)._subs(old, new)
