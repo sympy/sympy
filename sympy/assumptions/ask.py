@@ -1423,6 +1423,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
+    ("antihermitian",     "matrices.AskAntiHermitianHandler"),
     ("finite",           "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
@@ -1430,6 +1431,7 @@ _handlers = [
     ("even",              "ntheory.AskEvenHandler"),
     ("extended_real",     "sets.AskExtendedRealHandler"),
     ("hermitian",         "sets.AskHermitianHandler"),
+    ("hermitian",         "matrices.AskHermitianHandler"),
     ("imaginary",         "sets.AskImaginaryHandler"),
     ("integer",           "sets.AskIntegerHandler"),
     ("irrational",        "sets.AskIrrationalHandler"),
