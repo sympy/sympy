@@ -1052,6 +1052,13 @@ def test_issue_10931():
     assert S.Integers - S.Reals == EmptySet()
 
 
+def test_issue_11442():
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    assert Interval(2, 7).is_EmptySet is False
+    assert Interval(a, b).is_EmptySet is None
+
+
 def test_issue_11174():
     soln = Intersection(Interval(-oo, oo), FiniteSet(-x), evaluate=False)
     assert Intersection(FiniteSet(-x), S.Reals) == soln
