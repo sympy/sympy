@@ -309,7 +309,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def check_assumptions(expr, against=None, **assumptions):
+def check_assumptions(expr, get=False, against=None, **assumptions):
     """Checks whether expression `expr` satisfies all assumptions.
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
@@ -350,7 +350,7 @@ def check_assumptions(expr, against=None, **assumptions):
         assumptions = against.assumptions0
 
     expr = sympify(expr)
-
+    wrong_list = []
     result = True
     for key, expected in assumptions.items():
         if expected is None:
@@ -359,9 +359,17 @@ def check_assumptions(expr, against=None, **assumptions):
         if test is expected:
             continue
         elif test is not None:
-            return False
+            if get is True:
+                wrong_list.append(key)
+                continue
+            else:
+                return False
+
         result = None  # Can't conclude, unless an other test fails.
-    return result
+    if not wrong_list:
+        return result
+    else:
+        return False, tuple(wrong_list)
 
 
 def solve(f, *symbols, **flags):
