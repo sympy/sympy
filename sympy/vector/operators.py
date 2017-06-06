@@ -3,6 +3,7 @@ from sympy.core import  sympify
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy import S
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
@@ -16,7 +17,12 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             useinstead="do not use it",
             deprecated_since_version="1.1"
         ).warn()
-    return list(expr.atoms(CoordSysCartesian))[0]
+    if expr is Vector.zero:
+        return False
+    elif expr == 0:
+        return False
+    else:
+        return list(expr.atoms(CoordSysCartesian))[0]
 
 
 class Gradient(Basic):
@@ -122,8 +128,10 @@ def gradient(scalar, coord_sys=None):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-
-    return _get_coord_sys_from_expr(scalar, coord_sys).delop(scalar).doit()
+    if _get_coord_sys_from_expr(scalar, coord_sys) is False:
+        return Vector.zero
+    else:
+        return _get_coord_sys_from_expr(scalar, coord_sys).delop(scalar).doit()
 
 
 def divergence(vector, coord_sys=None):
@@ -154,8 +162,10 @@ def divergence(vector, coord_sys=None):
     2*R.z
 
     """
-
-    return _get_coord_sys_from_expr(vector, coord_sys).delop.dot(vector).doit()
+    if _get_coord_sys_from_expr(vector, coord_sys) is False:
+        return S.Zero
+    else:
+        return _get_coord_sys_from_expr(vector, coord_sys).delop.dot(vector).doit()
 
 
 def curl(vector, coord_sys=None):
@@ -186,5 +196,7 @@ def curl(vector, coord_sys=None):
     R.x*R.y*R.j + (-R.x*R.z)*R.k
 
     """
-
-    return _get_coord_sys_from_expr(vector, coord_sys).delop.cross(vector).doit()
+    if _get_coord_sys_from_expr(vector, coord_sys) is False:
+        return Vector.zero
+    else:
+        return _get_coord_sys_from_expr(vector, coord_sys).delop.cross(vector).doit()
