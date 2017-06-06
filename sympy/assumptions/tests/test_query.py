@@ -1654,6 +1654,8 @@ def test_odd():
     assert ask(Q.odd(2*x + y), Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.odd(x*y), Q.odd(x) & Q.even(y)) is False
     assert ask(Q.odd(x*y), Q.odd(x) & Q.odd(y)) is True
+    assert ask(Q.odd(x+y+z), Q.odd(x) & Q.even(y) & Q.even(z)) is True
+    assert ask(Q.odd(2*x+1), Q.integer(x)) is True
     assert ask(Q.odd(2*x*y), Q.rational(x) & Q.rational(x)) is None
     assert ask(Q.odd(2*x*y), Q.irrational(x) & Q.irrational(x)) is None
 
