@@ -570,7 +570,7 @@ class Set(Basic):
     def __pow__(self, exp):
         if not sympify(exp).is_Integer and exp >= 0:
             raise ValueError("%s: Exponent must be a positive Integer" % exp)
-        return ProductSet([self]*exp)
+        return ProductSet([self] * exp)
 
     def __sub__(self, other):
         return Complement(self, other)
@@ -714,7 +714,6 @@ class ProductSet(Set):
                                 for j, b in enumerate(self.sets))
                                 for i, a in enumerate(self.sets))
 
-
     @property
     def is_iterable(self):
         """
@@ -825,7 +824,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end < start) == True:
+        if (end < start) is True:
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet
@@ -989,7 +988,6 @@ class Interval(Set, EvalfMixin):
 
         return Interval(start, end, left_open, right_open)
 
-
     def _complement(self, other):
         if other == S.Reals:
             a = Interval(S.NegativeInfinity, self.start,
@@ -1003,7 +1001,6 @@ class Interval(Set, EvalfMixin):
                 return None
 
         return Set._complement(self, other)
-
 
     def _union(self, other):
         """
@@ -1065,7 +1062,7 @@ class Interval(Set, EvalfMixin):
             return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
-            if not other.is_real is None:
+            if other.is_real is not None:
                 return other.is_real
 
         if self.left_open:
@@ -1444,6 +1441,7 @@ class Union(Set, EvalfMixin):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
+
 class Intersection(Set):
     """
     Represents an intersection of sets as a :class:`Set`.
@@ -1590,8 +1588,7 @@ class Intersection(Set):
                         if sympify(v.contains(x)) is S.true]
                     if contained != symbolic_s_list:
                         other.append(
-                            v - FiniteSet(
-                            *contained, evaluate=False))
+                            v - FiniteSet(*contained, evaluate=False))
                     else:
                         pass  # for coverage
 
@@ -1719,7 +1716,7 @@ class Complement(Set, EvalfMixin):
             return Intersection(s.complement(A) for s in B.args)
 
         result = B._complement(A)
-        if result != None:
+        if result is not None:
             return result
         else:
             return Complement(A, B, evaluate=False)
@@ -1962,7 +1959,6 @@ class FiniteSet(Set, EvalfMixin):
 
         return Set._complement(self, other)
 
-
     def _union(self, other):
         """
         This function should only be used internally
@@ -1979,7 +1975,6 @@ class FiniteSet(Set, EvalfMixin):
                     if other.contains(x) != True]), other))
 
         return None
-
 
     def _contains(self, other):
         """
