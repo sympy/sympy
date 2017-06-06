@@ -405,7 +405,7 @@ class MatrixSymbol(MatrixExpr):
     is_commutative = False
 
     def __new__(cls, name, n, m):
-        n, m = sympify(n), sympify(m)
+        name, n, m = sympify(name), sympify(n), sympify(m)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
