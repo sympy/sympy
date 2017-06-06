@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+"""
+Program to test building of the docs
+"""
+
+import os
+import sys
+import subprocess
+import logging
+import locale
+
+encoding = locale.getdefaultlocale()[1]
+cwd = os.getcwd()
+
+
+def os_chdir(path):
+    print("cd",  path)
+    os.chdir(path)
+
+
+def subprocess_call(args):
+    print(' '.join(args))
+    logging.debug("subprocess_call({0})".format(repr(args)))
+
+    def filter_split_decode(s):
+        s = s.decode(encoding)
+        return [line for line in s.split('\n') if line.strip() != '']
+
+    call = subprocess.Popen(args,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    (stdout, stderr) = map(filter_split_decode, call.communicate())
+
+    for line in stdout:
+        logging.info(line)
+
+    for line in stderr:
+        logging.error(line)
+
+    rc = call.returncode
+    if rc != 0:
+        sys.exit(rc)
+
+
+def open_default(filename):
+    """
+    Opens a file using the default system application
+    """
+    logging.debug("open_default({0})".format(repr(filename)))
+
+    if sys.platform.startswith('darwin'):
+        subprocess_call(('open', filename))
+    elif os.name == 'posix':
+        subprocess_call(('xdg-open', filename))
+    else:
+        raise NotImplementedError
+
+
+def check_cwd():
+    """
+    Tries to determine if this script is being run from the correct location
+    by looking for the required subdirs
+    """
+    global cwd
+
+    logging.debug("check_cwd()")
+
+    dirs = ['doc', 'bin', 'sympy']
+    try:
+        for d in dirs:
+            os.chdir(d)
+            os.chdir(cwd)
+    except OSError as e:
+        print(e)
+        sys.stderr.write(
+            "This script must be run from the sympy base directory\n")
+        sys.exit(1)
+
+
+def check_docs():
+    """
+    Essentially performs:
+    $ cd doc
+    $ make clean
+    $ make html
+    $ # open _build/html/index.html in default web browser
+
+    $ make clean
+    $ make latex
+    $ cd _build/latex
+    $ make all
+    $ # open sympy-*.*.*-*.pdf in default pdf reader
+
+    It is up to the user to check that the html and pdf documentation is okay
+    """
+    logging.debug("check_docs()")
+
+    docdir = os.path.join(cwd, 'doc')
+    os_chdir(docdir)
+
+    # Check Sphinx stuff
+    subprocess_call(["make", "clean"])
+    subprocess_call(["make", "html-errors"])
+
+    open_default(os.path.join(docdir, '_build', 'html', 'index.html'))
+
+    # Check pdf docs
+    subprocess_call(["make", "clean"])
+    subprocess_call(["make", "latex"])
+
+    os_chdir(os.path.join('_build', 'latex'))
+    subprocess_call(["make", "all"])
+
+    pdfs = [d.startswith('sympy') and d.endswith('.pdf')
+            for d in os.listdir('.')]
+    assert len(pdfs) == 1
+
+    open_default(os.path.join(docdir, '_build', 'latex', pdfs[0]))
+
+    subprocess_call(["make", "clean"])
+    os_chdir(docdir)
+    subprocess_call(["make", "clean"])
+    os_chdir(cwd)
+
+if __name__ == '__main__':
+    check_cwd()
+    check_docs()
