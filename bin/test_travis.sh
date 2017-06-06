@@ -2,6 +2,18 @@
 
 # Exit on error
 set -e
+
+# Find out whether the commit to test is at the head of its branch
+if [ x`git rev-list --max-count=1 $TRAVIS_BRANCH` != x$TRAVIS_COMMIT ]; then
+    echo 'The current commit was superseded by a newer one.'
+    echo 'Signalling a test failure to avoid testing an outdated commit.'
+    echo '(To force a test, create a throwaway branch using'
+    echo "  git checkout -b <throwaway_branch> $TRAVIS_COMMIT"
+    echo 'and push it to github.)'
+    echo 'NO SYMPY TESTS FAILED. The current failure is just technical.'
+    exit 1
+fi
+
 # Echo each command
 set -x
 
