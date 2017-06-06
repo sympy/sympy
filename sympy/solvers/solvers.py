@@ -359,6 +359,7 @@ def check_assumptions(expr, against=None, **assumptions):
         if test is expected:
             continue
         elif test is not None:
+            print("Assumption for (",expr,") is wrong as",key,"returned ",end="")
             return False
         result = None  # Can't conclude, unless an other test fails.
     return result
