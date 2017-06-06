@@ -50,8 +50,13 @@ def test_hadamard():
     C = MatrixSymbol('C', m, p)
     with raises(TypeError):
         hadamard_product()
-    assert hadamard_product(A) == A
+    assert hadamard_product(A) == HadamardProduct(A)
     assert isinstance(hadamard_product(A, B), HadamardProduct)
     assert hadamard_product(A, B).doit() == hadamard_product(A, B)
     with raises(ShapeError):
         hadamard_product(A, C)
+
+def test_issue_8589():
+    m, n = symbols('m, n', integer=True)
+    A = MatrixSymbol('A', m, n)
+    assert isinstance(hadamard_product(A), HadamardProduct)
