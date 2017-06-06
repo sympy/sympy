@@ -135,6 +135,7 @@ class CodeWrapper(object):
         workdir = self.filepath or tempfile.mkdtemp("_sympy_compile")
         if not os.access(workdir, os.F_OK):
             os.mkdir(workdir)
+            os.chmod(workdir, 0o777)
         oldwork = os.getcwd()
         os.chdir(workdir)
         try:
