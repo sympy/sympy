@@ -25,7 +25,7 @@ def test_del_operator():
             (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
             (Derivative(0, C.x) - Derivative(0, C.y))*C.k)
     assert ((delop ^ Vector.zero).doit() == Vector.zero ==
-            curl(Vector.zero, C))
+            curl(Vector.zero))
     assert delop.cross(Vector.zero) == delop ^ Vector.zero
     assert (delop ^ i).doit() == Vector.zero
     assert delop.cross(2*y**2*j, doit=True) == Vector.zero
@@ -33,14 +33,14 @@ def test_del_operator():
     v = x*y*z * (i + j + k)
     assert ((delop ^ v).doit() ==
             (-x*y + x*z)*i + (x*y - y*z)*j + (-x*z + y*z)*k ==
-            curl(v, C))
+            curl(v))
     assert delop ^ v == delop.cross(v)
     assert (delop.cross(2*x**2*j) ==
             (Derivative(0, C.y) - Derivative(2*C.x**2, C.z))*C.i +
             (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
             (-Derivative(0, C.y) + Derivative(2*C.x**2, C.x))*C.k)
     assert (delop.cross(2*x**2*j, doit=True) == 4*x*k ==
-            curl(2*x**2*j, C))
+            curl(2*x**2*j))
 
     #Tests for divergence
     assert delop & Vector.zero == S(0) == divergence(Vector.zero)
@@ -62,19 +62,19 @@ def test_del_operator():
 
     #Tests for gradient
     assert (delop.gradient(0, doit=True) == Vector.zero ==
-            gradient(0, C))
+            gradient(0))
     assert delop.gradient(0) == delop(0)
     assert (delop(S(0))).doit() == Vector.zero
     assert (delop(x) == (Derivative(C.x, C.x))*C.i +
             (Derivative(C.x, C.y))*C.j + (Derivative(C.x, C.z))*C.k)
-    assert (delop(x)).doit() == i == gradient(x, C)
+    assert (delop(x)).doit() == i == gradient(x)
     assert (delop(x*y*z) ==
             (Derivative(C.x*C.y*C.z, C.x))*C.i +
             (Derivative(C.x*C.y*C.z, C.y))*C.j +
             (Derivative(C.x*C.y*C.z, C.z))*C.k)
     assert (delop.gradient(x*y*z, doit=True) ==
             y*z*i + z*x*j + x*y*k ==
-            gradient(x*y*z, C))
+            gradient(x*y*z))
     assert delop(x*y*z) == delop.gradient(x*y*z)
     assert (delop(2*x**2)).doit() == 4*x*i
     assert ((delop(a*sin(y) / x)).doit() ==
