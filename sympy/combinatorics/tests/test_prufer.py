@@ -18,8 +18,11 @@ def test_prufer():
     assert a.tree_repr == [[2, 4], [1, 4], [1, 3], [0, 5], [0, 4]]
     assert a.prufer_repr == [4, 1, 4, 0]
 
-    assert Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) == \
-        ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)
+    # make test independent of order of edge_list
+    edge_list, n_nodes = Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6])
+    assert n_nodes == 7
+    assert sorted(edge_list) == [[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]]
+
     assert Prufer([0]*4).size == Prufer([6]*4).size == 1296
 
     # accept iterables but convert to list of lists
