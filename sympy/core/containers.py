@@ -12,6 +12,7 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, range
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
+from functools import total_ordering
 
 
 class Tuple(Basic):
@@ -127,6 +128,7 @@ class Tuple(Basic):
             return self.args.index(value, start)
         else:
             return self.args.index(value, start, stop)
+
 
 converter[tuple] = lambda tup: Tuple(*tup)
 
