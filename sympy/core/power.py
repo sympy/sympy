@@ -559,7 +559,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol
+        from sympy import exp, log, Symbol, pi
         def _check(ct1, ct2, old):
             """Return bool, pow where, if bool is True, then the exponent of
             Pow `old` will combine with `pow` so the substitution is valid,
@@ -571,6 +571,7 @@ class Pow(Expr):
             not hold then the substitution should not occur so `bool` will be
             False.
             """
+            from sympy.simplify.radsimp import denom
             coeff1, terms1 = ct1
             coeff2, terms2 = ct2
             if terms1 == terms2:
@@ -579,9 +580,12 @@ class Pow(Expr):
                     pow = as_int(pow)
                     combines = True
                 except ValueError:
-                    combines = Pow._eval_power(
-                        Pow(*old.as_base_exp(), evaluate=False),
-                        pow) is not None
+                    if denom(pow) == 1:
+                        combines = True
+                    else:
+                        combines = Pow._eval_power(
+                            Pow(*old.as_base_exp(), evaluate=False),
+                            pow) is not None
                 return combines, pow
             return False, None
 
