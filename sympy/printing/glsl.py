@@ -5,6 +5,7 @@ from sympy.printing.precedence import precedence
 from sympy.core.compatibility import string_types, range
 from sympy.core import S
 from sympy.codegen.ast import Assignment
+from functools import reduce
 
 known_functions = {
     'Abs': 'abs',
@@ -30,7 +31,7 @@ known_functions = {
 
 class GLSLPrinter(CodePrinter):
     """
-    Rudimentary GLSL printing tools.  Capable of printing with mul/add/sub functions instead of
+    Rudimentary, generic GLSL printing tools.  Capable of printing with mul/add/sub functions instead of
     operators.  Prints pow(b,n) instead of b**n.   Goals: support for emulated double/quad/octal
     precision.
 
@@ -39,8 +40,8 @@ class GLSLPrinter(CodePrinter):
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
     _not_supported = set()
-    printmethod = "_ccode"
-    language = "C"
+    printmethod = "_glsl"
+    language = "GLSL"
 
     _default_settings = {
         'order': None,
@@ -216,7 +217,7 @@ class GLSLPrinter(CodePrinter):
         if(self._settings['use_operators']):
             return CodePrinter._print_Add(self,expr,order)
 
-        terms = list(expr.args)
+        terms = expr.as_ordered_terms()
 
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
@@ -234,10 +235,7 @@ class GLSLPrinter(CodePrinter):
     def _print_Mul(self, expr, order=None):
         if(self._settings['use_operators']):
             return CodePrinter._print_Mul(self,expr)
-
-        terms = list(expr.args)
-        def partition(p,l):
-            return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))
+        terms = expr.as_ordered_factors()
         def mul(a,b):
             return self.known_functions['mul']+'(%s, %s)' % (a,b)
         s = reduce(lambda a,b: mul(a,b), map(lambda t: self._print(t),terms))
