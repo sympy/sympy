@@ -1068,6 +1068,9 @@ class Interval(Set, EvalfMixin):
             if not other.is_real is None:
                 return other.is_real
 
+        if isinstance(other,Interval):
+            return False
+
         if self.left_open:
             expr = other > self.start
         else:
