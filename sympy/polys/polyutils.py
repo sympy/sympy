@@ -257,9 +257,6 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
                 else:
                     if opt.series is False:
                         base, exp = decompose_power(factor)
-
-                        if exp < 0:
-                            exp, base = -exp, Pow(base, -S.One)
                     else:
                         base, exp = decompose_power_rat(factor)
 
