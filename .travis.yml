@@ -264,7 +264,7 @@ before_install:
   - |
     if [[ "${TEST_THEANO}" == "true" ]]; then
         # this assumes TEST_THEANO runs in the same build as TEST_MATPLOTLIB
-        conda install theano;
+        conda install theano = 0.8.2;
     fi
   - |
     if [[ "${TEST_AUTOWRAP}" == "true" ]]; then
