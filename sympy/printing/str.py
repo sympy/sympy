@@ -476,6 +476,9 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
+    def _print_LPolyElement(self, expr):
+        return str(expr)
+
     def _print_ProductSet(self, p):
         return ' x '.join(self._print(set) for set in p.sets)
 
