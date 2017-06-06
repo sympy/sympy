@@ -138,13 +138,13 @@ class CodeWrapper(object):
         oldwork = os.getcwd()
         os.chdir(workdir)
         try:
-            sys.path.append(workdir)
+            sys.path.append(os.getcwd())
             self._generate_code(routine, helpers)
             self._prepare_files(routine)
             self._process_files(routine)
             mod = __import__(self.module_name)
         finally:
-            sys.path.remove(workdir)
+            sys.path.append(os.getcwd())
             CodeWrapper._module_counter += 1
             os.chdir(oldwork)
             if not self.filepath:
@@ -682,13 +682,13 @@ class UfuncifyCodeWrapper(CodeWrapper):
         oldwork = os.getcwd()
         os.chdir(workdir)
         try:
-            sys.path.append(workdir)
+            sys.path.append(os.getcwd())
             self._generate_code(routines, helpers)
             self._prepare_files(routines, funcname)
             self._process_files(routines)
             mod = __import__(self.module_name)
         finally:
-            sys.path.remove(workdir)
+            sys.path.remove(os.getcwd())
             CodeWrapper._module_counter += 1
             os.chdir(oldwork)
             if not self.filepath:
