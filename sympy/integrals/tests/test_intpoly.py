@@ -3,8 +3,14 @@ from __future__ import print_function, division
 from sympy import sqrt
 
 from sympy.core import S
-from sympy.integrals.intpoly import *
+
+from sympy.integrals.intpoly import (is_vertex, intersection, norm,
+                                     decompose, best_origin,
+                                     hyperplane_parameters,
+                                     integration_reduction, polytope_integrate)
+
 from sympy.geometry.line import Segment2D
+from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
 from sympy.abc import x, y
 
