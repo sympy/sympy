@@ -3943,6 +3943,27 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del(C))
 
 
+def test_sympy__vector__operators__Curl():
+    from sympy.vector.operators import Curl
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(Curl(C.i))
+
+
+def test_sympy__vector__operators__Divergence():
+    from sympy.vector.operators import Divergence
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(Divergence(C.i))
+
+
+def test_sympy__vector__operators__Gradient():
+    from sympy.vector.operators import Gradient
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(Gradient(C.x))
+
+
 def test_sympy__vector__orienters__Orienter():
     from sympy.vector.orienters import Orienter
     #Not to be initialized
@@ -3986,24 +4007,3 @@ def test_sympy__vector__scalar__BaseScalar():
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
-
-
-def test_sympy__vector__operators_Gradient():
-    from sympy.vector.operators import Gradient
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Gradient(C.x))
-
-
-def test_sympy__vector__operators_Divergence():
-    from sympy.vector.operators import Divergence
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Divergence(C.i))
-
-
-def test_sympy__vector__operators_Curl():
-    from sympy.vector.operators import Curl
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(Curl(C.i))
