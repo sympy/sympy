@@ -25,9 +25,17 @@ def rubi_object():
 
     rubi = ManyToOneReplacer()
 
+    pattern0 = Pattern(Int(Pow(Add(Mul(b_, x_), a_), ConstantSymbol(-1)), x_), cons(FreeQ(List(a_, b_), x_), (b, a, x)))
+    rule0 = ReplacementRule(pattern0, lambda b, a, x : Mul(log(RemoveContent(Add(Mul(b, x), a), x)), Pow(b, ConstantSymbol(-1))))
+
+    pattern1 = Pattern(Int(Pow(Add(Mul(b_, x_), a_), m_), x_), cons(And(NonzeroQ(Add(ConstantSymbol(1), m_)), FreeQ(List(a_, b_, m_), x_)), (a, b, x, m)))
+    rule1 = ReplacementRule(pattern1, lambda a, b, x, m : Mul(Pow(Add(ConstantSymbol(1), m), ConstantSymbol(-1)), Pow(Add(Mul(b, x), a), Add(ConstantSymbol(1), m)), Pow(b, ConstantSymbol(-1))))
+
     pattern2 = Pattern(Int(Pow(x_, m_), x_), cons(And(FreeQ(m_, x_), NonzeroQ(Add(ConstantSymbol(1), m_))), (m, x)))
     rule2 = ReplacementRule(pattern2, lambda m, x : Mul(Pow(Add(ConstantSymbol(1), m), ConstantSymbol(-1)), Pow(x, Add(ConstantSymbol(1), m))))
 
+    rubi.add(rule0)
+    rubi.add(rule1)
     rubi.add(rule2)
 
     return rubi
