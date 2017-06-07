@@ -10,8 +10,8 @@ from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.utilities.pytest import raises
 from sympy.printing.ccode import CCodePrinter, C89CodePrinter, C99CodePrinter, get_math_macros
-from sympy.codegen.ast import Type, Declaration, Pointer, Variable
-from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
+from sympy.codegen.ast import Type, Declaration, Pointer, Variable, value_const, pointer_const
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt, restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.tensor import IndexedBase, Idx
@@ -655,23 +655,24 @@ def test_get_math_macros():
 
 def test_ccode_Declaration():
     i = symbols('i', integer=True)
-    var1 = Variable(i)
+    var1 = Variable(i, type_=Type.from_expr(i))
     dcl1 = Declaration(var1)
     assert ccode(dcl1) == 'int i;'
 
-    var2 = Variable(x, Type('float32'), const=True)
+    var2 = Variable(x, {value_const}, Type('float32'))
     dcl2a = Declaration(var2)
     assert ccode(dcl2a) == 'const float x;'
     dcl2b = Declaration(var2, pi)
     assert ccode(dcl2b) == 'const float x = M_PI;'
 
-    var3 = Variable(y, Type('bool'))
+    var3 = Variable(y, None, Type('bool'))
     dcl3 = Declaration(var3)
     printer = C89CodePrinter()
     assert 'stdbool.h' not in printer.headers
     assert printer.doprint(dcl3) == 'bool y;'
     assert 'stdbool.h' in printer.headers
 
-    ptr4 = Pointer(y, pointer_const=True, restrict=True)
+    u = symbols('u', real=True)
+    ptr4 = Pointer.deduced(u, {pointer_const, restrict})
     dcl4 = Declaration(ptr4)
-    assert ccode(dcl4) == 'double * const restrict y;'
+    assert ccode(dcl4) == 'double * const restrict u;'

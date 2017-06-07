@@ -382,18 +382,19 @@ class C89CodePrinter(CodePrinter):
         return type_str
 
     def _print_Declaration(self, expr):
+        from sympy.codegen.cfunctions import restrict
         var, val = expr.variable, expr.value
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
                 vc='const ' if var.value_const else '',
                 t=self._print(var.type),
                 pc=' const' if var.pointer_const else '',
-                r='restrict ' if var.restrict else '',  # actually only guaranteed by C >= C99
+                r='restrict ' if var.attributes.contains(restrict) == True else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
-                vc='const ' if var.const else '',
+                vc='const ' if var.value_const else '',
                 t=self._print(var.type),
                 s=self._print(var.symbol)
             )
@@ -501,12 +502,6 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                    ' erfc tgamma lgamma ceil floor trunc round nearbyint rint'
                    ' frexp ldexp modf scalbn ilogb logb nextafter copysign').split()
 
-    def _print_Max(self, expr):
-        return self._print_math_func(expr, nest=True)
-
-    def _print_Min(self, expr):
-        return self._print_math_func(expr, nest=True)
-
     def _print_Infinity(self, expr):
         return 'INFINITY'
 
@@ -542,103 +537,17 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
             args=args
         )
 
+    def _print_Max(self, expr):
+        return self._print_math_func(expr, nest=True)
 
-    def _print_Abs(self, expr):
-        return self._print_math_func(expr)
+    def _print_Min(self, expr):
+        return self._print_math_func(expr, nest=True)
 
-    def _print_Sqrt(self, expr):
-        return self._print_math_func(expr)
 
-    def _print_exp(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_exp2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_expm1(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log10(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log1p(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_Cbrt(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_hypot(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_fma(self, expr):  # fused mutiply-add
-        return self._print_math_func(expr)
-
-    def _print_loggamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_sin(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_cos(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_tan(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_asin(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_acos(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atan(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atan2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_sinh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_cosh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_tanh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_asinh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_acosh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atanh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_erf(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_erfc(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_loggamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_gamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_ceiling(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_floor(self, expr):
-        return self._print_math_func(expr)
-
+for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma '
+          ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
+          'atanh erf erfc loggamma gamma ceiling floor').split():
+    setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)
 
 c_code_printers = {
     'c89': C89CodePrinter,

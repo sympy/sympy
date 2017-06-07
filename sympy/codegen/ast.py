@@ -7,19 +7,21 @@ has been included below to illustrate the relationships between the AST types.
 
 AST Type Tree
 -------------
+::
 
-*Basic*
-     |--->Assignment
-     |             |--->AugmentedAssignment
-     |                                    |--->AddAugmentedAssignment
-     |                                    |--->SubAugmentedAssignment
-     |                                    |--->MulAugmentedAssignment
-     |                                    |--->DivAugmentedAssignment
-     |                                    |--->ModAugmentedAssignment
-     |
-     |--->CodeBlock
-     |
-     |--->For
+  *Basic*
+       |--->Assignment
+       |             |--->AugmentedAssignment
+       |                                    |--->AddAugmentedAssignment
+       |                                    |--->SubAugmentedAssignment
+       |                                    |--->MulAugmentedAssignment
+       |                                    |--->DivAugmentedAssignment
+       |                                    |--->ModAugmentedAssignment
+       |
+       |--->CodeBlock
+       |
+       |--->For
+
 """
 
 from __future__ import print_function, division
@@ -30,6 +32,7 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify, sympify
+from sympy.sets import FiniteSet
 from sympy.utilities.iterables import iterable
 
 class Assignment(Relational):
@@ -197,11 +200,11 @@ class CodeBlock(Basic):
     >>> from sympy import symbols, ccode
     >>> from sympy.codegen.ast import CodeBlock, Assignment
     >>> x, y = symbols('x y')
-
     >>> c = CodeBlock(Assignment(x, 1), Assignment(y, x + 1))
     >>> print(ccode(c))
     x = 1;
     y = x + 1;
+
     """
     def __new__(cls, *args):
         left_hand_sides = []
@@ -405,17 +408,22 @@ class For(Basic):
 class Type(Symbol):
     """ Represents a type.
 
-    The naming is a super-set of NumPy naming, see [1]_.
+    The naming is a super-set of NumPy naming, see [1]_. Type has a classmethod
+    ``from_expr`` which offer type deduction. It also has a method
+    ``cast_check`` which casts the argument to its type, possibly raising an
+    exception if possible rounding error is not within tolerances.
 
     Arguments
     ---------
-    name : str or Type
+    name : str
         Either an explicit type: ``intc``, ``intp``, ``int8``, ``int16``,
         ``int32``, ``int64``, ``uint8``, ``uint16``, ``uint32``, ``uint64,
         float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
-        ``bool. Or only kind (precision decided by code-printer): ``integer``,
+        ``bool``. Or a type category (precision decided by code-printer): ``integer``,
         ``real`` or ``complex`` (where the latter two are of floating point type).
-        If a ``Type`` instance is given, the said instance is returned.
+        If a ``Type`` instance is given, the said instance is returned. When given
+        the names of Python types ("int", "float" and "complex") the mapping is 'long',
+        'float64' and 'complex128' respectively (same as NumPy).
 
     Examples
     --------
@@ -442,15 +450,20 @@ class Type(Symbol):
     ValueError: Casting gives a significantly different value.
     >>> Type('float80').cast_check(v18)
     0.123456789012345649
+    >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
+    >>> from sympy import Symbol
+    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.codegen.ast import Declaration, Variable
+    >>> cxxcode(Declaration(Variable(Symbol('x'), None, boost_mp50)))
+    'boost::multiprecision::cpp_dec_float_50 x;'
 
     References
     ----------
-    [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+
+    .. [1] Numpy types
+        https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
-    allowed_names = tuple('intc intp int8 int16 int32 int64 uint8 uint16 uint32'.split() +
-                          'uint64 float16 float32 float64 complex64 complex128'.split() +
-                          'real integer complex bool'.split())
     __slots__ = ['name']
 
     default_limits = {  # IEE754 data when applicable
@@ -483,11 +496,7 @@ class Type(Symbol):
     default_limits['complex64'] = default_limits['float32']
     default_limits['complex128'] = default_limits['float64']
 
-    default_precision_targets = {  # e.g.:
-        # 'real': 'float64',
-        # 'integer': 'intc',
-        # 'complex': 'complex128'
-    }
+    default_precision_targets = {}
 
     def __new__(cls, name):
         if isinstance(name, Type):
@@ -495,49 +504,40 @@ class Type(Symbol):
         return Symbol.__new__(cls, name)
 
     @classmethod
-    def from_expr(cls, expr, symb=None):
-        """ Infers type from an expression or a ``Symbol``.
+    def from_expr(cls, expr):
+        """ Deduces type from an expression or a ``Symbol``.
 
         Parameters
         ----------
-        expr : number, string or SymPy object
-            The typename will be deduced from type or properties. Default is 'real'
-            (e.g. when a string is given as expr).
-        symb : Symbol (optional)
-            If given, assumptions of ``symb`` has higher precedence than expr.
+        expr : number or SymPy object
+            The type will be deduced from type or properties.
 
         Examples
         --------
         >>> from sympy.codegen.ast import Type
         >>> Type.from_expr(2) == Type('integer')
         True
-        >>> Type.from_expr('i') == Type('integer')
-        False
         >>> from sympy import Symbol
-        >>> Type.from_expr(2, Symbol('j', complex=True)) == Type('complex')
+        >>> Type.from_expr(Symbol('z', complex=True)) == Type('complex')
         True
 
+        Raises
+        ------
+        ValueError when type deduction fails.
+
         """
-        if symb is not None:
-            if getattr(symb, 'is_integer', False):
-                return cls('integer')
-            if getattr(symb, 'is_complex', False):
-                return cls('complex')
-
-        if isinstance(expr, str):
-            return cls('real')  # default
+        if isinstance(expr, (float, Float)):
+            return cls('real')
+        if isinstance(expr, (int, Integer)) or getattr(expr, 'is_integer', False):
+            return cls('integer')
+        if getattr(expr, 'is_real', False):
+            return cls('real')
+        if isinstance(expr, complex) or getattr(expr, 'is_complex', False):
+            return cls('complex')
+        if isinstance(expr, bool) or getattr(expr, 'is_Relational', False):
+            return cls('bool')
         else:
-            if isinstance(expr, (float, Float)):
-                return cls('real')
-            if isinstance(expr, complex) or getattr(expr, 'is_complex', False):
-                return cls('complex')
-            if isinstance(expr, (int, Integer)) or getattr(expr, 'is_integer', False):
-                return cls('integer')
-
-            if getattr(expr, 'is_Relational', False):
-                return cls('bool')
-            else:
-                return cls('real')
+            raise ValueError("Could not deduce type from expr")
 
     def cast_check(self, value, rtol=None, atol=None, limits=None, precision_targets=None):
         """ Casts a value to the data type of the instance.
@@ -551,7 +551,7 @@ class Type(Symbol):
             Absolute tolerance. (will be deduced if not given).
         limits : dict
             Values given by ``limits.h``, x86/IEEE754 defaults if not given.
-            Default: :attr:`Type.default_limits`.
+            Default: :attr:`default_limits`.
         precision_targets : dict
             Maps substitutions for Type.name, e.g. {'integer': 'int64', 'real': 'float32'}
 
@@ -605,7 +605,10 @@ class Type(Symbol):
             _min = -lim(name, 'max')
             _tiny = lim(name, 'tiny')
             dec_dig = lim(name, 'decimal_dig')
-            val = Float(str(val), dec_dig+3)
+            try:
+                val = Float(str(val), dec_dig+3)
+            except ValueError:
+                val = val.evalf(dec_dig + 3)  # e.g. sympy.pi
             caster = lambda x: Float(str(x.evalf(dec_dig)), dec_dig+3)
 
         if name.startswith('complex'):
@@ -643,6 +646,40 @@ class Type(Symbol):
 
         return new_val
 
+# NumPy types:
+intc = Type('intc')
+intp = Type('intp')
+int8 = Type('int8')
+int16 = Type('int16')
+int32 = Type('int32')
+int64 = Type('int64')
+uint8 = Type('uint8')
+uint16 = Type('uint16')
+uint32 = Type('uint32')
+uint64 = Type('uint64')
+float16 = Type('float16')
+float32 = Type('float32')
+float64 = Type('float64')
+complex64 = Type('complex64')
+complex128 = Type('complex128')
+# Generic types (precision may be chosen by code printers):
+real = Type('real')
+integer = Type('integer')
+complex_ = Type('complex')
+bool_ = Type('bool')
+
+
+class Attribute(Symbol):
+    """ Variable attribute """
+    __slots__ = ['name']
+
+    def __new__(cls, name):
+        if isinstance(name, Type):
+            return name
+        return Symbol.__new__(cls, name)
+
+value_const = Attribute('value_const')
+pointer_const = Attribute('pointer_const')
 
 class Variable(Basic):
     """ Represents a variable
@@ -650,93 +687,63 @@ class Variable(Basic):
     Parameters
     ----------
     symbol : Symbol
-        If a ``Variable`` instance is given as symbol, said instance is simply returned.
+    attrs : iterable of Attribute instances
+        Will be stored as a FiniteSet.
     type_ : Type (optional)
         Type of the variable. Inferred from ``symbol`` if not given.
-    const : bool
-        Constness of the variable.
 
     Examples
     --------
     >>> from sympy import Symbol
     >>> from sympy.codegen.ast import Variable, Type
     >>> i = Symbol('i', integer=True)
-    >>> v = Variable(i)
+    >>> v = Variable.deduced(i)
     >>> v.type == Type('integer')
     True
 
     """
-    def __new__(cls, symbol, type_=None, const=False):
-        if isinstance(symbol, Variable):
-            return symbol
-        if type_ is None:
-            type_ = Type.from_expr(None, symbol)
-        return Basic.__new__(cls, _sympify(symbol), Type(type_), _sympify(const or False))
+
+    nargs = (2, 3)  # type is optional
+
+    def __new__(cls, symbol, attrs=None, type_=None):
+        args = (_sympify(symbol), FiniteSet() if attrs is None else FiniteSet(*attrs))
+        if type_ is not None:
+            if not isinstance(type_, Type):
+                raise NotImplementedError("Expected a Type as type_")
+            args += (type_,)
+        return Basic.__new__(cls, *args)
+
+    @classmethod
+    def deduced(cls, symbol, attrs=None):
+        """ Alt. constructor with type deduction from ``Type.from_expr`` """
+        return cls(symbol, attrs, Type.from_expr(symbol))
 
     @property
     def symbol(self):
         return self.args[0]
 
     @property
-    def type(self):
+    def attributes(self):
         return self.args[1]
 
     @property
-    def const(self):
-        return self.args[2]
-
-
-class Pointer(Basic):
-    """ Represents a pointer
-
-    Parameters
-    ----------
-    name : Symbol
-    type_ : Type
-        Type of the variable. Inferred from ``symbol`` if not given.
-    value_const : bool
-        Constness of the value pointed to by the variable.
-    pointer_const : bool
-        Constness of the pointer (i.e. opposite of the mutability of the address).
-    restrict : bool
-        Applicable to C > C99. If the pointer is guaranteed not to alias another pointer
-        this may be set to ``True``. (allows the compiler to generate efficient assembly).
-
-    Examples
-    --------
-    >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Pointer, Type
-    >>> x = Symbol('x')
-    >>> p = Pointer(x, value_const=True, pointer_const=True, restrict=True)
-    >>> p.type == Type('real')
-    True
-
-    """
-    def __new__(cls, symbol, type_=None, value_const=False, pointer_const=False, restrict=False):
-        if type_ is None:
-            type_ = Type.from_expr(symbol)
-        args = symbol, type_, value_const or False, pointer_const, restrict
-        return Basic.__new__(cls, *map(_sympify, args))
-
-    @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
     def type(self):
-        return self.args[1]
+        if len(self.args) == 3:
+            return self.args[2]
+        else:
+            return None
 
     @property
     def value_const(self):
-        return self.args[2]
+        return self.attributes.contains(value_const) == True
+
+
+class Pointer(Variable):
+    """ Represents a pointer """
 
     @property
     def pointer_const(self):
-        return self.args[3]
-
-    @property
-    def restrict(self):
-        return self.args[4]
+        return self.attributes.contains(pointer_const) == True
 
 
 class Declaration(Basic):
@@ -745,22 +752,23 @@ class Declaration(Basic):
     Parameters
     ----------
     var : Variable, Pointer or IndexedBase
-    value : Value (optional)
+    val : Value (optional)
         Value to be assigned upon declaration.
-    const : bool
-        Constness of value. Can not be given if ``var`` is Variable
-        or Pointer since constness is then taken from ``var``.
+    cast : bool
+        If val is not ``None`` val will be casted using
+        ``var.Type.cast_check()``.
 
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type
+    >>> from sympy.codegen.ast import Declaration, Type, Variable
     >>> x = Symbol('x')
-    >>> decl = Declaration(x, 3)
+    >>> xvar = Variable(x)
+    >>> decl = Declaration.deduced(xvar, 3)
     >>> decl.variable.type == Type('integer')
     True
     >>> k = Symbol('k', integer=True)
-    >>> k_decl = Declaration(k, 3.0)
+    >>> k_decl = Declaration.deduced(k, 3.0)
     >>> k_decl.variable.type == Type('integer')
     True
 
@@ -768,36 +776,35 @@ class Declaration(Basic):
 
     nargs = (1, 2)
 
-    def __new__(cls, var, value=None, const=None):
-        from sympy.tensor.indexed import IndexedBase
-
-        if isinstance(var, (Variable, Pointer)):
-            if const is not None:
-                raise ValueError("Cannot change constness of an existing Variable/Pointer")
-        else:
-            if value is not None:
-                type_ = Type.from_expr(value, var)
-                value = type_.cast_check(value)
-            else:
-                type_ = None
-
-            if isinstance(var, IndexedBase):
-                var = Pointer(var, type_, const)
-            else:
-                var = Variable(var, type_, const)
-
+    def __new__(cls, var, val=None, cast=False):
+        if not isinstance(var, Variable):
+            raise NotImplementedError("Expected a Variable instance as var")
         args = var,
-        if value is not None:
-            args += (_sympify(value),)
+        if val is not None:
+            if cast:
+                args += (var.type.cast_check(val),)
+            else:
+                args += (_sympify(val),)
         return Basic.__new__(cls, *args)
 
+    @classmethod
+    def deduced(cls, symbol, val=None, attrs=None, **kwargs):
+        """ Deduces type primarily from symbol, secondarily from val """
+        try:
+            type_ = Type.from_expr(symbol)
+        except ValueError:
+            type_ = Type.from_expr(val)
+        var = Variable(symbol, attrs, type_)
+        return cls(var, val, **kwargs)
 
     @property
     def variable(self):
+        """ Variable of the declaration """
         return self.args[0]
 
     @property
     def value(self):
+        """ Initialization value of the declaration """
         if len(self.args) == 2:
             return self.args[1]
         else:

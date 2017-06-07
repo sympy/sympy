@@ -175,27 +175,30 @@ def test_sympy__codegen__ast__Type():
     assert _test_args(Type('float32'))
 
 
+def test_sympy__codegen__ast__Attribute():
+    from sympy.codegen.ast import Attribute
+    assert _test_args(Attribute('noexcept'))
+
+
 def test_sympy__codegen__ast__Variable():
-    from sympy.codegen.ast import Variable, Type
+    from sympy.codegen.ast import Variable, Type, value_const
     assert _test_args(Variable(x))
-    assert _test_args(Variable(y, Type('float32')))
-    assert _test_args(Variable(z, Type('float64'), const=True))
+    assert _test_args(Variable(y, {value_const}, Type('float32')))
+    assert _test_args(Variable(z, None, Type('float64')))
 
 
 def test_sympy__codegen__ast__Pointer():
-    from sympy.codegen.ast import Pointer, Type
+    from sympy.codegen.ast import Pointer, Type, pointer_const
     assert _test_args(Pointer(x))
-    assert _test_args(Pointer(y, Type('float32')))
-    assert _test_args(Pointer(z, Type('float64'), value_const=True, pointer_const=True, restrict=True))
+    assert _test_args(Pointer(y, None, Type('float32')))
+    assert _test_args(Pointer(z, {pointer_const}, Type('float64')))
 
 
 def test_sympy__codegen__ast__Declaration():
     from sympy.codegen.ast import Declaration
-    assert _test_args(Declaration(x))
-    assert _test_args(Declaration(y, 3.0))
-    i, j = symbols('i j', integer=True)
-    assert _test_args(Declaration(i))
-    assert _test_args(Declaration(j, 3))
+    vx = Variable(x, None, Type('float'))
+    assert _test_args(Declaration(vx))
+    assert _test_args(Declaration(vx, 3.0))
 
 
 @XFAIL

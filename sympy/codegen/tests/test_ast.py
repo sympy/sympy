@@ -8,7 +8,7 @@ from sympy.utilities.pytest import raises
 from sympy.codegen.ast import (
     Assignment, aug_assign, CodeBlock, For, Type, Variable, Pointer, Declaration,
     AddAugmentedAssignment, SubAugmentedAssignment, MulAugmentedAssignment,
-    DivAugmentedAssignment, ModAugmentedAssignment
+    DivAugmentedAssignment, ModAugmentedAssignment, value_const, pointer_const,
 )
 
 x, y, z, t, x0 = symbols("x, y, z, t, x0")
@@ -176,12 +176,12 @@ def test_Type():
 
 
 def test_Type__from_expr():
-    assert Type.from_expr(None, i) == Type('integer')
-    assert Type.from_expr(None, x) == Type('real')
-    assert Type.from_expr(x, n) == Type('integer')
-    assert Type.from_expr(3, x) == Type('integer')
-    assert Type.from_expr(3.0, x) == Type('real')
+    assert Type.from_expr(i) == Type('integer')
+    u = symbols('u', real=True)
+    assert Type.from_expr(u) == Type('real')
+    assert Type.from_expr(n) == Type('integer')
     assert Type.from_expr(3) == Type('integer')
+    assert Type.from_expr(3.0) == Type('real')
     assert Type.from_expr(3+1j) == Type('complex')
 
 
@@ -202,6 +202,7 @@ def test_Type__cast_check__integers():
     assert uint8.cast_check(128) == 128
     raises(ValueError, lambda: uint8.cast_check(256.0))
     raises(ValueError, lambda: uint8.cast_check(-1))
+
 
 def test_Type__cast_check__floating_point():
     f32 = Type('float32')
@@ -239,54 +240,70 @@ def test_Type__cast_check__complex_floating_point():
 
 
 def test_Variable():
-    v = Variable(x)
+    v = Variable(x, None, Type('real'))
     assert v.symbol == x
     assert v.type == Type('real')
-    assert v.const == False
-    w = Variable(y, Type('float32'), True)
+    assert v.value_const == False
+    w = Variable(y, {value_const}, Type('float32'))
     assert w.symbol == y
     assert w.type == Type('float32')
-    assert w.const
-    v_n = Variable(n)
+    assert w.value_const
+    v_n = Variable(n, None, Type.from_expr(n))
     assert v_n.type == Type('integer')
-    v_i = Variable(i)
+    v_i = Variable(i, type_=Type.from_expr(n))
+    assert v_i.type == Type('integer')
+
+    a_i = Variable.deduced(i)
+    assert a_i.type == Type('integer')
+
+
+def test_Variable__deduced():
+    v_i = Variable.deduced(i)
     assert v_i.type == Type('integer')
 
 
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
-    assert p.type == Type('real')
+    assert p.type == None
     assert not p.value_const
     assert not p.pointer_const
-    assert not p.restrict
-    pB = Pointer(B)
-    assert pB.symbol is B
-    assert pB.type == Type('real')
+    u = symbols('u', real=True)
+    py = Pointer(u, {value_const, pointer_const}, Type.from_expr(u))
+    assert py.symbol is u
+    assert py.type == Type('real')
+    assert py.value_const
+    assert py.pointer_const
 
 
 def test_Declaration():
-    assert Declaration(x).variable.type.name == 'real'
-    assert Declaration(n).variable.type.name == 'integer'
+    u = symbols('u', real=True)
+    vu = Variable(u, type_=Type.from_expr(u))
+    assert Declaration(vu).variable.type.name == 'real'
+    vn = Variable(n, type_=Type.from_expr(n))
+    assert Declaration(vn).variable.type.name == 'integer'
 
-    decl = Declaration(x, 3.0, True)
-    assert decl.variable == Variable(x, const=True)
+    vuc = Variable(u, {value_const}, Type.from_expr(u))
+    decl = Declaration(vuc, 3.0)
+    assert decl.variable == vuc
     assert type(decl.value) == Float
     assert decl.value == 3.0
 
-    decl2 = Declaration(y, 3)
-    assert decl2.variable == Variable(y, Type('integer'))
+    vy = Variable(y, None, Type('integer'))
+    decl2 = Declaration(vy, 3)
+    assert decl2.variable == vy
     assert decl2.value is Integer(3)
 
-    decl3 = Declaration(i, 3.0)
+    vi = Variable(i, None, Type.from_expr(i))
+    decl3 = Declaration(vi, 3.0)
     assert decl3.variable.type == Type('integer')
     assert decl3.value == 3.0
 
-    decl4 = raises(ValueError, lambda: Declaration(n, 3.5))
+    decl4 = raises(ValueError, lambda: Declaration.deduced(n, 3.5, cast=True))
 
-    var = Variable(x)
-    raises(ValueError, lambda: Declaration(var, const=True))
-    assert Declaration(z, 3).variable.type == Type('integer')
-    assert Declaration(z, 3.0).variable.type == Type('real')
-    assert Declaration(z, 3.0+1j).variable.type == Type('complex')
-    assert Declaration(B).variable == Pointer(B)
+
+def test_Declaration__deduced():
+    assert Declaration.deduced(n).variable.type.name == 'integer'
+    assert Declaration.deduced(z, 3).variable.type == Type('integer')
+    assert Declaration.deduced(z, 3.0).variable.type == Type('real')
+    assert Declaration.deduced(z, 3.0+1j).variable.type == Type('complex')
