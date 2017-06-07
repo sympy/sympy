@@ -18,9 +18,9 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             deprecated_since_version="1.1"
         ).warn()
     if expr is Vector.zero:
-        return False
+        return None
     elif expr == 0:
-        return False
+        return None
     else:
         return list(expr.atoms(CoordSysCartesian))[0]
 
@@ -128,10 +128,12 @@ def gradient(scalar, coord_sys=None):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-    if _get_coord_sys_from_expr(scalar, coord_sys) is False:
+
+    coord_sys = _get_coord_sys_from_expr(scalar, coord_sys)
+    if coord_sys is None:
         return Vector.zero
     else:
-        return _get_coord_sys_from_expr(scalar, coord_sys).delop(scalar).doit()
+        return coord_sys.delop(scalar).doit()
 
 
 def divergence(vector, coord_sys=None):
@@ -162,10 +164,12 @@ def divergence(vector, coord_sys=None):
     2*R.z
 
     """
-    if _get_coord_sys_from_expr(vector, coord_sys) is False:
+
+    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
+    if coord_sys is None:
         return S.Zero
     else:
-        return _get_coord_sys_from_expr(vector, coord_sys).delop.dot(vector).doit()
+        return coord_sys.delop.dot(vector).doit()
 
 
 def curl(vector, coord_sys=None):
@@ -196,7 +200,9 @@ def curl(vector, coord_sys=None):
     R.x*R.y*R.j + (-R.x*R.z)*R.k
 
     """
-    if _get_coord_sys_from_expr(vector, coord_sys) is False:
+
+    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
+    if coord_sys is None:
         return Vector.zero
     else:
-        return _get_coord_sys_from_expr(vector, coord_sys).delop.cross(vector).doit()
+        return coord_sys.delop.cross(vector).doit()
