@@ -13,10 +13,8 @@ n, m = map(VariableSymbol, 'nm')
 
 a_, b_, c_, d_, e_, f_, g_, h_ = map(Wildcard.dot, 'abcdefgh')
 n_, m_ = map(Wildcard.dot, 'nm')
-x_ = Wildcard.symbol('x')
-u_ = Wildcard.symbol('u')
+x_, u_ = map(Wildcard.symbol, 'xu')
 
-one = Wildcard.dot('x1')
 
 def rubi_object():
     '''
