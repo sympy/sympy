@@ -77,6 +77,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     x0 = best_origin(a, b, facets[index], expr)
     gens = [x, y]
     m = len(facets)
+    gens = [x, y]
     for i in range(0, len(dims)):
         df_i = diff(expr, gens[i])
         if df_i != 0:
