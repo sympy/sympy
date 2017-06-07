@@ -7,7 +7,11 @@ class cons(Constraint):
         self.vars = frozenset(v.name for v in vars)
 
     def __call__(self, substitution):
-        return sympify(str(substitute(self.expr, substitution)))
+        try:
+            return sympify(str(substitute(self.expr, substitution)))
+        except:
+            print('Unable to sympify')
+            return False
 
     @property
     def variables(self):

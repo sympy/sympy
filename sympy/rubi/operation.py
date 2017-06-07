@@ -47,32 +47,22 @@ class FreeQ(Operation):
     name = "FreeQ"
     arity = Arity.binary
 
+class ZeroQ(Operation):
+    name = "ZeroQ"
+    arity = Arity.unary
+
 class NonzeroQ(Operation):
     name = "NonzeroQ"
     arity = Arity.unary
 
 class List(Operation):
-    name = "list"
+    name = "List"
     arity = Arity.variadic
-    def __str__(self):
-        try:
-            res = str([s.name for s in self.operands]).replace("'", "")
-        except:
-            res = str([s.variable_name for s in self.operands]).replace("'", "")
-        return 'list('+ res +')'
 
 class RemoveContent(Operation):
     name = "RemoveContent"
     arity = Arity.binary
 
-
-class Log_parse(Operation):
-    name = 'Log'
-    arity = Arity.unary
-
-class List_parse(Operation):
-    name = "List"
-    arity = Arity.variadic
 
 class ConstantSymbol_parse(Operation):
     name = "ConstantSymbol"
