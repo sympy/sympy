@@ -8,7 +8,7 @@ def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
 
-    This function uses `eval`
+    This function uses `eval`.
     '''
 
     if not isinstance(expr, matchpy.Expression):

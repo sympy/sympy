@@ -24,12 +24,6 @@ class Pow(Operation):
     associative = False
     commutative = False
 
-class Log(Operation):
-    name = "log"
-    arity = Arity.unary
-    def __str__(self):
-        return 'log({})'.format(self.operands[0])
-
 class And(Operation):
     name = "And"
     arity = Arity.variadic
@@ -56,13 +50,73 @@ class List(Operation):
     name = "List"
     arity = Arity.variadic
 
+class Log(Operation):
+    name = "log"
+    arity = Arity.unary
+
 class RemoveContent(Operation):
     name = "RemoveContent"
     arity = Arity.binary
 
+class PositiveIntegerQ(Operation):
+    name = "PositiveIntegerQ"
+    arity = Arity.unary
+
+class NegativeIntegerQ(Operation):
+    name = "NegativeIntegerQ"
+    arity = Arity.unary
+
+class PositiveQ(Operation):
+    name = "PositiveQ"
+    arity = Arity.unary
+
+class IntegerQ(Operation):
+    name = "IntegerQ"
+    arity = Arity.unary
+
+class PosQ(Operation):
+    name = "PosQ"
+    arity = Arity.unary
+
+class NegQ(Operation):
+    name = "NegQ"
+    arity = Arity.unary
+
+class FracPart(Operation):
+    name = "FracPart"
+    arity = Arity.unary
+
+class IntPart(Operation):
+    name = "IntPart"
+    arity = Arity.unary
+
+class RationalQ(Operation):
+    name = "RationalQ"
+    arity = Arity.unary
+
+class Subst(Operation):
+    name = "Subst"
+    arity = Arity.variadic
+
+class LinearQ(Operation):
+    name = "LinearQ"
+    arity = Arity.binary
+
+class Sqrt(Operation):
+    name = "Sqrt"
+    arity = Arity.unary
+
+class ArcCosh(Operation):
+    name = "ArcCosh"
+    arity = Arity.unary
 
 
-    
+
+
+
+
+
+
 
 class ConstantSymbol_parse(Operation):
     name = "ConstantSymbol"
