@@ -69,17 +69,12 @@ class FpGroup(DefaultPrinting):
         obj._is_standardized = False
 
         obj._order = None
-        obj._parent = None
         obj._center = None
         return obj
 
     @property
     def free_group(self):
         return self._free_group
-
-    @property
-    def parent(self):
-        return self._parent
 
     @property
     def relators(self):
@@ -100,23 +95,7 @@ class FpGroup(DefaultPrinting):
                 raise ValueError("Given generators are not members of the group")
         g, rels = reidemeister_presentation(self, gens)
         g = FpGroup(g[0].group, rels)
-        g._parent = self
         return g
-
-    def is_subgroup(self, G):
-        '''
-        Check if the group is a subgroup of `G`. Currently this is limited
-        to only recognising subgroups that were created using the `.subgroup`
-        method
-
-        '''
-
-        if self.parent == None:
-            return False
-        elif self.parent == G:
-            return True
-        else:
-            return self.parent.is_subgroup(G)
 
     def coset_enumeration(self, H, strategy="relator_based"):
         """
