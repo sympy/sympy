@@ -12,6 +12,7 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
 from sympy.utilities import default_sort_key, public
+from sympy.core.decorators import deprecated
 
 @public
 class Domain(object):
@@ -48,6 +49,16 @@ class Domain(object):
 
     rep = None
     alias = None
+
+    @property
+    @deprecated(useinstead="is_Field")
+    def has_Field(self):
+        return self.is_Field
+
+    @property
+    @deprecated(useinstead="is_Ring")
+    def has_Ring(self):
+        return self.is_Ring
 
     def __init__(self):
         raise NotImplementedError
