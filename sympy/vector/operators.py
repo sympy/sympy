@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core import  sympify
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
@@ -25,7 +25,7 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
         return list(expr.atoms(CoordSysCartesian))[0]
 
 
-class Gradient(Basic):
+class Gradient(Expr):
     """
     Represents unevaluated Gradient.
 
@@ -42,7 +42,7 @@ class Gradient(Basic):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Basic.__new__(cls, expr)
+        obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
@@ -50,7 +50,7 @@ class Gradient(Basic):
         return gradient(self._expr)
 
 
-class Divergence(Basic):
+class Divergence(Expr):
     """
     Represents unevaluated Divergence.
 
@@ -67,7 +67,7 @@ class Divergence(Basic):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Basic.__new__(cls, expr)
+        obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
@@ -75,7 +75,7 @@ class Divergence(Basic):
         return divergence(self._expr)
 
 
-class Curl(Basic):
+class Curl(Expr):
     """
     Represents unevaluated Curl.
 
@@ -92,7 +92,7 @@ class Curl(Basic):
 
     def __new__(cls, expr):
         expr = sympify(expr)
-        obj = Basic.__new__(cls, expr)
+        obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
