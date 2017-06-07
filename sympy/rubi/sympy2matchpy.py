@@ -3,9 +3,9 @@ Contains Sympy to MatchPy converter function.
 '''
 
 import matchpy
-from operation import *
-from sympy import sympify
-from symbol import VariableSymbol, ConstantSymbol
+from .operation import *
+from sympy.core import sympify
+from .symbol import VariableSymbol, ConstantSymbol
 
 
 get_matchpy_node = {

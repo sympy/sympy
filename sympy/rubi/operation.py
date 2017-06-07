@@ -3,9 +3,6 @@ from matchpy import Operation, Arity
 class Int(Operation):
     name = "Int"
     arity = Arity.binary
-    associative = False
-    def __str__(self):
-        return 'Int({}, {})'.format(self.operands[0], self.operands[1])
 
 class Mul(Operation):
     name = "Mul"
@@ -63,6 +60,9 @@ class RemoveContent(Operation):
     name = "RemoveContent"
     arity = Arity.binary
 
+
+
+    
 
 class ConstantSymbol_parse(Operation):
     name = "ConstantSymbol"
