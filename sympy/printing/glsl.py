@@ -39,6 +39,12 @@ class GLSLPrinter(CodePrinter):
     language = "GLSL"
 
     _default_settings = {
+        'use_operators': True,
+        'mat_nested': False,
+        'mat_separator': ',\n',
+        'mat_transpose': False,
+        'glsl_types': True,
+
         'order': None,
         'full_prec': 'auto',
         'precision': 32,
@@ -46,8 +52,7 @@ class GLSLPrinter(CodePrinter):
         'human': True,
         'contract': True,
         'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-        'use_operators': True
+        'reserved_word_suffix': '_'
     }
 
     def __init__(self, settings={}):
@@ -98,11 +103,33 @@ class GLSLPrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-    def _print_MatrixBase(self, A):
+    def _print_MatrixBase(self, mat):
+        mat_separator = self._settings['mat_separator']
+        mat_transpose = self._settings['mat_transpose']
+        glsl_types = self._settings['glsl_types']
+        column_vector = (mat.rows == 1) if mat_transpose else (mat.cols == 1)
+        A = mat.transpose() if mat_transpose != column_vector else mat
+
         if A.cols == 1:
-            return "[%s]" % ", ".join(self._print(a) for a in A)
-        else:
-            raise ValueError("GLSL does not support nested arrays.")
+            return str(A[0]);
+        if A.rows <= 4 and A.cols <= 4 and glsl_types:
+            if A.rows == 1:
+                return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
+            elif A.rows == A.cols:
+                return 'mat%s(%s)' %   (A.rows, A.table(self,rowsep=', ',
+                                        rowstart='',rowend=''))
+            else:
+                return 'mat%sx%s(%s)' % (A.cols, A.rows,
+                                        A.table(self,rowsep=', ',
+                                        rowstart='',rowend=''))
+        elif A.cols == 1 or A.rows == 1:
+            return 'float[%s](%s)' % (A.cols*A.rows, A.table(self,rowsep=mat_separator,rowstart='',rowend=''))
+        elif not self._settings['mat_nested']:
+            return 'float[%s](\n%s\n) /* a %sx%s matrix */' % (A.cols*A.rows,
+                            A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
+                            A.rows,A.cols)
+        elif self._settings['mat_nested']:
+            return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
     _print_Matrix = \
         _print_MatrixElement = \
@@ -113,16 +140,25 @@ class GLSLPrinter(CodePrinter):
         _print_MatrixBase
 
     def _traverse_matrix_indices(self, mat):
-        rows, cols = mat.shape
-        return ((i, j) for i in range(rows) for j in range(cols))
+        mat_transpose = self._settings['mat_transpose']
+        if mat_transpose:
+            rows,cols = mat.shape
+        else:
+            cols,rows = mat.shape
+        return ((i, j) for i in range(cols) for j in range(rows))
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
-
-    def _print_Matrix(self, expr):
-        return "%s[%s]" % (expr.parent,
-                           expr.j + expr.i*expr.parent.shape[1])
+        nest = self._settings['mat_nested'];
+        mat_transpose = self._settings['mat_transpose'];
+        if mat_transpose:
+            cols,rows = expr.parent.shape
+        else:
+            rows,cols = expr.parent.shape
+        pnt = self._print(expr.parent)
+        if (rows <= 4 and cols <=4) or nest:
+            return "%s[%s][%s]" % (pnt, expr.i, expr.j)
+        elif (cols == 1 or rows == 1) and (not nest):
+            return "{0}[{1}]".format(pnt, expr.i + expr.j*rows)
 
     def _get_loop_opening_ending(self, indices):
         open_lines = []
@@ -267,9 +303,27 @@ def glsl_code(expr,assign_to=None,**settings):
         line-wrapping, or for expressions that generate multi-line statements.
     use_operators: bool, optional
         If set to False, then *,/,+,- operators will be replaced with functions
-        mul, add, and sub, which must be implemented by the user.  This is
-        intended for use with emulated quad/octal precision.
+        mul, add, and sub, which must be implemented by the user, e.g. for
+        implementing non-standard rings or emulated quad/octal precision.
         [default=True]
+    glsl_types: bool, optional
+        Set this argument to ``False`` in order to avoid using the ``vec`` and ``mat``
+        types.  The printer will instead use arrays (or nested arrays).
+        [default=True]
+    mat_nested: bool, optional
+        GLSL version 4.3 and above support nested arrays.  Set this to ``True``
+        to render matrices as nested arrays.
+        [default=False]
+    mat_separator: str, optional
+        By default, matrices are rendered with newlines using this separator,
+        making them easier to read, but less compact.  By removing the newline
+        this option can be used to make them more vertically compact.
+        [default=',\n']
+    mat_transpose: bool, optional
+        GLSL's matrix multiplication implementation assumes column-major indexing.
+        By default, this printer ignores that convention. Setting this option to
+        ``True`` transposes all matrix output.
+        [default=False]
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
@@ -296,8 +350,46 @@ def glsl_code(expr,assign_to=None,**settings):
     >>> x, tau = symbols("x, tau")
     >>> glsl_code((2*tau)**Rational(7, 2))
     '8*sqrt(2)*pow(tau, 3.5)'
-    >>> glsl_code(sin(x), assign_to="float s")
-    'float s = sin(x);'
+    >>> glsl_code(sin(x), assign_to="float y")
+    'float y = sin(x);'
+
+    Various GLSL types are supported:
+    >>> from sympy import Matrix, glsl_code
+    >>> glsl_code(Matrix([1,2,3]))
+    'vec3(1, 2, 3)'
+
+    >>> glsl_code(Matrix([[1, 2],[3, 4]]))
+    'mat2(1, 2, 3, 4)'
+
+    Pass ``mat_transpose = True`` to switch to column-major indexing:
+    >>> glsl_code(Matrix([[1, 2],[3, 4]]), mat_transpose = True)
+    'mat2(1, 3, 2, 4)'
+
+    By default, larger matrices get collapsed into float arrays:
+    >>> print(glsl_code( Matrix([[1,2,3,4,5],[6,7,8,9,10]]) ))
+    float[10](
+       1, 2, 3, 4,  5,
+       6, 7, 8, 9, 10
+    ) /* a 2x5 matrix */
+
+    Passing ``mat_nested = True`` instead prints out nested float arrays, which are
+    supported in GLSL 4.3 and above.
+    >>> mat = Matrix([
+    ... [ 0,  1,  2],
+    ... [ 3,  4,  5],
+    ... [ 6,  7,  8],
+    ... [ 9, 10, 11],
+    ... [12, 13, 14]])
+    >>> print(glsl_code( mat, mat_nested = True ))
+    float[5][3](
+       float[]( 0,  1,  2),
+       float[]( 3,  4,  5),
+       float[]( 6,  7,  8),
+       float[]( 9, 10, 11),
+       float[](12, 13, 14)
+    )
+
+
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
@@ -313,12 +405,14 @@ def glsl_code(expr,assign_to=None,**settings):
     'fabs(x) + CEIL(x)'
 
     If further control is needed, addition, subtraction, multiplication and
-    division operators can be substituted with ``add``, ``sub``, and ``mul``
+    division operators can be replaced with ``add``, ``sub``, and ``mul``
     functions.  This is done by passing ``use_operators = False``:
 
     >>> x,y,z = symbols('x,y,z')
     >>> glsl_code(x*(y+z), use_operators = False)
     'mul(x, add(y, z))'
+    >>> glsl_code(x*(y+z*(x-y)**z), use_operators = False)
+    'mul(x, add(y, mul(z, pow(sub(x, y), z))))'
 
     ``Piecewise`` expressions are converted into conditionals. If an
     ``assign_to`` variable is provided an if statement is created, otherwise
@@ -352,22 +446,18 @@ def glsl_code(expr,assign_to=None,**settings):
     >>> glsl_code(e.rhs, assign_to=e.lhs, contract=False)
     'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
-    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
-    must be provided to ``assign_to``. Note that any expression that can be
-    generated normally can also exist inside a Matrix:
-
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
     >>> print(glsl_code(mat, A))
-    A[0] = pow(x, 2.0);
+    A[0][0] = pow(x, 2.0);
     if (x > 0) {
-       A[1] = x + 1;
+       A[1][0] = x + 1;
     }
     else {
-       A[1] = x;
+       A[1][0] = x;
     }
-    A[2] = sin(x);
+    A[2][0] = sin(x);
     """
     return GLSLPrinter(settings).doprint(expr,assign_to)
 
