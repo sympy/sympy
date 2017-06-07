@@ -594,7 +594,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:
             return self.inverse()*other.inverse()*self*other
 
-    def eliminate_words(self, words, _all = False):
+    def eliminate_words(self, words, _all=False):
         '''
         Replace each subword from the dictionary `words` by words[subword].
         If words is a list, replace the words by the identity.
@@ -907,7 +907,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if index is not None:
             return index
         else:
-            raise ValueError("The given word is not a subword of `self`")
+            raise ValueError("The given word is not a subword of self")
 
     def is_dependent(self, word):
         """
@@ -930,15 +930,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         is_independent
 
         """
-        i = None
         try:
-            i = self.subword_index(word)
-            return True
+            return self.subword_index(word) != None
         except ValueError:
             pass
         try:
-            i = self.subword_index(word**-1)
-            return True
+            return self.subword_index(word**-1) != None
         except ValueError:
             return False
 
