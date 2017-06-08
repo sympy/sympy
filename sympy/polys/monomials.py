@@ -264,7 +264,7 @@ def term_div(a, b, domain):
 
     monom = monomial_div(a_lm, b_lm)
 
-    if domain.has_Field:
+    if domain.is_Field:
         if monom is not None:
             return monom, domain.quo(a_lc, b_lc)
         else:

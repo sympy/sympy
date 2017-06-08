@@ -976,7 +976,7 @@ def roots(f, *gens, **flags):
 
     coeff, f = preprocess_roots(f)
 
-    if auto and f.get_domain().has_Ring:
+    if auto and f.get_domain().is_Ring:
         f = f.to_field()
 
     rescale_x = None
