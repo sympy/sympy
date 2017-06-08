@@ -8,6 +8,7 @@ from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin
 from sympy.polys.polytools import degree
+from sympy.simplify.simplify import fraction
 
 def ZeroQ(expr):
     return expr == 0
@@ -75,9 +76,6 @@ def Coefficient(u, var, n):
 
 def RemoveContent():
     return
-
-def Sqrt(a):
-    return math.sqrt(a)
 
 def ExpandIntegrand(expr, x):
     return
