@@ -130,7 +130,7 @@ if [[ "${TEST_SYMENGINE}" == "true" ]]; then
     cat << EOF | python
 print('Testing SymEngine')
 import sympy
-if not sympy.test('sympy/physics/mechanics'):
+if not (sympy.test('sympy/physics/mechanics') and sympy.test('sympy/parsing')):
     raise Exception('Tests failed')
 EOF
 fi

@@ -1,5 +1,6 @@
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.functions import exp, factorial, sin
+from sympy.core import Symbol, Float, Pow, Eq, Rational, Mul
+from sympy.core.backend import Function, Integer, I, exp, sin
+from sympy.functions import factorial
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.utilities.pytest import raises
