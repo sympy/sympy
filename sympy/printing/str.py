@@ -75,7 +75,7 @@ class StrPrinter(Printer):
         return "False"
 
     def _print_Not(self, expr):
-        return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
+        return '~%s' % (self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
         return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
@@ -139,6 +139,11 @@ class StrPrinter(Printer):
 
     def _print_ExprCondPair(self, expr):
         return '(%s, %s)' % (expr.expr, expr.cond)
+
+    def _print_Piecewise(self, expr):
+        return 'Piecewise(%s)' % ', '.join([self._print(a)
+            for a in expr.ec + (() if expr.default is None else
+            (expr.default,))])
 
     def _print_FiniteSet(self, s):
         s = sorted(s, key=default_sort_key)
@@ -237,7 +242,7 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixElement(self, expr):
-        return self._print(expr.parent) + '[%s, %s]'%(expr.i, expr.j)
+        return self._print(expr.parent) + '[%s, %s]' % (expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def strslice(x):
@@ -698,7 +703,7 @@ class StrPrinter(Printer):
         return "Uniform(%s, %s)" % (expr.a, expr.b)
 
     def _print_Union(self, expr):
-        return 'Union(%s)' %(', '.join([self._print(a) for a in expr.args]))
+        return 'Union(%s)' % (', '.join([self._print(a) for a in expr.args]))
 
     def _print_Complement(self, expr):
         return ' \ '.join(self._print(set) for set in expr.args)
@@ -766,7 +771,6 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
-
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

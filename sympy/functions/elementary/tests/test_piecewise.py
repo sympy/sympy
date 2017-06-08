@@ -4,6 +4,7 @@ from sympy import (
     Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, exp, Abs, Not, Symbol, S
 )
+from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -13,7 +14,19 @@ z = symbols('z', nonzero=True)
 
 def test_piecewise():
 
-    # Test canonization
+    # instantiation with otherwise
+    assert \
+        Piecewise((x, True)) == \
+        Piecewise(x) == \
+        Piecewise(default=x) == \
+        Piecewise(y, default=x) == \
+        x
+    try:
+        Piecewise(default=2).default = 3
+    except AttributeError:  # test this way b/c lambda does not allow assignment
+        pass
+
+    # Test canonicalization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, True), (1, True)) == \
         Piecewise((x, x < 1), (0, True))
@@ -26,8 +39,6 @@ def test_piecewise():
     assert Piecewise((x, x < 1), (x, x < 2), (0, True)) == \
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
-    assert Piecewise((x, True)) == x
-    raises(TypeError, lambda: Piecewise(x))
     raises(TypeError, lambda: Piecewise((x, x**2)))
 
     # Test subs
@@ -493,5 +504,5 @@ def test_as_expr_set_pairs():
 
 def test_S_srepr_is_identity():
     p = Piecewise((10, Eq(x, 0)), (12, True))
-    q = S(srepr(p))
+    q = S(srepr(p), locals={'ExprCondPair': ExprCondPair})
     assert p == q

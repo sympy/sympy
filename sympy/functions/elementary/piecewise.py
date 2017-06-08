@@ -91,6 +91,16 @@ class Piecewise(Function):
 
     def __new__(cls, *args, **options):
         # (Try to) sympify args first
+        default = options.pop('default', None)
+        if args and not isinstance(args[-1], (ExprCondPair, tuple, Tuple)):
+            # rewrite existing
+            args = args[:-1] + ((args[-1], true),)
+        if default is not None:
+            if args and args[-1][1] == True:
+                # given one replaces existing one
+                args = args[:-1] + ((default, true),)
+            else:
+                args = args + ((default, true),)
         newargs = []
         for ec in args:
             # ec could be a ExprCondPair or a tuple
@@ -115,6 +125,26 @@ class Piecewise(Function):
             return Basic.__new__(cls, *newargs, **options)
         else:
             return r
+
+    @property
+    def ec(self):
+        """
+        Returns the ExprCondPairs excluding the last one if it has
+        a condition that is true. (The default expression can
+        be obtained with the `default` property.)
+        """
+        rv = self.args
+        if rv and rv[-1].cond is S.true:
+            return rv[:-1]
+        return rv
+
+    @property
+    def default(self):
+        """
+        Returns the default expression.
+        """
+        if self.args and self.args[-1].cond is S.true:
+            return self.args[-1].expr
 
     @classmethod
     def eval(cls, *args):

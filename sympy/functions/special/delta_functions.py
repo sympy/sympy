@@ -313,13 +313,13 @@ class DiracDelta(Function):
            >>> x = Symbol('x')
 
            >>> DiracDelta(x).rewrite(Piecewise)
-           Piecewise((DiracDelta(0), Eq(x, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x, 0)), 0)
 
            >>> DiracDelta(x - 5).rewrite(Piecewise)
-           Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x - 5, 0)), 0)
 
            >>> DiracDelta(x**2 - 5).rewrite(Piecewise)
-           Piecewise((DiracDelta(0), Eq(x**2 - 5, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x**2 - 5, 0)), 0)
 
            >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
            DiracDelta(x - 5, 4)
