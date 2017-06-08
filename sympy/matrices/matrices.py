@@ -3518,7 +3518,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             basis_mat = mat.hstack(*jordan_basis)
             return restore_floats(basis_mat, jordan_mat)
 
-        block_structre = []
+        block_structure = []
         for eig in sorted(eigs.keys(), key=default_sort_key):
             chain = nullity_chain(eig)
             block_sizes = blocks_from_nullity_chain(chain)
@@ -3530,9 +3530,9 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
             # we expect larger Jordan blocks to come earlier
             size_nums.reverse()
 
-            block_structre.extend(
+            block_structure.extend(
                 (eig, size) for size, num in size_nums for _ in range(num))
-        blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structre)
+        blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
@@ -3553,7 +3553,7 @@ class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
 
         for eig in sorted(eigs.keys(), key=default_sort_key):
             eig_basis = []
-            for block_eig, size in block_structre:
+            for block_eig, size in block_structure:
                 if block_eig != eig:
                     continue
                 null_big = (eig_mat(eig, size)).nullspace()
