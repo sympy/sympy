@@ -215,6 +215,7 @@ def test_hstack():
                 [6,  7,  8, 6,  7,  8, 6,  7,  8],
                 [9, 10, 11, 9, 10, 11, 9, 10, 11]])
     raises(ShapeError, lambda: m.hstack(m, m2))
+    assert Matrix.hstack() == Matrix()
 
 def test_vstack():
     m = ShapingOnlyMatrix(4, 3, lambda i, j: i*3 + j)
@@ -234,6 +235,7 @@ def test_vstack():
                                 [6,  7,  8],
                                 [9, 10, 11]])
     raises(ShapeError, lambda: m.vstack(m, m2))
+    assert Matrix.vstack() == Matrix()
 
 
 # PropertiesOnlyMatrix tests
@@ -1159,3 +1161,109 @@ def test_nullspace():
     # make sure the null space is really gets zeroed
     assert all(e.is_zero for e in m*basis[0])
     assert all(e.is_zero for e in m*basis[1])
+
+
+# EigenOnlyMatrix tests
+def test_eigenvals():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
+
+    # if we cannot factor the char poly, we raise an error
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(MatrixError, lambda: m.eigenvals())
+
+def test_eigenvects():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    vecs = M.eigenvects()
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        assert M*vec_list[0] == val*vec_list[0]
+
+def test_left_eigenvects():
+    M = EigenOnlyMatrix([[0, 1, 1],
+                [1, 0, 0],
+                [1, 1, 1]])
+    vecs = M.left_eigenvects()
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        assert vec_list[0]*M == val*vec_list[0]
+
+def test_diagonalize():
+    m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
+    raises(MatrixError, lambda: m.diagonalize(reals_only=True))
+    P, D = m.diagonalize()
+    assert D.is_diagonal()
+    assert D == Matrix([
+                 [-I, 0],
+                 [ 0, I]])
+
+    # make sure we use floats out if floats are passed in
+    m = EigenOnlyMatrix(2, 2, [0, .5, .5, 0])
+    P, D = m.diagonalize()
+    assert all(isinstance(e, Float) for e in D.values())
+    assert all(isinstance(e, Float) for e in P.values())
+
+    _, D2 = m.diagonalize(reals_only=True)
+    assert D == D2
+
+def test_is_diagonalizable():
+    a, b, c = symbols('a b c')
+    m = EigenOnlyMatrix(2, 2, [a, c, c, b])
+    assert m.is_symmetric()
+    assert m.is_diagonalizable()
+    assert not EigenOnlyMatrix(2, 2, [1, 1, 0, 1]).is_diagonalizable()
+
+    m = EigenOnlyMatrix(2, 2, [0, -1, 1, 0])
+    assert m.is_diagonalizable()
+    assert not m.is_diagonalizable(reals_only=True)
+
+def test_jordan_form():
+    m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
+    raises(NonSquareMatrixError, lambda: m.jordan_form())
+
+    # the next two tests test the cases where the old
+    # algorithm failed due to the fact that the block structure can
+    # *NOT* be determined  from algebraic and geometric multiplicity alone
+    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
+    # is in J.c.f already.
+    m = EigenOnlyMatrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 1, 0,
+                    0, 0, 2, 0,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
+
+    m = EigenOnlyMatrix(4, 4, [2, 1, 0, 0,
+                    0, 2, 0, 0,
+                    0, 0, 2, 1,
+                    0, 0, 0, 2
+    ])
+    P, J = m.jordan_form()
+    assert m == J
+
+    A = Matrix([[ 2,  4,  1,  0],
+                [-4,  2,  0,  1],
+                [ 0,  0,  2,  4],
+                [ 0,  0, -4,  2]])
+    P, J = A.jordan_form()
+    assert simplify(P*J*P.inv()) == A
+
+    assert EigenOnlyMatrix(1,1,[1]).jordan_form() == (Matrix([1]), Matrix([1]))
+    assert EigenOnlyMatrix(1,1,[1]).jordan_form(calc_transform=False) == Matrix([1])
+
+    # make sure if we cannot factor the characteristic polynomial, we raise an error
+    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
+    raises(MatrixError, lambda: m.jordan_form())
+
+    # make sure that if the input has floats, the output does too
+    m = Matrix([
+        [                0.6875, 0.125 + 0.1875*sqrt(3)],
+        [0.125 + 0.1875*sqrt(3),                 0.3125]])
+    P, J = m.jordan_form()
+    assert all(isinstance(x, Float) or x == 0 for x in P)
+    assert all(isinstance(x, Float) or x == 0 for x in J)
