@@ -5,7 +5,8 @@ Utility functions for Constraints in Rubi
 from sympy.functions import (log, sin, cos, sqrt)
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin
 from sympy.polys.polytools import degree
 
 def ZeroQ(expr):
@@ -65,3 +66,104 @@ def Sqrt(a):
 
 def ArcCosh(a):
     return acosh(a)
+
+def TogetherSimplify(expr):
+    return
+
+def Coefficient(u, var, n):
+    return
+
+def RemoveContent():
+    return
+
+def Sqrt(a):
+    return math.sqrt(a)
+
+def ExpandIntegrand(expr, x):
+    return
+
+def ArcCosh(a):
+    return acosh(a)
+
+def With():
+    return
+
+def Denominator(var):
+    return fraction(var, exact=True)[1]
+
+def Hypergeometric2F1(a, b, c, z):
+    return hyp2f1(a, b, c, z)
+
+def TogetherSimplify():
+    return
+
+def IntLinearcQ():
+    return
+
+def ArcTan(a):
+    return atan(a)
+
+def Not(var):
+    return not(var)
+
+def Simplify():
+    return
+
+def FractionalPart(a):
+    return FracPart(a)
+
+def IntegerPart(a):
+    return IntPart(a)
+
+def Simp():
+    return
+
+def Rt():
+    return
+
+def SumSimplerQ():
+    return
+
+# utility functions used in tests
+
+def AppellF1(a, b1, b2, c, x, y):
+    return appellF1(a, b1, b2, c, x, y)
+
+def Integrate(f, x):
+    return integrate(f, x)
+
+def hypergeom():
+    return
+
+def EllipticPi(*args):
+    return ellippi(*args)
+
+def EllipticE(*args):
+    return ellipe(*args)
+
+def EllipticF(Phi, m):
+    return ellipf(Phi, m)
+
+def arctan(a):
+    return atan(a)
+
+def arctanh(a):
+    return atanh(a)
+
+def arcsin(a):
+    return asin(a)
+
+def arcsinh(a):
+    return asinh(a)
+
+def arccos(a):
+    return acos(a)
+
+def arccosh(a):
+    return acosh(a)
+
+def arccsc(a):
+    return acsc(a)
+
+def arccsch(a):
+    return acsch(a)
