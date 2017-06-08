@@ -23,6 +23,11 @@ class elliptic_k(Function):
     The function `K(m)` is a single-valued function on the complex
     plane with branch cut along the interval `(1, \infty)`.
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -96,6 +101,11 @@ class elliptic_f(Function):
     This function reduces to a complete elliptic integral of
     the first kind, `K(m)`, when `z = \pi/2`.
 
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
+
     Examples
     ========
 
@@ -162,6 +172,11 @@ class elliptic_e(Function):
 
     The function `E(m)` is a single-valued function on the complex
     plane with branch cut along the interval `(1, \infty)`.
+
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
 
     Examples
     ========
@@ -268,6 +283,11 @@ class elliptic_pi(Function):
 
     .. math:: \Pi\left(n\middle| m\right) =
               \Pi\left(n; \tfrac{\pi}{2}\middle| m\right)
+
+    Note that our notation defines the incomplete elliptic integral
+    in terms of the parameter `m` instead of the elliptic modulus
+    (eccentricity) `k`.
+    In this case, the parameter `m` is defined as `m=k^2`.
 
     Examples
     ========
