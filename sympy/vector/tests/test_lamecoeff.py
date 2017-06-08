@@ -10,6 +10,7 @@ x, y, z = symbols('x y z')
 def test_spherical_system():
     a = CoordSysCartesian('a', 'spherical')
     assert a.lame_coefficients() == (1, a.x, cos(a.y)*a.x)
+    print(a.transformation_equations())
     assert a.transformation_equations() == (sin(a.y)*cos(a.z)*a.x, sin(a.y)*sin(a.z)*a.x, cos(a.y)*a.x)
 
 

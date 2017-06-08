@@ -159,9 +159,9 @@ class CoordSysCartesian(Basic):
         # system of transformation equation in tuple or name of type of
         # coordinate system, which is implemented in SymPy.
         if curv_coord_name is not None and transformation_equations is None:
-            coefficients = CoeffProvider(obj).get_coefficients(curv_coord_name)
+            coefficients = CoeffProvider(obj, curv_coord_name)
         elif curv_coord_name is None and transformation_equations is None:
-            coefficients = CoeffProvider(obj).get_coefficients("cartesian")
+            coefficients = CoeffProvider(obj, "cartesian")
         elif curv_coord_name is None and transformation_equations is not None:
             from sympy import symbols
             x, y, z = symbols('x y z')
@@ -174,7 +174,7 @@ class CoordSysCartesian(Basic):
             te3 = transformation_equations[2].subs(x, obj._x)
             te3 = te3.subs(y, obj._y)
             te3 = te3.subs(z, obj._z)
-            coefficients = CoeffProvider(obj).get_coefficients(eq1=te1, eq2=te2, eq3=te3)
+            coefficients = CoeffProvider(obj, transformation_equations=(te1, te2, te3))
 
         else:
             raise ValueError("Type of coordinate system is defined by system of "
