@@ -34,7 +34,7 @@ def groebner(seq, ring, method=None):
 
     domain, orig = ring.domain, None
 
-    if not domain.has_Field or not domain.has_assoc_Field:
+    if not domain.is_Field or not domain.has_assoc_Field:
         try:
             orig, ring = ring, ring.clone(domain=domain.get_field())
         except DomainError:
@@ -844,7 +844,7 @@ def groebner_gcd(f, g):
         raise ValueError("Values should be equal")
     domain = f.ring.domain
 
-    if not domain.has_Field:
+    if not domain.is_Field:
         fc, f = f.primitive()
         gc, g = g.primitive()
         gcd = domain.gcd(fc, gc)
@@ -855,7 +855,7 @@ def groebner_gcd(f, g):
         raise ValueError("Length should be 1")
     h = H[0]
 
-    if not domain.has_Field:
+    if not domain.is_Field:
         return gcd*h
     else:
         return h.monic()

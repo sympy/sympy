@@ -1191,7 +1191,7 @@ def dup_factor_list(f, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dup_clear_denoms(f, K0, K)
@@ -1213,7 +1213,7 @@ def dup_factor_list(f, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dup_convert(f, K, K0), k)
 
@@ -1266,7 +1266,7 @@ def dmp_factor_list(f, u, K0):
         else:
             K0_inexact = None
 
-        if K0.has_Field:
+        if K0.is_Field:
             K = K0.get_ring()
 
             denom, f = dmp_clear_denoms(f, u, K0, K)
@@ -1292,7 +1292,7 @@ def dmp_factor_list(f, u, K0):
         else:  # pragma: no cover
             raise DomainError('factorization not supported over %s' % K0)
 
-        if K0.has_Field:
+        if K0.is_Field:
             for i, (f, k) in enumerate(factors):
                 factors[i] = (dmp_convert(f, u, K, K0), k)
 
