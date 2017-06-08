@@ -172,3 +172,7 @@ def test_subsets():
 def test_issue_5653():
     assert sqrtdenest(
         sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))
+
+
+def test_sqrt_ratcomb():
+    assert sqrtdenest(sqrt(1 + r3) + sqrt(3 + 3*r3) - sqrt(10 + 6*r3)) == 0
