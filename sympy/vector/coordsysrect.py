@@ -155,9 +155,9 @@ class CoordSysCartesian(Basic):
                             pretty_scalars[2], latex_scalars[2])
 
         # Initialize proper class, which provide specific information
-        # on curvilinear coordinate system. Create parameters could be
-        # system of equation in tuple or name of type of coordinate system,
-        # which is implemented in SymPy.
+        # on curvilinear coordinate system. Creating parameters is done by
+        # system of transformation equation in tuple or name of type of
+        # coordinate system, which is implemented in SymPy.
         if curv_coord_name is not None and transformation_equations is None:
             coefficients = CoeffProvider(obj).get_coefficients(curv_coord_name)
         elif curv_coord_name is None and transformation_equations is None:
