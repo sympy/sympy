@@ -18,3 +18,11 @@ from .decorator import threaded, xthreaded, public, memoize_property
 from .runtests import test, doctest
 
 from .timeutils import timed
+
+from .multiset import Multiset
+
+from .funcsigs import *
+
+from .enum import Enum, EnumMeta
+
+from .typing import NamedTuple, TupleMeta
