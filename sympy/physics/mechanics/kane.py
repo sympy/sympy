@@ -759,7 +759,7 @@ class KanesMethod(object):
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
-        rhs = zeros(len(self.q) + len(self.u), c=1)
+        rhs = zeros(len(self.q) + len(self.u), 1)
         kdes = self.kindiffdict()
         for i, q_i in enumerate(self.q):
             rhs[i] = kdes[q_i.diff()]

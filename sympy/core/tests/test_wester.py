@@ -1579,7 +1579,7 @@ def test_P26():
                 [  0,   0,   0,   0,   0,  1,  0,  0,  0],
                 [  0,   0,   0,   0,   0,  0,  1, -1, -1],
                 [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
-    assert M.eigenvals() == {
+    assert M.eigenvals(error_when_incomplete=False) == {
         S('-1/2 - sqrt(3)*I/2'): 2,
         S('-1/2 + sqrt(3)*I/2'): 2}
 
