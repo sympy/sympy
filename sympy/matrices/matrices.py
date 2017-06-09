@@ -4323,13 +4323,17 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
                          lambda i, j: self[i, j].diff(*args))
 
     def dot(self, b):
-        """Return the dot product of Matrix self and b relaxing the condition
+        """Return the dot product of Matrix ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if either the number of rows or columns are
-        the same as the length of b then the dot product is returned. If self
+        the same as the length of ``b`` then the dot product is returned. If self
         is a row or column vector, a scalar is returned. Otherwise, a list
         of results is returned (and in that case the number of columns in self
-        must match the length of b).
+        must match the length of ``b``).
 
+        Parameters
+        ==========
+            b : Matrix
+            
         Examples
         ========
 
