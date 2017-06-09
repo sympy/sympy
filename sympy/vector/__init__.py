@@ -14,3 +14,4 @@ from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.vector.lamecoeff import CoeffProvider
+from sympy.vector.operators import Gradient, Divergence, Curl, gradient, curl, divergence

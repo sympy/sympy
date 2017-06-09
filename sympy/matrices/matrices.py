@@ -17,9 +17,8 @@ from sympy.core.compatibility import is_sequence, default_sort_key, range, \
 from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten, numbered_symbols
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions import exp, factorial
+from sympy.functions import Abs, exp, factorial
 from sympy.printing import sstr
 from sympy.core.compatibility import reduce, as_int, string_types
 from sympy.assumptions.refine import refine
@@ -402,6 +401,26 @@ class MatrixShaping(MatrixRequired):
         """
         return self._eval_get_diag_blocks()
 
+    @classmethod
+    def hstack(cls, *args):
+        """Return a matrix formed by joining args horizontally (i.e.
+        by repeated application of row_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.hstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0, 2, 0],
+        [0, 1, 0, 2]])
+        """
+        if len(args) == 0:
+            return cls._new()
+
+        kls = type(args[0])
+        return reduce(kls.row_join, args)
+
     def reshape(self, rows, cols):
         """Reshape the matrix. Total number of elements must remain the same.
 
@@ -602,6 +621,321 @@ class MatrixShaping(MatrixRequired):
         vech
         """
         return self._eval_vec()
+
+    @classmethod
+    def vstack(cls, *args):
+        """Return a matrix formed by joining args vertically (i.e.
+        by repeated application of col_join).
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> Matrix.vstack(eye(2), 2*eye(2))
+        Matrix([
+        [1, 0],
+        [0, 1],
+        [2, 0],
+        [0, 2]])
+        """
+        if len(args) == 0:
+            return cls._new()
+
+        kls = type(args[0])
+        return reduce(kls.col_join, args)
+
+
+class MatrixSpecial(MatrixRequired):
+    """Construction of special matrices"""
+
+    @classmethod
+    def _eval_diag(cls, rows, cols, diag_dict):
+        """diag_dict is a defaultdict containing
+        all the entries of the diagonal matrix."""
+        def entry(i, j):
+            return diag_dict[(i,j)]
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_eye(cls, rows, cols):
+        def entry(i, j):
+            return S.One if i == j else S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
+        if band == 'lower':
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif j + 1 == i:
+                    return S.One
+                return S.Zero
+        else:
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif i + 1 == j:
+                    return S.One
+                return S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_ones(cls, rows, cols):
+        def entry(i, j):
+            return S.One
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def _eval_zeros(cls, rows, cols):
+        def entry(i, j):
+            return S.Zero
+        return cls._new(rows, cols, entry)
+
+    @classmethod
+    def diag(kls, *args, **kwargs):
+        """Returns a matrix with the specified diagonal.
+        If matrices are passed, a block-diagonal matrix
+        is created.
+
+        kwargs
+        ======
+
+        rows : rows of the resulting matrix; computed if
+               not given.
+        cols : columns of the resulting matrix; computed if
+               not given.
+        cls : class for the resulting matrix
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> Matrix.diag(1, 2, 3)
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+        >>> Matrix.diag([1, 2, 3])
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+
+        The diagonal elements can be matrices; diagonal filling will
+        continue on the diagonal from the last element of the matrix:
+
+        >>> from sympy.abc import x, y, z
+        >>> a = Matrix([x, y, z])
+        >>> b = Matrix([[1, 2], [3, 4]])
+        >>> c = Matrix([[5, 6]])
+        >>> Matrix.diag(a, 7, b, c)
+        Matrix([
+        [x, 0, 0, 0, 0, 0],
+        [y, 0, 0, 0, 0, 0],
+        [z, 0, 0, 0, 0, 0],
+        [0, 7, 0, 0, 0, 0],
+        [0, 0, 1, 2, 0, 0],
+        [0, 0, 3, 4, 0, 0],
+        [0, 0, 0, 0, 5, 6]])
+
+        A given band off the diagonal can be made by padding with a
+        vertical or horizontal "kerning" vector:
+
+        >>> hpad = Matrix(0, 2, [])
+        >>> vpad = Matrix(2, 0, [])
+        >>> Matrix.diag(vpad, 1, 2, 3, hpad) + Matrix.diag(hpad, 4, 5, 6, vpad)
+        Matrix([
+        [0, 0, 4, 0, 0],
+        [0, 0, 0, 5, 0],
+        [1, 0, 0, 0, 6],
+        [0, 2, 0, 0, 0],
+        [0, 0, 3, 0, 0]])
+
+        The type of the resulting matrix can be affected with the ``cls``
+        keyword.
+
+        >>> type(Matrix.diag(1))
+        <class 'sympy.matrices.dense.MutableDenseMatrix'>
+        >>> from sympy.matrices import ImmutableMatrix
+        >>> type(Matrix.diag(1, cls=ImmutableMatrix))
+        <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+        """
+
+        klass = kwargs.get('cls', kls)
+        # allow a sequence to be passed in as the only argument
+        if len(args) == 1 and is_sequence(args[0]) and not isinstance(args[0], MatrixBase):
+            args = args[0]
+
+        def size(m):
+            """Compute the size of the diagonal block"""
+            if hasattr(m, 'rows'):
+                return m.rows, m.cols
+            return 1, 1
+        diag_rows = sum(size(m)[0] for m in args)
+        diag_cols =  sum(size(m)[1] for m in args)
+        rows = kwargs.get('rows', diag_rows)
+        cols = kwargs.get('cols', diag_cols)
+        if rows < diag_rows or cols < diag_cols:
+            raise ValueError("A {} x {} diagnal matrix cannot accomodate a"
+                             "diagonal of size at least {} x {}.".format(rows, cols,
+                                                                         diag_rows, diag_cols))
+
+        # fill a default dict with the diagonal entries
+        diag_entries = collections.defaultdict(lambda: S.Zero)
+        row_pos, col_pos = 0, 0
+        for m in args:
+            if hasattr(m, 'rows'):
+                # in this case, we're a matrix
+                for i in range(m.rows):
+                    for j in range(m.cols):
+                        diag_entries[(i + row_pos, j + col_pos)] = m[i, j]
+                row_pos += m.rows
+                col_pos += m.cols
+            else:
+                # in this case, we're a single value
+                diag_entries[(row_pos, col_pos)] = m
+                row_pos += 1
+                col_pos += 1
+        return klass._eval_diag(rows, cols, diag_entries)
+
+    @classmethod
+    def eye(kls, rows, cols=None, **kwargs):
+        """Returns an identity matrix.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_eye(rows, cols)
+
+    @classmethod
+    def jordan_block(kls, *args, **kwargs):
+        """Returns a Jordan block with the specified size
+        and eigenvalue.  You may call `jordan_block` with
+        two args (size, eigenvalue) or with keyword arguments.
+
+        kwargs
+        ======
+
+        size : rows and columns of the matrix
+        rows : rows of the matrix (if None, rows=size)
+        cols : cols of the matrix (if None, cols=size)
+        eigenvalue : value on the diagonal of the matrix
+        band : position of off-diagonal 1s.  May be 'upper' or
+               'lower'. (Default: 'upper')
+
+        cls : class of the returned matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> Matrix.jordan_block(4, x)
+        Matrix([
+        [x, 1, 0, 0],
+        [0, x, 1, 0],
+        [0, 0, x, 1],
+        [0, 0, 0, x]])
+        >>> Matrix.jordan_block(4, x, band='lower')
+        Matrix([
+        [x, 0, 0, 0],
+        [1, x, 0, 0],
+        [0, 1, x, 0],
+        [0, 0, 1, x]])
+        >>> Matrix.jordan_block(size=4, eigenvalue=x)
+        Matrix([
+        [x, 1, 0, 0],
+        [0, x, 1, 0],
+        [0, 0, x, 1],
+        [0, 0, 0, x]])
+        """
+
+        klass = kwargs.get('cls', kls)
+        size, eigenvalue = None, None
+        if len(args) == 2:
+            size, eigenvalue = args
+        elif len(args) == 1:
+            size = args[0]
+        elif len(args) != 0:
+            raise ValueError("'jordan_block' accepts 0, 1, or 2 arguments, not {}".format(len(args)))
+        rows, cols = kwargs.get('rows', None), kwargs.get('cols', None)
+        size = kwargs.get('size', size)
+        band = kwargs.get('band', 'upper')
+        # allow for a shortened form of `eigenvalue`
+        eigenvalue = kwargs.get('eigenval', eigenvalue)
+        eigenvalue = kwargs.get('eigenvalue', eigenvalue)
+
+        if eigenvalue is None:
+            raise ValueError("Must supply an eigenvalue")
+
+        if (size, rows, cols) == (None, None, None):
+            raise ValueError("Must supply a matrix size")
+
+        if size is not None:
+            rows, cols = size, size
+        elif rows is not None and cols is None:
+            cols = rows
+        elif cols is not None and rows is None:
+            rows = cols
+
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_jordan_block(rows, cols, eigenvalue, band)
+
+    @classmethod
+    def ones(kls, rows, cols=None, **kwargs):
+        """Returns a matrix of ones.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_ones(rows, cols)
+
+    @classmethod
+    def zeros(kls, rows, cols=None, **kwargs):
+        """Returns a matrix of zeros.
+
+        Args
+        ====
+
+        rows : rows of the matrix
+        cols : cols of the matrix (if None, cols=rows)
+
+        kwargs
+        ======
+        cls : class of the returned matrix
+        """
+        if cols is None:
+            cols = rows
+        klass = kwargs.get('cls', kls)
+        rows, cols = as_int(rows), as_int(cols)
+
+        return klass._eval_zeros(rows, cols)
 
 
 class MatrixProperties(MatrixRequired):
@@ -1595,6 +1929,9 @@ class MatrixArithmetic(MatrixRequired):
 
     _op_priority = 10.01
 
+    def _eval_Abs(self):
+        return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
+
     def _eval_add(self, other):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
@@ -1639,6 +1976,10 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     # python arithmetic functions
+    def __abs__(self):
+        """Returns a new matrix with entry-wise absolute values."""
+        return self._eval_Abs()
+
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
@@ -1745,7 +2086,7 @@ class MatrixArithmetic(MatrixRequired):
                 elif a.rows == 2 and num > 100000:
                     try:
                         return a._matrix_pow_by_jordan_blocks(num)
-                    except AttributeError:
+                    except (AttributeError, MatrixError):
                         pass
                 return a._eval_pow_by_recursion(num)
             elif isinstance(num, (Expr, float)):
@@ -2230,7 +2571,7 @@ class MatrixDeterminant(MatrixArithmetic, MatrixOperations, MatrixShaping):
 
 
 class MatrixReductions(MatrixDeterminant):
-    """Provides basic matrix inversion operations.
+    """Provides basic matrix row/column operations.
     Should not be instantiated directly."""
 
     def _eval_col_op_swap(self, col1, col2):
@@ -2468,7 +2809,7 @@ class MatrixReductions(MatrixDeterminant):
 
         return self._new(self.rows, self.cols, mat), tuple(pivot_cols), tuple(swaps)
 
-    def echelon_form(self, iszerofunc=_iszero, simplify=False):
+    def echelon_form(self, iszerofunc=_iszero, simplify=False, with_pivots=False):
         """Returns a matrix row-equivalent to `self` that is
         in echelon form.  Note that echelon form of a matrix
         is *not* unique, however, properties like the row
@@ -2477,6 +2818,8 @@ class MatrixReductions(MatrixDeterminant):
             simplify, FunctionType) else _simplify
 
         mat, pivots, swaps = self._eval_echelon_form(iszerofunc, simpfunc)
+        if with_pivots:
+            return mat, pivots
         return mat
 
     def elementary_col_op(self, op="n->kn", col=None, k=None, col1=None, col2=None):
@@ -2648,6 +2991,620 @@ class MatrixReductions(MatrixDeterminant):
         return ret
 
 
+class MatrixSubspaces(MatrixReductions):
+    """Provides methods relating to the fundamental subspaces
+    of a matrix.  Should not be instantiated directly."""
+
+    def columnspace(self, simplify=False):
+        """Returns a list of vectors (Matrix objects) that span columnspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.columnspace()
+        [Matrix([
+        [ 1],
+        [-2],
+        [ 3]]), Matrix([
+        [0],
+        [0],
+        [6]])]
+
+        See Also
+        ========
+
+        nullspace
+        rowspace
+        """
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+
+        return [self.col(i) for i in pivots]
+
+    def nullspace(self, simplify=False):
+        """Returns list of vectors (Matrix objects) that span nullspace of self
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
+        >>> m
+        Matrix([
+        [ 1,  3, 0],
+        [-2, -6, 0],
+        [ 3,  9, 6]])
+        >>> m.nullspace()
+        [Matrix([
+        [-3],
+        [ 1],
+        [ 0]])]
+
+        See Also
+        ========
+
+        columnspace
+        rowspace
+        """
+
+        reduced, pivots = self.rref(simplify=simplify)
+
+        free_vars = [i for i in range(self.cols) if i not in pivots]
+
+        basis = []
+        for free_var in free_vars:
+            # for each free variable, we will set it to 1 and all others
+            # to 0.  Then, we will use back substitution to solve the system
+            vec = [S.Zero]*self.cols
+            vec[free_var] = S.One
+            for piv_row, piv_col in enumerate(pivots):
+                for pos in pivots[piv_row+1:] + (free_var,):
+                    vec[piv_col] -= reduced[piv_row, pos]
+            basis.append(vec)
+
+        return [self._new(self.cols, 1, b) for b in basis]
+
+    def rowspace(self, simplify=False):
+        """Returns a list of vectors that span the row space of self."""
+
+        reduced, pivots = self.echelon_form(simplify=simplify, with_pivots=True)
+
+        return [reduced.row(i) for i in range(len(pivots))]
+
+    @classmethod
+    def orthogonalize(cls, *vecs, **kwargs):
+        """Apply the Gram-Schmidt orthogonalization procedure
+        to vectors supplied in `vecs`.
+
+        Arguments
+        =========
+
+        vecs : vectors to be made orthogonal
+        normalize : bool. Whether the returned vectors
+                    should be renormalized to be unit vectors.
+        """
+
+        normalize = kwargs.get('normalize', False)
+
+        def project(a, b):
+            return b * (a.dot(b) / b.dot(b))
+
+        def perp_to_subspace(vec, basis):
+            """projects vec onto the subspace given
+            by the orthogonal basis `basis`"""
+            components = [project(vec, b) for b in basis]
+            if len(basis) == 0:
+                return vec
+            return vec - reduce(lambda a, b: a + b, components)
+
+        ret = []
+        # make sure we start with a non-zero vector
+        while len(vecs) > 0 and vecs[0].is_zero:
+            del vecs[0]
+
+        for vec in vecs:
+            perp = perp_to_subspace(vec, ret)
+            if not perp.is_zero:
+                ret.append(perp)
+
+        if normalize:
+            ret = [vec / vec.norm() for vec in ret]
+
+        return ret
+
+
+class MatrixEigen(MatrixSubspaces, MatrixProperties, MatrixSpecial):
+    """Provides basic matrix eigenvalue/vector operations.
+    Should not be instantiated directly."""
+
+    _cache_is_diagonalizable = None
+    _cache_eigenvects = None
+
+    def diagonalize(self, reals_only=False, sort=False, normalize=False):
+        """
+        Return (P, D), where D is diagonal and
+
+            D = P^-1 * M * P
+
+        where M is current matrix.
+
+        Parameters
+        ==========
+
+        reals_only : bool. Whether to throw an error if complex numbers are need
+                     to diagonalize. (Default: False)
+        sort : bool. Sort the eigenvalues along the diagonal. (Default: False)
+        normalize : bool. If True, normalize the columns of P. (Default: False)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        Matrix([
+        [1,  2, 0],
+        [0,  3, 0],
+        [2, -4, 2]])
+        >>> (P, D) = m.diagonalize()
+        >>> D
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+        >>> P
+        Matrix([
+        [-1, 0, -1],
+        [ 0, 0, -1],
+        [ 2, 1,  2]])
+        >>> P.inv() * m * P
+        Matrix([
+        [1, 0, 0],
+        [0, 2, 0],
+        [0, 0, 3]])
+
+        See Also
+        ========
+
+        is_diagonal
+        is_diagonalizable
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        if not self.is_diagonalizable(reals_only=reals_only, clear_cache=False):
+            raise MatrixError("Matrix is not diagonalizable")
+
+        eigenvecs = self._cache_eigenvects
+        if eigenvecs is None:
+            eigenvecs = self.eigenvects(simplify=True)
+
+        if sort:
+            eigenvecs = sorted(eigenvecs, key=default_sort_key)
+
+        p_cols, diag = [], []
+        for val, mult, basis in eigenvecs:
+            diag += [val] * mult
+            p_cols += basis
+
+        if normalize:
+            p_cols = [v / v.norm() for v in p_cols]
+
+        return self.hstack(*p_cols), self.diag(*diag)
+
+    def eigenvals(self, error_when_incomplete=True, **flags):
+        """Return eigenvalues using the Berkowitz agorithm to compute
+        the characteristic polynomial.
+
+        Parameters
+        ==========
+
+        error_when_incomplete : bool
+            Raise an error when not all eigenvalues are computed. This is
+            caused by ``roots`` not returning a full list of eigenvalues.
+
+        Since the roots routine doesn't always work well with Floats,
+        they will be replaced with Rationals before calling that
+        routine. If this is not desired, set flag ``rational`` to False.
+        """
+        mat = self
+        if not mat:
+            return {}
+        if flags.pop('rational', True):
+            if any(v.has(Float) for v in mat):
+                mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        flags.pop('simplify', None)  # pop unsupported flag
+        eigs = roots(mat.charpoly(x=Dummy('x')), **flags)
+
+        # make sure the algebraic multiplicty sums to the
+        # size of the matrix
+        if error_when_incomplete and sum(m for m in eigs.values()) != self.cols:
+            raise MatrixError("Could not compute eigenvalues for {}".format(self))
+
+        return eigs
+
+    def eigenvects(self, error_when_incomplete=True, **flags):
+        """Return list of triples (eigenval, multiplicity, basis).
+
+        The flag ``simplify`` has two effects:
+            1) if bool(simplify) is True, as_content_primitive()
+            will be used to tidy up normalization artifacts;
+            2) if nullspace needs simplification to compute the
+            basis, the simplify flag will be passed on to the
+            nullspace routine which will interpret it there.
+
+        Parameters
+        ==========
+
+        error_when_incomplete : bool
+            Raise an error when not all eigenvalues are computed. This is
+            caused by ``roots`` not returning a full list of eigenvalues.
+
+        If the matrix contains any Floats, they will be changed to Rationals
+        for computation purposes, but the answers will be returned after being
+        evaluated with evalf. If it is desired to removed small imaginary
+        portions during the evalf step, pass a value for the ``chop`` flag.
+        """
+        from sympy.matrices import eye
+
+        simplify = flags.get('simplify', True)
+        if not isinstance(simplify, FunctionType):
+            simpfunc = _simplify if simplify else lambda x: x
+        primitive = flags.get('simplify', False)
+        chop = flags.pop('chop', False)
+
+        flags.pop('multiple', None)  # remove this if it's there
+
+        mat = self
+        # roots doesn't like Floats, so replace them with Rationals
+        has_floats = any(v.has(Float) for v in self)
+        if has_floats:
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        def eigenspace(eigenval):
+            """Get a basis for the eigenspace for a particular eigenvalue"""
+            m = mat - self.eye(mat.rows) * eigenval
+            ret = m.nullspace()
+            # the nullspace for a real eigenvalue should be
+            # non-trivial.  If we didn't find an eigenvector, try once
+            # more a little harder
+            if len(ret) == 0 and simplify:
+                ret = m.nullspace(simplify=True)
+            if len(ret) == 0:
+                raise NotImplementedError(
+                        "Can't evaluate eigenvector for eigenvalue %s" % eigenval)
+            return ret
+
+        eigenvals = mat.eigenvals(rational=False,
+                                  error_when_incomplete=error_when_incomplete,
+                                  **flags)
+        ret = [(val, mult, eigenspace(val)) for val, mult in
+                    sorted(eigenvals.items(), key=default_sort_key)]
+        if primitive:
+            # if the primitive flag is set, get rid of any common
+            # integer denominators
+            def denom_clean(l):
+                from sympy import gcd
+                return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
+            ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
+        if has_floats:
+            # if we had floats to start with, turn the eigenvectors to floats
+            ret = [(val.evalf(chop=chop), mult, [v.evalf(chop=chop) for v in es]) for val, mult, es in ret]
+        return ret
+
+    def is_diagonalizable(self, reals_only=False, **kwargs):
+        """Returns true if a matrix is diagonalizable.
+
+        Parameters
+        ==========
+
+        reals_only : bool. If reals_only=True, determine whether the matrix can be
+                     diagonalized without complex numbers. (Default: False)
+
+        kwargs
+        ======
+
+        clear_cache : bool. If True, clear the result of any computations when finished.
+                      (Default: True)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
+        >>> m
+        Matrix([
+        [1,  2, 0],
+        [0,  3, 0],
+        [2, -4, 2]])
+        >>> m.is_diagonalizable()
+        True
+        >>> m = Matrix(2, 2, [0, 1, 0, 0])
+        >>> m
+        Matrix([
+        [0, 1],
+        [0, 0]])
+        >>> m.is_diagonalizable()
+        False
+        >>> m = Matrix(2, 2, [0, 1, -1, 0])
+        >>> m
+        Matrix([
+        [ 0, 1],
+        [-1, 0]])
+        >>> m.is_diagonalizable()
+        True
+        >>> m.is_diagonalizable(reals_only=True)
+        False
+
+        See Also
+        ========
+
+        is_diagonal
+        diagonalize
+        """
+
+        clear_cache = kwargs.get('clear_cache', True)
+        if 'clear_subproducts' in kwargs:
+            SymPyDeprecationWarning(useinstead="clear_cache", deprecated_since_version="1.1")
+            clear_cache = kwargs.get('clear_subproducts')
+
+        def cleanup():
+            """Clears any cached values if requested"""
+            if clear_cache:
+                self._cache_eigenvects = None
+                self._cache_is_diagonalizable = None
+
+        if not self.is_square:
+            cleanup()
+            return False
+
+        # use the cached value if we have it
+        if self._cache_is_diagonalizable is not None:
+            ret = self._cache_is_diagonalizable
+            cleanup()
+            return ret
+
+        if all(e.is_real for e in self) and self.is_symmetric():
+            # every real symmetric matrix is real diagonalizable
+            self._cache_is_diagonalizable = True
+            cleanup()
+            return True
+
+        self._cache_eigenvects = self.eigenvects(simplify=True)
+        ret = True
+        for val, mult, basis in self._cache_eigenvects:
+            # if we have a complex eigenvalue
+            if reals_only and not val.is_real:
+                ret = False
+            # if the geometric multiplicity doesn't equal the algebraic
+            if mult != len(basis):
+                ret = False
+        cleanup()
+        return ret
+
+    def jordan_form(self, calc_transform=True, **kwargs):
+        """Return `(P, J)` where `J` is a Jordan block
+        matrix and `P` is a matrix such that
+
+            `self == P*J*P**-1`
+
+
+        Parameters
+        ==========
+
+        calc_transform : bool
+            If ``False``, then only `J` is returned.
+        chop : bool
+            All matrices are convered to exact types when computing
+            eigenvalues and eigenvectors.  As a result, there may be
+            approximation errors.  If ``chop==True``, these errors
+            will be truncated.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m = Matrix([[ 6,  5, -2, -3], [-3, -1,  3,  3], [ 2,  1, -2, -3], [-1,  1,  5,  5]])
+        >>> P, J = m.jordan_form()
+        >>> J
+        Matrix([
+        [2, 1, 0, 0],
+        [0, 2, 0, 0],
+        [0, 0, 2, 1],
+        [0, 0, 0, 2]])
+
+        See Also
+        ========
+
+        jordan_block
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError("Only square matrices have Jordan forms")
+
+        chop = kwargs.pop('chop', False)
+        mat = self
+        has_floats = any(v.has(Float) for v in self)
+
+        def restore_floats(*args):
+            """If `has_floats` is `True`, cast all `args` as
+            matrices of floats."""
+            if has_floats:
+                args = [m.evalf(chop=chop) for m in args]
+            if len(args) == 1:
+                return args[0]
+            return args
+
+        # cache calculations for some speedup
+        mat_cache = {}
+        def eig_mat(val, pow):
+            """Cache computations of (self - val*I)**pow for quick
+            retrieval"""
+            if (val, pow) in mat_cache:
+                return mat_cache[(val, pow)]
+            if (val, pow - 1) in mat_cache:
+                mat_cache[(val, pow)] = mat_cache[(val, pow - 1)] * mat_cache[(val, 1)]
+            else:
+                mat_cache[(val, pow)] = (mat - val*self.eye(self.rows))**pow
+            return mat_cache[(val, pow)]
+
+        # helper functions
+        def nullity_chain(val):
+            """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
+            until it is constant where `E = self - val*I`"""
+            # mat.rank() is faster than computing the null space,
+            # so use the rank-nullity theorem
+            cols = self.cols
+            ret = [0]
+            nullity = cols - eig_mat(val, 1).rank()
+            i = 2
+            while nullity != ret[-1]:
+                ret.append(nullity)
+                nullity = cols - eig_mat(val, i).rank()
+                i += 1
+            return ret
+
+        def blocks_from_nullity_chain(d):
+            """Return a list of the size of each Jordan block.
+            If d_n is the nullity of E**n, then the number
+            of Jordan blocks of size n is
+
+                2*d_n - d_(n-1) - d_(n+1)"""
+            # d[0] is always the number of columns, so skip past it
+            mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
+            # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
+            # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
+            end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
+            return mid + end
+
+        def pick_vec(small_basis, big_basis):
+            """Picks a vector from big_basis that isn't in
+            the subspace spanned by small_basis"""
+            if len(small_basis) == 0:
+                return big_basis[0]
+            for v in big_basis:
+                _, pivots = self.hstack(*(small_basis + [v])).echelon_form(with_pivots=True)
+                if pivots[-1] == len(small_basis):
+                    return v
+
+        # roots doesn't like Floats, so replace them with Rationals
+        if has_floats:
+            mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
+
+        # first calculate the jordan block structure
+        eigs = mat.eigenvals()
+
+        # make sure that we found all the roots by counting
+        # the algebraic multiplicity
+        if sum(m for m in eigs.values()) != mat.cols:
+            raise MatrixError("Could not compute eigenvalues for {}".format(mat))
+
+        # most matrices have distinct eigenvalues
+        # and so are diagonalizable.  In this case, don't
+        # do extra work!
+        if len(eigs.keys()) == mat.cols:
+            blocks = list(sorted(eigs.keys(), key=default_sort_key))
+            jordan_mat = mat.diag(*blocks)
+            if not calc_transform:
+                return restore_floats(jordan_mat)
+            jordan_basis = [eig_mat(eig, 1).nullspace()[0] for eig in blocks]
+            basis_mat = mat.hstack(*jordan_basis)
+            return restore_floats(basis_mat, jordan_mat)
+
+        block_structure = []
+        for eig in sorted(eigs.keys(), key=default_sort_key):
+            chain = nullity_chain(eig)
+            block_sizes = blocks_from_nullity_chain(chain)
+            # if block_sizes == [a, b, c, ...], then the number of
+            # Jordan blocks of size 1 is a, of size 2 is b, etc.
+            # create an array that has (eig, block_size) with one
+            # entry for each block
+            size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
+            # we expect larger Jordan blocks to come earlier
+            size_nums.reverse()
+
+            block_structure.extend(
+                (eig, size) for size, num in size_nums for _ in range(num))
+        blocks = (mat.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
+        jordan_mat = mat.diag(*blocks)
+
+        if not calc_transform:
+            return restore_floats(jordan_mat)
+
+        # For each generalized eigenspace, calculate a basis.
+        # We start by looking for a vector in null( (A - eig*I)**n )
+        # which isn't in null( (A - eig*I)**(n-1) ) where n is
+        # the size of the Jordan block
+        #
+        # Ideally we'd just loop through block_structure and
+        # compute each generalized eigenspace.  However, this
+        # causes a lot of unneeded computation.  Instead, we
+        # go through the eigenvalues separately, since we know
+        # their generalized eigenspaces must have bases that
+        # are linearly independent.
+        jordan_basis = []
+
+        for eig in sorted(eigs.keys(), key=default_sort_key):
+            eig_basis = []
+            for block_eig, size in block_structure:
+                if block_eig != eig:
+                    continue
+                null_big = (eig_mat(eig, size)).nullspace()
+                null_small = (eig_mat(eig, size - 1)).nullspace()
+                # we want to pick something that is in the big basis
+                # and not the small, but also something that is independent
+                # of any other generalized eigenvectors from a different
+                # generalized eigenspace sharing the same eigenvalue.
+                vec = pick_vec(null_small + eig_basis, null_big)
+                new_vecs = [(eig_mat(eig, i))*vec for i in range(size)]
+                eig_basis.extend(new_vecs)
+                jordan_basis.extend(reversed(new_vecs))
+
+        basis_mat = mat.hstack(*jordan_basis)
+
+        return restore_floats(basis_mat, jordan_mat)
+
+    def left_eigenvects(self, **flags):
+        """Returns left eigenvectors and eigenvalues.
+
+        This function returns the list of triples (eigenval, multiplicity,
+        basis) for the left eigenvectors. Options are the same as for
+        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
+        eigenvects().
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
+        >>> M.eigenvects()
+        [(-1, 1, [Matrix([
+        [-1],
+        [ 1],
+        [ 0]])]), (0, 1, [Matrix([
+        [ 0],
+        [-1],
+        [ 1]])]), (2, 1, [Matrix([
+        [2/3],
+        [1/3],
+        [  1]])])]
+        >>> M.left_eigenvects()
+        [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
+        1, [Matrix([[1, 1, 1]])])]
+
+        """
+        eigs = self.transpose().eigenvects(**flags)
+
+        return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
+
+
 class MatrixDeprecated(MatrixRequired):
     """A class to house deprecated matrix methods."""
 
@@ -2786,6 +3743,15 @@ class MatrixDeprecated(MatrixRequired):
         """
         return self.det(method='lu')
 
+    @deprecated(useinstead="jordan_block", issue=12685, deprecated_since_version="1.1")
+    def jordan_cell(self, eigenval, n):
+        return self.jordan_block(size=n, eigenvalue=eigenval)
+
+    @deprecated(deprecated_since_version="1.1")
+    def jordan_cells(self, calc_transformation=True):
+        P, J = self.jordan_form()
+        return P, J.get_diag_blocks()
+
     @deprecated(useinstead="minor", issue=12389, deprecated_since_version="1.1")
     def minorEntry(self, i, j, method="berkowitz"):
         return self.minor(i, j, method=method)
@@ -2805,7 +3771,7 @@ class MatrixDeprecated(MatrixRequired):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
+class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial):
     # Added just for numpy compatibility
     __array_priority__ = 11
 
@@ -2868,29 +3834,13 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
                         bn = bn._eval_expand_func()
                     jc[j, i+j] = l**(n-i)*bn
 
-        P, jordan_cells = self.jordan_cells()
+        P, J = self.jordan_form()
+        jordan_cells = J.get_diag_blocks()
         # Make sure jordan_cells matrices are mutable:
         jordan_cells = [MutableMatrix(j) for j in jordan_cells]
         for j in jordan_cells:
             jordan_cell_power(j, num)
         return self._new(P*diag(*jordan_cells)*P.inv())
-
-    def _matrix_pow_by_recursion(self, num):
-        from sympy.matrices import eye
-        n = int(num)
-        if n < 0:
-            return self.inv()**-n   # A**-2 = (A**-1)**2
-        a = eye(self.cols)
-        s = self
-        while n:
-            if n % 2:
-                a *= s
-                n -= 1
-            if not n:
-                break
-            s *= s
-            n //= 2
-        return self._new(a)
 
     def __repr__(self):
         return sstr(self)
@@ -3031,6 +3981,10 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             rows = as_int(args[0])
             cols = as_int(args[1])
 
+            if rows < 0 or cols < 0:
+                raise ValueError("Cannot create a {} x {} matrix. "
+                                 "Both dimensions must be positive".format(rows, cols))
+
             # Matrix(2, 2, lambda i, j: i+j)
             if len(args) == 3 and isinstance(args[2], collections.Callable):
                 op = args[2]
@@ -3059,192 +4013,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             raise TypeError("Data type not understood")
 
         return rows, cols, flat_list
-
-    def _jordan_block_structure(self):
-        # To every eigenvalue may belong `i` blocks with size s(i)
-        # and a chain of generalized eigenvectors
-        # which will be determined by the following computations:
-        # for every eigenvalue we will add a dictionary
-        # containing, for all blocks, the blocksizes and the attached chain vectors
-        # that will eventually be used to form the transformation P
-        jordan_block_structures = {}
-        _eigenvects = self.eigenvects()
-        ev = self.eigenvals()
-        if len(ev) == 0:
-            raise AttributeError("could not compute the eigenvalues")
-        for eigenval, multiplicity, vects in _eigenvects:
-            l_jordan_chains = {}
-            geometrical = len(vects)
-            if geometrical == multiplicity:
-                # The Jordan chains have all length 1 and consist of only one vector
-                # which is the eigenvector of course
-                chains = []
-                for v in vects:
-                    chain = [v]
-                    chains.append(chain)
-                l_jordan_chains[1] = chains
-                jordan_block_structures[eigenval] = l_jordan_chains
-            elif geometrical == 0:
-                raise MatrixError(
-                    "Matrix has the eigen vector with geometrical multiplicity equal zero.")
-            else:
-                # Up to now we know nothing about the sizes of the blocks of our Jordan matrix.
-                # Note that knowledge of algebraic and geometrical multiplicity
-                # will *NOT* be sufficient to determine this structure.
-                # The blocksize `s` could be defined as the minimal `k` where
-                # `kernel(self-lI)^k = kernel(self-lI)^(k+1)`
-                # The extreme case would be that k = (multiplicity-geometrical+1)
-                # but the blocks could be smaller.
-
-                # Consider for instance the following matrix
-
-                # [2 1 0 0]
-                # [0 2 1 0]
-                # [0 0 2 0]
-                # [0 0 0 2]
-
-                # which coincides with it own Jordan canonical form.
-                # It has only one eigenvalue l=2 of (algebraic) multiplicity=4.
-                # It has two eigenvectors, one belonging to the last row (blocksize 1)
-                # and one being the last part of a jordan chain of length 3 (blocksize of the first block).
-
-                # Note again that it is not not possible to obtain this from the algebraic and geometrical
-                # multiplicity alone. This only gives us an upper limit for the dimension of one of
-                # the subspaces (blocksize of according jordan block) given by
-                # max=(multiplicity-geometrical+1) which is reached for our matrix
-                # but not for
-
-                # [2 1 0 0]
-                # [0 2 0 0]
-                # [0 0 2 1]
-                # [0 0 0 2]
-
-                # although multiplicity=4 and geometrical=2 are the same for this matrix.
-
-                from sympy.matrices import MutableMatrix
-                I = MutableMatrix.eye(self.rows)
-                l = eigenval
-                M = (self - l * I)
-
-                # We will store the matrices `(self-l*I)^k` for further computations
-                # for convenience only we store `Ms[0]=(sefl-lI)^0=I`
-                # so the index is the same as the power for all further Ms entries
-                # We also store the vectors that span these kernels (Ns[0] = [])
-                # and also their dimensions `a_s`
-                # this is mainly done for debugging since the number of blocks of a given size
-                # can be computed from the a_s, in order to check our result which is obtained simpler
-                # by counting the number of Jordan chains for `a` given `s`
-                # `a_0` is `dim(Kernel(Ms[0]) = dim (Kernel(I)) = 0` since `I` is regular
-
-                l_jordan_chains = {}
-                Ms = [I]
-                Ns = [[]]
-                a = [0]
-                smax = 0
-                M_new = Ms[-1] * M
-                Ns_new = M_new.nullspace()
-                a_new = len(Ns_new)
-                Ms.append(M_new)
-                Ns.append(Ns_new)
-                while a_new > a[
-                    -1]:  # as long as the nullspaces increase compute further powers
-                    a.append(a_new)
-                    M_new = Ms[-1] * M
-                    Ns_new = M_new.nullspace()
-                    a_new = len(Ns_new)
-                    Ms.append(M_new)
-                    Ns.append(Ns_new)
-                    smax += 1
-
-                # We now have `Ms[-1]=((self-l*I)**s)=Z=0`.
-                # We also know the size of the biggest Jordan block
-                # associated with `l` to be `s`.
-                # Now let us proceed with the computation of the associate part of the transformation matrix `P`.
-                # We already know the kernel (=nullspace)  `K_l` of (self-lI) which consists of the
-                # eigenvectors belonging to eigenvalue `l`.
-                # The dimension of this space is the geometric multiplicity of eigenvalue `l`.
-                # For every eigenvector ev out of `K_l`, there exists a subspace that is
-                # spanned by the Jordan chain of ev. The dimension of this subspace is
-                # represented by the length `s` of the Jordan block.
-                # The chain itself is given by `{e_0,..,e_s-1}` where:
-                # `e_k+1 =(self-lI)e_k (*)`
-                # and
-                # `e_s-1=ev`
-                # So it would be possible to start with the already known `ev` and work backwards until one
-                # reaches `e_0`. Unfortunately this can not be done by simply solving system (*) since its matrix
-                # is singular (by definition of the eigenspaces).
-                # This approach would force us a choose in every step the degree of freedom undetermined
-                # by (*). This is difficult to implement with computer algebra systems and also quite inefficient.
-                # We therefore reformulate the problem in terms of nullspaces.
-                # To do so we start from the other end and choose `e0`'s out of
-                # `E=Kernel(self-lI)^s / Kernel(self-lI)^(s-1)`
-                # Note that `Kernel(self-lI)^s = Kernel(Z) = V` (the whole vector space).
-                # So in the first step `s=smax` this restriction turns out to actually restrict nothing at all
-                # and the only remaining condition is to choose vectors in `Kernel(self-lI)^(s-1)`.
-                # Subsequently we compute `e_1=(self-lI)e_0`, `e_2=(self-lI)*e_1` and so on.
-                # The subspace `E` can have a dimension larger than one.
-                # That means that we have more than one Jordan block of size `s` for the eigenvalue `l`
-                # and as many Jordan chains (this is the case in the second example).
-                # In this case we start as many Jordan chains and have as many blocks of size `s` in the jcf.
-                # We now have all the Jordan blocks of size `s` but there might be others attached to the same
-                # eigenvalue that are smaller.
-                # So we will do the same procedure also for `s-1` and so on until 1 (the lowest possible order
-                # where the Jordan chain is of length 1 and just represented by the eigenvector).
-
-                for s in reversed(range(1, smax + 1)):
-                    S = Ms[s]
-                    # We want the vectors in `Kernel((self-lI)^s)`,
-                    # but without those in `Kernel(self-lI)^s-1`
-                    # so we will add their adjoints as additional equations
-                    # to the system formed by `S` to get the orthogonal
-                    # complement.
-                    # (`S` will no longer be quadratic.)
-
-                    exclude_vectors = Ns[s - 1]
-                    for k in range(0, a[s - 1]):
-                        S = S.col_join((exclude_vectors[k]).adjoint())
-
-                    # We also want to exclude the vectors
-                    # in the chains for the bigger blocks
-                    # that we have already computed (if there are any).
-                    # (That is why we start with the biggest s).
-
-                    # Since Jordan blocks are not orthogonal in general
-                    # (in the original space), only those chain vectors
-                    # that are on level s (index `s-1` in a chain)
-                    # are added.
-
-                    for chain_list in l_jordan_chains.values():
-                        for chain in chain_list:
-                            S = S.col_join(chain[s - 1].adjoint())
-
-                    e0s = S.nullspace()
-                    # Determine the number of chain leaders
-                    # for blocks of size `s`.
-                    n_e0 = len(e0s)
-                    s_chains = []
-                    # s_cells=[]
-                    for i in range(0, n_e0):
-                        chain = [e0s[i]]
-                        for k in range(1, s):
-                            v = M * chain[k - 1]
-                            chain.append(v)
-
-                        # We want the chain leader appear as the last of the block.
-                        chain.reverse()
-                        s_chains.append(chain)
-                    l_jordan_chains[s] = s_chains
-            jordan_block_structures[eigenval] = l_jordan_chains
-        return jordan_block_structures
-
-    def _jordan_split(self, algebraical, geometrical):
-        """Return a list of integers with sum equal to 'algebraical'
-        and length equal to 'geometrical'"""
-        n1 = algebraical // geometrical
-        res = [n1] * geometrical
-        res[len(res) - 1] += algebraical % geometrical
-        assert sum(res) == algebraical
-        return res
 
     def _setitem(self, key, value):
         """Helper to set value at location given by key.
@@ -3385,44 +4153,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
         return self._cholesky()
-
-    def columnspace(self, simplify=False):
-        """Returns list of vectors (Matrix objects) that span columnspace of self
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.columnspace()
-        [Matrix([
-        [ 1],
-        [-2],
-        [ 3]]), Matrix([
-        [0],
-        [0],
-        [6]])]
-
-        See Also
-        ========
-
-        nullspace
-        """
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-        reduced, pivots = self.rref(simplify=simpfunc)
-
-        basis = []
-        # create a set of vectors for the basis
-        for i in range(self.cols):
-            if i in pivots:
-                basis.append(self.col(i))
-        return [self._new(b) for b in basis]
 
     def condition_number(self):
         """Returns the condition number of a matrix.
@@ -3565,74 +4295,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def diagonalize(self, reals_only=False, sort=False, normalize=False):
-        """
-        Return (P, D), where D is diagonal and
-
-            D = P^-1 * M * P
-
-        where M is current matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-        >>> m
-        Matrix([
-        [1,  2, 0],
-        [0,  3, 0],
-        [2, -4, 2]])
-        >>> (P, D) = m.diagonalize()
-        >>> D
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
-        >>> P
-        Matrix([
-        [-1, 0, -1],
-        [ 0, 0, -1],
-        [ 2, 1,  2]])
-        >>> P.inv() * m * P
-        Matrix([
-        [1, 0, 0],
-        [0, 2, 0],
-        [0, 0, 3]])
-
-        See Also
-        ========
-
-        is_diagonal
-        is_diagonalizable
-
-        """
-        from sympy.matrices import diag
-
-        if not self.is_square:
-            raise NonSquareMatrixError()
-        if not self.is_diagonalizable(reals_only, False):
-            self._diagonalize_clear_subproducts()
-            raise MatrixError("Matrix is not diagonalizable")
-        else:
-            if self._eigenvects is None:
-                self._eigenvects = self.eigenvects(simplify=True)
-            if sort:
-                self._eigenvects.sort(key=default_sort_key)
-                self._eigenvects.reverse()
-            diagvals = []
-            P = self._new(self.rows, 0, [])
-            for eigenval, multiplicity, vects in self._eigenvects:
-                for k in range(multiplicity):
-                    diagvals.append(eigenval)
-                    vec = vects[k]
-                    if normalize:
-                        vec = vec / vec.norm()
-                    P = P.col_insert(P.cols, vec)
-            D = diag(*diagvals)
-            self._diagonalize_clear_subproducts()
-            return (P, D)
-
     def diff(self, *args):
         """Calculate the derivative of each element in the matrix.
 
@@ -3754,106 +4416,14 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
 
         return work
 
-    def eigenvals(self, **flags):
-        """Return eigenvalues using the Berkowitz agorithm to compute
-        the characteristic polynomial.
-
-        Since the roots routine doesn't always work well with Floats,
-        they will be replaced with Rationals before calling that
-        routine. If this is not desired, set flag ``rational`` to False.
-        """
-        # roots doesn't like Floats, so replace them with Rationals
-        # unless the nsimplify flag indicates that this has already
-        # been done, e.g. in eigenvects
-        mat = self
-
-        if not mat:
-            return {}
-        if flags.pop('rational', True):
-            if any(v.has(Float) for v in mat):
-                mat = mat._new(mat.rows, mat.cols,
-                               [nsimplify(v, rational=True) for v in mat])
-
-        flags.pop('simplify', None)  # pop unsupported flag
-        return roots(mat.charpoly(x=Dummy('x')), **flags)
-
-    def eigenvects(self, **flags):
-        """Return list of triples (eigenval, multiplicity, basis).
-
-        The flag ``simplify`` has two effects:
-            1) if bool(simplify) is True, as_content_primitive()
-            will be used to tidy up normalization artifacts;
-            2) if nullspace needs simplification to compute the
-            basis, the simplify flag will be passed on to the
-            nullspace routine which will interpret it there.
-
-        If the matrix contains any Floats, they will be changed to Rationals
-        for computation purposes, but the answers will be returned after being
-        evaluated with evalf. If it is desired to removed small imaginary
-        portions during the evalf step, pass a value for the ``chop`` flag.
-        """
-        from sympy.matrices import eye
-
-        simplify = flags.get('simplify', True)
-        primitive = bool(flags.get('simplify', False))
-        chop = flags.pop('chop', False)
-
-        flags.pop('multiple', None)  # remove this if it's there
-
-        # roots doesn't like Floats, so replace them with Rationals
-        float = False
-        mat = self
-        if any(v.has(Float) for v in self):
-            float = True
-            mat = mat._new(mat.rows, mat.cols, [nsimplify(
-                v, rational=True) for v in mat])
-            flags['rational'] = False  # to tell eigenvals not to do this
-
-        out, vlist = [], mat.eigenvals(**flags)
-        vlist = list(vlist.items())
-        vlist.sort(key=default_sort_key)
-        flags.pop('rational', None)
-
-        for r, k in vlist:
-            tmp = mat.as_mutable() - eye(mat.rows) * r
-            basis = tmp.nullspace()
-            # whether tmp.is_symbolic() is True or False, it is possible that
-            # the basis will come back as [] in which case simplification is
-            # necessary.
-            if not basis:
-                # The nullspace routine failed, try it again with simplification
-                basis = tmp.nullspace(simplify=simplify)
-                if not basis:
-                    raise NotImplementedError(
-                        "Can't evaluate eigenvector for eigenvalue %s" % r)
-            if primitive:
-                # the relationship A*e = lambda*e will still hold if we change the
-                # eigenvector; so if simplify is True we tidy up any normalization
-                # artifacts with as_content_primtive (default) and remove any pure Integer
-                # denominators.
-                l = 1
-                for i, b in enumerate(basis[0]):
-                    c, p = signsimp(b).as_content_primitive()
-                    if c is not S.One:
-                        b = c * p
-                        l = ilcm(l, c.q)
-                    basis[0][i] = b
-                if l != 1:
-                    basis[0] *= l
-            if float:
-                out.append((r.evalf(chop=chop), k, [
-                    mat._new(b).evalf(chop=chop) for b in basis]))
-            else:
-                out.append((r, k, [mat._new(b) for b in basis]))
-        return out
-
     def exp(self):
         """Return the exponentiation of a square matrix."""
         if not self.is_square:
             raise NonSquareMatrixError(
                 "Exponentiation is valid only for square matrices")
         try:
-            P, cells = self.jordan_cells()
+            P, J = self.jordan_form()
+            cells = J.get_diag_blocks()
         except MatrixError:
             raise NotImplementedError(
                 "Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
@@ -4016,23 +4586,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             return sol, tau, free_var_index
         else:
             return sol, tau
-
-    @classmethod
-    def hstack(cls, *args):
-        """Return a matrix formed by joining args horizontally (i.e.
-        by repeated application of row_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.hstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0, 2, 0],
-        [0, 1, 0, 2]])
-        """
-        kls = type(args[0])
-        return reduce(kls.row_join, args)
 
     def integrate(self, *args):
         """Integrate each element of the matrix.
@@ -4231,69 +4784,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
 
-    def is_diagonalizable(self, reals_only=False, clear_subproducts=True):
-        """Check if matrix is diagonalizable.
-
-        If reals_only==True then check that diagonalized matrix consists of the only not complex values.
-
-        Some subproducts could be used further in other methods to avoid double calculations,
-        By default (if clear_subproducts==True) they will be deleted.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
-        >>> m
-        Matrix([
-        [1,  2, 0],
-        [0,  3, 0],
-        [2, -4, 2]])
-        >>> m.is_diagonalizable()
-        True
-        >>> m = Matrix(2, 2, [0, 1, 0, 0])
-        >>> m
-        Matrix([
-        [0, 1],
-        [0, 0]])
-        >>> m.is_diagonalizable()
-        False
-        >>> m = Matrix(2, 2, [0, 1, -1, 0])
-        >>> m
-        Matrix([
-        [ 0, 1],
-        [-1, 0]])
-        >>> m.is_diagonalizable()
-        True
-        >>> m.is_diagonalizable(True)
-        False
-
-        See Also
-        ========
-
-        is_diagonal
-        diagonalize
-        """
-        if not self.is_square:
-            return False
-        res = False
-        self._is_symbolic = self.is_symbolic()
-        self._is_symmetric = self.is_symmetric()
-        self._eigenvects = None
-        self._eigenvects = self.eigenvects(simplify=True)
-        all_iscorrect = True
-        for eigenval, multiplicity, vects in self._eigenvects:
-            if len(vects) != multiplicity:
-                all_iscorrect = False
-                break
-            elif reals_only and not eigenval.is_real:
-                all_iscorrect = False
-                break
-        res = all_iscorrect
-        if clear_subproducts:
-            self._diagonalize_clear_subproducts()
-        return res
-
     def is_nilpotent(self):
         """Checks if a matrix is nilpotent.
 
@@ -4378,123 +4868,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         # m is the number of functions and n is the number of variables
         # computing the Jacobian is now easy:
         return self._new(m, n, lambda j, i: self[j].diff(X[i]))
-
-    def jordan_cell(self, eigenval, n):
-        n = int(n)
-        from sympy.matrices import MutableMatrix
-        out = MutableMatrix.zeros(n)
-        for i in range(n - 1):
-            out[i, i] = eigenval
-            out[i, i + 1] = 1
-        out[n - 1, n - 1] = eigenval
-        return type(self)(out)
-
-    def jordan_cells(self, calc_transformation=True):
-        r"""Return a list of Jordan cells of current matrix.
-        This list shape Jordan matrix J.
-
-        If calc_transformation is specified as False, then transformation P such that
-
-              `J = P^{-1} \cdot M \cdot P`
-
-        will not be calculated.
-
-        Notes
-        =====
-
-        Calculation of transformation P is not implemented yet.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix(4, 4, [
-        ...  6,  5, -2, -3,
-        ... -3, -1,  3,  3,
-        ...  2,  1, -2, -3,
-        ... -1,  1,  5,  5])
-
-        >>> P, Jcells = m.jordan_cells()
-        >>> Jcells[0]
-        Matrix([
-        [2, 1],
-        [0, 2]])
-        >>> Jcells[1]
-        Matrix([
-        [2, 1],
-        [0, 2]])
-
-        See Also
-        ========
-
-        jordan_form
-        """
-        n = self.rows
-        Jcells = []
-        Pcols_new = []
-        jordan_block_structures = self._jordan_block_structure()
-        from sympy.matrices import MutableMatrix
-
-        # Order according to default_sort_key, this makes sure the order is the same as in .diagonalize():
-        for eigenval in (
-        sorted(list(jordan_block_structures.keys()), key=default_sort_key)):
-            l_jordan_chains = jordan_block_structures[eigenval]
-            for s in reversed(sorted(
-                    (l_jordan_chains).keys())):  # Start with the biggest block
-                s_chains = l_jordan_chains[s]
-                block = self.jordan_cell(eigenval, s)
-                number_of_s_chains = len(s_chains)
-                for i in range(0, number_of_s_chains):
-                    Jcells.append(type(self)(block))
-                    chain_vectors = s_chains[i]
-                    lc = len(chain_vectors)
-                    assert lc == s
-                    for j in range(0, lc):
-                        generalized_eigen_vector = chain_vectors[j]
-                        Pcols_new.append(generalized_eigen_vector)
-        P = MutableMatrix.zeros(n)
-        for j in range(0, n):
-            P[:, j] = Pcols_new[j]
-
-        return type(self)(P), Jcells
-
-    def jordan_form(self, calc_transformation=True):
-        r"""Return Jordan form J of current matrix.
-
-        Also the transformation P such that
-
-            `J = P^{-1} \cdot M \cdot P`
-
-        and the jordan blocks forming J
-        will be calculated.
-
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m = Matrix([
-        ...        [ 6,  5, -2, -3],
-        ...        [-3, -1,  3,  3],
-        ...        [ 2,  1, -2, -3],
-        ...        [-1,  1,  5,  5]])
-        >>> P, J = m.jordan_form()
-        >>> J
-        Matrix([
-        [2, 1, 0, 0],
-        [0, 2, 0, 0],
-        [0, 0, 2, 1],
-        [0, 0, 0, 2]])
-
-        See Also
-        ========
-
-        jordan_cells
-        """
-        P, Jcells = self.jordan_cells()
-        from sympy.matrices import diag
-        J = diag(*Jcells)
-        return P, type(self)(J)
 
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
@@ -4626,44 +4999,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
-
-    def left_eigenvects(self, **flags):
-        """Returns left eigenvectors and eigenvalues.
-
-        This function returns the list of triples (eigenval, multiplicity,
-        basis) for the left eigenvectors. Options are the same as for
-        eigenvects(), i.e. the ``**flags`` arguments gets passed directly to
-        eigenvects().
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
-        >>> M.eigenvects()
-        [(-1, 1, [Matrix([
-        [-1],
-        [ 1],
-        [ 0]])]), (0, 1, [Matrix([
-        [ 0],
-        [-1],
-        [ 1]])]), (2, 1, [Matrix([
-        [2/3],
-        [1/3],
-        [  1]])])]
-        >>> M.left_eigenvects()
-        [(-1, 1, [Matrix([[-2, 1, 1]])]), (0, 1, [Matrix([[-1, -1, 1]])]), (2,
-        1, [Matrix([[1, 1, 1]])])]
-
-        """
-        mat = self
-        left_transpose = mat.transpose().eigenvects(**flags)
-
-        left = []
-        for (ev, mult, ltmp) in left_transpose:
-            left.append((ev, mult, [l.transpose() for l in ltmp]))
-
-        return left
 
     def limit(self, *args):
         """Calculate the limit of each element in the matrix.
@@ -5186,63 +5521,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
 
             else:
                 raise NotImplementedError("Matrix Norms under development")
-
-    def nullspace(self, simplify=False):
-        """Returns list of vectors (Matrix objects) that span nullspace of self
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> m = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
-        >>> m
-        Matrix([
-        [ 1,  3, 0],
-        [-2, -6, 0],
-        [ 3,  9, 6]])
-        >>> m.nullspace()
-        [Matrix([
-        [-3],
-        [ 1],
-        [ 0]])]
-
-        See Also
-        ========
-
-        columnspace
-        """
-        from sympy.matrices import zeros
-
-        simpfunc = simplify if isinstance(
-            simplify, FunctionType) else _simplify
-        reduced, pivots = self.rref(simplify=simpfunc)
-
-        basis = []
-        # create a set of vectors for the basis
-        for i in range(self.cols - len(pivots)):
-            basis.append(zeros(self.cols, 1))
-        # contains the variable index to which the vector corresponds
-        basiskey, cur = [-1] * len(basis), 0
-        for i in range(self.cols):
-            if i not in pivots:
-                basiskey[cur] = i
-                cur += 1
-        for i in range(self.cols):
-            if i not in pivots:  # free var, just set vector's ith place to 1
-                basis[basiskey.index(i)][i, 0] = 1
-            else:  # add negative of nonpivot entry to corr vector
-                for j in range(i + 1, self.cols):
-                    line = pivots.index(i)
-                    v = reduced[line, j]
-                    if simplify:
-                        v = simpfunc(v)
-                    if v:
-                        if j in pivots:
-                            # XXX: Is this the correct error?
-                            raise NotImplementedError(
-                                "Could not compute the nullspace of `self`.")
-                        basis[basiskey.index(j)][i, 0] = -v
-        return [self._new(b) for b in basis]
 
     def pinv_solve(self, B, arbitrary_matrix=None):
         """Solve Ax = B using the Moore-Penrose pseudoinverse.
@@ -5808,25 +6086,6 @@ class MatrixBase(MatrixDeprecated, MatrixReductions, MatrixProperties):
                     v[count] = self[i, j]
                     count += 1
         return v
-
-    @classmethod
-    def vstack(cls, *args):
-        """Return a matrix formed by joining args vertically (i.e.
-        by repeated application of col_join).
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix, eye
-        >>> Matrix.vstack(eye(2), 2*eye(2))
-        Matrix([
-        [1, 0],
-        [0, 1],
-        [2, 0],
-        [0, 2]])
-        """
-        kls = type(args[0])
-        return reduce(kls.col_join, args)
 
 
 def classof(A, B):

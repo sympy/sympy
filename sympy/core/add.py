@@ -683,6 +683,9 @@ class Add(Expr, AssocOp):
 
     def _eval_subs(self, old, new):
         if not old.is_Add:
+            if old is S.Infinity and -old in self.args:
+                # foo - oo is foo + (-oo) internally
+                return self.xreplace({-old: -new})
             return None
 
         coeff_self, terms_self = self.as_coeff_Add()
