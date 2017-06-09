@@ -329,6 +329,18 @@ def test_piecewise_fold():
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
+    # issue 10087
+    assert piecewise_fold(Piecewise(
+        (x, x > 1), (2, True))*Piecewise((x, x > 3), (3, True))
+        ) == Piecewise((x**2, (x > 1) & (x > 3)), (3*x, x > 1),
+        (2*x, x > 3),  # <-- artifact; met by first condition
+        (6, True))
+    assert piecewise_fold(Piecewise(
+        (x, x > 1), (2, True)) + Piecewise((x, x > 3), (3, True))
+        ) == Piecewise((2*x, (x > 1) & (x > 3)), (x + 3, x > 1),
+        (x + 2, x > 3),  # <-- artifact; met by first condition
+        (5, True))
+
 
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
@@ -339,10 +351,10 @@ def test_piecewise_fold_piecewise_in_cond():
     assert(p2.subs(x, -pi/4) == 1.0)
     p4 = Piecewise((0, Eq(p1, 0)), (1,True))
     assert(piecewise_fold(p4) == Piecewise(
-        (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
+        (0, Eq(Piecewise((cos(x), x < 0), (0, True)), 0)), (1, True)))
 
-    r1 = 1 < Piecewise((1, x < 1), (3, True))
-    assert(piecewise_fold(r1) == Not(x < 1))
+    assert piecewise_fold(1 < Piecewise((1, x < 1), (3, True))
+        ) == Piecewise((False, x < 1), (True, True))
 
     p5 = Piecewise((1, x < 0), (3, True))
     p6 = Piecewise((1, x < 1), (3, True))
