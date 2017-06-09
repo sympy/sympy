@@ -2655,6 +2655,7 @@ class MatrixBase(MatrixDeprecated, MatrixDecompositions,
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [2, 2, 2, 2]])
+
         And to replace column c you can assign to position c:
 
         >>> M[2] = ones(m, 1)*4; M
