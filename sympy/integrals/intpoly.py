@@ -30,18 +30,18 @@ def polytope_integrate(poly, expr, dims=None):
     """
     if dims is None:
         if isinstance(expr, Expr):
-            dims = list(expr.free_symbols)
+            dims = tuple(expr.free_symbols)
         else:
-            dims = [x, y]
+            dims = (x, y)
 
     polys = decompose(expr)
     hp_params = hyperplane_parameters(poly)
     facets = poly.sides
     dim_length = len(dims)
-    result = 0
+    result = S.Zero
 
     for degree in polys:
-        poly_contribute = 0
+        poly_contribute = S.Zero
         facet_count = 0
         for hp in hp_params:
             value_over_boundary = integration_reduction(facets, facet_count,
@@ -70,10 +70,10 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     dims : List of symbols denoting axes.
     degree : Degree of the homogeneous polynomial.
     """
-    if expr == 0:
+    if expr == S.Zero:
         return expr
 
-    value = 0
+    value = S.Zero
     x0 = best_origin(a, b, facets[index], expr)
     gens = [x, y]
     m = len(facets)
@@ -182,12 +182,12 @@ def best_origin(a, b, lineseg, expr):
         ls : Line segment
         """
         p, q = ls.points
-        if p.y == 0:
+        if p.y == S.Zero:
             return tuple(p)
-        elif q.y == 0:
+        elif q.y == S.Zero:
             return tuple(q)
-        elif p.y/q.y < 0:
-            return p.y * (p.x - q.x)/(q.y - p.y) + p.x, 0
+        elif p.y/q.y < S.Zero:
+            return p.y * (p.x - q.x)/(q.y - p.y) + p.x, S.Zero
         else:
             return ()
 
@@ -199,12 +199,12 @@ def best_origin(a, b, lineseg, expr):
         ls : Line segment
         """
         p, q = ls.points
-        if p.x == 0:
+        if p.x == S.Zero:
             return tuple(p)
-        elif q.x == 0:
+        elif q.x == S.Zero:
             return tuple(q)
-        elif p.x/q.x < 0:
-            return 0, p.x * (p.y - q.y)/(q.x - p.x) + p.y
+        elif p.x/q.x < S.Zero:
+            return S.Zero, p.x * (p.y - q.y)/(q.x - p.x) + p.y
         else:
             return ()
 
@@ -214,19 +214,19 @@ def best_origin(a, b, lineseg, expr):
     power_gens = {}
 
     for i in gens:
-        power_gens[i] = 0
+        power_gens[i] = S.Zero
 
     if len(gens) > 1:
         # Special case for vertical and horizontal lines
         if len(gens) == 2:
-            if a[0] == 0:
+            if a[0] == S.Zero:
                 if y_axis_cut(lineseg):
-                    return 0, b/a[1]
+                    return S.Zero, b/a[1]
                 else:
                     return a1, b1
-            elif a[1] == 0:
+            elif a[1] == S.Zero:
                 if x_axis_cut(lineseg):
-                    return b/a[0], 0
+                    return b/a[0], S.Zero
                 else:
                     return a1, b1
 
@@ -262,16 +262,16 @@ def best_origin(a, b, lineseg, expr):
         power_gens = sorted(power_gens.items(), key=lambda k: str(k[0]))
         if power_gens[0][1] >= power_gens[1][1]:
             if y_axis_cut(lineseg):
-                x0 = (0, b / a[1])
+                x0 = (S.Zero, b / a[1])
             elif x_axis_cut(lineseg):
-                x0 = (b / a[0], 0)
+                x0 = (b / a[0], S.Zero)
             else:
                 x0 = (a1, b1)
         else:
             if x_axis_cut(lineseg):
-                x0 = (b/a[0], 0)
+                x0 = (b/a[0], S.Zero)
             elif y_axis_cut(lineseg):
-                x0 = (0, b/a[1])
+                x0 = (S.Zero, b/a[1])
             else:
                 x0 = (a1, b1)
     else:
@@ -298,7 +298,7 @@ def decompose(expr):
     if isinstance(expr, Expr):
         if expr.is_Add:
             for monomial in expr.args:
-                degree = 0
+                degree = S.Zero
                 if monomial.is_Pow:
                     degree += monomial.args[1]
                 else:
@@ -319,7 +319,7 @@ def decompose(expr):
                 else:
                     poly_dict[degree] = monomial
         elif expr.is_Mul:
-            degree = 0
+            degree = S.Zero
             for term in expr.args:
                 term_type = len(term.args)
                 if term_type == 0 and term.is_Symbol:
@@ -332,7 +332,7 @@ def decompose(expr):
         else:
             poly_dict[1] = expr
     else:
-        poly_dict = {0: expr}
+        poly_dict[0] = expr
     return poly_dict
 
 
@@ -424,9 +424,11 @@ def plot_polytope(poly):
     from sympy.plotting.plot import Plot, List2DSeries
     xl, yl = list(), list()
 
-    for vertex in poly.vertices:
-        xl.append(vertex.x)
-        yl.append(vertex.y)
+    xl = list(map(lambda vertex: vertex.x, poly.vertices))
+    yl = list(map(lambda vertex: vertex.y, poly.vertices))
+
+    xl.append(poly.vertices[0].x)  # Closing the polygon
+    yl.append(poly.vertices[0].y)
 
     l2ds = List2DSeries(xl, yl)
     p = Plot(l2ds, axes='label_axes=True')
@@ -440,6 +442,9 @@ def plot_polynomial(expr):
     =========
     expr: Denotes a polynomial(SymPy expression)
     """
-    from sympy.plotting.plot import plot
-    p = plot(expr, axes='label_axes=True')
-    p.show()
+    from sympy.plotting.plot import plot3d, plot
+    gens = expr.free_symbols
+    if len(gens) == 2:
+        plot3d(expr)
+    else:
+        plot(expr)
