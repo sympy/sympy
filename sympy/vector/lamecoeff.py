@@ -30,21 +30,6 @@ class CoeffProvider(Basic):
             raise ValueError('Wrong set of parameters')
         return coefficient_mapping[curv_coord_name]
 
-    def _equation_mapping(self, curv_coord_name):
-        try:
-            equation_mapping = {
-                'cartesian': (1, 1, 1),
-                'spherical': (self._x * sin(self._y) * cos(self._z),
-                              self._x * sin(self._y) * sin(self._z),
-                              self._x * cos(self._y))
-            }
-        except:
-            raise ValueError('Wrong set of parameters')
-        return equation_mapping[curv_coord_name]
-
-    def transformation_equations(self):
-        return self.equations
-
     def get_lame_coefficient(self):
         return self.lame_coefficient
 

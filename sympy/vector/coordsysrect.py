@@ -166,10 +166,6 @@ class CoordSysCartesian(Basic):
         obj._h2 = coefficients.h2()
         obj._h3 = coefficients.h3()
 
-        # Define transformation equations from Cartesian to just created
-        # coordinate system.
-        obj._transformation_equation = coefficients.transformation_equations()
-
         # Assign a Del operator instance
         from sympy.vector.deloperator import Del
         obj._delop = Del(obj)
@@ -236,9 +232,6 @@ class CoordSysCartesian(Basic):
 
     def lame_coefficients(self):
         return self._h1, self._h2, self._h3
-
-    def transformation_equations(self):
-        return self._transformation_equation
 
     @cacheit
     def rotation_matrix(self, other):
