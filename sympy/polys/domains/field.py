@@ -10,7 +10,7 @@ from sympy.utilities import public
 class Field(Ring):
     """Represents a field domain. """
 
-    has_Field = True
+    is_Field = True
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
