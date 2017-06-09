@@ -12,57 +12,38 @@ class CoeffProvider(Basic):
 
     """
 
-    def __new__(cls, system, curv_coord_name=None, transformation_equations=None):
+    def __new__(cls, system, curv_coord_name):
         obj = super(CoeffProvider, cls).__new__(cls, system)
         obj.sys = system
         obj._x, obj._y, obj._z = system.x, system.y, system.z
-        if curv_coord_name is not None:
-            class DefinedCoefficient:
-                coefficient_mapping = {
-                    'cartesian': (1, 1, 1),
-                    'spherical': (1, obj._x, obj._x * cos(obj._y))
-                }
-                equation_mapping = {
-                    'cartesian': (1, 1, 1),
-                    'spherical': (obj._x * sin(obj._y) * cos(obj._z),
-                                  obj._x * sin(obj._y) * sin(obj._z),
-                                  obj._x * cos(obj._y))
-                }
-
-                def __init__(self, name):
-                    self.trans_equations = self.equation_mapping[name]
-                    self.lame_coefficient = self.coefficient_mapping[name]
-
-            obj._curvilinear_parameters = DefinedCoefficient(curv_coord_name)
-
-        elif transformation_equations is not None:
-            class CurvilinearCoefficient:
-                def __init__(self, equations):
-                    self.eq1, self.eq2, self.eq3 = equations
-                    self.lame_coefficient = (
-                        sqrt(Derivative(self.eq1, obj._x) ** 2 +
-                             Derivative(self.eq2, obj._x) ** 2 +
-                             Derivative(self.eq3, obj._x) ** 2),
-                        sqrt(Derivative(self.eq1, obj._y) ** 2 +
-                             Derivative(self.eq2, obj._y) ** 2 +
-                             Derivative(self.eq3, obj._y) ** 2),
-                        sqrt(Derivative(self.eq1, obj._z) ** 2 +
-                             Derivative(self.eq2, obj._z) ** 2 +
-                             Derivative(self.eq3, obj._z) ** 2)
-                    )
-                    self.trans_equations = equations
-
-            obj._curvilinear_parameters = CurvilinearCoefficient(transformation_equations)
-
-        else:
-            raise ValueError('Wrong set of parameters')
-
-        obj.lame_coefficient = obj._curvilinear_parameters.lame_coefficient
-        obj.trans_equations = obj._curvilinear_parameters.trans_equations
+        obj.lame_coefficient = obj._coefficient_mapping(curv_coord_name)
+        obj.equations = obj._equation_mapping(curv_coord_name)
         return obj
 
+    def _coefficient_mapping(self, curv_coord_name):
+        try:
+            coefficient_mapping = {
+                'cartesian': (1, 1, 1),
+                'spherical': (1, self._x, self._x * cos(self._y))
+            }
+        except:
+            raise ValueError('Wrong set of parameters')
+        return coefficient_mapping[curv_coord_name]
+
+    def _equation_mapping(self, curv_coord_name):
+        try:
+            equation_mapping = {
+                'cartesian': (1, 1, 1),
+                'spherical': (self._x * sin(self._y) * cos(self._z),
+                              self._x * sin(self._y) * sin(self._z),
+                              self._x * cos(self._y))
+            }
+        except:
+            raise ValueError('Wrong set of parameters')
+        return equation_mapping[curv_coord_name]
+
     def transformation_equations(self):
-        return self.trans_equations
+        return self.equations
 
     def get_lame_coefficient(self):
         return self.lame_coefficient

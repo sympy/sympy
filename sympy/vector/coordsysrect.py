@@ -15,7 +15,7 @@ class CoordSysCartesian(Basic):
     """
 
     def __new__(cls, name, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None, curv_coord_name=None, transformation_equations=None):
+                parent=None, vector_names=None, variable_names=None, curv_coord_name=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -25,15 +25,6 @@ class CoordSysCartesian(Basic):
 
         name : str
             The name of the new CoordSysCartesian instance.
-
-        curv_coord_name : str
-            The type of the new coordinate system. It should be
-            None, when transformation_equations are not None.
-
-        transformation_equations : tuple
-            The set of equations, which transforms to desired
-            curvilinear coordinate system from Cartesian ones.
-            It should be None, when curv_coord_name is not None.
 
         location : Vector
             The position vector of the new system's origin wrt the parent
@@ -52,6 +43,10 @@ class CoordSysCartesian(Basic):
             Iterables of 3 strings each, with custom names for base
             vectors and base scalars of the new system respectively.
             Used for simple str printing.
+
+        curv_coord_name : str
+            The type of the new coordinate system. It should be
+            None, when transformation_equations are not None.
 
         """
 
@@ -158,23 +153,10 @@ class CoordSysCartesian(Basic):
         # on curvilinear coordinate system. Creating parameters is done by
         # system of transformation equation in tuple or name of type of
         # coordinate system, which is implemented in SymPy.
-        if curv_coord_name is not None and transformation_equations is None:
+        if curv_coord_name is not None:
             coefficients = CoeffProvider(obj, curv_coord_name)
-
-        elif curv_coord_name is None and transformation_equations is None:
+        elif curv_coord_name is None:
             coefficients = CoeffProvider(obj, "cartesian")
-        elif curv_coord_name is None and transformation_equations is not None:
-            # Substitute given symbols in transformation equations for scalars.
-            from sympy import symbols
-            x, y, z = symbols('x y z')
-            te1, te2, te3 = transformation_equations
-            for i in zip((x, y, z), (obj._x, obj._y, obj._z)):
-                te1 = te1.subs(i[0], i[1])
-                te2 = te2.subs(i[0], i[1])
-                te3 = te3.subs(i[0], i[1])
-
-            coefficients = CoeffProvider(obj, transformation_equations=(te1, te2, te3))
-
         else:
             raise ValueError("Type of coordinate system is defined by system of "
                              "equations or by name of coordinate system")
@@ -748,8 +730,7 @@ class CoordSysCartesian(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-                 curv_coord_name=None, transformation_equations=None,
-                 pretty_scalars=None):
+                 curv_coord_name=None, pretty_scalars=None):
         # Dummy initializer for setting docstring
         pass
 
