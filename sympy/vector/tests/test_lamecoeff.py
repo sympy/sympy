@@ -1,16 +1,15 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy import sqrt, sin, cos
+from sympy import sqrt, sin, cos, simplify
 from sympy import symbols
 from sympy.core.function import Derivative
+from sympy.vector.functions import gradient, curl, express
 
-
-x, y, z = symbols('x y z')
+x, y, z, q = symbols('x y z q')
 
 
 def test_spherical_system():
-    a = CoordSysCartesian('a', 'spherical')
+    a = CoordSysCartesian('a', curv_coord_name='spherical')
     assert a.lame_coefficients() == (1, a.x, cos(a.y)*a.x)
-    print(a.transformation_equations())
     assert a.transformation_equations() == (sin(a.y)*cos(a.z)*a.x, sin(a.y)*sin(a.z)*a.x, cos(a.y)*a.x)
 
 

@@ -14,8 +14,8 @@ class CoordSysCartesian(Basic):
     Represents a coordinate system in 3-D space.
     """
 
-    def __new__(cls, name, curv_coord_name=None, transformation_equations=None, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None):
+    def __new__(cls, name, location=None, rotation_matrix=None,
+                parent=None, vector_names=None, variable_names=None, curv_coord_name=None, transformation_equations=None):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -160,20 +160,19 @@ class CoordSysCartesian(Basic):
         # coordinate system, which is implemented in SymPy.
         if curv_coord_name is not None and transformation_equations is None:
             coefficients = CoeffProvider(obj, curv_coord_name)
+
         elif curv_coord_name is None and transformation_equations is None:
             coefficients = CoeffProvider(obj, "cartesian")
         elif curv_coord_name is None and transformation_equations is not None:
+            # Substitute given symbols in transformation equations for scalars.
             from sympy import symbols
             x, y, z = symbols('x y z')
-            te1 = transformation_equations[0].subs(x, obj._x)
-            te1 = te1.subs(y, obj._y)
-            te1 = te1.subs(z, obj._z)
-            te2 = transformation_equations[1].subs(x, obj._x)
-            te2 = te2.subs(y, obj._y)
-            te2 = te2.subs(z, obj._z)
-            te3 = transformation_equations[2].subs(x, obj._x)
-            te3 = te3.subs(y, obj._y)
-            te3 = te3.subs(z, obj._z)
+            te1, te2, te3 = transformation_equations
+            for i in zip((x, y, z), (obj._x, obj._y, obj._z)):
+                te1 = te1.subs(i[0], i[1])
+                te2 = te2.subs(i[0], i[1])
+                te3 = te3.subs(i[0], i[1])
+
             coefficients = CoeffProvider(obj, transformation_equations=(te1, te2, te3))
 
         else:
@@ -746,9 +745,10 @@ class CoordSysCartesian(Basic):
                                vector_names=vector_names,
                                variable_names=variable_names)
 
-    def __init__(self, name, curv_coord_name=None, transformation_equations=None, location=None, rotation_matrix=None,
+    def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
+                 curv_coord_name=None, transformation_equations=None,
                  pretty_scalars=None):
         # Dummy initializer for setting docstring
         pass

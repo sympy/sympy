@@ -3943,6 +3943,13 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del(C))
 
 
+def test_sympy__vector__lamecoeff__CoeffProvider():
+    from sympy.vector.lamecoeff import CoeffProvider
+    from sympy.vector.coordsysrect import CoordSysCartesian
+    C = CoordSysCartesian('C')
+    assert _test_args(CoeffProvider(C, 'cartesian'))
+
+
 def test_sympy__vector__orienters__Orienter():
     from sympy.vector.orienters import Orienter
     #Not to be initialized
