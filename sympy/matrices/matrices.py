@@ -4195,11 +4195,15 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         return self._new(self.rows, self.cols, self._mat)
 
     def cross(self, b):
-        """Return the cross product of `self` and `b` relaxing the condition
+        r"""Return the cross product of ``self`` and ``b`` relaxing the condition
         of compatible dimensions: if each has 3 elements, a matrix of the
-        same type and shape as `self` will be returned. If `b` has the same
-        shape as `self` then common identities for the cross product (like
-        `a x b = - b x a`) will hold.
+        same type and shape as ``self`` will be returned. If ``b`` has the same
+        shape as ``self`` then common identities for the cross product (like
+        `a \times b = - b \times a`) will hold.
+
+        Parameters
+        ==========
+            b : 3x1 or 1x3 Matrix
 
         See Also
         ========
@@ -5140,11 +5144,11 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         lu[i ,j] = U[i, j] whenever i <= j.
         The output matrix can be visualized as:
 
-        Matrix([
-            [u, u, u, u],
-            [l, u, u, u],
-            [l, l, u, u],
-            [l, l, l, u]])
+            Matrix([
+                [u, u, u, u],
+                [l, u, u, u],
+                [l, l, u, u],
+                [l, l, l, u]])
 
         where l represents a subdiagonal entry of the L factor, and u
         represents an entry from the upper triangular entry of the U
@@ -5152,8 +5156,8 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
 
         perm is a list row swap index pairs such that if A is the original
         matrix, then A = (L*U).permuteBkwd(perm), and the row permutation
-        matrix P such that P*A = L*U can be computed by
-        soP=eye(A.row).permuteFwd(perm).
+        matrix P such that ``P*A = L*U`` can be computed by
+        ``P=eye(A.row).permuteFwd(perm)``.
 
         The keyword argument rankcheck determines if this function raises a
         ValueError when passed a matrix whose rank is strictly less than
@@ -5181,7 +5185,7 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         If no such candidate exists, then each candidate pivot is simplified
         if simpfunc is not None.
         The search is repeated, with the difference that a candidate may be
-        the pivot if `iszerofunc()` cannot guarantee that it is nonzero.
+        the pivot if ``iszerofunc()`` cannot guarantee that it is nonzero.
         In the second search the pivot is the first candidate that
         iszerofunc can guarantee is nonzero.
         If no such candidate exists, then the pivot is the first candidate
@@ -5189,9 +5193,9 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixProperties, MatrixSpecial)
         If no such candidate exists, then the search is repeated in the next
         column to the right.
         The pivot search algorithm differs from the one in `rref()`, which
-        relies on `_find_reasonable_pivot()`.
-        Future versions of `LUdecomposition_simple()` may use
-        `_find_reasonable_pivot()`.
+        relies on ``_find_reasonable_pivot()``.
+        Future versions of ``LUdecomposition_simple()`` may use
+        ``_find_reasonable_pivot()``.
 
         See Also
         ========
