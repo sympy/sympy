@@ -110,7 +110,9 @@ class ArcCosh(Operation):
     name = "ArcCosh"
     arity = Arity.unary
 
-
+class Rational(Operation):
+    name = "Rational"
+    arity = Arity.variadic
 
 
 
