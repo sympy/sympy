@@ -27,6 +27,17 @@ def _iszero(x):
     return x.is_zero
 
 
+def _compare_sequence(a, b):
+    """Compares the elements of a list/tupe `a`
+    and a list/tuple `b`.  `_compare_sequence((1,2), [1, 2])`
+    is True, whereas `(1,2) == [1, 2]` is False"""
+    if type(a) is type(b):
+        # if they are the same type, compare directly
+        return a == b
+    # there is no overhead for calling `tuple` on a
+    # tuple
+    return tuple(a) == tuple(b)
+
 class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False
@@ -40,9 +51,9 @@ class DenseMatrix(MatrixBase):
             if self.shape != other.shape:
                 return False
             if isinstance(other, Matrix):
-                return self._mat == other._mat
+                return _compare_sequence(self._mat,  other._mat)
             elif isinstance(other, MatrixBase):
-                return self._mat == Matrix(other)._mat
+                return _compare_sequence(self._mat, Matrix(other)._mat)
         except AttributeError:
             return False
 

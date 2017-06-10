@@ -55,7 +55,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 
     @property
     def _mat(self):
-        return list(self.args[2])
+        return self.args[2]
 
     def _entry(self, i, j):
         return DenseMatrix.__getitem__(self, (i, j))
