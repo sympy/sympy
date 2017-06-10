@@ -47,6 +47,9 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, Do
 
 from sympy.utilities.iterables import numbered_symbols
 
+from types import GeneratorType
+
+
 def integer_powers(exprs):
     """
     Rewrites a list of expressions as integer multiples of each other.
@@ -591,19 +594,34 @@ class DifferentialExtension(object):
         The attributes are (fa, fd, D, T, Tfuncs, backsubs, E_K, E_args,
         L_K, L_args).
         """
-        # XXX: This might be easier to read as a dict or something
-        # Maybe a named tuple.
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
             self.backsubs, self.E_K, self.E_args, self.L_K, self.L_args)
 
+    # NOTE: this printing doesn't follow the Python's standard
+    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
+    # , also this printing is supposed to contain all the important
+    # attributes of a DifferentialExtension object
     def __repr__(self):
-        return 'DifferentialExtension(extension=dict(fa=%s, fd=%s, D=%s))' % \
+        # no need to have GeneratorType object printed in it
+        r = {attr: getattr(self, attr) for attr in self.__slots__ \
+                if not isinstance(getattr(self, attr), GeneratorType)}
+        return self.__class__.__name__ + '(%r)' % r
+
+    # fancy printing of DifferentialExtension object
+    def __str__(self):
+        return self.__class__.__name__ + '({fa=%s, fd=%s, D=%s})' % \
                 (self.fa, self.fd, self.D)
 
-    def __str__(self):
-        return "{'fa': %s, 'fd': %s, 'D': %s, 'T': %s, 'Tfuncs': %s, " \
-            "'backsubs': %s, 'E_K': %s, 'E_args': %s, 'L_K': %s, 'L_args': %s}" % \
-            (tuple(self._important_attrs[i] for i in range(10)))
+    # should only be used for debugging purposes, internally
+    # f1 = f2 = log(x) at different places in code execution
+    # may return D1 != D2 as True, since 'level' or other attribute
+    # may differ
+    def __eq__(self, other):
+        for attr in self.__class__.__slots__:
+            d1, d2 = getattr(self, attr), getattr(other, attr)
+            if not (isinstance(d1, GeneratorType) or d1 == d2):
+                return False
+        return True
 
     def reset(self):
         """

@@ -667,12 +667,21 @@ def test_xtothex():
     assert isinstance(a, NonElementaryIntegral)
 
 
+def test_DifferentialExtension_equality():
+    DE1 = DE2 = DifferentialExtension(log(x), x)
+    assert DE1 == DE2
+
+
 def test_DifferentialExtension_printing():
     DE = DifferentialExtension(exp(2*x**2) + log(exp(x**2) + 1), x)
-    assert repr(DE) == "DifferentialExtension(extension=dict(fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), " \
-        "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), " \
-        "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]))"
-    assert str(DE) == "{'fa': Poly(t1 + t0**2, t1, domain='ZZ[t0]'), 'fd': Poly(1, t1, domain='ZZ'), " \
-        "'D': [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')], " \
-        "'T': [x, t0, t1], 'Tfuncs': [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))], 'backsubs': [], " \
-        "'E_K': [1], 'E_args': [x**2], 'L_K': [2], 'L_args': [t0 + 1]}"
+    assert repr(DE) == "DifferentialExtension({'f': exp(2*x**2) + log(exp(x**2) + 1), " \
+            "'x': x, 'T': [x, t0, t1], 'D': [Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "  \
+            "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')], 'fa': Poly(t1 + t0**2, t1, domain='ZZ[t0]'), " \
+            "'fd': Poly(1, t1, domain='ZZ'), 'Tfuncs': [Lambda(i, exp(i**2)), Lambda(i, log(t0 + 1))], " \
+            "'backsubs': [], 'E_K': [1], 'E_args': [x**2], 'L_K': [2], 'L_args': [t0 + 1], " \
+            "'cases': ['base', 'exp', 'primitive'], 'case': 'primitive', 't': t1, 'd': Poly(2*t0*x/(t0 + 1), " \
+            "t1, domain='ZZ(x,t0)'), 'newf': t0**2 + t1, 'level': -1, 'dummy': False})"
+
+    assert str(DE) == "DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), " \
+            "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), " \
+            "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})"
