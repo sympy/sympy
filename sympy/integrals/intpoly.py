@@ -1,5 +1,7 @@
 from __future__ import print_function, division
 
+from functools import cmp_to_key
+
 from sympy.core import S, Symbol
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
@@ -9,7 +11,7 @@ from sympy.abc import x, y
 from sympy.polys.polytools import gcd_list
 
 
-def polytope_integrate(poly, expr, dims=None):
+def polytope_integrate(poly, expr, **kwargs):
     """This is currently a basic prototype for integrating
     univariate/bivariate polynomials over 2-Polytopes.
     Parameters
@@ -28,11 +30,14 @@ def polytope_integrate(poly, expr, dims=None):
     >>> polytope_integrate(poly, expr)
     1/4
     """
-    if dims is None:
+    if kwargs['dims'] is None:
         if isinstance(expr, Expr):
             dims = tuple(expr.free_symbols)
         else:
             dims = (x, y)
+
+    if kwargs['clockwise'] is True:
+        poly = clockwise_sort(poly)
 
     polys = decompose(expr)
     hp_params = hyperplane_parameters(poly)
@@ -89,13 +94,18 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
         if j == (index - 1) % m or j == (index + 1) % m:
             intersect = intersection(facets[index], facets[j])
         if intersect:
-            distance_origin = norm((intersect[0] - x0[0],
-                                    intersect[1] - x0[1]))
+            distance_origin = norm(tuple(map(lambda x, y: x - y,
+                                             intersect, x0)))
             if is_vertex(intersect):
                 if isinstance(expr, Expr):
-                    value += distance_origin * \
-                             expr.subs({gens[0]: intersect[0],
-                                        gens[1]: intersect[1]})
+                    if len(gens) == 3: 
+                        expr_dict = {gens[0]: intersect[0],
+                                     gens[1]: intersect[1],
+                                     gens[2]: intersect[2]}
+                    else:
+                        expr_dict = {gens[0]: intersect[0],
+                                     gens[1]: intersect[1]}
+                    value += distance_origin * expr.subs(expr_dict)
                 else:
                     value += distance_origin * expr
             else:
@@ -336,17 +346,68 @@ def decompose(expr):
     return poly_dict
 
 
+def clockwise_sort(poly):
+    """Returns the same polygon with points sorted in clockwise order.
+
+    Note that it's necessary for input points to be sorted in some order
+    (clockwise or anti-clockwise) for the algorithm to work. As a convention
+    algorithm has been implemented keeping clockwise orientation in mind.
+    
+    Parameters
+    ==========
+    poly: 2-Polytope
+    
+    Examples
+    ========
+    >>> from sympy.integrals.intpoly import clockwise_sort
+    >>> from sympy.geometry.point import Point
+    >>> from sympy.geometry.polygon import Polygon
+    >>> clockwise_sort(Polygon(Point(0, 0), Point(1, 0), Point(1, 1)))
+    Triangle(Point2D(1, 1), Point2D(1, 0), Point2D(0, 0))
+    
+    """
+    n = len(poly.vertices)
+    vertices = list(poly.vertices)
+    center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
+                   sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
+    
+    def compareTo(a, b):
+        if a.x - center.x >= 0 and b.x - center.x < 0:
+            return -1
+        elif a.x - center.x < 0 and b.x - center.x >= 0:
+            return 1
+        elif a.x - center.x == 0 and b.x - center.x == 0: 
+            if a.y - center.y >= 0 or b.y - center.y >= 0:
+                return -1 if a.y > b.y else 1
+            return -1 if b.y > a.y else 1
+
+        det = (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y)
+        if det < 0:
+            return -1
+        elif det > 0:
+            return 1
+
+        first = (a.x - center.x) * (a.x - center.x) + (a.y - center.y) * (a.y - center.y)
+        second = (b.x - center.x) * (b.x - center.x) + (b.y - center.y) * (b.y - center.y)
+        return -1 if first > second else 1
+
+    return Polygon(*sorted(vertices, key = cmp_to_key(compareTo)))
+
+
 def norm(point):
     """Returns the Euclidean norm of a point from origin.
+    
     Parameters
     ==========
     point: This denotes a point in the dimensional space.
+    
     Examples
     ========
     >>> from sympy.integrals.intpoly import norm
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
     sqrt(53)
+    
     """
     h = 0
     half = S(1)/2
