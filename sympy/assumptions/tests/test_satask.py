@@ -266,6 +266,7 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
 
 
+@slow
 def test_pow_pos_neg():
     assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
     assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
