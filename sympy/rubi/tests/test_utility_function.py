@@ -3,7 +3,7 @@ from sympy.core.symbol import symbols, S
 from sympy.functions import log, sin, cos
 from sympy.functions.elementary.hyperbolic import acosh
 
-a, b, c, d, x, y = symbols('a b c d x y')
+a, b, c, d, x, y, b1, b2, z = symbols('a b c d x y b1 b2 z')
 
 def test_ZeroQ():
     assert ZeroQ(S(0))
@@ -82,3 +82,121 @@ def test_ArcCosh():
 def test_LinearQ():
     assert LinearQ(3*x + y**2, x)
     assert not LinearQ(3*x + y**2, y)
+
+def test_Sqrt():
+    assert Sqrt(x) == sqrt(x)
+    assert Sqrt(25) == 5
+
+def TogetherSimplify(expr):
+    return
+
+def test_Coefficient():
+    assert Coefficient(7 + 2*x + 4*x**3, x, 1) == 2
+    assert Coefficient(a + b*x + c*x**3, x, 0) == a
+    assert Coefficient(a + b*x + c*x**3, x, 4) == 0
+    assert Coefficient(b*x + c*x**3, x, 3) == c
+
+def test_RemoveContent():
+    assert RemoveContent(3+6*x**3+8*x+2*x**2, x) == 6*x**3 + 2*x**2 + 8*x
+    assert RemoveContent(3+6*x**3+8*x+2, x) == 6*x**3 + 8*x
+    assert RemoveContent(3+b*x**3+a+2, x) == b*x**3
+
+def ExpandIntegrand():
+    return
+
+def test_With():
+    return
+
+def test_Denominator():
+    assert Denominator(3/2) == 2
+    assert Denominator(x/y) == y
+    assert Denominator(S(4)/5) == 5
+    assert Denominator(3/6) == 2
+
+def test_Hypergeometric2F1():
+    assert Hypergeometric2F1(2, (1,2), 4, 0.75) == 1.303703703703703703703704
+    assert Hypergeometric2F1(2, (1,2), 4, 1) == 1.6
+    assert Hypergeometric2F1(2, (1,2), 4, 0.25j) == (0.9931169055799728251931672 + 0.06154836525312066938147793j)
+
+def test_TogetherSimplify():
+
+
+def test_IntLinearcQ():
+
+
+def test_ArcTan():
+    assert ArcTan(x) == atan(x)
+
+def test_Not(var):
+    a = 10
+    assert Not(a == 2)
+
+def test_Simplify():
+    assert
+
+def test_FractionalPart(a):
+    assert FractionalPart(a) == FracPart(a)
+
+def test_IntegerPart(a):
+    assert IntegerPart(a) == IntPart(a)
+
+def test_Simp():
+
+def test_Rt():
+
+def test_SumSimplerQ():
+    assert not SumSimplerQ(x**3, 3 + 4*x**2 + 8*x**3)
+    assert SumSimplerQ(x**3, -x**3)
+    assert SumSimplerQ(1+x**2, 2-x**2+x)
+
+def test_SimplerQ():
+    assert SimplerQ(x**3, 3+4*x**2+8*x**3)
+    assert SimplerQ(x**3, 3+x**2+x)
+    assert SimplerQ(x**3, 3*x**4+3*x**5)
+    assert not SimplerQ(x**3, 3)
+    assert not SimplerQ(x**3, 3*x)
+    assert SimplerQ(x**3, 3*x**2)
+    assert not SimplerQ(x**3, x**2)
+
+# utility functions used in tests
+
+def test_AppellF1():
+    assert AppellF1(a, b1, b2, c, x, y)  == appellf1(a, b1, b2, c, x, y)
+
+def test_Integrate():
+    assert Integrate(x**2, x) == x**3/3
+    assert Integrate(x**3, x) == integrate(x**3, x)
+
+def test hypergeom():
+
+def test_EllipticPi():
+    assert EllipticPi(0.25, 0.25) == 1.956616279119236207279727
+    assert EllipticPi(3, 0) == (0.0 - 1.11072073453959156175397j)
+
+def test_EllipticE():
+    assert EllipticE(0) == 1.570796326794896619231322
+    assert EllipticE(2) == (0.5990701173677961037199612 + 0.5990701173677961037199612j)
+    assert EllipticE(0.5+0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
+
+def test_EllipticF():
+    assert EllipticF(0,1) == 0.0
+    assert EllipticF(2+3j,0) == (2.0 + 3.0j)
+    assert EllipticF(1,1) == 1.226191170883517070813061
+
+def test_arctanh():
+    assert arctanh(a) == atanh(a)
+
+def test_arcsin():
+    assert arcsin(a) == asin(a)
+
+def test_arcsinh():
+    assert arcsinh(a) == asinh(a)
+
+def test_arccos():
+    assert arccos(a) == acos(a)
+
+def test_arccsc():
+    assert arccsc(a) == acsc(a)
+
+def test_arccsch():
+    assert arccsch(a) == acsch(a)
