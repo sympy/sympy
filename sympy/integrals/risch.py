@@ -603,14 +603,14 @@ class DifferentialExtension(object):
     # attributes of a DifferentialExtension object
     def __repr__(self):
         # no need to have GeneratorType object printed in it
-        r = {attr: getattr(self, attr) for attr in self.__slots__ \
-                if not isinstance(getattr(self, attr), GeneratorType)}
-        return self.__class__.__name__ + '(%r)' % r
+        r = [(attr, getattr(self, attr)) for attr in self.__slots__
+                if not isinstance(getattr(self, attr), GeneratorType)]
+        return self.__class__.__name__ + '(dict(%r))' % (r)
 
     # fancy printing of DifferentialExtension object
     def __str__(self):
-        return self.__class__.__name__ + '({fa=%s, fd=%s, D=%s})' % \
-                (self.fa, self.fd, self.D)
+        return (self.__class__.__name__ + '({fa=%s, fd=%s, D=%s})' %
+                (self.fa, self.fd, self.D))
 
     # should only be used for debugging purposes, internally
     # f1 = f2 = log(x) at different places in code execution
