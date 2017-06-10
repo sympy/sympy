@@ -1506,6 +1506,171 @@ class MatrixEigen(MatrixSubspaces):
 
         return [(val, mult, [l.transpose() for l in basis]) for val, mult, basis in eigs]
 
+    def singular_values(self):
+        """Compute the singular values of a Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Symbol
+        >>> x = Symbol('x', real=True)
+        >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
+        >>> A.singular_values()
+        [sqrt(x**2 + 1), 1, 0]
+
+        See Also
+        ========
+
+        condition_number
+        """
+        mat = self
+        # Compute eigenvalues of A.H A
+        valmultpairs = (mat.H * mat).eigenvals()
+
+        # Expands result from eigenvals into a simple list
+        vals = []
+        for k, v in valmultpairs.items():
+            vals += [sqrt(k)] * v  # dangerous! same k in several spots!
+        # sort them in descending order
+        vals.sort(reverse=True, key=default_sort_key)
+
+        return vals
+
+
+
+class MatrixCalculus(MatrixCommon):
+    """Provides calculus-related matrix operations."""
+
+    def diff(self, *args):
+        """Calculate the derivative of each element in the matrix.
+        ``args`` will be passed to the ``integrate`` function.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> from sympy.abc import x, y
+        >>> M = Matrix([[x, y], [1, 0]])
+        >>> M.diff(x)
+        Matrix([
+        [1, 0],
+        [0, 0]])
+
+        See Also
+        ========
+
+        integrate
+        limit
+        """
+        return self.applyfunc(lambda x: x.diff(*args))
+
+    def integrate(self, *args):
+        """Integrate each element of the matrix.  ``args`` will
+        be passed to the ``integrate`` function.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> from sympy.abc import x, y
+        >>> M = Matrix([[x, y], [1, 0]])
+        >>> M.integrate((x, ))
+        Matrix([
+        [x**2/2, x*y],
+        [     x,   0]])
+        >>> M.integrate((x, 0, 2))
+        Matrix([
+        [2, 2*y],
+        [2,   0]])
+
+        See Also
+        ========
+
+        limit
+        diff
+        """
+        return self.applyfunc(lambda x: x.integrate(*args))
+
+    def jacobian(self, X):
+        """Calculates the Jacobian matrix (derivative of a vectorial function).
+
+        Parameters
+        ==========
+
+        self : vector of expressions representing functions f_i(x_1, ..., x_n).
+        X : set of x_i's in order, it can be a list or a Matrix
+
+        Both self and X can be a row or a column matrix in any order
+        (i.e., jacobian() should always work).
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos, Matrix
+        >>> from sympy.abc import rho, phi
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+        >>> Y = Matrix([rho, phi])
+        >>> X.jacobian(Y)
+        Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)],
+        [   2*rho,             0]])
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+        >>> X.jacobian(Y)
+        Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)]])
+
+        See Also
+        ========
+
+        hessian
+        wronskian
+        """
+        if not isinstance(X, MatrixBase):
+            X = self._new(X)
+        # Both X and self can be a row or a column matrix, so we need to make
+        # sure all valid combinations work, but everything else fails:
+        if self.shape[0] == 1:
+            m = self.shape[1]
+        elif self.shape[1] == 1:
+            m = self.shape[0]
+        else:
+            raise TypeError("self must be a row or a column matrix")
+        if X.shape[0] == 1:
+            n = X.shape[1]
+        elif X.shape[1] == 1:
+            n = X.shape[0]
+        else:
+            raise TypeError("X must be a row or a column matrix")
+
+        # m is the number of functions and n is the number of variables
+        # computing the Jacobian is now easy:
+        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
+
+    def limit(self, *args):
+        """Calculate the limit of each element in the matrix.
+        ``args`` will be passed to the ``limit`` function.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import Matrix
+        >>> from sympy.abc import x, y
+        >>> M = Matrix([[x, y], [1, 0]])
+        >>> M.limit(x, 2)
+        Matrix([
+        [2, y],
+        [1, 0]])
+
+        See Also
+        ========
+
+        integrate
+        diff
+        """
+        return self.applyfunc(lambda x: x.limit(*args))
+
 
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
@@ -1673,7 +1838,11 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
-class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
+class MatrixBase(MatrixDeprecated,
+                 MatrixCalculus,
+                 MatrixEigen,
+                 MatrixCommon):
+    """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
 
@@ -2197,29 +2366,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
             raise TypeError("Size mis-match")
         return self._diagonal_solve(rhs)
 
-    def diff(self, *args):
-        """Calculate the derivative of each element in the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.diff(x)
-        Matrix([
-        [1, 0],
-        [0, 0]])
-
-        See Also
-        ========
-
-        integrate
-        limit
-        """
-        return self._new(self.rows, self.cols,
-                         lambda i, j: self[i, j].diff(*args))
-
     def dot(self, b):
         """Return the dot product of Matrix self and b relaxing the condition
         of compatible dimensions: if either the number of rows or columns are
@@ -2489,33 +2635,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
         else:
             return sol, tau
 
-    def integrate(self, *args):
-        """Integrate each element of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.integrate((x, ))
-        Matrix([
-        [x**2/2, x*y],
-        [     x,   0]])
-        >>> M.integrate((x, 0, 2))
-        Matrix([
-        [2, 2*y],
-        [2,   0]])
-
-        See Also
-        ========
-
-        limit
-        diff
-        """
-        return self._new(self.rows, self.cols,
-                         lambda i, j: self[i, j].integrate(*args))
-
     def inv_mod(self, m):
         """
         Returns the inverse of the matrix `K` (mod `m`), if it exists.
@@ -2714,63 +2833,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
             return True
         return False
 
-    def jacobian(self, X):
-        """Calculates the Jacobian matrix (derivative of a vectorial function).
-
-        Parameters
-        ==========
-
-        self : vector of expressions representing functions f_i(x_1, ..., x_n).
-        X : set of x_i's in order, it can be a list or a Matrix
-
-        Both self and X can be a row or a column matrix in any order
-        (i.e., jacobian() should always work).
-
-        Examples
-        ========
-
-        >>> from sympy import sin, cos, Matrix
-        >>> from sympy.abc import rho, phi
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-        >>> Y = Matrix([rho, phi])
-        >>> X.jacobian(Y)
-        Matrix([
-        [cos(phi), -rho*sin(phi)],
-        [sin(phi),  rho*cos(phi)],
-        [   2*rho,             0]])
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
-        >>> X.jacobian(Y)
-        Matrix([
-        [cos(phi), -rho*sin(phi)],
-        [sin(phi),  rho*cos(phi)]])
-
-        See Also
-        ========
-
-        hessian
-        wronskian
-        """
-        if not isinstance(X, MatrixBase):
-            X = self._new(X)
-        # Both X and self can be a row or a column matrix, so we need to make
-        # sure all valid combinations work, but everything else fails:
-        if self.shape[0] == 1:
-            m = self.shape[1]
-        elif self.shape[1] == 1:
-            m = self.shape[0]
-        else:
-            raise TypeError("self must be a row or a column matrix")
-        if X.shape[0] == 1:
-            n = X.shape[1]
-        elif X.shape[1] == 1:
-            n = X.shape[0]
-        else:
-            raise TypeError("X must be a row or a column matrix")
-
-        # m is the number of functions and n is the number of variables
-        # computing the Jacobian is now easy:
-        return self._new(m, n, lambda j, i: self[j].diff(X[i]))
-
     def key2bounds(self, keys):
         """Converts a key with potentially mixed types of keys (integer and slice)
         into a tuple of ranges and raises an error if any index is out of self's
@@ -2901,29 +2963,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
         Y = L._lower_triangular_solve(rhs)
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
-
-    def limit(self, *args):
-        """Calculate the limit of each element in the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import Matrix
-        >>> from sympy.abc import x, y
-        >>> M = Matrix([[x, y], [1, 0]])
-        >>> M.limit(x, 2)
-        Matrix([
-        [2, y],
-        [1, 0]])
-
-        See Also
-        ========
-
-        integrate
-        diff
-        """
-        return self._new(self.rows, self.cols,
-                         lambda i, j: self[i, j].limit(*args))
 
     def lower_triangular_solve(self, rhs):
         """Solves Ax = B, where A is a lower triangular matrix.
@@ -3727,36 +3766,6 @@ class MatrixBase(MatrixDeprecated, MatrixEigen, MatrixCommon):
                 tmp -= R[j, k] * x[n - 1 - k]
             x.append(tmp / R[j, j])
         return self._new([row._mat for row in reversed(x)])
-
-    def singular_values(self):
-        """Compute the singular values of a Matrix
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix, Symbol
-        >>> x = Symbol('x', real=True)
-        >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> A.singular_values()
-        [sqrt(x**2 + 1), 1, 0]
-
-        See Also
-        ========
-
-        condition_number
-        """
-        mat = self.as_mutable()
-        # Compute eigenvalues of A.H A
-        valmultpairs = (mat.H * mat).eigenvals()
-
-        # Expands result from eigenvals into a simple list
-        vals = []
-        for k, v in valmultpairs.items():
-            vals += [sqrt(k)] * v  # dangerous! same k in several spots!
-        # sort them in descending order
-        vals.sort(reverse=True, key=default_sort_key)
-
-        return vals
 
     def solve_least_squares(self, rhs, method='CH'):
         """Return the least-square fit to the data.

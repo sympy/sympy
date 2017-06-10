@@ -9,7 +9,7 @@ from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
 from sympy.matrices.matrices import (DeferredVector, MatrixDeterminant,
-    MatrixReductions, MatrixSubspaces, MatrixEigen)
+    MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -85,6 +85,9 @@ class SubspaceOnlyMatrix(_MinimalMatrix, MatrixSubspaces):
     pass
 
 class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
+    pass
+
+class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
     pass
 
 
@@ -1268,3 +1271,52 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert all(isinstance(x, Float) or x == 0 for x in P)
     assert all(isinstance(x, Float) or x == 0 for x in J)
+
+def test_singular_values():
+    x = Symbol('x', real=True)
+
+    A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
+    assert A.singular_values() == [2, 1]
+
+    A = eye(3)
+    A[1, 1] = x
+    A[2, 2] = 5
+    vals = A.singular_values()
+    assert 1 in vals and 5 in vals and abs(x) in vals
+
+    A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
+    vals = [sv.trigsimp() for sv in A.singular_values()]
+    assert vals == [S(1), S(1)]
+
+
+# CalculusOnlyMatrix tests
+def test_diff():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.diff(x) == Matrix(2, 1, [1, 0])
+
+def test_integrate():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [x, y])
+    assert m.integrate(x) == Matrix(2, 1, [x**2/2, y*x])
+
+def test_jacobian2():
+    rho, phi = symbols("rho,phi")
+    X = CalculusOnlyMatrix(3, 1, [rho*cos(phi), rho*sin(phi), rho**2])
+    Y = CalculusOnlyMatrix(2, 1, [rho, phi])
+    J = Matrix([
+        [cos(phi), -rho*sin(phi)],
+        [sin(phi),  rho*cos(phi)],
+        [   2*rho,             0],
+    ])
+    assert X.jacobian(Y) == J
+
+    m = CalculusOnlyMatrix(2, 2, [1, 2, 3, 4])
+    m2 = CalculusOnlyMatrix(4, 1, [1, 2, 3, 4])
+    raises(TypeError, lambda: m.jacobian(Matrix([1,2])))
+    raises(TypeError, lambda: m2.jacobian(m))
+
+def test_limit():
+    x, y = symbols('x y')
+    m = CalculusOnlyMatrix(2, 1, [1/x, y])
+    assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])

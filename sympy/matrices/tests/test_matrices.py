@@ -2127,23 +2127,6 @@ def test_matrix_norm():
                 assert dif == 0
 
 
-def test_singular_values():
-    x = Symbol('x', real=True)
-
-    A = Matrix([[0, 1*I], [2, 0]])
-    assert A.singular_values() == [2, 1]
-
-    A = eye(3)
-    A[1, 1] = x
-    A[2, 2] = 5
-    vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
-
-    A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
-    vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
-
-
 def test_condition_number():
     x = Symbol('x', real=True)
     A = eye(3)
