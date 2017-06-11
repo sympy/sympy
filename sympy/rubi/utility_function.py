@@ -9,7 +9,7 @@ from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, acos
 from sympy.polys.polytools import degree, Poly
-from sympy.simplify.simplify import fraction, count_ops
+from sympy.simplify.simplify import fraction, simplify, count_ops
 from sympy.integrals.integrals import integrate
 from fractions import Fraction
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
@@ -74,9 +74,6 @@ def Sqrt(a):
 def ArcCosh(a):
     return acosh(a)
 
-def TogetherSimplify(expr):
-    return
-
 def Coefficient(expr, var, n):
     a = Poly(expr, var)
     if (degree(a) - n) < 0:
@@ -90,12 +87,6 @@ def RemoveContent(expr, x):
             expr = expr - i
     return expr
 
-def ExpandIntegrand(expr, x):
-    return
-
-def With():
-    return
-
 def Denominator(var):
     try:
         return fraction(sympify(Fraction (var)), exact=True)[1]
@@ -105,30 +96,20 @@ def Denominator(var):
 def Hypergeometric2F1(a, b, c, z):
     return hyp2f1(a, b, c, z)
 
-def IntLinearcQ():
-    # IntLinearcQ[a,b,c,d,m,n,x] returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
-    return
-
 def ArcTan(a):
     return atan(a)
 
 def Not(var):
     return not(var)
 
-def Simplify():
-    return
+def Simplify(expr):
+    return simplify(expr)
 
 def FractionalPart(a):
     return FracPart(a)
 
 def IntegerPart(a):
     return IntPart(a)
-
-def Simp():
-    return
-
-def Rt():
-    return
 
 def SumSimplerQ(u, v):
     # If u+v is simpler than u, SumSimplerQ(u,v) returns True, else it returns False
@@ -146,9 +127,6 @@ def AppellF1(a, b1, b2, c, x, y):
 def Integrate(f, x):
     return integrate(f, x)
 
-def hypergeom():
-    return
-
 def EllipticPi(*args):
     return ellippi(*args)
 
@@ -158,23 +136,23 @@ def EllipticE(*args):
 def EllipticF(Phi, m):
     return ellipf(Phi, m)
 
-def arctan(a):
+def ArcTan(a):
     return atan(a)
 
-def arctanh(a):
+def ArcTanh(a):
     return atanh(a)
 
-def arcsin(a):
+def ArcSin(a):
     return asin(a)
 
-def arcsinh(a):
+def ArcSinh(a):
     return asinh(a)
 
-def arccos(a):
+def ArcCos(a):
     return acos(a)
 
-def arccsc(a):
+def ArcCsc(a):
     return acsc(a)
 
-def arccsch(a):
+def ArcCsch(a):
     return acsch(a)
