@@ -1,7 +1,6 @@
-# Maple integration test file: "1 Algebraic functions\1 Linear products\1.2 (a + b x)**m (c + d x)**n.txt"
-
-#lst:=[
-
+'''
+test_algebraic_set1 contains: 1 Algebraic functions\1 Linear products\1.2 (a + b x)**m (c + d x)**n
+'''
 # Integrands of the form (c x)**m (a + b x)**n
 
 # Integrands of the form (c x)**m
