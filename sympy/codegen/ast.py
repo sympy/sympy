@@ -155,7 +155,7 @@ def aug_assign(lhs, op, rhs):
         subclass these types are also supported.
 
     op : str
-        Operator (+, -, /, *, %).
+        Operator (+, -, /, \*, %).
 
     rhs : Expr
         Sympy object representing the rhs of the expression. This can be any
@@ -186,13 +186,17 @@ class CodeBlock(Basic):
 
     Useful methods on this object are
 
-    ``left_hand_sides``: Tuple of left-hand sides of assignments, in order.
-    ``left_hand_sides``: Tuple of right-hand sides of assignments, in order.
-    ``topological_sort``: Class method. Return a CodeBlock with assignments
-                          sorted so that variables are assigned before they
-                          are used.
-    ``cse``: Return a new CodeBlock with common subexpressions eliminated and
-             pulled out as assignments.
+    ``left_hand_sides``:
+        Tuple of left-hand sides of assignments, in order.
+    ``left_hand_sides``:
+        Tuple of right-hand sides of assignments, in order.
+    ``topological_sort``:
+        Class method. Return a CodeBlock with assignments
+        sorted so that variables are assigned before they
+        are used.
+    ``cse``:
+        Return a new CodeBlock with common subexpressions eliminated and
+        pulled out as assignments.
 
     Example
     =======
@@ -249,6 +253,7 @@ class CodeBlock(Basic):
         ... ]
         >>> CodeBlock.topological_sort(assignments)
         CodeBlock(Assignment(z, 2), Assignment(y, z + 1), Assignment(x, y + z))
+
         """
         from sympy.utilities.iterables import topological_sort
         # Create a graph where the nodes are assignments and there is a directed edge
@@ -314,8 +319,8 @@ class CodeBlock(Basic):
         ... )
         ...
         >>> c.cse()
-        CodeBlock(Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 +
-        1), Assignment(z, x0 - 1))
+        CodeBlock(Assignment(x, 1), Assignment(x0, sin(x)), Assignment(y, x0 + 1), Assignment(z, x0 - 1))
+
         """
         # TODO: Check that the symbols are new
         from sympy.simplify.cse_main import cse
@@ -340,6 +345,7 @@ class CodeBlock(Basic):
         new_assignments = tuple(Assignment(*i) for i in replacements)
         return self.topological_sort(new_assignments + new_block)
 
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -361,6 +367,7 @@ class For(Basic):
     >>> x, n = symbols('x n')
     >>> For(n, Range(10), [aug_assign(x, '+', n)])
     For(n, Range(0, 10, 1), CodeBlock(AddAugmentedAssignment(x, n)))
+
     """
 
     def __new__(cls, target, iter, body):
@@ -421,9 +428,7 @@ class Type(Symbol):
         float16``, ``float32``, ``float64``, ``complex64``, ``complex128``,
         ``bool``. Or a type category (precision decided by code-printer): ``integer``,
         ``real`` or ``complex`` (where the latter two are of floating point type).
-        If a ``Type`` instance is given, the said instance is returned. When given
-        the names of Python types ("int", "float" and "complex") the mapping is 'long',
-        'float64' and 'complex128' respectively (same as NumPy).
+        If a ``Type`` instance is given, the said instance is returned.
 
     Examples
     --------
