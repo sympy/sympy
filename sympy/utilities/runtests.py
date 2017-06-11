@@ -525,7 +525,7 @@ def _test(*paths, **kwargs):
 
     if slow:
         # Seed to evenly shuffle slow tests among splits
-        random.seed(41992450)
+        random.seed(41992451)
         random.shuffle(matched)
 
     if split:
