@@ -45,7 +45,7 @@ IS_WINDOWS = (os.name == 'nt')
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
 # the second 10% and the third 30%.
-SPLIT_DENSITY = [0.361, 0.045, 0.037, 0.093, 0.005, 0.019, 0.032, 0.073, 0.023, 0.08, 0.219, 0.013]
+SPLIT_DENSITY = [0.3527, 0.0439, 0.0284, 0.0097, 0.0359, 0.0103, 0.0229, 0.0082, 0.0782, 0.0186, 0.0009, 0.002, 0.0101, 0.0123, 0.0035, 0.0034, 0.0118, 0.0145, 0.0497, 0.0015, 0.0097, 0.0114, 0.0011, 0.0254, 0.0598, 0.0249, 0.1286, 0.0064, 0.0044, 0.0098]
 
 class Skipped(Exception):
     pass
