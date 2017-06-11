@@ -2,7 +2,7 @@ from sympy.assumptions.satask import satask
 
 from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
 
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.utilities.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')
@@ -235,7 +235,6 @@ def test_abs():
     assert satask(Q.zero(abs(x)), Q.zero(x)) is True
 
 
-@slow
 def test_imaginary():
     assert satask(Q.imaginary(2*I)) is True
     assert satask(Q.imaginary(x*y), Q.imaginary(x)) is None
@@ -246,7 +245,6 @@ def test_imaginary():
     assert satask(Q.imaginary(x + y), Q.real(x) & Q.real(y)) is False
 
 
-@slow
 def test_real():
     assert satask(Q.real(x*y), Q.real(x) & Q.real(y)) is True
     assert satask(Q.real(x + y), Q.real(x) & Q.real(y)) is True
@@ -266,7 +264,6 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
 
 
-@slow
 def test_pow_pos_neg():
     assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
     assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
