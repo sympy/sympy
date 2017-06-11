@@ -166,20 +166,20 @@ def test_EllipticF():
     assert EllipticF(2+3j,0) == (2.0 + 3.0j)
     assert EllipticF(1,1) == 1.226191170883517070813061
 
-def test_arctanh():
+def test_ArcTanh():
     assert ArcTanh(a) == atanh(a)
 
-def test_arcsin():
+def test_ArcSin():
     assert ArcSin(a) == asin(a)
 
-def test_arcsinh():
+def test_ArcSinh():
     assert ArcSinh(a) == asinh(a)
 
-def test_arccos():
+def test_ArcCos():
     assert ArcCos(a) == acos(a)
 
-def test_arccsc():
+def test_ArcCsc():
     assert ArcCsc(a) == acsc(a)
 
-def test_arccsch():
+def test_ArcCsch():
     assert ArcCsch(a) == acsch(a)
