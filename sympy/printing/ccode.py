@@ -19,7 +19,10 @@ from itertools import chain
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
-from sympy.codegen.ast import Assignment, Pointer, Type, Variable
+from sympy.codegen.ast import (
+    Assignment, Pointer, Type, Variable,
+    float32, float64, float80, complex64, complex128
+)
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
@@ -151,12 +154,15 @@ class C89CodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
         'type_mappings': {
             Type('intc'): ('int', None),
-            Type('float32'): ('float', None),
-            Type('float64'): ('double', None),
-            Type('real'): ('double', None),
+            float32: ('float', None),
+            float64: ('double', None),
             Type('integer'): ('int', None),
-            Type('complex'): ('double _Complex', {'complex.h'}),
             Type('bool'): ('bool', {'stdbool.h'})
+        },
+        'type_suffixes': {
+            float32: 'f',
+            float64: '',
+            float80: 'l'
         }
     }
 
@@ -375,7 +381,27 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _get_precision_type(self):
+        typ = self._settings['precision']
+        if not isinstance(typ, Type):
+            if typ <= Type.default_limits['float32']['dig']:
+                typ = float32
+            elif typ <= Type.default_limits['float64']['dig']:
+                typ = float64
+            elif typ <= Type.default_limits['float80']['dig']:
+                typ = float80
+            else:
+                raise NotImplementedError("Need a higher precision datatype.")
+        return typ
+
+    def _get_precision_suffix(self):
+        return self._settings['type_suffixes'].get(self._get_precision_type(), '')
+
     def _print_Type(self, type_):
+        if type_.name == 'real':  # precision-dependent data type
+            type_ = self._get_precision_type()
+        if type_.name == 'complex':
+            type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
         type_str, headers = self._settings['type_mappings'].get(type_, (type_.name, None))
         if headers:
             self.headers.update(headers)
@@ -409,26 +435,6 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Pointer(self, expr):
         return self._print(expr.symbol)
-
-    def _get_precision_suffix(self):
-        prec = self._settings.get('precision', 15)
-        if isinstance(prec, Type):
-            if prec.name == 'float32':
-                suffix = 'f'
-            elif prec.name == 'float64':
-                suffix = ''
-            elif prec.name == 'float80':
-                suffix = 'l'
-        else:
-            if prec <= Type.default_limits['float32']['dig']:
-                suffix = 'f'
-            elif prec <= Type.default_limits['float64']['dig']:
-                suffix = ''
-            elif prec <= Type.default_limits['float80']['dig']:
-                suffix = 'l'
-            else:
-                raise NotImplementedError("Need a higher precision datatype.")
-        return suffix
 
     def _print_Float(self, flt):
         suffix = self._get_precision_suffix().upper()

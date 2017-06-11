@@ -27,7 +27,8 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.function import Function
 from sympy.core.relational import Eq
 from sympy.sets import Range
-from sympy.codegen.ast import Assignment, Declaration, Pointer, Type
+from sympy.codegen.ast import (Assignment, Declaration, Pointer, Type,
+                               float32, float64, complex64, complex128)
 from sympy.codegen.ffunctions import isign, dsign, cmplx, merge, literal_dp
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -67,13 +68,11 @@ class FCodePrinter(CodePrinter):
         'standard': 77,
         'type_mappings': {
             Type('intc'): ('integer(c_int)', {'iso_c_binding': 'c_int'}),
-            Type('float32'): ('real(4)', None),
-            Type('float64'): ('real(8)', None),
-            Type('complex64'): ('complex(4)', None),
-            Type('complex128'): ('complex(8)', None),
-            Type('real'): ('real(kind(1d0))', None),
+            float32: ('real(4)', None),
+            float64: ('real(8)', None),
+            complex64: ('complex(4)', None),
+            complex128: ('complex(8)', None),
             Type('integer'): ('integer', None),
-            Type('complex'): ('complex(kind(1d0))', None),
             Type('bool'): ('logical', None)
         }
     }
@@ -319,7 +318,24 @@ class FCodePrinter(CodePrinter):
         lhs, rhs = expr.args
         return ' /= '.join(map(self._print, (lhs, rhs)))
 
+    def _get_precision_type(self):
+        typ = self._settings['precision']
+        if not isinstance(typ, Type):
+            if typ <= Type.default_limits['float32']['dig']:
+                typ = float32
+            elif typ <= Type.default_limits['float64']['dig']:
+                typ = float64
+            elif typ <= Type.default_limits['float80']['dig']:
+                typ = float80
+            else:
+                raise NotImplementedError("Need a higher precision datatype.")
+        return typ
+
     def _print_Type(self, type_):
+        if type_.name == 'real':  # precision-dependent data type
+            type_ = self._get_precision_type()
+        if type_.name == 'complex':
+            type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
         type_str, module_uses = self._settings['type_mappings'].get(type_, type_.name)
         if module_uses:
             for k, v in module_uses:
@@ -333,13 +349,13 @@ class FCodePrinter(CodePrinter):
         if self._settings["standard"] >= 90:
             result = '{t}{vc} :: {s}'.format(
                 t=self._print(var.type),
-                vc=', parameter' if var.const else '',
+                vc=', parameter' if var.value_const else '',
                 s=self._print(var.symbol)
             )
             if val is not None:
                 result += ' = %s' % self._print(val)
         else:
-            if var.const or val:
+            if var.value_const or val:
                 raise NotImplementedError("F77 init./parameter statem. req. multiple lines.")
             result = ' '.join(self._print(var.type), self._print(var.symbol))
         return result

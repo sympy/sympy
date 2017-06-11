@@ -660,6 +660,7 @@ uint64 = Type('uint64')
 float16 = Type('float16')
 float32 = Type('float32')
 float64 = Type('float64')
+float80 = Type('float80')
 complex64 = Type('complex64')
 complex128 = Type('complex128')
 # Generic types (precision may be chosen by code printers):

@@ -195,7 +195,7 @@ def test_sympy__codegen__ast__Pointer():
 
 
 def test_sympy__codegen__ast__Declaration():
-    from sympy.codegen.ast import Declaration
+    from sympy.codegen.ast import Declaration, Variable, Type
     vx = Variable(x, None, Type('float'))
     assert _test_args(Declaration(vx))
     assert _test_args(Declaration(vx, 3.0))
