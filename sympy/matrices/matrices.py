@@ -1592,7 +1592,7 @@ class MatrixCalculus(MatrixCommon):
         return self.applyfunc(lambda x: x.integrate(*args))
 
     def jacobian(self, X):
-        """Calculates the Jacobian matrix (derivative of a vectorial function).
+        """Calculates the Jacobian matrix (derivative of a vector-valued function).
 
         Parameters
         ==========
