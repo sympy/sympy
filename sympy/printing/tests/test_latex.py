@@ -279,8 +279,8 @@ def test_latex_functions():
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
     assert latex(Abs(x)) == r"\left|{x}\right|"
-    assert latex(re(x)) == r"\Re{x}"
-    assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
+    assert latex(re(x)) == r"\Re{\left(x\right)}"
+    assert latex(re(x + y)) == r"\Re{\left(x\right)} + \Re{\left(y\right)}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma{\left(x \right)}"
@@ -299,7 +299,7 @@ def test_latex_functions():
 
     assert latex(cot(x)) == r'\cot{\left (x \right )}'
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
-    assert latex(re(x)) == r'\Re{x}'
+    assert latex(re(x)) == r'\Re{\left(x\right)}'
     assert latex(im(x)) == r'\Im{x}'
     assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
@@ -1585,7 +1585,6 @@ def test_issue_10489():
     s = Symbol(latexSymbolWithBrace)
     assert latex(s) == latexSymbolWithBrace
     assert latex(cos(s)) == r'\cos{\left (C_{x_{0}} \right )}'
-
 
 def test_latex_UnevaluatedExpr():
     x = symbols("x")

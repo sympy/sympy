@@ -2,6 +2,7 @@ from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.dyadic import Dyadic
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
+from sympy.vector.operators import gradient, curl, divergence
 from sympy import sympify, diff, integrate, S, simplify
 
 
@@ -122,98 +123,6 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
-def curl(vect, coord_sys):
-    """
-    Returns the curl of a vector field computed wrt the base scalars
-    of the given coordinate system.
-
-    Parameters
-    ==========
-
-    vect : Vector
-        The vector operand
-
-    coord_sys : CoordSysCartesian
-        The coordinate system to calculate the curl in
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSysCartesian, curl
-    >>> R = CoordSysCartesian('R')
-    >>> v1 = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> curl(v1, R)
-    0
-    >>> v2 = R.x*R.y*R.z*R.i
-    >>> curl(v2, R)
-    R.x*R.y*R.j + (-R.x*R.z)*R.k
-
-    """
-
-    return coord_sys.delop.cross(vect).doit()
-
-
-def divergence(vect, coord_sys):
-    """
-    Returns the divergence of a vector field computed wrt the base
-    scalars of the given coordinate system.
-
-    Parameters
-    ==========
-
-    vect : Vector
-        The vector operand
-
-    coord_sys : CoordSysCartesian
-        The cooordinate system to calculate the divergence in
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSysCartesian, divergence
-    >>> R = CoordSysCartesian('R')
-    >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
-    >>> divergence(v1, R)
-    R.x*R.y + R.x*R.z + R.y*R.z
-    >>> v2 = 2*R.y*R.z*R.j
-    >>> divergence(v2, R)
-    2*R.z
-
-    """
-
-    return coord_sys.delop.dot(vect).doit()
-
-
-def gradient(scalar, coord_sys):
-    """
-    Returns the vector gradient of a scalar field computed wrt the
-    base scalars of the given coordinate system.
-
-    Parameters
-    ==========
-
-    scalar : SymPy Expr
-        The scalar field to compute the gradient of
-
-    coord_sys : CoordSysCartesian
-        The coordinate system to calculate the gradient in
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSysCartesian, gradient
-    >>> R = CoordSysCartesian('R')
-    >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1, R)
-    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2, R)
-    10*R.x*R.z*R.i + 5*R.x**2*R.k
-
-    """
-
-    return coord_sys.delop(scalar).doit()
-
 def directional_derivative(scalar, vect):
     """
     Returns the directional derivative of a scalar field computed along a given vector
@@ -245,8 +154,8 @@ def directional_derivative(scalar, vect):
     5*R.x**2 + 30*R.x*R.z
 
     """
-    coord_sys = vect._sys
-    return gradient(scalar, coord_sys).dot(vect).doit()
+    return gradient(scalar).dot(vect).doit()
+
 
 def is_conservative(field):
     """
@@ -278,8 +187,7 @@ def is_conservative(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    coord_sys = list(field.separate())[0]
-    return curl(field, coord_sys).simplify() == Vector.zero
+    return curl(field).simplify() == Vector.zero
 
 
 def is_solenoidal(field):
@@ -312,8 +220,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    coord_sys = list(field.separate())[0]
-    return divergence(field, coord_sys).simplify() == S(0)
+    return divergence(field).simplify() == S(0)
 
 
 def scalar_potential(field, coord_sys):
@@ -340,7 +247,7 @@ def scalar_potential(field, coord_sys):
     >>> scalar_potential(R.k, R) == R.z
     True
     >>> scalar_field = 2*R.x**2*R.y*R.z
-    >>> grad_field = gradient(scalar_field, R)
+    >>> grad_field = gradient(scalar_field)
     >>> scalar_potential(grad_field, R)
     2*R.x**2*R.y*R.z
 

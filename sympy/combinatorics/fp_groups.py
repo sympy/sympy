@@ -57,8 +57,8 @@ class FpGroup(DefaultPrinting):
         if not relators:
             return fr_grp
         obj = object.__new__(cls)
-        obj._free_group = fr_grp
-        obj._relators = relators
+        obj.free_group = fr_grp
+        obj.relators = relators
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
 
@@ -71,14 +71,6 @@ class FpGroup(DefaultPrinting):
         obj._order = None
         obj._center = None
         return obj
-
-    @property
-    def free_group(self):
-        return self._free_group
-
-    @property
-    def relators(self):
-        return tuple(self._relators)
 
     def _generators(self):
         return self.free_group.generators
