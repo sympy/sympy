@@ -19,6 +19,7 @@ class Del(Basic):
         obj = super(Del, cls).__new__(cls, system)
         obj._x, obj._y, obj._z = system.x, system.y, system.z
         obj._i, obj._j, obj._k = system.i, system.j, system.k
+        obj._h1, obj._h2, obj._h3 = system.lame_coefficients()
         obj._system = system
         obj._name = system.__str__() + ".delop"
         return obj
@@ -58,9 +59,9 @@ class Del(Basic):
 
         scalar_field = express(scalar_field, self.system,
                                variables=True)
-        vx = Derivative(scalar_field, self._x)
-        vy = Derivative(scalar_field, self._y)
-        vz = Derivative(scalar_field, self._z)
+        vx = Derivative(scalar_field, self._x) / self._h1
+        vy = Derivative(scalar_field, self._y) / self._h2
+        vz = Derivative(scalar_field, self._z) / self._h3
 
         if doit:
             return (vx * self._i + vy * self._j + vz * self._k).doit()
@@ -98,9 +99,12 @@ class Del(Basic):
 
         """
 
-        vx = _diff_conditional(vect.dot(self._i), self._x)
-        vy = _diff_conditional(vect.dot(self._j), self._y)
-        vz = _diff_conditional(vect.dot(self._k), self._z)
+        vx = _diff_conditional(vect.dot(self._i), self._x, self._h2, self._h3) \
+             / (self._h1 * self._h2 * self._h3)
+        vy = _diff_conditional(vect.dot(self._j), self._y, self._h3, self._h2) \
+             / (self._h1 * self._h2 * self._h3)
+        vz = _diff_conditional(vect.dot(self._k), self._z, self._h1, self._h2) \
+             / (self._h1 * self._h2 * self._h3)
 
         if doit:
             return (vx + vy + vz).doit()
@@ -164,7 +168,7 @@ class Del(Basic):
     _sympystr = __str__
 
 
-def _diff_conditional(expr, base_scalar):
+def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     """
     First re-expresses expr in the system that base_scalar belongs to.
     If base_scalar appears in the re-expressed form, differentiates
@@ -174,5 +178,5 @@ def _diff_conditional(expr, base_scalar):
 
     new_expr = express(expr, base_scalar.system, variables=True)
     if base_scalar in new_expr.atoms(BaseScalar):
-        return Derivative(new_expr, base_scalar)
+        return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
     return S(0)
