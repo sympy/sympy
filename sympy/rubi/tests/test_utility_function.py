@@ -99,10 +99,9 @@ def test_RemoveContent():
 
 
 def test_Denominator():
-    assert Denominator(3/2) == 2
+    assert Denominator(S(3)/2) == 2
     assert Denominator(x/y) == y
     assert Denominator(S(4)/5) == 5
-    assert Denominator(3/6) == 2
 
 def test_Hypergeometric2F1():
     assert Hypergeometric2F1(2, (1,2), 4, 0.75) == 1.303703703703703703703704
@@ -183,3 +182,12 @@ def test_ArcCsch():
 def test_Equal():
     assert Equal(a, a)
     assert not Equal(a, b)
+
+def test_LessEqual():
+    assert LessEqual(1, 2, 3)
+    assert LessEqual(1, 1)
+    assert not LessEqual(3, 2, 1)
+
+def test_With():
+    assert With(Set(x, 3), x + y) == 3 + y
+    assert With(List(Set(x, 3), Set(y, c)), x + y) == 3 + c

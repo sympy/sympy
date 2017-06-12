@@ -11,12 +11,10 @@ from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, aco
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from sympy.integrals.integrals import integrate
-from fractions import Fraction
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 from .rubi import rubi_integrate
 
 def Int(expr, var):
-    print('in Int', expr, var)
     return rubi_integrate(expr, var)
 
 def ZeroQ(expr):
@@ -96,10 +94,7 @@ def RemoveContent(expr, x):
     return expr
 
 def Denominator(var):
-    try:
-        return fraction(sympify(Fraction (var)), exact=True)[1]
-    except TypeError:
-        return fraction(var, exact=True)[1]
+    return fraction(var)[1]
 
 def Hypergeometric2F1(a, b, c, z):
     return hyp2f1(a, b, c, z)
@@ -162,3 +157,24 @@ def ArcCsc(a):
 
 def ArcCsch(a):
     return acsch(a)
+
+def LessEqual(*args):
+    for i in range(0, len(args) - 1):
+        if args[i] > args[i + 1]:
+            return False
+
+    return True
+
+def Set(expr, value):
+    return {expr: value}
+
+def With(subs, expr):
+    if isinstance(subs, dict):
+        k = list(subs.keys())[0]
+        expr = expr.subs(k, subs[k])
+    else:
+        for i in subs:
+            k = list(i.keys())[0]
+            expr = expr.subs(k, i[k])
+
+    return expr
