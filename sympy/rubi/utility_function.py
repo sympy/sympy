@@ -13,6 +13,11 @@ from sympy.simplify.simplify import fraction, simplify, count_ops
 from sympy.integrals.integrals import integrate
 from fractions import Fraction
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
+from .rubi import rubi_integrate
+
+def Int(expr, var):
+    print('in Int', expr, var)
+    return rubi_integrate(expr, var)
 
 def ZeroQ(expr):
     return expr == 0
@@ -50,14 +55,17 @@ def PosQ(var):
 def NegQ(var):
     return var < 0
 
+def Equal(a, b):
+    return a == b
+
 def FracPart(var):
     return frac(var)
 
 def IntPart(var):
     return floor(var)
 
-def RationalQ(var):
-    return var.is_Rational
+def RationalQ(*nodes):
+    return all(var.is_Rational for var in nodes)
 
 def Subst(a, x, y):
     return a.subs(x, y)
@@ -118,8 +126,6 @@ def SumSimplerQ(u, v):
 def SimplerQ(u, v):
     # If u is simpler than v, SimplerQ(u,v) returns True, else it returns False. SimplerQ(u,u) returns False.
     return count_ops(u) < count_ops(v)
-
-# utility functions used in RUBI tests
 
 def AppellF1(a, b1, b2, c, x, y):
     return appellf1(a, b1, b2, c, x, y)

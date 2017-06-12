@@ -92,7 +92,7 @@ class IntPart(Operation):
 
 class RationalQ(Operation):
     name = "RationalQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class Subst(Operation):
     name = "Subst"
@@ -122,8 +122,30 @@ class Not(Operation):
     name = "Not"
     arity = Arity.unary
 
-
-
-class ConstantSymbol_parse(Operation):
-    name = "ConstantSymbol"
+class Simplify(Operation):
+    name = "Simplify"
     arity = Arity.unary
+
+class Denominator(Operation):
+    name = "Denominator"
+    arity = Arity.unary
+
+class Coefficient(Operation):
+    name = "Coefficient"
+    arity = Arity.ternary
+
+class SumSimplerQ(Operation):
+    name = "SumSimplerQ"
+    arity = Arity.binary
+
+class Equal(Operation):
+    name = "Equal"
+    arity = Arity.binary
+
+class LessEqual(Operation):
+    name = "LessEqual"
+    arity = Arity.variadic
+
+class IntLinearcQ(Operation):
+    name = "IntLinearcQ"
+    arity = Arity.variadic

@@ -30,7 +30,9 @@ def sympy2matchpy(expr):
     Converts a SymPy expression into a MatchPy expression
     `parse_rules` is used internally to parse rules.
     '''
-    if expr.is_Atom:
+    if isinstance(expr, int):
+        return Integer(expr)
+    elif expr.is_Atom:
         if expr.is_Number:
             return Integer(expr)
         return matchpy.Symbol(str(expr))

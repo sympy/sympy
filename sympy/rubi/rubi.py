@@ -16,6 +16,10 @@ def rubi_integrate(expr, var):
 
     rubi = rubi_object()
     result = rubi.replace(expr)
-    result = sympify(str(result))
 
+    if result == expr:
+        print(('Pattern not matched: {}').format(expr))
+        return None
+
+    result = sympify(str(result))
     return result

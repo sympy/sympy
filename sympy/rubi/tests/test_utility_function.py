@@ -48,10 +48,6 @@ def test_IntegerQ():
     assert not IntegerQ(S(0.0))
     assert IntegerQ(S(-1))
 
-def test_RationalQ():
-    assert RationalQ(S(5)/6)
-    assert not RationalQ(Sqrt(1.6))
-
 def test_PosQ():
     assert PosQ(S(10))
     assert not PosQ(S(-10))
@@ -72,7 +68,9 @@ def test_NegQ():
 
 def test_RationalQ():
     assert RationalQ(S(5)/6)
+    assert RationalQ(S(5)/6, S(4)/5)
     assert not RationalQ(Sqrt(1.6))
+    assert not RationalQ(Sqrt(1.6), S(5)/6)
 
 def test_Sqrt():
     assert Sqrt(S(16)) == 4
@@ -95,9 +93,9 @@ def test_Coefficient():
     assert Coefficient(b*x + c*x**3, x, 3) == c
 
 def test_RemoveContent():
-    assert RemoveContent(3+6*x**3+8*x+2*x**2, x) == 6*x**3 + 2*x**2 + 8*x
-    assert RemoveContent(3+6*x**3+8*x+2, x) == 6*x**3 + 8*x
-    assert RemoveContent(3+b*x**3+a+2, x) == b*x**3
+    assert RemoveContent(3 + 6*x**3 + 8*x + 2*x**2, x) == 6*x**3 + 2*x**2 + 8*x
+    assert RemoveContent(3 + 6*x**3 + 8*x + 2, x) == 6*x**3 + 8*x
+    assert RemoveContent(3 + b*x**3 + a + 2, x) == b*x**3
 
 
 def test_Denominator():
@@ -128,18 +126,16 @@ def test_IntegerPart():
 def test_SumSimplerQ():
     assert not SumSimplerQ(x**3, 3 + 4*x**2 + 8*x**3)
     assert SumSimplerQ(x**3, -x**3)
-    assert SumSimplerQ(1+x**2, 2-x**2+x)
+    assert SumSimplerQ(1+x**2, 2-x**2 + x)
 
 def test_SimplerQ():
-    assert SimplerQ(x**3, 3+4*x**2+8*x**3)
-    assert SimplerQ(x**3, 3+x**2+x)
-    assert SimplerQ(x**3, 3*x**4+3*x**5)
+    assert SimplerQ(x**3, 3 + 4*x**2 + 8*x**3)
+    assert SimplerQ(x**3, 3 + x**2 + x)
+    assert SimplerQ(x**3, 3*x**4 + 3*x**5)
     assert not SimplerQ(x**3, 3)
     assert not SimplerQ(x**3, 3*x)
     assert SimplerQ(x**3, 3*x**2)
     assert not SimplerQ(x**3, x**2)
-
-# utility functions used in tests
 
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25) == 1.154700538379251529018298
@@ -159,11 +155,11 @@ def test_EllipticPi():
 def test_EllipticE():
     assert EllipticE(0) == 1.570796326794896619231322
     assert EllipticE(2) == (0.5990701173677961037199612 + 0.5990701173677961037199612j)
-    assert EllipticE(0.5+0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
+    assert EllipticE(0.5 + 0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
 
 def test_EllipticF():
     assert EllipticF(0,1) == 0.0
-    assert EllipticF(2+3j,0) == (2.0 + 3.0j)
+    assert EllipticF(2 + 3j,0) == (2.0 + 3.0j)
     assert EllipticF(1,1) == 1.226191170883517070813061
 
 def test_ArcTanh():
@@ -183,3 +179,7 @@ def test_ArcCsc():
 
 def test_ArcCsch():
     assert ArcCsch(a) == acsch(a)
+
+def test_Equal():
+    assert Equal(a, a)
+    assert not Equal(a, b)

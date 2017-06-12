@@ -13,7 +13,7 @@ class cons(Constraint):
         try:
             return sympify(str(sub))
         except:
-            print(('Unable to sympify: {}').format(sub))
+            #print(('Unable to sympify: {}').format(sub))
             return False
 
     @property
