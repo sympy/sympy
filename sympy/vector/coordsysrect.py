@@ -175,7 +175,7 @@ class CoordSysCartesian(Basic):
     def __iter__(self):
         return iter([self.i, self.j, self.k])
 
-    def _set_coefficient_mapping(self, curv_coord_name):
+    def _set_lame_coefficient_mapping(self, curv_coord_name):
         """
         Store information about Lame coefficient, for pre-defined
         curvilinear coordinate systems. Return tuple with scaling
