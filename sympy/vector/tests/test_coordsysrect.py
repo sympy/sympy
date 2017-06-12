@@ -295,11 +295,14 @@ def test_evalf():
 
 
 def test_lame_coefficients():
-    a = CoordSysCartesian('a', curv_coord_name='spherical')
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('spherical')
     assert a.lame_coefficients() == (1, a.x, cos(a.y)*a.x)
     a = CoordSysCartesian('a')
     assert a.lame_coefficients() == (1, 1, 1)
-    a = CoordSysCartesian('a', 'cartesian')
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('cartesian')
     assert a.lame_coefficients() == (1, 1, 1)
-    a = CoordSysCartesian('a', curv_coord_name='cylindrical')
+    a = CoordSysCartesian('a')
+    a._set_lame_coefficient_mapping('cylindrical')
     assert a.lame_coefficients() == (1, a.y, 1)
