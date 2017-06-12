@@ -227,8 +227,10 @@ def test_scalar_potential_difference():
 
 
 def test_differential_operators_curvilinear_system():
-    A = CoordSysCartesian('A', curv_coord_name='spherical')
-    B = CoordSysCartesian('B', curv_coord_name='cylindrical')
+    A = CoordSysCartesian('A')
+    A._set_lame_coefficient_mapping('spherical')
+    B = CoordSysCartesian('B')
+    B._set_lame_coefficient_mapping('cylindrical')
     # Test for spherical coordinate system and gradient
     assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
     assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/cos(A.y))*A.k
