@@ -191,3 +191,7 @@ def test_LessEqual():
 def test_With():
     assert With(Set(x, 3), x + y) == 3 + y
     assert With(List(Set(x, 3), Set(y, c)), x + y) == 3 + c
+
+def test_Less():
+    assert Less(1, 2, 3)
+    assert not Less(1, 1, 3)

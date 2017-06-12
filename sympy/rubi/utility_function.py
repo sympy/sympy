@@ -165,6 +165,14 @@ def LessEqual(*args):
 
     return True
 
+
+def Less(*args):
+    for i in range(0, len(args) - 1):
+        if args[i] >= args[i + 1]:
+            return False
+
+    return True
+
 def Set(expr, value):
     return {expr: value}
 
