@@ -57,8 +57,8 @@ class FpGroup(DefaultPrinting):
         if not relators:
             return fr_grp
         obj = object.__new__(cls)
-        obj._free_group = fr_grp
-        obj._relators = relators
+        obj.free_group = fr_grp
+        obj.relators = relators
         obj.generators = obj._generators()
         obj.dtype = type("FpGroupElement", (FpGroupElement,), {"group": obj})
 
@@ -71,10 +71,6 @@ class FpGroup(DefaultPrinting):
         obj._order = None
         obj._center = None
         return obj
-
-    @property
-    def free_group(self):
-        return self._free_group
 
     def coset_enumeration(self, H, strategy="relator_based"):
         """
@@ -167,9 +163,6 @@ class FpGroup(DefaultPrinting):
         else:
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
-
-    def relators(self):
-        return tuple(self._relators)
 
     def _generators(self):
         """Returns the generators of the associated free group."""
@@ -766,7 +759,7 @@ class CosetTable(DefaultPrinting):
         "coincidence" of cosets.
 
         """
-        R = self.fp_group.relators()
+        R = self.fp_group.relators
         p = self.p
         # complete scan all relators under all cosets(obviously live)
         # without making new definitions
@@ -1091,7 +1084,7 @@ def coset_enumeration_r(fp_grp, Y):
     """
     # 1. Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y)
-    R = fp_grp.relators()
+    R = fp_grp.relators
     A_dict = C.A_dict
     A_dict_inv = C.A_dict_inv
     p = C.p
@@ -1129,7 +1122,7 @@ def coset_enumeration_c(fp_grp, Y):
     # Initialize a coset table C for < X|R >
     C = CosetTable(fp_grp, Y)
     X = fp_grp.generators
-    R = fp_grp.relators()
+    R = fp_grp.relators
     A = C.A
     # replace all the elements by cyclic reductions
     R_cyc_red = [rel.identity_cyclic_reduction() for rel in R]
@@ -1204,7 +1197,7 @@ def low_index_subgroups(G, N, Y=[]):
 
     """
     C = CosetTable(G, [])
-    R = G.relators()
+    R = G.relators
     # length chosen for the length of the short relators
     len_short_rel = 5
     # elements of R2 only checked at the last step for complete
@@ -1424,7 +1417,7 @@ def define_schreier_generators(C):
 
 
 def reidemeister_relators(C):
-    R = C.fp_group.relators()
+    R = C.fp_group.relators
     rels = [rewrite(C, coset, word) for word in R for coset in range(C.n)]
     identity = C._schreier_free_group.identity
     order_1_gens = set([i for i in rels if len(i) == 1])
