@@ -51,7 +51,7 @@ class List(Operation):
     arity = Arity.variadic
 
 class Log(Operation):
-    name = "log"
+    name = "Log"
     arity = Arity.unary
 
 class RemoveContent(Operation):
@@ -112,11 +112,15 @@ class ArcCosh(Operation):
 
 class Rational(Operation):
     name = "Rational"
+    arity = Arity.binary
+
+class Less(Operation):
+    name = "Less"
     arity = Arity.variadic
 
-
-
-
+class Not(Operation):
+    name = "Not"
+    arity = Arity.unary
 
 
 

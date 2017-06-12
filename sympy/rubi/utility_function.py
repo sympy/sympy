@@ -23,7 +23,7 @@ def NonzeroQ(expr):
 def FreeQ(nodes, var):
     if isinstance(nodes, list):
         return not any(expr.has(var) for expr in nodes)
-    elif isinstance(nodes, Symbol):
+    else:
         return nodes != var
 
 def List(*var):
