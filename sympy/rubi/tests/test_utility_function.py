@@ -143,10 +143,6 @@ def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
     assert Simplify((x**3 + x**2 - x - 1)/(x**2 + 2*x + 1)) == x - 1
 
-def test_Integrate():
-    assert Integrate(x**2, x) == x**3/3
-    assert Integrate(x**3, x) == integrate(x**3, x)
-
 def test_EllipticPi():
     assert EllipticPi(0.25, 0.25) == 1.956616279119236207279727
     assert EllipticPi(3, 0) == (0.0 - 1.11072073453959156175397j)
@@ -195,3 +191,20 @@ def test_With():
 def test_Less():
     assert Less(1, 2, 3)
     assert not Less(1, 1, 3)
+
+def test_Greater():
+    assert Greater(3, 2, 1)
+    assert not Greater(3, 2, 2)
+
+def test_GreaterEqual():
+    assert GreaterEqual(3, 2, 1)
+    assert GreaterEqual(3, 2, 2)
+    assert not GreaterEqual(2, 3)
+
+def test_Unequal():
+    assert Unequal(1, 2)
+    assert not Unequal(1, 1)
+
+def test_FractionQ():
+    assert FractionQ(S(1), S(2), S(1)/3)
+    assert not FractionQ(sqrt(2))

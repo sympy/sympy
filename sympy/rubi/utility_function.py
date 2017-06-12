@@ -3,14 +3,11 @@ Utility functions for Constraints in Rubi
 '''
 
 from sympy.functions import (log, sin, cos, sqrt)
-from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, acos
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
-from sympy.integrals.integrals import integrate
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 from .rubi import rubi_integrate
 
@@ -55,6 +52,9 @@ def NegQ(var):
 
 def Equal(a, b):
     return a == b
+
+def Unequal(a, b):
+    return a != b
 
 def FracPart(var):
     return frac(var)
@@ -103,7 +103,7 @@ def ArcTan(a):
     return atan(a)
 
 def Not(var):
-    return not(var)
+    return not var
 
 def Simplify(expr):
     return simplify(expr)
@@ -124,9 +124,6 @@ def SimplerQ(u, v):
 
 def AppellF1(a, b1, b2, c, x, y):
     return appellf1(a, b1, b2, c, x, y)
-
-def Integrate(f, x):
-    return integrate(f, x)
 
 def EllipticPi(*args):
     return ellippi(*args)
@@ -162,15 +159,24 @@ def LessEqual(*args):
     for i in range(0, len(args) - 1):
         if args[i] > args[i + 1]:
             return False
-
     return True
-
 
 def Less(*args):
     for i in range(0, len(args) - 1):
         if args[i] >= args[i + 1]:
             return False
+    return True
 
+def Greater(*args):
+    for i in range(0, len(args) - 1):
+        if args[i] <= args[i + 1]:
+            return False
+    return True
+
+def GreaterEqual(*args):
+    for i in range(0, len(args) - 1):
+        if args[i] < args[i + 1]:
+            return False
     return True
 
 def Set(expr, value):
@@ -184,5 +190,10 @@ def With(subs, expr):
         for i in subs:
             k = list(i.keys())[0]
             expr = expr.subs(k, i[k])
-
     return expr
+
+def FractionQ(*args):
+    for i in args:
+        if not i.is_Rational:
+            return False
+    return True

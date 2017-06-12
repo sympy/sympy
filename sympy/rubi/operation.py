@@ -142,10 +142,30 @@ class Equal(Operation):
     name = "Equal"
     arity = Arity.binary
 
+class Unequal(Operation):
+    name = "Unequal"
+    arity = Arity.binary
+
+class SimplerQ(Operation):
+    name = "SimplerQ"
+    arity = Arity.binary
+
 class LessEqual(Operation):
     name = "LessEqual"
     arity = Arity.variadic
 
 class IntLinearcQ(Operation):
     name = "IntLinearcQ"
+    arity = Arity.variadic
+
+class Greater(Operation):
+    name = "Greater"
+    arity = Arity.variadic
+
+class GreaterEqual(Operation):
+    name = "GreaterEqual"
+    arity = Arity.variadic
+
+class FractionQ(Operation):
+    name = "FractionQ"
     arity = Arity.variadic
