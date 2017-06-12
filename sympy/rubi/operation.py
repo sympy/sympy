@@ -21,8 +21,6 @@ class Add(Operation):
 class Pow(Operation):
     name = "Pow"
     arity = Arity.binary
-    associative = False
-    commutative = False
 
 class And(Operation):
     name = "And"
