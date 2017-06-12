@@ -155,6 +155,13 @@ class DenseMatrix(MatrixBase):
         mat = [a + b for a,b in zip(self._mat, other._mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
+    def _eval_extract(self, rowsList, colsList):
+        mat = self._mat
+        cols = self.cols
+        indices = (i * cols + j for i in rowsList for j in colsList)
+        return self._new(len(rowsList), len(colsList),
+                         list(mat[i] for i in indices), copy=False)
+
     def _eval_matrix_mul(self, other):
         from sympy import Add
         # cache attributes for faster access

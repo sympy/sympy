@@ -22,6 +22,17 @@ class Tuple(Basic):
     SymPy framework.  The wrapped tuple is available as self.args, but
     you can also access elements or slices with [:] syntax.
 
+    Parameters
+    ==========
+
+    sympify : bool
+        If ``False``, ``sympify`` is not called on ``args``. This
+        can be used for speedups for very large tuples where the
+        elements are known to already be sympy objects.
+
+    Example
+    =======
+
     >>> from sympy import symbols
     >>> from sympy.core.containers import Tuple
     >>> a, b, c, d = symbols('a b c d')
@@ -32,8 +43,9 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args):
-        args = [ sympify(arg) for arg in args ]
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get('sympify', True):
+            args = ( sympify(arg) for arg in args )
         obj = Basic.__new__(cls, *args)
         return obj
 
