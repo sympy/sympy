@@ -292,3 +292,14 @@ def test_evalf():
     v = 3*A.i + 4*A.j + a*A.k
     assert v.n() == v.evalf()
     assert v.evalf(subs={a:1}) == v.subs(a, 1).evalf()
+
+
+def test_lame_coefficients():
+    a = CoordSysCartesian('a', curv_coord_name='spherical')
+    assert a.lame_coefficients() == (1, a.x, cos(a.y)*a.x)
+    a = CoordSysCartesian('a')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSysCartesian('a', 'cartesian')
+    assert a.lame_coefficients() == (1, 1, 1)
+    a = CoordSysCartesian('a', curv_coord_name='cylindrical')
+    assert a.lame_coefficients() == (1, a.y, 1)

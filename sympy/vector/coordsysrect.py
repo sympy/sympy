@@ -5,7 +5,7 @@ from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.vector.lamecoeff import CoeffProvider
+from sympy import cos
 import sympy.vector
 
 
@@ -15,7 +15,7 @@ class CoordSysCartesian(Basic):
     """
 
     def __new__(cls, name, location=None, rotation_matrix=None,
-                parent=None, vector_names=None, variable_names=None, curv_coord_name=None):
+                parent=None, vector_names=None, variable_names=None, curv_coord_name='cartesian'):
         """
         The orientation/location parameters are necessary if this system
         is being defined at a certain orientation or location wrt another.
@@ -45,8 +45,8 @@ class CoordSysCartesian(Basic):
             Used for simple str printing.
 
         curv_coord_name : str
-            The type of the new coordinate system. It should be
-            None, when transformation_equations are not None.
+            Variable specifying type of curvilinear coordinate system.
+            Currently, it is experimental feature.
 
         """
 
@@ -149,22 +149,15 @@ class CoordSysCartesian(Basic):
         obj._z = BaseScalar(variable_names[2], 2, obj,
                             pretty_scalars[2], latex_scalars[2])
 
-        # Initialize proper class, which provide specific information
-        # on curvilinear coordinate system. Creating parameters is done by
-        # system of transformation equation in tuple or name of type of
-        # coordinate system, which is implemented in SymPy.
-        if curv_coord_name is not None:
-            coefficients = CoeffProvider(obj, curv_coord_name)
-        elif curv_coord_name is None:
-            coefficients = CoeffProvider(obj, "cartesian")
-        else:
-            raise ValueError("Type of coordinate system is defined by system of "
-                             "equations or by name of coordinate system")
-
         # Define Lame coefficients for coordinate system
-        obj._h1 = coefficients.h1()
-        obj._h2 = coefficients.h2()
-        obj._h3 = coefficients.h3()
+        if curv_coord_name is not 'cartesian':
+            coefficients = obj._coefficient_mapping(curv_coord_name)
+        else:
+            coefficients = obj._coefficient_mapping('cartesian')
+
+        obj._h1 = coefficients[0]
+        obj._h2 = coefficients[1]
+        obj._h3 = coefficients[2]
 
         # Assign a Del operator instance
         from sympy.vector.deloperator import Del
@@ -191,6 +184,30 @@ class CoordSysCartesian(Basic):
 
     def __iter__(self):
         return iter([self.i, self.j, self.k])
+
+    def _coefficient_mapping(self, curv_coord_name):
+        """
+        Store information about Lame coefficient, for pre-defined
+        curvilinear coordinate systems. Return tuple with scaling
+        factor.
+
+        Parameters
+        ==========
+
+        curv_coord_name : str
+            The type of the new coordinate system.
+
+        """
+
+        try:
+            coefficient_mapping = {
+                'cartesian': (1, 1, 1),
+                'spherical': (1, self.x, self.x * cos(self.y)),
+                'cylindrical': (1, self.y, 1)
+            }
+        except:
+            raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
+        return coefficient_mapping[curv_coord_name]
 
     @property
     def origin(self):

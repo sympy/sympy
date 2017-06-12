@@ -3942,11 +3942,6 @@ def test_sympy__vector__deloperator__Del():
     C = CoordSysCartesian('C')
     assert _test_args(Del(C))
 
-def test_sympy__vector__lamecoeff__CoeffProvider():
-    from sympy.vector.lamecoeff import CoeffProvider
-    from sympy.vector.coordsysrect import CoordSysCartesian
-    C = CoordSysCartesian('C')
-    assert _test_args(CoeffProvider(C, 'cartesian'))
 
 def test_sympy__vector__operators__Curl():
     from sympy.vector.operators import Curl
@@ -3967,7 +3962,6 @@ def test_sympy__vector__operators__Gradient():
     from sympy.vector.coordsysrect import CoordSysCartesian
     C = CoordSysCartesian('C')
     assert _test_args(Gradient(C.x))
-
 
 
 def test_sympy__vector__orienters__Orienter():
