@@ -3,6 +3,7 @@ from sympy import (Abs, exp, Expr, I, pi, Q, Rational, refine, S, sqrt,
 from sympy.abc import x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.utilities.pytest import slow
 
 
 def test_Abs():
@@ -15,7 +16,8 @@ def test_Abs():
     assert refine(Abs(x**2), Q.real(x)) == x**2
 
 
-def test_pow():
+@slow
+def test_pow1():
     assert refine((-1)**x, Q.even(x)) == 1
     assert refine((-1)**x, Q.odd(x)) == -1
     assert refine((-2)**x, Q.even(x)) == 2**x
@@ -33,6 +35,9 @@ def test_pow():
     assert refine(sqrt(1/x), Q.real(x)) != 1/sqrt(x)
     assert refine(sqrt(1/x), Q.positive(x)) == 1/sqrt(x)
 
+
+@slow
+def test_pow2():
     # powers of (-1)
     assert refine((-1)**(x + y), Q.even(x)) == (-1)**y
     assert refine((-1)**(x + y + z), Q.odd(x) & Q.odd(z)) == (-1)**y
