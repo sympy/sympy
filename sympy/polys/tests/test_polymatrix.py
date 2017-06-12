@@ -2,7 +2,7 @@ from sympy.matrices.dense import Matrix
 from sympy.polys.polymatrix import PolyMatrix
 from sympy.polys import Poly
 
-from sympy import S, ZZ, QQ
+from sympy import S, ZZ, QQ, EX
 
 from sympy.abc import x
 
@@ -30,11 +30,14 @@ def test_polymatrix():
     assert pm2*m2 == C
 
     pm3 = PolyMatrix([[Poly(x**2, x), S(1)]], ring='ZZ[x]')
-    assert (S(1)/2)*pm3 == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]], ring='ZZ[x]')
-    assert pm3*(S(1)/2) == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), 1]], ring='ZZ[x]')
+    v3 = (S(1)/2)*pm3
+    assert v3 == PolyMatrix([[Poly(1/2*x**2, x, domain='QQ'), S(1)/2]], ring='EX')
+    assert pm3*(S(1)/2) == v3
+    assert v3.ring == EX
 
     pm4 = PolyMatrix([[Poly(x**2, x, domain='ZZ'), Poly(-x**2, x, domain='ZZ')]])
     v4 = Matrix([1, -1], ring='ZZ[x]')
     assert pm4*v4 == PolyMatrix([[Poly(2*x**2, x, domain='ZZ')]])
 
     assert len(PolyMatrix()) == 0
+    assert PolyMatrix([1, 0, 0, 1])/(-1) == PolyMatrix([-1, 0, 0, -1])
