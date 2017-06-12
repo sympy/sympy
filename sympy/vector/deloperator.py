@@ -70,7 +70,7 @@ class Del(Basic):
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
 
-    def dot(self, vect, doit=False):
+    def dot(self, vector, doit=False):
         """
         Represents the dot product between this operator and a given
         vector - equal to the divergence of the vector field.
@@ -78,7 +78,7 @@ class Del(Basic):
         Parameters
         ==========
 
-        vect : Vector
+        vector : Vector
             The vector whose divergence is to be calculated.
 
         doit : bool
@@ -99,13 +99,12 @@ class Del(Basic):
 
         """
 
-        vx = _diff_conditional(vect.dot(self._i), self._x, self._h2, self._h3) \
+        vx = _diff_conditional(vector.dot(self._i), self._x, self._h2, self._h3) \
              / (self._h1 * self._h2 * self._h3)
-        vy = _diff_conditional(vect.dot(self._j), self._y, self._h3, self._h2) \
+        vy = _diff_conditional(vector.dot(self._j), self._y, self._h3, self._h1) \
              / (self._h1 * self._h2 * self._h3)
-        vz = _diff_conditional(vect.dot(self._k), self._z, self._h1, self._h2) \
+        vz = _diff_conditional(vector.dot(self._k), self._z, self._h1, self._h2) \
              / (self._h1 * self._h2 * self._h3)
-
         if doit:
             return (vx + vy + vz).doit()
         return vx + vy + vz
@@ -113,7 +112,7 @@ class Del(Basic):
     __and__ = dot
     __and__.__doc__ = dot.__doc__
 
-    def cross(self, vect, doit=False):
+    def cross(self, vector, doit=False):
         """
         Represents the cross product between this operator and a given
         vector - equal to the curl of the vector field.
@@ -121,7 +120,7 @@ class Del(Basic):
         Parameters
         ==========
 
-        vect : Vector
+        vector : Vector
             The vector whose curl is to be calculated.
 
         doit : bool
@@ -143,16 +142,16 @@ class Del(Basic):
 
         """
 
-        vectx = express(vect.dot(self._i), self.system, variables=True)
-        vecty = express(vect.dot(self._j), self.system, variables=True)
-        vectz = express(vect.dot(self._k), self.system, variables=True)
+        vectx = express(vector.dot(self._i), self.system, variables=True)
+        vecty = express(vector.dot(self._j), self.system, variables=True)
+        vectz = express(vector.dot(self._k), self.system, variables=True)
         outvec = Vector.zero
-        outvec += (Derivative(vectz, self._y) -
-                   Derivative(vecty, self._z)) * self._i
-        outvec += (Derivative(vectx, self._z) -
-                   Derivative(vectz, self._x)) * self._j
-        outvec += (Derivative(vecty, self._x) -
-                   Derivative(vectx, self._y)) * self._k
+        outvec += (Derivative(vectz * self._h3, self._y) -
+                   Derivative(vecty * self._h2, self._z)) * self._i / (self._h2 * self._h3)
+        outvec += (Derivative(vectx * self._h1, self._z) -
+                   Derivative(vectz * self._h3, self._x)) * self._j / (self._h1 * self._h3)
+        outvec += (Derivative(vecty * self._h2, self._x) -
+                   Derivative(vectx * self._h1, self._y)) * self._k / (self._h2 * self._h1)
 
         if doit:
             return outvec.doit()

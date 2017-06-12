@@ -224,3 +224,27 @@ def test_scalar_potential_difference():
     assert (scalar_potential_difference(grad_field, P, P.origin,
                                         genericpointP).simplify() ==
             potential_diff_P.simplify())
+
+
+def test_differential_operators_curvilinear_system():
+    A = CoordSysCartesian('A', curv_coord_name='spherical')
+    B = CoordSysCartesian('B', curv_coord_name='cylindrical')
+    # Test for spherical coordinate system and gradient
+    assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
+    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/cos(A.y))*A.k
+    assert gradient(0*A.x + 0*A.y+0*A.z) == 0
+    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/cos(A.y))*A.k
+    # Test for spherical coordinate system and divergence
+    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == \
+           (-sin(A.y)*A.y + 3*cos(A.y)*A.x + cos(A.y) + 1)/(cos(A.y)*A.x)
+    assert divergence(3*A.x*A.z*A.i + A.y*A.j + A.x*A.y*A.z*A.k) == \
+           (-sin(A.y)*A.x*A.y + cos(A.y)*A.x)/(cos(A.y)*A.x**2) + 9*A.z + A.y/cos(A.y)
+    assert divergence(Vector.zero) == 0
+    assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
+    # Test for cylindrical coordinate system and divergence
+    assert divergence(B.x*B.i + B.y*B.j + B.z*B.k) == 2 + 1/A.y
+    assert divergence(B.x*B.j + B.z*B.k) == 1
+    # Test for spherical coordinate system and divergence
+    assert curl(A.x*A.i + A.y*A.j + A.z*A.k) == \
+           (-sin(A.y)*A.z/(cos(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
+    assert curl(A.x*A.j + A.z*A.k) == (-sin(A.y)*A.z/(cos(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k

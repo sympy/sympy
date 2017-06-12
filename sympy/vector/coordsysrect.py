@@ -699,6 +699,7 @@ class CoordSysCartesian(Basic):
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
                  pretty_scalars=None):
+
         # Dummy initializer for setting docstring
         pass
 
