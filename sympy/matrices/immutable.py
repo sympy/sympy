@@ -39,6 +39,12 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     _op_priority = 10.001
 
     def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
+    __hash__ = MatrixExpr.__hash__
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
         if kwargs.get('copy', True) is False:
@@ -55,15 +61,12 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 
         return Basic.__new__(cls, rows, cols, flat_list)
 
-    __hash__ = MatrixExpr.__hash__
-
-    @classmethod
-    def _new(cls, *args, **kwargs):
-        return cls(*args, **kwargs)
-
     @property
     def _mat(self):
-        return self.args[2]
+        # self.args[2] is a Tuple.  Access to the elements
+        # of a tuple are significantly faster than Tuple,
+        # so return the internal tuple.
+        return self.args[2].args
 
     def _entry(self, i, j):
         return DenseMatrix.__getitem__(self, (i, j))
@@ -92,7 +95,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
         # tuple over a Tuple, so grab the internal tuple directly
-        mat = self._mat.args
+        mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),

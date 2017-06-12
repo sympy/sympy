@@ -52,7 +52,7 @@ class Tuple(Basic):
     def __getitem__(self, i):
         if isinstance(i, slice):
             indices = i.indices(len(self))
-            return Tuple(*[self.args[j] for j in range(*indices)])
+            return Tuple(*(self.args[j] for j in range(*indices)))
         return self.args[i]
 
     def __len__(self):
@@ -103,7 +103,7 @@ class Tuple(Basic):
         return hash(self.args)
 
     def _to_mpmath(self, prec):
-        return tuple([a._to_mpmath(prec) for a in self.args])
+        return tuple(a._to_mpmath(prec) for a in self.args)
 
     def __lt__(self, other):
         return sympify(self.args < other.args)
