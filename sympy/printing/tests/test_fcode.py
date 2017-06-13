@@ -3,7 +3,7 @@ from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
     Range, Catalan, EulerGamma, E, GoldenRatio, I, pi, Function, Rational, Integer, Lambda, sign)
 
 from sympy.codegen import For, Assignment
-from sympy.codegen.ast import Declaration, Type, Variable
+from sympy.codegen.ast import Declaration, Type, Variable, float32, float64, value_const
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -688,23 +688,27 @@ def test_fcode_For():
                    "      end do")
 
 def test_fcode_Declaration():
-    def check(expr, ref):
-        assert fcode(expr, standard=95, source_format='free') == ref
+    def check(expr, ref, **kwargs):
+        assert fcode(expr, standard=95, source_format='free', **kwargs) == ref
 
     i = symbols('i', integer=True)
-    var1 = Variable(i)
+    var1 = Variable.deduced(i)
     dcl1 = Declaration(var1)
     check(dcl1, "integer :: i")
 
+
     x, y = symbols('x y')
-    var2 = Variable(x, Type('float32'), const=True)
+    var2 = Variable(x, {value_const}, float32)
     dcl2b = Declaration(var2, 42)
     check(dcl2b, 'real(4), parameter :: x = 42')
 
-    var3 = Variable(y, Type('bool'))
+    var3 = Variable(y, (), Type('bool'))
     dcl3 = Declaration(var3)
     check(dcl3, 'logical :: y')
 
-    check(Type('float32'), "real(4)")
-    check(Type('float64'), "real(8)")
-    check(Type('real'), "real(kind(1d0))")
+    check(float32, "real(4)")
+    check(float64, "real(8)")
+    check(Type('real'), "real(4)", precision=float32)
+    check(Type('real'), "real(4)", precision=6)
+    check(Type('real'), "real(8)", precision=float64)
+    check(Type('real'), "real(8)", precision=15)

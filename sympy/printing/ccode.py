@@ -19,7 +19,10 @@ from itertools import chain
 from sympy.core import S
 from sympy.core.compatibility import string_types, range
 from sympy.core.decorators import deprecated
-from sympy.codegen.ast import Assignment, Pointer, Type, Variable
+from sympy.codegen.ast import (
+    Assignment, Pointer, Type, Variable,
+    float32, float64, float80, complex64, complex128
+)
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
@@ -151,12 +154,15 @@ class C89CodePrinter(CodePrinter):
         'reserved_word_suffix': '_',
         'type_mappings': {
             Type('intc'): ('int', None),
-            Type('float32'): ('float', None),
-            Type('float64'): ('double', None),
-            Type('real'): ('double', None),
+            float32: ('float', None),
+            float64: ('double', None),
             Type('integer'): ('int', None),
-            Type('complex'): ('double _Complex', {'complex.h'}),
             Type('bool'): ('bool', {'stdbool.h'})
+        },
+        'type_suffixes': {
+            float32: 'f',
+            float64: '',
+            float80: 'l'
         }
     }
 
@@ -375,25 +381,46 @@ class C89CodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    def _get_precision_type(self):
+        typ = self._settings['precision']
+        if not isinstance(typ, Type):
+            if typ <= Type.default_limits['float32']['dig']:
+                typ = float32
+            elif typ <= Type.default_limits['float64']['dig']:
+                typ = float64
+            elif typ <= Type.default_limits['float80']['dig']:
+                typ = float80
+            else:
+                raise NotImplementedError("Need a higher precision datatype.")
+        return typ
+
+    def _get_precision_suffix(self):
+        return self._settings['type_suffixes'].get(self._get_precision_type(), '')
+
     def _print_Type(self, type_):
+        if type_.name == 'real':  # precision-dependent data type
+            type_ = self._get_precision_type()
+        if type_.name == 'complex':
+            type_ = {float32: complex64, float64: complex128}[self._get_precision_type()]
         type_str, headers = self._settings['type_mappings'].get(type_, (type_.name, None))
         if headers:
             self.headers.update(headers)
         return type_str
 
     def _print_Declaration(self, expr):
+        from sympy.codegen.cfunctions import restrict
         var, val = expr.variable, expr.value
         if isinstance(var, Pointer):
             result = '{vc}{t} *{pc} {r}{s}'.format(
                 vc='const ' if var.value_const else '',
                 t=self._print(var.type),
                 pc=' const' if var.pointer_const else '',
-                r='restrict ' if var.restrict else '',  # actually only guaranteed by C >= C99
+                r='restrict ' if var.attributes.contains(restrict) == True else '',
                 s=self._print(var.symbol)
             )
         elif isinstance(var, Variable):
             result = '{vc}{t} {s}'.format(
-                vc='const ' if var.const else '',
+                vc='const ' if var.value_const else '',
                 t=self._print(var.type),
                 s=self._print(var.symbol)
             )
@@ -408,26 +435,6 @@ class C89CodePrinter(CodePrinter):
 
     def _print_Pointer(self, expr):
         return self._print(expr.symbol)
-
-    def _get_precision_suffix(self):
-        prec = self._settings.get('precision', 15)
-        if isinstance(prec, Type):
-            if prec.name == 'float32':
-                suffix = 'f'
-            elif prec.name == 'float64':
-                suffix = ''
-            elif prec.name == 'float80':
-                suffix = 'l'
-        else:
-            if prec <= Type.default_limits['float32']['dig']:
-                suffix = 'f'
-            elif prec <= Type.default_limits['float64']['dig']:
-                suffix = ''
-            elif prec <= Type.default_limits['float80']['dig']:
-                suffix = 'l'
-            else:
-                raise NotImplementedError("Need a higher precision datatype.")
-        return suffix
 
     def _print_Float(self, flt):
         suffix = self._get_precision_suffix().upper()
@@ -501,12 +508,6 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
                    ' erfc tgamma lgamma ceil floor trunc round nearbyint rint'
                    ' frexp ldexp modf scalbn ilogb logb nextafter copysign').split()
 
-    def _print_Max(self, expr):
-        return self._print_math_func(expr, nest=True)
-
-    def _print_Min(self, expr):
-        return self._print_math_func(expr, nest=True)
-
     def _print_Infinity(self, expr):
         return 'INFINITY'
 
@@ -542,103 +543,17 @@ class C99CodePrinter(_C9XCodePrinter, C89CodePrinter):
             args=args
         )
 
+    def _print_Max(self, expr):
+        return self._print_math_func(expr, nest=True)
 
-    def _print_Abs(self, expr):
-        return self._print_math_func(expr)
+    def _print_Min(self, expr):
+        return self._print_math_func(expr, nest=True)
 
-    def _print_Sqrt(self, expr):
-        return self._print_math_func(expr)
 
-    def _print_exp(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_exp2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_expm1(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log10(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_log1p(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_Cbrt(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_hypot(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_fma(self, expr):  # fused mutiply-add
-        return self._print_math_func(expr)
-
-    def _print_loggamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_sin(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_cos(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_tan(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_asin(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_acos(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atan(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atan2(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_sinh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_cosh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_tanh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_asinh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_acosh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_atanh(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_erf(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_erfc(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_loggamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_gamma(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_ceiling(self, expr):
-        return self._print_math_func(expr)
-
-    def _print_floor(self, expr):
-        return self._print_math_func(expr)
-
+for k in ('Abs Sqrt exp exp2 expm1 log log10 log2 log1p Cbrt hypot fma '
+          ' loggamma sin cos tan asin acos atan atan2 sinh cosh tanh asinh acosh '
+          'atanh erf erfc loggamma gamma ceiling floor').split():
+    setattr(C99CodePrinter, '_print_%s' % k, C99CodePrinter._print_math_func)
 
 c_code_printers = {
     'c89': C89CodePrinter,

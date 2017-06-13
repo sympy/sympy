@@ -567,3 +567,9 @@ Fortran specific functions
 
 .. automodule:: sympy.codegen.ffunctions
     :members:
+
+Classes for abstract syntax trees (sympy.codegen.ast)
+-----------------------------------------------------
+
+.. automodule:: sympy.codegen.ast
+    :members:
