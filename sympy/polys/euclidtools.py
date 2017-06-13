@@ -74,7 +74,7 @@ def dup_half_gcdex(f, g, K):
     (-1/5*x + 3/5, x + 1)
 
     """
-    if not K.has_Field:
+    if not K.is_Field:
         raise DomainError("can't compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
@@ -796,7 +796,7 @@ def dmp_resultant(f, g, u, K, includePRS=False):
     if includePRS:
         return dmp_prs_resultant(f, g, u, K)
 
-    if K.has_Field:
+    if K.is_Field:
         if K.is_QQ and query('USE_COLLINS_RESULTANT'):
             return dmp_qq_collins_resultant(f, g, u, K)
     else:
@@ -1510,7 +1510,7 @@ def dup_inner_gcd(f, g, K):
         cfg = dup_convert(cfg, exact, K)
 
         return h, cff, cfg
-    elif K.has_Field:
+    elif K.is_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dup_qq_heu_gcd(f, g, K)
@@ -1546,7 +1546,7 @@ def _dmp_inner_gcd(f, g, u, K):
         cfg = dmp_convert(cfg, u, exact, K)
 
         return h, cff, cfg
-    elif K.has_Field:
+    elif K.is_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dmp_qq_heu_gcd(f, g, u, K)
@@ -1694,7 +1694,7 @@ def dup_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
-    if K.has_Field:
+    if K.is_Field:
         return dup_ff_lcm(f, g, K)
     else:
         return dup_rr_lcm(f, g, K)
@@ -1771,7 +1771,7 @@ def dmp_lcm(f, g, u, K):
     if not u:
         return dup_lcm(f, g, K)
 
-    if K.has_Field:
+    if K.is_Field:
         return dmp_ff_lcm(f, g, u, K)
     else:
         return dmp_rr_lcm(f, g, u, K)
@@ -1863,7 +1863,7 @@ def dmp_cancel(f, g, u, K, include=True):
     """
     K0 = None
 
-    if K.has_Field and K.has_assoc_Ring:
+    if K.is_Field and K.has_assoc_Ring:
         K0, K = K, K.get_ring()
 
         cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)

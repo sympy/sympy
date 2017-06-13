@@ -1,11 +1,13 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import Poly, Matrix, S, symbols
-from sympy.integrals.risch import DifferentialExtension
+from sympy.integrals.risch import DifferentialExtension, derivation
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field)
+    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE)
+
+from sympy.polys.polymatrix import PolyMatrix
 
 from sympy.abc import x, t, n
 
@@ -67,7 +69,7 @@ def test_prde_linear_constraints():
     G = [(Poly(t, t), Poly(1, t)), (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, DE) == \
-        ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix())
+        ((Poly(t, t), Poly(t**2, t), Poly(t**3, t)), Matrix(0, 3, []))
     G = [(Poly(2*x, t), Poly(t, t)), (Poly(-x, t), Poly(t, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     prde_linear_constraints(Poly(1, t), Poly(0, t), G, DE) == \
@@ -131,7 +133,53 @@ def test_prde_no_cancel():
                                          [0, 0,       0, 0, 1,  0,  0,  0,  0, -1]]))
 
     # TODO: Add test for deg(b) <= 0 with b small
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
+    b = Poly(-1/x**2, t, field=True)  # deg(b) == 0
+    q = [Poly(x**i*t**j, t, field=True) for i in range(2) for j in range(3)]
+    h, A = prde_no_cancel_b_small(b, q, 3, DE)
+    V = A.nullspace()
+    assert len(V) == 1
+    assert V[0] == Matrix([-1/2, 0, 0, 1, 0, 0]*3)
+    assert (PolyMatrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
+    assert (PolyMatrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
 
+
+def test_param_poly_rischDE():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    a = Poly(x**2 - x, x, field=True)
+    b = Poly(1, x, field=True)
+    q = [Poly(x, x, field=True), Poly(x**2, x, field=True)]
+    h, A = param_poly_rischDE(a, b, q, 3, DE)
+
+    assert A.nullspace() == [Matrix([0, 1, 1, 1])]  # c1, c2, d1, d2
+    # Solution of a*Dp + b*p = c1*q1 + c2*q2 = q2 = x**2
+    # is d1*h1 + d2*h2 = h1 + h2 = x.
+    assert h[0] + h[1] == Poly(x, x)
+    # a*Dp + b*p = q1 = x has no solution.
+
+    a = Poly(x**2 - x, x, field=True)
+    b = Poly(x**2 - 5*x + 3, x, field=True)
+    q = [Poly(1, x, field=True), Poly(x, x, field=True),
+         Poly(x**2, x, field=True)]
+    h, A = param_poly_rischDE(a, b, q, 3, DE)
+
+    assert A.nullspace() == [Matrix([3, -5, 1, -5, 1, 1])]
+    p = -5*h[0] + h[1] + h[2]  # Poly(1, x)
+    assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x)
+
+
+def test_param_rischDE():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    p1, px = Poly(1, x, field=True), Poly(x, x, field=True)
+    G = [(p1, px), (p1, p1), (px, p1)]  # [1/x, 1, x]
+    h, A = param_rischDE(-p1, Poly(x**2, x, field=True), G, DE)
+    assert len(h) == 3
+    p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
+    V = A.nullspace()
+    assert len(V) == 2
+    assert V[0] == Matrix([-1, 1, 0, -1, 1, 0])
+    y = -p[0] + p[1] + 0*p[2]  # x
+    assert y.diff(x) - y/x**2 == 1 - 1/x  # Dy + f*y == -G0 + G1 + 0*G2
 
 def test_limited_integrate_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})

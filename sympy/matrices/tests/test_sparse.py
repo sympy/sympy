@@ -1,4 +1,4 @@
-from sympy import S, Symbol, I, Rational, PurePoly
+from sympy import Abs, S, Symbol, I, Rational, PurePoly
 from sympy.matrices import Matrix, SparseMatrix, eye, zeros, ShapeError
 from sympy.utilities.pytest import raises
 
@@ -255,6 +255,9 @@ def test_sparse_matrix():
     m0 = sparse_eye(3)
     assert m0.applyfunc(lambda x: 2*x) == sparse_eye(3)*2
     assert m0.applyfunc(lambda x: 0 ) == sparse_zeros(3)
+
+    # test__eval_Abs
+    assert abs(SparseMatrix(((x, 1), (y, 2*y)))) == SparseMatrix(((Abs(x), 1), (Abs(y), 2*Abs(y))))
 
     # test_LUdecomp
     testmat = SparseMatrix([[ 0, 2, 5, 3],

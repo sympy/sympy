@@ -147,7 +147,7 @@ One, by using the ``delop`` property
 Or by using the dedicated function
 
   >>> from sympy.vector import curl
-  >>> curl(C.x*C.y*C.z*C.i, C)
+  >>> curl(C.x*C.y*C.z*C.i)
   C.x*C.y*C.j + (-C.x*C.z)*C.k
 
 Divergence
@@ -184,7 +184,7 @@ One, by using the ``delop`` property
 Or by using the dedicated function
 
   >>> from sympy.vector import divergence
-  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k), C)
+  >>> divergence(C.x*C.y*C.z*(C.i + C.j + C.k))
   C.x*C.y + C.x*C.z + C.y*C.z
 
 Gradient
@@ -217,7 +217,7 @@ One, by using the ``delop`` property
 Or by using the dedicated function
 
   >>> from sympy.vector import gradient
-  >>> gradient(C.x*C.y*C.z, C)
+  >>> gradient(C.x*C.y*C.z)
   C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
 Directional Derivative
@@ -268,7 +268,7 @@ To check if a vector field is conservative in :mod:`sympy.vector`, the
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_conservative(field)
   True
-  >>> curl(field, R)
+  >>> curl(field)
   0
 
 A solenoidal field, on the other hand, is a vector field whose divergence
@@ -282,7 +282,7 @@ To check if a vector field is solenoidal in :mod:`sympy.vector`, the
   >>> field = R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
   >>> is_solenoidal(field)
   True
-  >>> divergence(field, R)
+  >>> divergence(field)
   0
 
 Scalar potential functions
