@@ -99,6 +99,12 @@ def test_RemoveContent():
     assert RemoveContent(3+6*x**3+8*x+2, x) == 6*x**3 + 8*x
     assert RemoveContent(3+b*x**3+a+2, x) == b*x**3
 
+def test_Rt():
+    assert Rt(8, 3) == 2
+    assert Rt(16807, 5) == 7
+
+def test_With():
+    assert With(x*y*z**2, x=2, y=4, z=4) == 128
 
 def test_Denominator():
     assert Denominator(3/2) == 2

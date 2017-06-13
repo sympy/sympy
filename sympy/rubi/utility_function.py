@@ -12,7 +12,7 @@ from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from sympy.integrals.integrals import integrate
 from fractions import Fraction
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
+from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 def ZeroQ(expr):
     return expr == 0
@@ -85,6 +85,14 @@ def RemoveContent(expr, x):
     for i in expr.args:
         if not i.has(x):
             expr = expr - i
+    return expr
+
+def Rt(val, n):
+    return nthroot(val, n)
+
+def With(expr, **kwargs):
+    for key in kwargs:
+        expr = expr.subs(key, kwargs[key])
     return expr
 
 def Denominator(var):
