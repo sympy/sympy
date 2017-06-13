@@ -4,8 +4,6 @@ import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr
-from sympy.core.function import count_ops
-from sympy.core.logic import fuzzy_and
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy, symbols
 from sympy.core.numbers import Integer, ilcm, Float
@@ -30,6 +28,7 @@ from types import FunctionType
 
 from .common import (a2idx, classof, MatrixError, ShapeError,
         NonSquareMatrixError, MatrixCommon)
+
 
 def _iszero(x):
     """Returns True if x is zero."""
