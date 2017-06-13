@@ -44,7 +44,8 @@ IS_WINDOWS = (os.name == 'nt')
 # an even split of tests.  This should periodically be regenerated.
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
-# the second 10% and the third 30%.
+# the second 10% and the third 30%.  These lists are normalized to sum
+# to 1, so [60, 10, 30] has the same behavoir as [6, 1, 3] or [.6, .1, .3].
 #
 # This list can be generated with the code:
 #     from time import time
@@ -58,6 +59,7 @@ IS_WINDOWS = (os.name == 'nt')
 #     tot = sum(delays)
 #     print([round(x / tot, 4) for x in delays]))
 SPLIT_DENSITY = [0.2464, 0.0507, 0.0328, 0.0113, 0.0418, 0.012, 0.0269, 0.0095, 0.091, 0.0215, 0.001, 0.0023, 0.0116, 0.0137, 0.0041, 0.0039, 0.0145, 0.0172, 0.059, 0.0017, 0.0112, 0.0128, 0.0012, 0.0293, 0.0705, 0.0284, 0.1495, 0.0073, 0.0052, 0.0115]
+SPLIT_DENSITY_SLOW = [0.3616, 0.0003, 0.0004, 0.0004, 0.0255, 0.0005, 0.0674, 0.0337, 0.1057, 0.0329, 0.0002, 0.0002, 0.0184, 0.0028, 0.0046, 0.0148, 0.0046, 0.0083, 0.0004, 0.0002, 0.0069, 0.0004, 0.0004, 0.0046, 0.0205, 0.1378, 0.1451, 0.0003, 0.0006, 0.0006]
 
 class Skipped(Exception):
     pass
@@ -549,17 +551,15 @@ def _test(*paths, **kwargs):
                     matched.append(f)
                     break
 
-    if slow:
-        # Seed to evenly shuffle slow tests among splits
-        random.seed(41992451)
-        random.shuffle(matched)
+    density = None
+    if time_balance:
+        if slow:
+            density = SPLIT_DENSITY_SLOW
+        else:
+            density = SPLIT_DENSITY
 
     if split:
-        if time_balance:
-            matched = split_list(matched, split, density=SPLIT_DENSITY)
-        else:
-            matched = split_list(matched, split)
-
+        matched = split_list(matched, split, density=density)
 
     t._testfiles.extend(matched)
 
@@ -847,7 +847,7 @@ def split_list(l, split, density=None):
     If the length of the list is not divisible by the number of splits, the
     last split will have more items.
 
-    `density` may be specified as a list which sums to 1.  If specified,
+    `density` may be specified as a list.  If specified,
     tests will be balanced so that each split has as equal-as-possible
     amount of mass according to `density`.
 
@@ -867,6 +867,10 @@ def split_list(l, split, density=None):
 
     if not density:
         return l[(i - 1)*len(l)//t : i*len(l)//t]
+
+    # normalize density
+    tot = sum(density)
+    density = [x / tot for x in density]
 
     def density_inv(x):
         """Interpolate the inverse to the cumulative
