@@ -38,4 +38,4 @@ def test_rubi_algebriac_1_2():
     assert rubi_integrate(1/x**(2/3), x) == 3*x**(1/3)
     assert rubi_integrate(1/x**(4/3), x) == (-3)/x**(1/3)
     assert rubi_integrate(1/x**(5/3), x) == (-3/2)/x**(2/3)
-    
+    '''
