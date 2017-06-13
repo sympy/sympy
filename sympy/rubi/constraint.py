@@ -7,7 +7,7 @@ class cons(Constraint):
         self.vars = frozenset(v.name for v in vars)
 
     def __call__(self, substitution):
-        if isinstance(self.expr, bool): # handle rules without constraints
+        if isinstance(self.expr, bool): #handle rules without constraints
             return self.expr
         sub = substitute(self.expr, substitution)
         try:

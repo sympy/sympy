@@ -4,6 +4,8 @@ import matchpy
 from .sympy2matchpy import sympy2matchpy
 from sympy.core.sympify import sympify
 
+rubi = rubi_object()
+
 def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
@@ -14,7 +16,6 @@ def rubi_integrate(expr, var):
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))
 
-    rubi = rubi_object()
     result = rubi.replace(expr)
 
     if result == expr:
