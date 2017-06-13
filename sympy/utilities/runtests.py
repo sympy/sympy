@@ -40,6 +40,26 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
 
+# emperically generated list of the proportion of time spent running
+# an even split of tests.  This should periodically be regenerated.
+# A list of [.6, .1, .3] would mean that if the tests are evenly split
+# into '1/3', '2/3', '3/3', the first split would take 60% of the time,
+# the second 10% and the third 30%.  These lists are normalized to sum
+# to 1, so [60, 10, 30] has the same behavoir as [6, 1, 3] or [.6, .1, .3].
+#
+# This list can be generated with the code:
+#     from time import time
+#     import sympy
+#
+#     delays, num_splits = [], 30
+#     for i in range(1, num_splits + 1):
+#         tic = time()
+#         sympy.test(split='{}/{}'.format(i, num_splits), time_balance=False)
+#         delays.append(time() - tic)
+#     tot = sum(delays)
+#     print([round(x / tot, 4) for x in delays]))
+SPLIT_DENSITY = [0.2464, 0.0507, 0.0328, 0.0113, 0.0418, 0.012, 0.0269, 0.0095, 0.091, 0.0215, 0.001, 0.0023, 0.0116, 0.0137, 0.0041, 0.0039, 0.0145, 0.0172, 0.059, 0.0017, 0.0112, 0.0128, 0.0012, 0.0293, 0.0705, 0.0284, 0.1495, 0.0073, 0.0052, 0.0115]
+SPLIT_DENSITY_SLOW = [0.3616, 0.0003, 0.0004, 0.0004, 0.0255, 0.0005, 0.0674, 0.0337, 0.1057, 0.0329, 0.0002, 0.0002, 0.0184, 0.0028, 0.0046, 0.0148, 0.0046, 0.0083, 0.0004, 0.0002, 0.0069, 0.0004, 0.0004, 0.0046, 0.0205, 0.1378, 0.1451, 0.0003, 0.0006, 0.0006]
 
 class Skipped(Exception):
     pass
@@ -398,6 +418,13 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
+    The ``time_balance`` option can be passed in conjunction with ``split``.
+    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    to split the tests such that each split takes equal time.  This heuristic
+    for balancing is based on pre-recorded test data.
+
+    >>> sympy.test(split='1/2', time_balance=True)  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -486,6 +513,7 @@ def _test(*paths, **kwargs):
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
+    time_balance = kwargs.get('time_balance', True)
     blacklist = kwargs.get('blacklist', [])
     blacklist = convert_to_native_paths(blacklist)
     fast_threshold = kwargs.get('fast_threshold', None)
@@ -523,13 +551,15 @@ def _test(*paths, **kwargs):
                     matched.append(f)
                     break
 
-    if slow:
-        # Seed to evenly shuffle slow tests among splits
-        random.seed(41992451)
-        random.shuffle(matched)
+    density = None
+    if time_balance:
+        if slow:
+            density = SPLIT_DENSITY_SLOW
+        else:
+            density = SPLIT_DENSITY
 
     if split:
-        matched = split_list(matched, split)
+        matched = split_list(matched, split, density=density)
 
     t._testfiles.extend(matched)
 
@@ -807,7 +837,7 @@ def _doctest(*paths, **kwargs):
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def split_list(l, split):
+def split_list(l, split, density=None):
     """
     Splits a list into part a of b
 
@@ -816,6 +846,10 @@ def split_list(l, split):
 
     If the length of the list is not divisible by the number of splits, the
     last split will have more items.
+
+    `density` may be specified as a list.  If specified,
+    tests will be balanced so that each split has as equal-as-possible
+    amount of mass according to `density`.
 
     >>> from sympy.utilities.runtests import split_list
     >>> a = list(range(10))
@@ -830,8 +864,35 @@ def split_list(l, split):
     if not m:
         raise ValueError("split must be a string of the form a/b where a and b are ints")
     i, t = map(int, m.groups())
-    return l[(i - 1)*len(l)//t:i*len(l)//t]
 
+    if not density:
+        return l[(i - 1)*len(l)//t : i*len(l)//t]
+
+    # normalize density
+    tot = sum(density)
+    density = [x / tot for x in density]
+
+    def density_inv(x):
+        """Interpolate the inverse to the cumulative
+        distribution function given by density"""
+        if x <= 0:
+            return 0
+        if x >= sum(density):
+            return 1
+
+        # find the first time the cumulative sum surpasses x
+        # and linearly interpolate
+        cumm = 0
+        for i, d in enumerate(density):
+            cumm += d
+            if cumm >= x:
+                break
+        frac = (d - (cumm - x)) / d
+        return (i + frac) / len(density)
+
+    lower_frac = density_inv((i - 1) / t)
+    higher_frac = density_inv(i / t)
+    return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
