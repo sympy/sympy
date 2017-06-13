@@ -45,7 +45,19 @@ IS_WINDOWS = (os.name == 'nt')
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
 # the second 10% and the third 30%.
-SPLIT_DENSITY = [0.3527, 0.0439, 0.0284, 0.0097, 0.0359, 0.0103, 0.0229, 0.0082, 0.0782, 0.0186, 0.0009, 0.002, 0.0101, 0.0123, 0.0035, 0.0034, 0.0118, 0.0145, 0.0497, 0.0015, 0.0097, 0.0114, 0.0011, 0.0254, 0.0598, 0.0249, 0.1286, 0.0064, 0.0044, 0.0098]
+#
+# This list can be generated with the code:
+#     from time import time
+#     import sympy
+#
+#     delays, num_splits = [], 30
+#     for i in range(1, num_splits + 1):
+#         tic = time()
+#         sympy.test(split='{}/{}'.format(i, num_splits), time_balance=False)
+#         delays.append(time() - tic)
+#     tot = sum(delays)
+#     print([round(x / tot, 4) for x in delays]))
+SPLIT_DENSITY = [0.2464, 0.0507, 0.0328, 0.0113, 0.0418, 0.012, 0.0269, 0.0095, 0.091, 0.0215, 0.001, 0.0023, 0.0116, 0.0137, 0.0041, 0.0039, 0.0145, 0.0172, 0.059, 0.0017, 0.0112, 0.0128, 0.0012, 0.0293, 0.0705, 0.0284, 0.1495, 0.0073, 0.0052, 0.0115]
 
 class Skipped(Exception):
     pass
