@@ -148,14 +148,48 @@ class FpGroup(DefaultPrinting):
         2
 
         """
+        from sympy import S, gcd
         if self._order != None:
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
+        elif len(self.generators) == 1:
+            self._order = gcd([g.array_form[0][1] for g in self.relators])
         else:
-            self._coset_table = self.coset_enumeration([], strategy)
-            self._order = len(self._coset_table.table)
+            g, ind = self.finite_index_subgroup()
+            self._order = ind*g.order()
         return self._order
+
+    def finite_index_subgroup(self, gens=[]):
+        gen = self.most_frequent_generator()
+        if not gens:
+            gens = [g for g in self.generators if g != gen] + [gen, self.random_element()]
+        gens = [g for g in gens if g != self.free_group.identity]
+        mid = (len(gens)+1)//2
+        half = gens[:mid]
+        C = self.coset_enumeration(half)
+        if not C.is_complete():
+            half = gens[mid:]
+            C = self.coset_enumeration(half)
+            if not C.is_complete():
+                return
+        if len(half) > 1:
+            return self.finite_index_subgroup(half)
+        else:
+            return self.subgroup([half[0]],C=C),len(C.table)
+
+    def most_frequent_generator(self):
+        gens = self.generators
+        rels = self.relators
+        freqs = [sum([r.generator_count(g) for r in rels]) for g in gens]
+        return gens[freqs.index(max(freqs))]
+
+    def random_element(self):
+        import random
+        r = self.free_group.identity
+        for i in range(random.randint(2,3)):
+            r = r*random.choice(self.generators)**random.choice([1,-1])
+        return r
 
     def index(self, H, strategy="relator_based"):
         """
@@ -1436,7 +1470,7 @@ def reidemeister_relators(C):
     order_1_gens = set([i for i in rels if len(i) == 1])
 
     # remove all the order 1 generators from relators
-    rels = list(filter(lambda rel: rel not in order_1_gens, rels))
+    rels = list(set(filter(lambda rel: rel not in order_1_gens, rels)))
 
     # replace order 1 generators by identity element in reidemeister relators
     for i in range(len(rels)):
@@ -1673,7 +1707,7 @@ def _simplification_technique_1(rels):
 
     return nw
 
-def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
+def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2, C=None):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
@@ -1711,7 +1745,8 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2):
     ((x_0,), (x_0**6,))
 
     """
-    C = coset_enumeration_r(fp_grp, H)
+    if not C:
+        C = coset_enumeration_r(fp_grp, H)
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)

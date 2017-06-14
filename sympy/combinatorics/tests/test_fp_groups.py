@@ -851,3 +851,6 @@ def test_subgroup_presentations():
         "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
         )
     assert str(reidemeister_presentation(f, H)) == k
+
+def test_order():
+    return
