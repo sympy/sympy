@@ -19,7 +19,7 @@ def rubi_integrate(expr, var):
     result = rubi.replace(expr)
 
     if result == expr:
-        print(('Pattern not matched: {}').format(expr))
+        print(('Unable to integrate: {}').format(expr))
         return None
 
     result = sympify(str(result))

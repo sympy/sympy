@@ -41,8 +41,8 @@ def NegativeIntegerQ(var):
 def PositiveQ(var):
     return var > 0
 
-def IntegerQ(var):
-    return var.is_Integer
+def IntegerQ(*var):
+    return all(i.is_Integer for i in var)
 
 def PosQ(var):
     return var > 0
@@ -197,3 +197,6 @@ def FractionQ(*args):
         if not i.is_Rational:
             return False
     return True
+
+def IntLinearcQ(a, b, c, d, m, n, x):
+    return IntegerQ(m) | IntegerQ(n) | IntegersQ(3*m, 3*n) | IntegersQ(4*m, 4*n) | IntegersQ(2*m, 6*n) | IntegersQ(6*m, 2*n) | IntegerQ(m + n)
