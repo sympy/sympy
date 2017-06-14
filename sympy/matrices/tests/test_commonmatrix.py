@@ -1276,13 +1276,15 @@ def test_singular_values():
     x = Symbol('x', real=True)
 
     A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
+    # if singular values can be sorted, they should be in decreasing order
     assert A.singular_values() == [2, 1]
 
     A = eye(3)
     A[1, 1] = x
     A[2, 2] = 5
     vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
+    # since Abs(x) cannot be sorted, test set equality
+    assert set(vals) == set([5, 1, Abs(x)])
 
     A = EigenOnlyMatrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
     vals = [sv.trigsimp() for sv in A.singular_values()]
