@@ -2701,6 +2701,10 @@ class Infinity(with_metaclass(Singleton, Number)):
     def _latex(self, printer):
         return r"\infty"
 
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number):
@@ -2919,6 +2923,10 @@ class NegativeInfinity(with_metaclass(Singleton, Number)):
 
     def _latex(self, printer):
         return r"-\infty"
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):

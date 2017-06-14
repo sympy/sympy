@@ -3,11 +3,11 @@ from __future__ import print_function, division
 import random
 from sympy import Derivative
 
+from sympy.core import SympifyError
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
-from sympy.core.compatibility import is_sequence, as_int, range
+from sympy.core.compatibility import is_sequence, as_int, range, reduce
 from sympy.core.function import count_ops
-from sympy.core.decorators import call_highest_priority
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -20,11 +20,23 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.matrices.matrices import (MatrixBase,
                                      ShapeError, a2idx, classof)
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
 
+
+def _compare_sequence(a, b):
+    """Compares the elements of a list/tuple `a`
+    and a list/tuple `b`.  `_compare_sequence((1,2), [1, 2])`
+    is True, whereas `(1,2) == [1, 2]` is False"""
+    if type(a) is type(b):
+        # if they are the same type, compare directly
+        return a == b
+    # there is no overhead for calling `tuple` on a
+    # tuple
+    return tuple(a) == tuple(b)
 
 class DenseMatrix(MatrixBase):
 
@@ -39,9 +51,9 @@ class DenseMatrix(MatrixBase):
             if self.shape != other.shape:
                 return False
             if isinstance(other, Matrix):
-                return self._mat == other._mat
+                return _compare_sequence(self._mat,  other._mat)
             elif isinstance(other, MatrixBase):
-                return self._mat == Matrix(other)._mat
+                return _compare_sequence(self._mat, Matrix(other)._mat)
         except AttributeError:
             return False
 
@@ -137,8 +149,57 @@ class DenseMatrix(MatrixBase):
         """
         return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
-    def _eval_determinant(self):
-        return self.det()
+    def _eval_add(self, other):
+        # we assume both arguments are dense matrices since
+        # sparse matrices have a higher priority
+        mat = [a + b for a,b in zip(self._mat, other._mat)]
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+
+    def _eval_extract(self, rowsList, colsList):
+        mat = self._mat
+        cols = self.cols
+        indices = (i * cols + j for i in rowsList for j in colsList)
+        return self._new(len(rowsList), len(colsList),
+                         list(mat[i] for i in indices), copy=False)
+
+    def _eval_matrix_mul(self, other):
+        from sympy import Add
+        # cache attributes for faster access
+        self_rows, self_cols = self.rows, self.cols
+        other_rows, other_cols = other.rows, other.cols
+        other_len = other_rows * other_cols
+        new_mat_rows = self.rows
+        new_mat_cols = other.cols
+
+        # preallocate the array
+        new_mat = [S.Zero]*new_mat_rows*new_mat_cols
+
+        # if we multiply an n x 0 with a 0 x m, the
+        # expected behavior is to produce an n x m matrix of zeros
+        if self.cols != 0 and other.rows != 0:
+            # cache self._mat and other._mat for performance
+            mat = self._mat
+            other_mat = other._mat
+            for i in range(len(new_mat)):
+                row, col = i // new_mat_cols, i % new_mat_cols
+                row_indices = range(self_cols*row, self_cols*(row+1))
+                col_indices = range(col, other_len, other_cols)
+                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                try:
+                    new_mat[i] = Add(*vec)
+                except (TypeError, SympifyError):
+                    # Block matrices don't work with `sum` or `Add` (ISSUE #11599)
+                    # They don't work with `sum` because `sum` tries to add `0`
+                    # initially, and for a matrix, that is a mix of a scalar and
+                    # a matrix, which raises a TypeError. Fall back to a
+                    # block-matrix-safe way to multiply if the `sum` fails.
+                    vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                    new_mat[i] = reduce(lambda a,b: a + b, vec)
+        return classof(self, other)._new(new_mat_rows, new_mat_cols, new_mat, copy=False)
+
+    def _eval_matrix_mul_elementwise(self, other):
+        mat = [a*b for a,b in zip(self._mat, other._mat)]
+        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_diff(self, *args, **kwargs):
         if kwargs.pop("evaluate", True):
@@ -209,7 +270,13 @@ class DenseMatrix(MatrixBase):
             raise ValueError("Inversion method unrecognized")
         return self._new(rv)
 
+    def _eval_scalar_mul(self, other):
+        mat = [other*a for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
 
+    def _eval_scalar_rmul(self, other):
+        mat = [a*other for a in self._mat]
+        return self._new(self.rows, self.cols, mat, copy=False)
 
     def _LDLdecomposition(self):
         """Helper function of LDLdecomposition.
@@ -321,26 +388,6 @@ class DenseMatrix(MatrixBase):
         except AttributeError:
             return False
 
-    @classmethod
-    def eye(cls, n):
-        """Return an n x n identity matrix."""
-        n = as_int(n)
-        mat = [cls._sympify(0)]*n*n
-        mat[::n + 1] = [cls._sympify(1)]*n
-        return cls._new(n, n, mat)
-
-    @classmethod
-    def zeros(cls, r, c=None):
-        """Return an r x c matrix of zeros, square if c is omitted."""
-        c = r if c is None else c
-        r = as_int(r)
-        c = as_int(c)
-        return cls._new(r, c, [cls._sympify(0)]*r*c)
-
-    ############################
-    # Mutable matrix operators #
-    ############################
-
 
 def _force_mutable(x):
     """Return a matrix as a Matrix, otherwise return x."""
@@ -362,11 +409,20 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+        # if the `copy` flag is set to False, the input
+        # was rows, cols, [list].  It should be used directly
+        # without creating a copy.
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
-        self._mat = list(flat_list)  # create a shallow copy
+        self._mat = flat_list
         return self
 
     def __setitem__(self, key, value):
@@ -1006,7 +1062,7 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 
-def eye(n, cls=None):
+def eye(*args, **kwargs):
     """Create square identity matrix n x n
 
     See Also
@@ -1016,9 +1072,9 @@ def eye(n, cls=None):
     zeros
     ones
     """
-    if cls is None:
-        from sympy.matrices import Matrix as cls
-    return cls.eye(n)
+    from .dense import Matrix
+
+    return Matrix.eye(*args, **kwargs)
 
 
 def diag(*values, **kwargs):
@@ -1107,44 +1163,18 @@ def diag(*values, **kwargs):
 
     eye
     """
-    from .sparse import MutableSparseMatrix
 
-    cls = kwargs.pop('cls', None)
-    if cls is None:
-        from .dense import Matrix as cls
+    from .dense import Matrix
 
-    if kwargs:
-        raise ValueError('unrecognized keyword%s: %s' % (
-            's' if len(kwargs) > 1 else '',
-            ', '.join(kwargs.keys())))
-    rows = 0
-    cols = 0
-    values = list(values)
-    for i in range(len(values)):
-        m = values[i]
-        if isinstance(m, MatrixBase):
-            rows += m.rows
-            cols += m.cols
-        elif is_sequence(m):
-            m = values[i] = Matrix(m)
-            rows += m.rows
-            cols += m.cols
-        else:
-            rows += 1
-            cols += 1
-    res = MutableSparseMatrix.zeros(rows, cols)
-    i_row = 0
-    i_col = 0
-    for m in values:
-        if isinstance(m, MatrixBase):
-            res[i_row:i_row + m.rows, i_col:i_col + m.cols] = m
-            i_row += m.rows
-            i_col += m.cols
-        else:
-            res[i_row, i_col] = m
-            i_row += 1
-            i_col += 1
-    return cls._new(res)
+    # diag assumes any lists passed in are to be interpreted
+    # as arguments to Matrix, so apply Matrix to any list arguments
+    def normalize(m):
+        if is_sequence(m) and not isinstance(m, MatrixBase):
+            return Matrix(m)
+        return m
+    values = (normalize(m) for m in values)
+
+    return Matrix.diag(*values, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):
@@ -1262,13 +1292,9 @@ def jordan_cell(eigenval, n):
     [0, 0, x, 1],
     [0, 0, 0, x]])
     """
-    n = as_int(n)
-    out = zeros(n)
-    for i in range(n - 1):
-        out[i, i] = eigenval
-        out[i, i + 1] = S.One
-    out[n - 1, n - 1] = eigenval
-    return out
+    from .dense import Matrix
+
+    return Matrix.jordan_block(size=n, eigenvalue=eigenval)
 
 
 def matrix_multiply_elementwise(A, B):
@@ -1295,9 +1321,9 @@ def matrix_multiply_elementwise(A, B):
                               lambda i, j: A[i, j]*B[i, j])
 
 
-def ones(r, c=None):
-    """Returns a matrix of ones with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
+def ones(*args, **kwargs):
+    """Returns a matrix of ones with ``rows`` rows and ``cols`` columns;
+    if ``cols`` is omitted a square matrix will be returned.
 
     See Also
     ========
@@ -1306,12 +1332,15 @@ def ones(r, c=None):
     eye
     diag
     """
+
+    if 'c' in kwargs:
+        kwargs['cols'] = kwargs.pop('c')
+        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
+                                useinstead="cols",
+                                deprecated_since_version="1.1")
     from .dense import Matrix
 
-    c = r if c is None else c
-    r = as_int(r)
-    c = as_int(c)
-    return Matrix(r, c, [S.One]*r*c)
+    return Matrix.ones(*args, **kwargs)
 
 
 def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
@@ -1421,9 +1450,9 @@ def wronskian(functions, var, method='bareiss'):
     return W.det(method)
 
 
-def zeros(r, c=None, cls=None):
-    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
-    if ``c`` is omitted a square matrix will be returned.
+def zeros(*args, **kwargs):
+    """Returns a matrix of zeros with ``rows`` rows and ``cols`` columns;
+    if ``cols`` is omitted a square matrix will be returned.
 
     See Also
     ========
@@ -1432,6 +1461,13 @@ def zeros(r, c=None, cls=None):
     eye
     diag
     """
-    if cls is None:
-        from .dense import Matrix as cls
-    return cls.zeros(r, c)
+
+    if 'c' in kwargs:
+        kwargs['cols'] = kwargs.pop('c')
+        SymPyDeprecationWarning("use of kwarg 'c' is deprecated",
+                                useinstead="cols",
+                                deprecated_since_version="1.1")
+
+    from .dense import Matrix
+
+    return Matrix.zeros(*args, **kwargs)
