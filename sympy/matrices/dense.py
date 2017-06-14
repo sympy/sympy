@@ -28,7 +28,7 @@ def _iszero(x):
 
 
 def _compare_sequence(a, b):
-    """Compares the elements of a list/tupe `a`
+    """Compares the elements of a list/tuple `a`
     and a list/tuple `b`.  `_compare_sequence((1,2), [1, 2])`
     is True, whereas `(1,2) == [1, 2]` is False"""
     if type(a) is type(b):
