@@ -1,9 +1,10 @@
 from sympy.core.expr import Expr
-from sympy.core import  sympify
+from sympy.core import  sympify, S
 from sympy.vector.coordsysrect import CoordSysCartesian
 from sympy.vector.vector import Vector
+from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy import S
+from sympy.core.function import Derivative
 
 
 def _get_coord_sys_from_expr(expr, coord_sys=None):
@@ -47,7 +48,7 @@ class Gradient(Expr):
         return obj
 
     def doit(self, **kwargs):
-        return gradient(self._expr)
+        return gradient(self._expr, doit=True)
 
 
 class Divergence(Expr):
@@ -72,7 +73,7 @@ class Divergence(Expr):
         return obj
 
     def doit(self, **kwargs):
-        return divergence(self._expr)
+        return divergence(self._expr, doit=True)
 
 
 class Curl(Expr):
@@ -97,82 +98,10 @@ class Curl(Expr):
         return obj
 
     def doit(self, **kwargs):
-        return curl(self._expr)
+        return curl(self._expr, doit=True)
 
 
-def gradient(scalar, coord_sys=None):
-    """
-    Returns the vector gradient of a scalar field computed wrt the
-    base scalars of the given coordinate system.
-
-    Parameters
-    ==========
-
-    scalar : SymPy Expr
-        The scalar field to compute the gradient of
-
-    coord_sys : CoordSysCartesian
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSysCartesian, gradient
-    >>> R = CoordSysCartesian('R')
-    >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1)
-    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2)
-    10*R.x*R.z*R.i + 5*R.x**2*R.k
-
-    """
-
-    coord_sys = _get_coord_sys_from_expr(scalar, coord_sys)
-    if coord_sys is None:
-        return Vector.zero
-    else:
-        return coord_sys.delop(scalar).doit()
-
-
-def divergence(vector, coord_sys=None):
-    """
-    Returns the divergence of a vector field computed wrt the base
-    scalars of the given coordinate system.
-
-    Parameters
-    ==========
-
-    vect : Vector
-        The vector operand
-
-    coord_sys : CoordSysCartesian
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSysCartesian, divergence
-    >>> R = CoordSysCartesian('R')
-    >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
-    >>> divergence(v1)
-    R.x*R.y + R.x*R.z + R.y*R.z
-    >>> v2 = 2*R.y*R.z*R.j
-    >>> divergence(v2)
-    2*R.z
-
-    """
-
-    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
-    if coord_sys is None:
-        return S.Zero
-    else:
-        return coord_sys.delop.dot(vector).doit()
-
-
-def curl(vector, coord_sys=None):
+def curl(vector, coord_sys=None, doit=True):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -180,7 +109,7 @@ def curl(vector, coord_sys=None):
     Parameters
     ==========
 
-    vect : Vector
+    vector : Vector
         The vector operand
 
     coord_sys : CoordSysCartesian
@@ -205,4 +134,122 @@ def curl(vector, coord_sys=None):
     if coord_sys is None:
         return Vector.zero
     else:
-        return coord_sys.delop.cross(vector).doit()
+        from sympy.vector.functions import express
+        vectx = express(vector.dot(coord_sys._i), coord_sys, variables=True)
+        vecty = express(vector.dot(coord_sys._j), coord_sys, variables=True)
+        vectz = express(vector.dot(coord_sys._k), coord_sys, variables=True)
+        outvec = Vector.zero
+        outvec += (Derivative(vectz * coord_sys._h3, coord_sys._y) -
+                   Derivative(vecty * coord_sys._h2, coord_sys._z)) * coord_sys._i / (coord_sys._h2 * coord_sys._h3)
+        outvec += (Derivative(vectx * coord_sys._h1, coord_sys._z) -
+                   Derivative(vectz * coord_sys._h3, coord_sys._x)) * coord_sys._j / (coord_sys._h1 * coord_sys._h3)
+        outvec += (Derivative(vecty * coord_sys._h2, coord_sys._x) -
+                   Derivative(vectx * coord_sys._h1, coord_sys._y)) * coord_sys._k / (coord_sys._h2 * coord_sys._h1)
+
+        if doit:
+            return outvec.doit()
+        return outvec
+
+
+def divergence(vector, coord_sys=None, doit=True):
+    """
+    Returns the divergence of a vector field computed wrt the base
+    scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    vector : Vector
+        The vector operand
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the gradient in
+        Deprecated since version 1.1
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, divergence
+    >>> R = CoordSysCartesian('R')
+    >>> v1 = R.x*R.y*R.z * (R.i+R.j+R.k)
+
+    >>> divergence(v1)
+    R.x*R.y + R.x*R.z + R.y*R.z
+    >>> v2 = 2*R.y*R.z*R.j
+    >>> divergence(v2)
+    2*R.z
+
+    """
+
+    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
+    if coord_sys is None:
+        return S.Zero
+    else:
+        vx = _diff_conditional(vector.dot(coord_sys._i), coord_sys._x, coord_sys._h2, coord_sys._h3) \
+             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
+        vy = _diff_conditional(vector.dot(coord_sys._j), coord_sys._y, coord_sys._h3, coord_sys._h1) \
+             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
+        vz = _diff_conditional(vector.dot(coord_sys._k), coord_sys._z, coord_sys._h1, coord_sys._h2) \
+             / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
+        if doit:
+            return (vx + vy + vz).doit()
+        return vx + vy + vz
+
+
+def gradient(scalar_field, coord_sys=None, doit=True):
+    """
+    Returns the vector gradient of a scalar field computed wrt the
+    base scalars of the given coordinate system.
+
+    Parameters
+    ==========
+
+    scalar_field : SymPy Expr
+        The scalar field to compute the gradient of
+
+    coord_sys : CoordSysCartesian
+        The coordinate system to calculate the gradient in
+        Deprecated since version 1.1
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysCartesian, gradient
+    >>> R = CoordSysCartesian('R')
+    >>> s1 = R.x*R.y*R.z
+    >>> gradient(s1)
+    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
+    >>> s2 = 5*R.x**2*R.z
+    >>> gradient(s2)
+    10*R.x*R.z*R.i + 5*R.x**2*R.k
+
+    """
+    coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+
+    if coord_sys is None:
+        return Vector.zero
+    else:
+        from sympy.vector.functions import express
+        scalar_field = express(scalar_field, coord_sys,
+                                   variables=True)
+        vx = Derivative(scalar_field, coord_sys._x) / coord_sys._h1
+        vy = Derivative(scalar_field, coord_sys._y) / coord_sys._h2
+        vz = Derivative(scalar_field, coord_sys._z) / coord_sys._h3
+
+        if doit:
+            return (vx * coord_sys._i + vy * coord_sys._j + vz * coord_sys._k).doit()
+        return vx * coord_sys._i + vy * coord_sys._j + vz * coord_sys._k
+
+
+def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
+    """
+    First re-expresses expr in the system that base_scalar belongs to.
+    If base_scalar appears in the re-expressed form, differentiates
+    it wrt base_scalar.
+    Else, returns S(0)
+    """
+    from sympy.vector.functions import express
+    new_expr = express(expr, base_scalar.system, variables=True)
+    if base_scalar in new_expr.atoms(BaseScalar):
+        return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
+    return S(0)
