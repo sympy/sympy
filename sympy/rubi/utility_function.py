@@ -9,10 +9,46 @@ from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, aco
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
-from .rubi import rubi_integrate
+from sympy.core.expr import UnevaluatedExpr
 
-def Int(expr, var):
-    return rubi_integrate(expr, var)
+#from .rubi import rubi_integrate
+
+#def Int(expr, var):
+#    return rubi_integrate(expr, var)
+
+def Set(expr, value):
+    return {expr: value}
+
+def With(subs, expr):
+    if isinstance(subs, dict):
+        k = list(subs.keys())[0]
+        expr = expr.subs(k, subs[k])
+    else:
+        for i in subs:
+            k = list(i.keys())[0]
+            expr = expr.subs(k, i[k])
+    return expr
+
+def Scan(f, expr):
+    # evaluates f applied to each element of expr in turn.
+    for i in expr:
+        yield f(i)
+
+def MapAnd(f, l, x=None):
+    # MapAnd[f,l] applies f to the elements of list l until False is returned; else returns True
+    if x:
+        for i in l:
+            if f(i, x) == False:
+                return False
+        return True
+    else:
+        for i in l:
+            if f(i) == False:
+                return False
+        return True
+
+def FalseQ(u):
+    return u == False
 
 def ZeroQ(expr):
     return expr == 0
@@ -41,8 +77,29 @@ def NegativeIntegerQ(var):
 def PositiveQ(var):
     return var > 0
 
-def IntegerQ(*var):
-    return all(i.is_Integer for i in var)
+def IntegerQ(var):
+    if isinstance(var, int):
+        return True
+    else:
+        return var.is_Integer
+
+def IntegersQ(*var):
+    return all(IntegerQ(i) for i in var)
+
+def ComplexNumberQ(*var):
+    return all(i.is_complex for i in var)
+
+def RealNumericQ(u):
+    return u.is_real
+
+def PositiveOrZeroQ(u):
+    return u.is_real and u >= 0
+
+def NegativeOrZeroQ(u):
+    return u.is_real and u <= 0
+
+def FractionOrNegativeQ(u):
+    return FractionQ(u) or u < 0
 
 def PosQ(var):
     return var > 0
@@ -65,8 +122,38 @@ def IntPart(var):
 def RationalQ(*nodes):
     return all(var.is_Rational for var in nodes)
 
+def ProductQ(expr):
+    return expr.is_Mul
+
+def SumQ(expr):
+    return expr.is_Add
+
 def Subst(a, x, y):
     return a.subs(x, y)
+
+def First(expr, d=None):
+    # gives the first element if it exists, or d otherwise.
+    try:
+        return expr[0]
+    except:
+        return d
+
+def Rest(l):
+    return l[1:]
+
+def SqrtNumberQ(expr):
+    # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
+    if expr.is_Pow:
+        m = expr.base
+        n = expr.exp
+        return IntegerQ(n) & SqrtNumberQ(m) | IntegerQ(n-1/2) & RationalQ(m)
+    elif expr.is_Mul:
+        return all(SqrtNumberQ(i) for i in expr.args)
+    else:
+        return RationalQ(expr) or expr == I
+
+def SqrtNumberSumQ(u):
+    return SumQ(u) & SqrtNumberQ(First(u)) & SqrtNumberQ(Rest(u)) | ProductQ(u) & SqrtNumberQ(First(u)) & SqrtNumberSumQ(Rest(u))
 
 def LinearQ(expr, x):
     if degree(expr, gen=x) == 1:
@@ -86,12 +173,6 @@ def Coefficient(expr, var, n):
         return 0
     else:
         return a.all_coeffs()[degree(a) - n]
-
-def RemoveContent(expr, x):
-    for i in expr.args:
-        if not i.has(x):
-            expr = expr - i
-    return expr
 
 def Denominator(var):
     return fraction(var)[1]
@@ -179,24 +260,14 @@ def GreaterEqual(*args):
             return False
     return True
 
-def Set(expr, value):
-    return {expr: value}
-
-def With(subs, expr):
-    if isinstance(subs, dict):
-        k = list(subs.keys())[0]
-        expr = expr.subs(k, subs[k])
-    else:
-        for i in subs:
-            k = list(i.keys())[0]
-            expr = expr.subs(k, i[k])
-    return expr
-
 def FractionQ(*args):
-    for i in args:
-        if not i.is_Rational:
-            return False
-    return True
+    return all(i.is_Rational for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
+    # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
     return IntegerQ(m) | IntegerQ(n) | IntegersQ(3*m, 3*n) | IntegersQ(4*m, 4*n) | IntegersQ(2*m, 6*n) | IntegersQ(6*m, 2*n) | IntegerQ(m + n)
+
+Defer = UnevaluatedExpr
+
+def Expand(expr):
+    return expr.expand()
