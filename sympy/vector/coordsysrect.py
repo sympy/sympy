@@ -6,7 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.core import S
-from sympy import cos
+from sympy import sin
 import sympy.vector
 
 
@@ -192,7 +192,7 @@ class CoordSysCartesian(Basic):
 
         coefficient_mapping = {
             'cartesian': (1, 1, 1),
-            'spherical': (1, self.x, self.x * cos(self.y)),
+            'spherical': (1, self.x, self.x * sin(self.y)),
             'cylindrical': (1, self.y, 1)
         }
         if curv_coord_name not in coefficient_mapping:

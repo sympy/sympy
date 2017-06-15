@@ -233,13 +233,14 @@ def test_differential_operators_curvilinear_system():
     B._set_lame_coefficient_mapping('cylindrical')
     # Test for spherical coordinate system and gradient
     assert gradient(3*A.x + 4*A.y) == 3*A.i + 4/A.x*A.j
-    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/cos(A.y))*A.k
+    assert gradient(3*A.x*A.z + 4*A.y) == 3*A.z*A.i + 4/A.x*A.j + (3/sin(A.y))*A.k
     assert gradient(0*A.x + 0*A.y+0*A.z) == Vector.zero
-    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/cos(A.y))*A.k
+    assert gradient(A.x*A.y*A.z) == A.y*A.z*A.i + A.z*A.j + (A.y/sin(A.y))*A.k
     # Test for spherical coordinate system and divergence
-    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == (-sin(A.y)*A.x*A.y + cos(A.y)*A.x)/(cos(A.y)*A.x**2) + 3 + 1/(cos(A.y)*A.x)
+    assert divergence(A.x * A.i + A.y * A.j + A.z * A.k) == \
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 3 + 1/(sin(A.y)*A.x)
     assert divergence(3*A.x*A.z*A.i + A.y*A.j + A.x*A.y*A.z*A.k) == \
-           (-sin(A.y)*A.x*A.y + cos(A.y)*A.x)/(cos(A.y)*A.x**2) + 9*A.z + A.y/cos(A.y)
+           (sin(A.y)*A.x + cos(A.y)*A.x*A.y)/(sin(A.y)*A.x**2) + 9*A.z + A.y/sin(A.y)
     assert divergence(Vector.zero) == 0
     assert divergence(0*A.i + 0*A.j + 0*A.k) == 0
     # Test for cylindrical coordinate system and divergence
@@ -247,5 +248,5 @@ def test_differential_operators_curvilinear_system():
     assert divergence(B.x*B.j + B.z*B.k) == 1
     # Test for spherical coordinate system and divergence
     assert curl(A.x*A.i + A.y*A.j + A.z*A.k) == \
-           (-sin(A.y)*A.z/(cos(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
-    assert curl(A.x*A.j + A.z*A.k) == (-sin(A.y)*A.z/(cos(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k
+           (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + A.y/A.x*A.k
+    assert curl(A.x*A.j + A.z*A.k) == (cos(A.y)*A.z/(sin(A.y)*A.x))*A.i + (-A.z/A.x)*A.j + 2*A.k
