@@ -198,6 +198,7 @@ class CoordSysCartesian(Basic):
         if curv_coord_name not in coefficient_mapping:
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+        self._delop._h1, self._delop._h2, self._delop._h3 = coefficient_mapping[curv_coord_name]
 
     @property
     def origin(self):
@@ -730,9 +731,7 @@ class CoordSysCartesian(Basic):
     def __init__(self, name, location=None, rotation_matrix=None,
                  parent=None, vector_names=None, variable_names=None,
                  latex_vects=None, pretty_vects=None, latex_scalars=None,
-
                  curv_coord_name=None, pretty_scalars=None):
-
         # Dummy initializer for setting docstring
         pass
 
