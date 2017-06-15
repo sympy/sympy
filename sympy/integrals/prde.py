@@ -126,11 +126,11 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
         # Possible cancellation.
         if case == 'exp':
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+            with DecrementLevel(DE) as DE0:  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
-                etaa, etad = frac_in(dcoeff, DE.t)
-                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE0.t)
+                etaa, etad = frac_in(dcoeff, DE0.t)
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE0)
                 if A is not None:
                     a, m, z = A
                     if a == 1:
@@ -138,14 +138,14 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
         elif case == 'tan':
             dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
-            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+            with DecrementLevel(DE) as DE0:  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
+                betaa, alphaa, alphad =  real_imag(ba, bd*a, DE0.t)
                 betad = alphad
-                etaa, etad = frac_in(dcoeff, DE.t)
-                if recognize_log_derivative(2*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
-                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
+                etaa, etad = frac_in(dcoeff, DE0.t)
+                if recognize_log_derivative(2*betaa, betad, DE0):
+                    A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE0)
+                    B = parametric_log_deriv(betaa, betad, etaa, etad, DE0)
                     if A is not None and B is not None:
                         a, s, z = A
                         # TODO: Add test
@@ -384,11 +384,11 @@ def prde_no_cancel_b_small(b, Q, n, DE):
 
     t = DE.t
     if DE.case != 'base':
-        with DecrementLevel(DE):
-            t0 = DE.t  # k = k0(t0)
+        with DecrementLevel(DE) as DE0:
+            t0 = DE0.t  # k = k0(t0)
             ba, bd = frac_in(b, t0, field=True)
             Q0 = [frac_in(qi.TC(), t0, field=True) for qi in Q]
-            f, B = param_rischDE(ba, bd, Q0, DE)
+            f, B = param_rischDE(ba, bd, Q0, DE0)
 
             # f = [f1, ..., fr] in k^r and B is a matrix with
             # m + r columns and entries in Const(k) = Const(k0)
@@ -1152,19 +1152,19 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
 
     if case == 'exp':
         wa, wd = derivation(DE.t, DE).cancel(Poly(DE.t, DE.t), include=True)
-        with DecrementLevel(DE):
-            pa, pd = frac_in(p, DE.t, cancel=True)
-            wa, wd = frac_in((wa, wd), DE.t)
-            A = parametric_log_deriv(pa, pd, wa, wd, DE)
+        with DecrementLevel(DE) as DE0:
+            pa, pd = frac_in(p, DE0.t, cancel=True)
+            wa, wd = frac_in((wa, wd), DE0.t)
+            A = parametric_log_deriv(pa, pd, wa, wd, DE0)
         if A is None:
             return None
         n, e, u = A
         u *= DE.t**e
 
     elif case == 'primitive':
-        with DecrementLevel(DE):
-            pa, pd = frac_in(p, DE.t)
-            A = is_log_deriv_k_t_radical_in_field(pa, pd, DE, case='auto')
+        with DecrementLevel(DE) as DE0:
+            pa, pd = frac_in(p, DE0.t)
+            A = is_log_deriv_k_t_radical_in_field(pa, pd, DE0, case='auto')
         if A is None:
             return None
         n, u = A

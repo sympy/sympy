@@ -504,19 +504,19 @@ def test_DifferentialExtension_all_attrs():
     assert DE.t == t1 == DE.T[DE.level]
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
     raises(ValueError, lambda: DE.increment_level())
-    DE.decrement_level()
+    DE = DE.decrement_level()
     assert DE.level == -2
     assert DE.t == t0 == DE.T[DE.level]
     assert DE.d == Poly(t0, t0) == DE.D[DE.level]
     assert DE.case == 'exp'
-    DE.decrement_level()
+    DE = DE.decrement_level()
     assert DE.level == -3
     assert DE.t == x == DE.T[DE.level] == DE.x
     assert DE.d == Poly(1, x) == DE.D[DE.level]
     assert DE.case == 'base'
     raises(ValueError, lambda: DE.decrement_level())
-    DE.increment_level()
-    DE.increment_level()
+    DE = DE.increment_level()
+    DE = DE.increment_level()
     assert DE.level == -1
     assert DE.t == t1 == DE.T[DE.level]
     assert DE.d == Poly(1/x, t1) == DE.D[DE.level]
@@ -587,22 +587,22 @@ def test_DecrementLevel():
     assert DE.d == Poly(t0/(t0 + 1), t1)
     assert DE.case == 'primitive'
 
-    with DecrementLevel(DE):
-        assert DE.level == -2
-        assert DE.t == t0
-        assert DE.d == Poly(t0, t0)
-        assert DE.case == 'exp'
+    with DecrementLevel(DE) as DE1:
+        assert DE1.level == -2
+        assert DE1.t == t0
+        assert DE1.d == Poly(t0, t0)
+        assert DE1.case == 'exp'
 
-        with DecrementLevel(DE):
-            assert DE.level == -3
-            assert DE.t == x
-            assert DE.d == Poly(1, x)
-            assert DE.case == 'base'
+        with DecrementLevel(DE1) as DE2:
+            assert DE2.level == -3
+            assert DE2.t == x
+            assert DE2.d == Poly(1, x)
+            assert DE2.case == 'base'
 
-        assert DE.level == -2
-        assert DE.t == t0
-        assert DE.d == Poly(t0, t0)
-        assert DE.case == 'exp'
+        assert DE1.level == -2
+        assert DE1.t == t0
+        assert DE1.d == Poly(t0, t0)
+        assert DE1.case == 'exp'
 
     assert DE.level == -1
     assert DE.t == t1
@@ -611,7 +611,7 @@ def test_DecrementLevel():
 
     # Test that __exit__ is called after an exception correctly
     try:
-        with DecrementLevel(DE):
+        with DecrementLevel(DE) as DE0:
             raise TestingException
     except TestingException:
         pass

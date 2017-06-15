@@ -45,7 +45,7 @@ def test_prde_special_denom():
         (Poly(1, t), Poly(t**2 - 1, t), [(Poly(t**2, t), Poly(1, t)),
         (Poly(1, t), Poly(1, t))], Poly(t, t))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0)]})
-    DE.decrement_level()
+    DE = DE.decrement_level()
     G = [(Poly(t, t), Poly(t**2, t)), (Poly(2*t, t), Poly(t, t))]
     assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE) == \
         (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),

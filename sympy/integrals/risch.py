@@ -36,6 +36,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered, range
 from sympy.integrals.heurisch import _symbols
+from copy import deepcopy
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
@@ -643,6 +644,21 @@ class DifferentialExtension(object):
         self.Tfuncs = []
         self.newf = self.f
 
+    def copy(self):
+        DE = self.__class__(f=self.f, x=self.x, extension={'D': self.D[:]})
+        DE.f, DE.x = self.f, self.x
+        DE.T = deepcopy(self.T)
+        DE.fa, DE.fd = self.fa, self.fd
+        DE.Tfuncs = deepcopy(self.Tfuncs)
+        DE.backsubs = deepcopy(self.backsubs)
+        DE.E_K, DE.E_args = deepcopy(self.E_K), deepcopy(self.E_args)
+        DE.L_K, DE.L_args = deepcopy(self.L_K), deepcopy(self.L_args)
+        DE.cases, DE.case = deepcopy(self.cases), self.case
+        DE.t, DE.d = self.t, self.d
+        DE.newf, DE.level = self.newf, self.level
+        DE.ts, DE.dummy = self.ts, self.dummy
+        return DE
+
     def increment_level(self):
         """
         Increment the level of self.
@@ -655,11 +671,12 @@ class DifferentialExtension(object):
             raise ValueError("The level of the differential extension cannot "
                 "be incremented any further.")
 
-        self.level += 1
-        self.t = self.T[self.level]
-        self.d = self.D[self.level]
-        self.case = self.cases[self.level]
-        return None
+        DE = self.copy()
+        DE.level += 1
+        DE.t = DE.T[DE.level]
+        DE.d = DE.D[DE.level]
+        DE.case = DE.cases[DE.level]
+        return DE
 
     def decrement_level(self):
         """
@@ -673,11 +690,12 @@ class DifferentialExtension(object):
             raise ValueError("The level of the differential extension cannot "
                 "be decremented any further.")
 
-        self.level -= 1
-        self.t = self.T[self.level]
-        self.d = self.D[self.level]
-        self.case = self.cases[self.level]
-        return None
+        DE = self.copy()
+        DE.level -= 1
+        DE.t = DE.T[DE.level]
+        DE.d = DE.D[DE.level]
+        DE.case = DE.cases[DE.level]
+        return DE
 
 
 class DecrementLevel(object):
@@ -691,10 +709,10 @@ class DecrementLevel(object):
         return
 
     def __enter__(self):
-        self.DE.decrement_level()
+        return self.DE.decrement_level()
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.DE.increment_level()
+        return
 
 
 class NonElementaryIntegralException(Exception):
@@ -836,7 +854,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
         if DE.level <= -len(DE.T):
             # 'base' case, the answer is 0.
             return r
-        DE.decrement_level()
+        DE = DE.decrement_level()
 
     D = DE.D[:len(DE.D) + DE.level + 1]
     T = DE.T[:len(DE.T) + DE.level + 1]
@@ -854,7 +872,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     if basic:
         r = cancel(r)
     if coefficientD:
-        DE.increment_level()
+        DE = DE.increment_level()
 
     return r
 
@@ -1300,13 +1318,13 @@ def integrate_primitive_polynomial(p, DE):
 
         Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
 
-        with DecrementLevel(DE):  # We had better be integrating the lowest extension (x)
+        with DecrementLevel(DE) as DE0:  # We had better be integrating the lowest extension (x)
                                   # with ratint().
             a = p.LC()
-            aa, ad = frac_in(a, DE.t)
+            aa, ad = frac_in(a, DE0.t)
 
             try:
-                rv = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+                rv = limited_integrate(aa, ad, [(Dta, Dtb)], DE0)
                 if rv is None:
                     raise NonElementaryIntegralException
                 (ba, bd), c = rv
@@ -1386,7 +1404,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     if p.is_zero:
         return(qa, qd, b)
 
-    with DecrementLevel(DE):
+    with DecrementLevel(DE) as DE0:
         for i in range(-p.degree(z), p.degree(t1) + 1):
             if not i:
                 continue
@@ -1400,12 +1418,12 @@ def integrate_hyperexponential_polynomial(p, DE, z):
                 # then this should really not have expand=False
                 a = p.as_poly(t1, expand=False).nth(i)
 
-            aa, ad = frac_in(a, DE.t, field=True)
+            aa, ad = frac_in(a, DE0.t, field=True)
             aa, ad = aa.cancel(ad, include=True)
             iDt = Poly(i, t1)*dtt
-            iDta, iDtd = frac_in(iDt, DE.t, field=True)
+            iDta, iDtd = frac_in(iDt, DE0.t, field=True)
             try:
-                va, vd = rischDE(iDta, iDtd, Poly(aa, DE.t), Poly(ad, DE.t), DE)
+                va, vd = rischDE(iDta, iDtd, Poly(aa, DE0.t), Poly(ad, DE0.t), DE0)
                 va, vd = frac_in((va, vd), t1)
             except NonElementaryIntegralException:
                 b = False
@@ -1699,7 +1717,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     result = S(0)
     for case in reversed(DE.cases):
         if not DE.fa.has(DE.t) and not fd.has(DE.t) and not case == 'base':
-            DE.decrement_level()
+            DE = DE.decrement_level()
             fa, fd = frac_in((fa, fd), DE.t)
             continue
 
@@ -1720,7 +1738,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
         result += ans
         if b:
-            DE.decrement_level()
+            DE = DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
             result = result.subs(DE.backsubs)

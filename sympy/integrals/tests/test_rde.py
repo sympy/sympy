@@ -77,7 +77,7 @@ def test_special_denom():
     # but at least it tests the exp cancellation case
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0),
         Poly(I*k*t1, t1)]})
-    DE.decrement_level()
+    DE = DE.decrement_level()
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
         (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
@@ -183,7 +183,7 @@ def test_solve_poly_rde_cancel():
 def test_rischDE():
     # TODO: Add more tests for rischDE, including ones from the text
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    DE.decrement_level()
+    DE = DE.decrement_level()
     assert rischDE(Poly(-2*x, x), Poly(1, x), Poly(1 - 2*x - 2*x**2, x),
     Poly(1, x), DE) == \
         (Poly(x + 1, x), Poly(1, x))
