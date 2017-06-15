@@ -1193,7 +1193,7 @@ def test_sincos_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     s1 = sin(x).rewrite(sqrt)
@@ -1267,7 +1267,7 @@ def test_tancot_rewrite_sqrt():
     for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
-            for i in range(1, (n + 1)//2 + 1):
+            for i in range(1, min((n + 1)//2 + 1, 10)):
                 if 1 == gcd(i, n):
                     x = i*pi/n
                     if  2*i != n and 3*i != 2*n:
