@@ -60,7 +60,7 @@ def FreeQ(nodes, var):
     if isinstance(nodes, list):
         return not any(expr.has(var) for expr in nodes)
     else:
-        return nodes != var
+        return not nodes.has(var)
 
 def List(*var):
     return list(var)
@@ -127,6 +127,9 @@ def ProductQ(expr):
 
 def SumQ(expr):
     return expr.is_Add
+
+def NonsumQ(expr):
+    return not SumQ(expr)
 
 def Subst(a, x, y):
     return a.subs(x, y)
@@ -271,3 +274,18 @@ Defer = UnevaluatedExpr
 
 def Expand(expr):
     return expr.expand()
+
+def IndependentQ(u, x):
+    return FreeQ(u, x)
+
+def PowerQ(expr):
+    return expr.is_Pow
+
+def IntegerPowerQ(u):
+    return PowerQ(u) and IntegerQ(u.args[1])
+
+def PositiveIntegerPowerQ(u):
+    return PowerQ(u) and IntegerQ(u.args[1]) and u.args[1]>0
+
+def FractionalPowerQ(u):
+    return PowerQ(u) & FractionQ(u.args[1])

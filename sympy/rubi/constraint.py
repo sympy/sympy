@@ -10,6 +10,12 @@ class cons(Constraint):
         if isinstance(self.expr, bool): #handle rules without constraints
             return self.expr
         sub = substitute(self.expr, substitution)
+
+        print()
+        print(self.expr)
+        print(substitution)
+        print(sub)
+
         try:
             return sympify(str(sub))
         except:

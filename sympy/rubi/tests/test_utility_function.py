@@ -234,6 +234,10 @@ def test_SumQ():
     assert SumQ(a*b) == False
     assert SumQ(a + b) == True
 
+def test_NonsumQ():
+    assert NonsumQ(a*b) == True
+    assert NonsumQ(a + b) == False
+
 def test_First():
     assert First([1, 2, 3, 4]) == 1
 
@@ -246,3 +250,23 @@ def test_SqrtNumberQ():
 def test_IntLinearcQ():
     assert IntLinearcQ(1, 2, 3, 4, 5, 6, x) == True
     assert IntLinearcQ(S(1)/100, S(2)/100, S(3)/100, S(4)/100, S(5)/100, S(6)/100, x) == False
+
+def test_IndependentQ():
+    assert IndependentQ(a + b*x, x) == False
+    assert IndependentQ(a + b, x) == True
+
+def test_PowerQ():
+    assert PowerQ(a**b) == True
+    assert PowerQ(a + b) == False
+
+def test_IntegerPowerQ():
+    assert IntegerPowerQ(a**2) == True
+    assert IntegerPowerQ(a**0.5) == False
+
+def test_PositiveIntegerPowerQ():
+    assert PositiveIntegerPowerQ(a**3) == True
+    assert PositiveIntegerPowerQ(a**(-2)) == False
+
+def test_FractionalPowerQ():
+    assert FractionalPowerQ(a**2) == True
+    assert FractionalPowerQ(a**sqrt(2)) == False
