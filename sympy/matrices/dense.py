@@ -279,7 +279,7 @@ class DenseMatrix(MatrixBase):
         return self._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_tolist(self):
-        mat = self._mat
+        mat = list(self._mat)
         cols = self.cols
         return [mat[i*cols:(i + 1)*cols] for i in range(self.rows)]
 
