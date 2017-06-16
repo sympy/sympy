@@ -1,6 +1,9 @@
 from sympy.rubi.utility_function import *
 from sympy.core.symbol import symbols, S
-from sympy import I
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
+from sympy import I, E
 
 a, b, c, d, x, y, z = symbols('a b c d x y z')
 
@@ -270,3 +273,99 @@ def test_PositiveIntegerPowerQ():
 def test_FractionalPowerQ():
     assert FractionalPowerQ(a**2) == True
     assert FractionalPowerQ(a**sqrt(2)) == False
+
+def test_AtomQ():
+    assert AtomQ(x)
+    assert not AtomQ(x+1)
+
+def test_ExpQ():
+    assert ExpQ(E**2)
+    assert not ExpQ(2**E)
+
+def test_LogQ():
+    assert LogQ(log(x))
+    assert not LogQ(sin(x) + log(x))
+
+def test_Head():
+    assert Head(sin(x)) == sin
+    assert Head(log(x**3 + 3)) == log
+
+def test_MemberQ():
+    assert MemberQ([a, b, c], b)
+    assert MemberQ([sin, cos, log, tan], Head(sin(x)))
+
+def test_TrigQ():
+    assert TrigQ(sin(x))
+    assert TrigQ(tan(x**2 + 2))
+    assert not TrigQ(sin(x) + tan(x))
+
+def test_SinQ():
+    assert SinQ(sin(x))
+    assert not SinQ(tan(x))
+
+def test_CosQ():
+    assert CosQ(cos(x))
+    assert not CosQ(csc(x))
+
+def test_TanQ():
+    assert TanQ(tan(x))
+    assert not TanQ(cot(x))
+
+def test_CotQ():
+    assert not CotQ(tan(x))
+    assert CotQ(cot(x))
+
+def test_SecQ():
+    assert SecQ(sec(x))
+    assert not SecQ(csc(x))
+
+def test_CscQ():
+    assert not CscQ(sec(x))
+    assert CscQ(csc(x))
+
+def test_HyperbolicQ():
+    assert HyperbolicQ(sinh(x))
+    assert HyperbolicQ(cosh(x))
+    assert HyperbolicQ(tanh(x))
+    assert not HyperbolicQ(sinh(x) + cosh(x) + tanh(x))
+
+def test_SinhQ():
+    assert SinhQ(sinh(x))
+    assert not SinhQ(cosh(x))
+
+def test_CoshQ():
+    assert not CoshQ(sinh(x))
+    assert CoshQ(cosh(x))
+
+def test_TanhQ():
+    assert TanhQ(tanh(x))
+    assert not TanhQ(coth(x))
+
+def test_CothQ():
+    assert not CothQ(tanh(x))
+    assert CothQ(coth(x))
+
+def test_SechQ():
+    assert SechQ(sech(x))
+    assert not SechQ(csch(x))
+
+def test_CschQ():
+    assert not CschQ(sech(x))
+    assert CschQ(csch(x))
+
+def test_InverseTrigQ():
+    assert InverseTrigQ(acot(x))
+    assert InverseTrigQ(asec(x))
+    assert not InverseTrigQ(acsc(x) + asec(x))
+
+def test_SinCosQ():
+    assert SinCosQ(sin(x))
+    assert SinCosQ(cos(x))
+    assert SinCosQ(sec(x))
+    assert not SinCosQ(acsc(x))
+
+def test_SinhCoshQ():
+    assert not SinhCoshQ(sin(x))
+    assert SinhCoshQ(cosh(x))
+    assert SinhCoshQ(sech(x))
+    assert SinhCoshQ(csch(x))

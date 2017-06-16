@@ -2,14 +2,15 @@
 Utility functions for Constraints in Rubi
 '''
 
-from sympy.functions import (log, sin, cos, sqrt)
+from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, acos
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 from sympy.core.expr import UnevaluatedExpr
+from sympy import exp
 
 #from .rubi import rubi_integrate
 
@@ -289,3 +290,81 @@ def PositiveIntegerPowerQ(u):
 
 def FractionalPowerQ(u):
     return PowerQ(u) & FractionQ(u.args[1])
+
+def AtomQ(expr):
+    return expr.is_Atom
+
+def ExpQ(u):
+    return Head(u) == exp
+
+def LogQ(u):
+    return u.func == log
+
+def Head(u):
+    return u.func
+
+def MemberQ(l, u):
+    return u in l
+
+def TrigQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+    return MemberQ([sin, cos, tan, cot, sec, csc], x)
+
+def SinQ(u):
+    return Head(u) == sin
+
+def CosQ(u):
+    return Head(u) == cos
+
+def TanQ(u):
+    return Head(u) == tan
+
+def CotQ(u):
+    return Head(u) == cot
+
+def SecQ(u):
+    return Head(u) == sec
+
+def CscQ(u):
+    return Head(u) == csc
+
+def HyperbolicQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+    return MemberQ([sinh, cosh, tanh, coth, sech, csch], x)
+
+def SinhQ(u):
+    return Head(u) == sinh
+
+def CoshQ(u):
+    return Head(u) == cosh
+
+def TanhQ(u):
+    return Head(u) == tanh
+
+def CothQ(u):
+    return Head(u) == coth
+
+def SechQ(u):
+    return Head(u) == sech
+
+def CschQ(u):
+    return Head(u) == csch
+
+def InverseTrigQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+    return MemberQ([asin, acos, atan, acot, asec, acsc], x)
+
+def SinCosQ(f):
+    return MemberQ([sin, cos, sec, csc], Head(f))
+
+def SinhCoshQ(f):
+    return MemberQ([sinh, cosh, sech, csch], Head(f))
