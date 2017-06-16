@@ -2,14 +2,15 @@
 Utility functions for Constraints in Rubi
 '''
 
-from sympy.functions import (log, sin, cos, sqrt)
+from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, acos
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 from sympy.core.expr import UnevaluatedExpr
+from sympy import exp
 
 #from .rubi import rubi_integrate
 
@@ -294,26 +295,23 @@ def AtomQ(expr):
     return expr.is_Atom
 
 def ExpQ(u):
-    return PowerQ(u) and u.args[1] == E
+    return Head(u) == exp
 
 def LogQ(u):
-    return expr.func == log
+    return u.func == log
 
 def Head(u):
     return u.func
 
 def MemberQ(l, u):
-    try:
-        return any(expr == (u.func) for expr in l)
-    except TypeError:
-        return l == u.func
+    return u in l
 
 def TrigQ(u):
     if AtomQ(u):
         x = u
     else:
         x = Head(u)
-return ([sin, cos, tan, cot, sec, csc], x)
+    return MemberQ([sin, cos, tan, cot, sec, csc], x)
 
 def SinQ(u):
     return Head(u) == sin
