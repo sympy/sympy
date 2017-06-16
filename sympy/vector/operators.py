@@ -101,7 +101,7 @@ class Curl(Expr):
         return curl(self._expr, doit=True)
 
 
-def curl(vector, coord_sys=None, doit=True):
+def curl(vect, coord_sys=None, doit=True):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -109,7 +109,7 @@ def curl(vector, coord_sys=None, doit=True):
     Parameters
     ==========
 
-    vector : Vector
+    vect : Vector
         The vector operand
 
     coord_sys : CoordSysCartesian
@@ -130,14 +130,14 @@ def curl(vector, coord_sys=None, doit=True):
 
     """
 
-    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
+    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
     if coord_sys is None:
         return Vector.zero
     else:
         from sympy.vector.functions import express
-        vectx = express(vector.dot(coord_sys._i), coord_sys, variables=True)
-        vecty = express(vector.dot(coord_sys._j), coord_sys, variables=True)
-        vectz = express(vector.dot(coord_sys._k), coord_sys, variables=True)
+        vectx = express(vect.dot(coord_sys._i), coord_sys, variables=True)
+        vecty = express(vect.dot(coord_sys._j), coord_sys, variables=True)
+        vectz = express(vect.dot(coord_sys._k), coord_sys, variables=True)
         outvec = Vector.zero
         outvec += (Derivative(vectz * coord_sys._h3, coord_sys._y) -
                    Derivative(vecty * coord_sys._h2, coord_sys._z)) * coord_sys._i / (coord_sys._h2 * coord_sys._h3)
@@ -151,7 +151,7 @@ def curl(vector, coord_sys=None, doit=True):
         return outvec
 
 
-def divergence(vector, coord_sys=None, doit=True):
+def divergence(vect, coord_sys=None, doit=True):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -181,15 +181,15 @@ def divergence(vector, coord_sys=None, doit=True):
 
     """
 
-    coord_sys = _get_coord_sys_from_expr(vector, coord_sys)
+    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
     if coord_sys is None:
         return S.Zero
     else:
-        vx = _diff_conditional(vector.dot(coord_sys._i), coord_sys._x, coord_sys._h2, coord_sys._h3) \
+        vx = _diff_conditional(vect.dot(coord_sys._i), coord_sys._x, coord_sys._h2, coord_sys._h3) \
              / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
-        vy = _diff_conditional(vector.dot(coord_sys._j), coord_sys._y, coord_sys._h3, coord_sys._h1) \
+        vy = _diff_conditional(vect.dot(coord_sys._j), coord_sys._y, coord_sys._h3, coord_sys._h1) \
              / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
-        vz = _diff_conditional(vector.dot(coord_sys._k), coord_sys._z, coord_sys._h1, coord_sys._h2) \
+        vz = _diff_conditional(vect.dot(coord_sys._k), coord_sys._z, coord_sys._h1, coord_sys._h2) \
              / (coord_sys._h1 * coord_sys._h2 * coord_sys._h3)
         if doit:
             return (vx + vy + vz).doit()

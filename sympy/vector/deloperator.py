@@ -47,7 +47,7 @@ class Del(Basic):
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
 
-    def dot(self, vector, doit=False):
+    def dot(self, vect, doit=False):
         """
         Represents the dot product between this operator and a given
         vector - equal to the divergence of the vector field.
@@ -55,7 +55,7 @@ class Del(Basic):
         Parameters
         ==========
 
-        vector : Vector
+        vect : Vector
             The vector whose divergence is to be calculated.
 
         doit : bool
@@ -75,12 +75,12 @@ class Del(Basic):
         C.x*C.y + C.x*C.z + C.y*C.z
 
         """
-        return divergence(vector, doit=doit)
+        return divergence(vect, doit=doit)
 
     __and__ = dot
     __and__.__doc__ = dot.__doc__
 
-    def cross(self, vector, doit=False):
+    def cross(self, vect, doit=False):
         """
         Represents the cross product between this operator and a given
         vector - equal to the curl of the vector field.
@@ -88,7 +88,7 @@ class Del(Basic):
         Parameters
         ==========
 
-        vector : Vector
+        vect : Vector
             The vector whose curl is to be calculated.
 
         doit : bool
@@ -110,7 +110,7 @@ class Del(Basic):
 
         """
 
-        return curl(vector, doit=doit)
+        return curl(vect, doit=doit)
 
     __xor__ = cross
     __xor__.__doc__ = cross.__doc__
