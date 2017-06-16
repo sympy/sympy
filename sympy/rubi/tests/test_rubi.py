@@ -1,5 +1,5 @@
 from sympy.core.symbol import symbols
-from sympy.rubi.rubi1 import rubi_integrate
+from sympy.rubi.rubi import rubi_integrate
 from sympy.functions import log
 
 a, b, c, d, e, f, x = symbols('a b c d e f x')

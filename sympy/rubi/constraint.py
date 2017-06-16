@@ -11,11 +11,6 @@ class cons(Constraint):
             return self.expr
         sub = substitute(self.expr, substitution)
 
-        print()
-        print(self.expr)
-        print(substitution)
-        print(sub)
-
         try:
             return sympify(str(sub))
         except:
