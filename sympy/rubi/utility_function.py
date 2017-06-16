@@ -68,6 +68,87 @@ def LinearQ(expr, x):
     else:
         return False
 
+def AtomQ(expr):
+    return expr.is_Atom
+
+def ExpQ(u):
+    return PowerQ(u) and u.args[1] == E
+
+def LogQ(u):
+    return expr.func == log
+
+def Head(u):
+    return u.func
+
+def MemberQ(l, u):
+    try:
+        return any(expr == (u.func) for expr in l)
+    except TypeError:
+        return l == u.func
+
+def TrigQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+return ([sin, cos, tan, cot, sec, csc], x)
+
+def SinQ(u):
+    return Head(u) == sin
+
+def CosQ(u):
+    return Head(u) == cos
+
+def TanQ(u):
+    return Head(u) == tan
+
+def CotQ(u):
+    return Head(u) == cot
+
+def SecQ(u):
+    return Head(u) == sec
+
+def CscQ(u):
+    return Head(u) == csc
+
+def HyperbolicQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+    return MemberQ([sinh, cosh, tanh, coth, sech, csch], x)
+
+def SinhQ(u):
+    return Head(u) == sinh
+
+def CoshQ(u):
+    return Head(u) == cosh
+
+def TanhQ(u):
+    return Head(u) == tanh
+
+def CothQ(u):
+    return Head(u) == coth
+
+def SechQ(u):
+    return Head(u) == sech
+
+def CschQ(u):
+    return Head(u) == csch
+
+def InverseTrigQ(u):
+    if AtomQ(u):
+        x = u
+    else:
+        x = Head(u)
+    return MemberQ([asin, acos, atan, acot, asec, acsc], x)
+
+def SinCosQ(f):
+    return MemberQ([sin,cos,sec,csc], Head(f))
+
+def SinhCoshQ(f):
+    return MemberQ([sinh,cosh,sech,csch], Head(f))
+
 def Sqrt(a):
     return sqrt(a)
 
