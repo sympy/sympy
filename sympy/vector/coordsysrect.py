@@ -8,7 +8,7 @@ from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
 from sympy.core import S
 from sympy import cos
 import sympy.vector
-
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class CoordSysCartesian(Basic):
     """
@@ -205,6 +205,11 @@ class CoordSysCartesian(Basic):
 
     @property
     def delop(self):
+        SymPyDeprecationWarning(
+            feature="delop operator inside coordinate system",
+            useinstead="it as instance Del class",
+            deprecated_since_version="1.1"
+            ).warn()
         return self._delop
 
     @property

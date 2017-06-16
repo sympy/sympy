@@ -6,6 +6,7 @@ from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
 from sympy.vector.operators import curl, divergence, gradient
+from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
                                     scalar_potential_difference)
@@ -14,7 +15,7 @@ from sympy.utilities.pytest import raises
 C = CoordSysCartesian('C')
 i, j, k = C.base_vectors()
 x, y, z = C.base_scalars()
-delop = C.delop
+delop = Del()
 a, b, c, q = symbols('a b c q')
 
 
