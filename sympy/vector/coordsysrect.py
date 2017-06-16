@@ -6,7 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.core import S
-from sympy import cos
+from sympy import sin
 import sympy.vector
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -192,12 +192,13 @@ class CoordSysCartesian(Basic):
 
         coefficient_mapping = {
             'cartesian': (1, 1, 1),
-            'spherical': (1, self.x, self.x * cos(self.y)),
+            'spherical': (1, self.x, self.x * sin(self.y)),
             'cylindrical': (1, self.y, 1)
         }
         if curv_coord_name not in coefficient_mapping:
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
+        self._delop._h1, self._delop._h2, self._delop._h3 = coefficient_mapping[curv_coord_name]
 
     @property
     def origin(self):

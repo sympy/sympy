@@ -42,6 +42,7 @@ class Del(Basic):
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
         """
+
         return gradient(scalar_field, doit=doit)
 
     __call__ = gradient
