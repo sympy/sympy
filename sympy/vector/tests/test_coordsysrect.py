@@ -297,7 +297,7 @@ def test_evalf():
 def test_lame_coefficients():
     a = CoordSysCartesian('a')
     a._set_lame_coefficient_mapping('spherical')
-    assert a.lame_coefficients() == (1, a.x, cos(a.y)*a.x)
+    assert a.lame_coefficients() == (1, a.x, sin(a.y)*a.x)
     a = CoordSysCartesian('a')
     assert a.lame_coefficients() == (1, 1, 1)
     a = CoordSysCartesian('a')
