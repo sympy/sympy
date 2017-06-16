@@ -5,13 +5,15 @@ Utility functions for Constraints in Rubi
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 from sympy.core.expr import UnevaluatedExpr
-from sympy import exp
+from sympy.functions.elementary.complexes import im, re
+from sympy import exp, polylog, N
+
+from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 
 #from .rubi import rubi_integrate
 
@@ -380,9 +382,18 @@ def AtomQ(expr):
 def ListQ(u):
     return isinstance(u, list)
 
+def Im(u):
+    return im(u)
+
+def InverseHyperbolicQ(u):
+    if not u.is_Atom:
+        u = Head(u)
+
+    return u in [acosh, asinh, atanh, acoth, acsch, acsch]
+
 def InverseFunctionQ(u):
     # returns True if u is a call on an inverse function; else returns False.
-    LogQ(u) | InverseTrigQ(u) & Length(u)<=1 | InverseHyperbolicQ(u) | u.__class__.__name__ == 'polylog'
+    return LogQ(u) or InverseTrigQ(u) and Length(u)<=1 or InverseHyperbolicQ(u) or u.func == polylog
 
 def TrigHyperbolicFreeQ(u, x):
     # If u is free of trig, hyperbolic and calculus functions involving x, TrigHyperbolicFreeQ[u,x] returns true; else it returns False.
@@ -402,7 +413,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) | CalculusQ(u) | u.__class__ == hyp2f1 | u.__class__ == appellf1:
+        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyp2f1 | u.func == appellf1:
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -414,7 +425,7 @@ def RealQ(u):
     if ListQ(u):
         return MapAnd(RealQ, u)
     elif NumericQ(u):
-        return ZeroQ[Im[N[u]]]
+        return ZeroQ(Im(N(u)))
     elif u.is_Pow:
         u = u.base
         v = u.exp
@@ -424,13 +435,13 @@ def RealQ(u):
     elif u.is_Add:
         return all(RealQ(i) for i in u.args)
     elif u.is_Function:
-        f = u.__class__
+        f = u.func
         u = u.args[0]
         if f in [sin, cos, tan, cot, sec, csc, atan, acot, erf]:
             return RealQ(u)
         else:
             if f in [asin, acos]:
-                return LE[-1,u,1]
+                return LE(-1, u, 1)
             else:
                 if f == log:
                     return PositiveOrZeroQ(u)

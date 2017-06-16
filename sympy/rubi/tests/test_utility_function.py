@@ -369,3 +369,30 @@ def test_SinhCoshQ():
     assert SinhCoshQ(cosh(x))
     assert SinhCoshQ(sech(x))
     assert SinhCoshQ(csch(x))
+
+def test_length():
+    assert Length(a + b) == 2
+    assert Length(sin(a)*cos(a)) == 2
+
+def test_AtomQ():
+    assert AtomQ(a)
+    assert not AtomQ(a + b)
+
+def test_ListQ():
+    assert ListQ([1, 2])
+    assert not ListQ(a)
+
+def test_InverseHyperbolicQ():
+    assert InverseHyperbolicQ(acosh(a))
+
+def test_InverseFunctionQ():
+    assert InverseFunctionQ(log(a))
+    assert InverseFunctionQ(acos(a))
+    assert not InverseFunctionQ(a)
+    assert InverseFunctionQ(acosh(a))
+    assert InverseFunctionQ(polylog(a, b))
+
+
+def test_EqQ():
+    assert EqQ(a, a)
+    assert not EqQ(a, b)
