@@ -85,7 +85,7 @@ def test_del_operator():
     #Tests for directional derivative
     # assert (Vector.zero & delop)(a) == S(0)
     # assert ((Vector.zero & delop)(a)).doit() == S(0)
-    # assert ((v & delop)(Vector.zero)).doit() == Vector.zero
+    assert ((v & delop)(Vector.zero)).doit() == Vector.zero
     # assert ((v & delop)(S(0))).doit() == S(0)
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
@@ -99,7 +99,7 @@ def test_del_operator():
     assert ((i & delop)(v)).doit() == i
     assert ((j & delop)(v)).doit() == j
     assert ((k & delop)(v)).doit() == k
-    # assert ((v & delop)(Vector.zero)).doit() == Vector.zero
+    assert ((v & delop)(Vector.zero)).doit() == Vector.zero
 
 
 def test_product_rules():
