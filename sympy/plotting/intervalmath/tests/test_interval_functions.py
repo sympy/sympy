@@ -59,17 +59,17 @@ def test_exp():
     assert a.start == np.exp(-np.inf)
     assert a.end == np.exp(0)
     a = exp(interval(1, 2))
-    assert a.start == np.exp(1)
-    assert a.end == np.exp(2)
+    assert abs(a.start - np.exp(1)) < 1e-15
+    assert abs(a.end - np.exp(2)) < 1e-15
     a = exp(1)
-    assert a.start == np.exp(1)
-    assert a.end == np.exp(1)
+    assert abs(a.start - np.exp(1)) < 1e-15
+    assert abs(a.end - np.exp(1)) < 1e-15
 
 
 def test_log():
     a = log(interval(1, 2))
     assert a.start == 0
-    assert a.end == np.log(2)
+    assert abs(a.end - np.log(2)) < 1e-15
     a = log(interval(-1, 1))
     assert a.is_valid is None
     a = log(interval(-3, -1))
@@ -77,14 +77,14 @@ def test_log():
     a = log(-3)
     assert a.is_valid is False
     a = log(2)
-    assert a.start == np.log(2)
-    assert a.end == np.log(2)
+    assert abs(a.start - np.log(2)) < 1e-15
+    assert abs(a.end - np.log(2)) < 1e-15
 
 
 def test_log10():
     a = log10(interval(1, 2))
     assert a.start == 0
-    assert a.end == np.log10(2)
+    assert abs(a.end - np.log10(2)) < 1e-15
     a = log10(interval(-1, 1))
     assert a.is_valid is None
     a = log10(interval(-3, -1))
@@ -92,47 +92,47 @@ def test_log10():
     a = log10(-3)
     assert a.is_valid is False
     a = log10(2)
-    assert a.start == np.log10(2)
-    assert a.end == np.log10(2)
+    assert abs(a.start - np.log10(2)) < 1e-15
+    assert abs(a.end - np.log10(2)) < 1e-15
 
 
 def test_atan():
     a = atan(interval(0, 1))
     assert a.start == np.arctan(0)
-    assert a.end == np.arctan(1)
+    assert abs(a.end - np.arctan(1)) < 1e-15
     a = atan(1)
-    assert a.start == np.arctan(1)
-    assert a.end == np.arctan(1)
+    assert abs(a.start - np.arctan(1)) < 1e-15
+    assert abs(a.end - np.arctan(1)) < 1e-15
 
 
 def test_sin():
     a = sin(interval(0, np.pi / 4))
     assert a.start == np.sin(0)
-    assert a.end == np.sin(np.pi / 4)
+    assert abs(a.end - np.sin(np.pi / 4)) < 1e-15
 
     a = sin(interval(-np.pi / 4, np.pi / 4))
-    assert a.start == np.sin(-np.pi / 4)
-    assert a.end == np.sin(np.pi / 4)
+    assert abs(a.start - np.sin(-np.pi / 4)) < 1e-15
+    assert abs(a.end - np.sin(np.pi / 4)) < 1e-15
 
     a = sin(interval(np.pi / 4, 3 * np.pi / 4))
-    assert a.start == np.sin(np.pi / 4)
-    assert a.end == 1
+    assert abs(a.start - np.sin(np.pi / 4)) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = sin(interval(7 * np.pi / 6, 7 * np.pi / 4))
-    assert a.start == -1
-    assert a.end == np.sin(7 * np.pi / 6)
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - np.sin(7 * np.pi / 6)) < 1e-15
 
     a = sin(interval(0, 3 * np.pi))
-    assert a.start == -1
-    assert a.end == 1
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = sin(interval(np.pi / 3, 7 * np.pi / 4))
-    assert a.start == -1
-    assert a.end == 1
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = sin(np.pi / 4)
-    assert a.start == np.sin(np.pi / 4)
-    assert a.end == np.sin(np.pi / 4)
+    assert abs(a.start - np.sin(np.pi / 4)) < 1e-15
+    assert abs(a.end - np.sin(np.pi / 4)) < 1e-15
 
     a = sin(interval(1, 2, is_valid=False))
     assert a.is_valid is False
@@ -140,28 +140,28 @@ def test_sin():
 
 def test_cos():
     a = cos(interval(0, np.pi / 4))
-    assert a.start == np.cos(np.pi / 4)
-    assert a.end == 1
+    assert abs(a.start - np.cos(np.pi / 4)) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = cos(interval(-np.pi / 4, np.pi / 4))
-    assert a.start == np.cos(-np.pi / 4)
-    assert a.end == 1
+    assert abs(a.start - np.cos(-np.pi / 4)) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = cos(interval(np.pi / 4, 3 * np.pi / 4))
-    assert a.start == np.cos(3 * np.pi / 4)
-    assert a.end == np.cos(np.pi / 4)
+    assert abs(a.start - np.cos(3 * np.pi / 4)) < 1e-15
+    assert abs(a.end - np.cos(np.pi / 4)) < 1e-15
 
     a = cos(interval(3 * np.pi / 4, 5 * np.pi / 4))
-    assert a.start == -1
-    assert a.end == np.cos(3 * np.pi / 4)
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - np.cos(3 * np.pi / 4)) < 1e-15
 
     a = cos(interval(0, 3 * np.pi))
-    assert a.start == -1
-    assert a.end == 1
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = cos(interval(- np.pi / 3, 5 * np.pi / 4))
-    assert a.start == -1
-    assert a.end == 1
+    assert abs(a.start - -1) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = cos(interval(1, 2, is_valid=False))
     assert a.is_valid is False
@@ -169,8 +169,8 @@ def test_cos():
 
 def test_tan():
     a = tan(interval(0, np.pi / 4))
-    assert a.start == 0
-    assert a.end == np.tan(np.pi / 4)
+    assert abs(a.start - 0) < 1e-15
+    assert abs(a.end - np.tan(np.pi / 4)) < 1e-15
 
     a = tan(interval(np.pi / 4, 3 * np.pi / 4))
     #discontinuity
@@ -179,12 +179,12 @@ def test_tan():
 
 def test_sqrt():
     a = sqrt(interval(1, 4))
-    assert a.start == 1
-    assert a.end == 2
+    assert abs(a.start - 1) < 1e-15
+    assert abs(a.end - 2) < 1e-15
 
     a = sqrt(interval(0.01, 1))
-    assert a.start == np.sqrt(0.01)
-    assert a.end == 1
+    assert abs(a.start - np.sqrt(0.01)) < 1e-15
+    assert abs(a.end - 1) < 1e-15
 
     a = sqrt(interval(-1, 1))
     assert a.is_valid is None
@@ -229,45 +229,45 @@ def test_imax():
 
 def test_sinh():
     a = sinh(interval(-1, 1))
-    assert a.start == np.sinh(-1)
-    assert a.end == np.sinh(1)
+    assert abs(a.start - np.sinh(-1)) < 1e-15
+    assert abs(a.end - np.sinh(1)) < 1e-15
 
     a = sinh(1)
-    assert a.start == np.sinh(1)
-    assert a.end == np.sinh(1)
+    assert abs(a.start - np.sinh(1)) < 1e-15
+    assert abs(a.end - np.sinh(1)) < 1e-15
 
 
 def test_cosh():
     a = cosh(interval(1, 2))
-    assert a.start == np.cosh(1)
-    assert a.end == np.cosh(2)
+    assert abs(a.start - np.cosh(1)) < 1e-15
+    assert abs(a.end - np.cosh(2)) < 1e-15
     a = cosh(interval(-2, -1))
-    assert a.start == np.cosh(-1)
-    assert a.end == np.cosh(-2)
+    assert abs(a.start - np.cosh(-1)) < 1e-15
+    assert abs(a.end - np.cosh(-2)) < 1e-15
 
     a = cosh(interval(-2, 1))
-    assert a.start == 1
-    assert a.end == np.cosh(-2)
+    assert abs(a.start - 1) < 1e-15
+    assert abs(a.end - np.cosh(-2)) < 1e-15
 
     a = cosh(1)
-    assert a.start == np.cosh(1)
-    assert a.end == np.cosh(1)
+    assert abs(a.start - np.cosh(1)) < 1e-15
+    assert abs(a.end - np.cosh(1)) < 1e-15
 
 
 def test_tanh():
     a = tanh(interval(-3, 3))
-    assert a.start == np.tanh(-3)
-    assert a.end == np.tanh(3)
+    assert abs(a.start - np.tanh(-3)) < 1e-15
+    assert abs(a.end - np.tanh(3)) < 1e-15
 
     a = tanh(3)
-    assert a.start == np.tanh(3)
-    assert a.end == np.tanh(3)
+    assert abs(a.start - np.tanh(3)) < 1e-15
+    assert abs(a.end - np.tanh(3)) < 1e-15
 
 
 def test_asin():
     a = asin(interval(-0.5, 0.5))
-    assert a.start == np.arcsin(-0.5)
-    assert a.end == np.arcsin(0.5)
+    assert abs(a.start - np.arcsin(-0.5)) < 1e-15
+    assert abs(a.end - np.arcsin(0.5)) < 1e-15
 
     a = asin(interval(-1.5, 1.5))
     assert a.is_valid is None
@@ -281,8 +281,8 @@ def test_asin():
     assert a.is_valid is False
 
     a = asin(0.5)
-    assert a.start == np.arcsin(0.5)
-    assert a.end == np.arcsin(0.5)
+    assert abs(a.start - np.arcsin(0.5)) < 1e-15
+    assert abs(a.end - np.arcsin(0.5)) < 1e-15
 
     a = asin(1.5)
     assert a.is_valid is False
@@ -290,8 +290,8 @@ def test_asin():
 
 def test_acos():
     a = acos(interval(-0.5, 0.5))
-    assert a.start == np.arccos(0.5)
-    assert a.end == np.arccos(-0.5)
+    assert abs(a.start - np.arccos(0.5)) < 1e-15
+    assert abs(a.end - np.arccos(-0.5)) < 1e-15
 
     a = acos(interval(-1.5, 1.5))
     assert a.is_valid is None
@@ -305,8 +305,8 @@ def test_acos():
     assert a.is_valid is False
 
     a = acos(0.5)
-    assert a.start == np.arccos(0.5)
-    assert a.end == np.arccos(0.5)
+    assert abs(a.start - np.arccos(0.5)) < 1e-15
+    assert abs(a.end - np.arccos(0.5)) < 1e-15
 
     a = acos(1.5)
     assert a.is_valid is False
@@ -350,18 +350,18 @@ def test_floor():
 
 def test_asinh():
     a = asinh(interval(1, 2))
-    assert a.start == np.arcsinh(1)
-    assert a.end == np.arcsinh(2)
+    assert abs(a.start - np.arcsinh(1)) < 1e-15
+    assert abs(a.end - np.arcsinh(2)) < 1e-15
 
     a = asinh(0.5)
-    assert a.start == np.arcsinh(0.5)
-    assert a.end == np.arcsinh(0.5)
+    assert abs(a.start - np.arcsinh(0.5)) < 1e-15
+    assert abs(a.end - np.arcsinh(0.5)) < 1e-15
 
 
 def test_acosh():
     a = acosh(interval(3, 5))
-    assert a.start == np.arccosh(3)
-    assert a.end == np.arccosh(5)
+    assert abs(a.start - np.arccosh(3)) < 1e-15
+    assert abs(a.end - np.arccosh(5)) < 1e-15
 
     a = acosh(interval(0, 3))
     assert a.is_valid is None
@@ -372,14 +372,14 @@ def test_acosh():
     assert a.is_valid is False
 
     a = acosh(2)
-    assert a.start == np.arccosh(2)
-    assert a.end == np.arccosh(2)
+    assert abs(a.start - np.arccosh(2)) < 1e-15
+    assert abs(a.end - np.arccosh(2)) < 1e-15
 
 
 def test_atanh():
     a = atanh(interval(-0.5, 0.5))
-    assert a.start == np.arctanh(-0.5)
-    assert a.end == np.arctanh(0.5)
+    assert abs(a.start - np.arctanh(-0.5)) < 1e-15
+    assert abs(a.end - np.arctanh(0.5)) < 1e-15
 
     a = atanh(interval(0, 3))
     assert a.is_valid is None
@@ -388,8 +388,8 @@ def test_atanh():
     assert a.is_valid is False
 
     a = atanh(0.5)
-    assert a.start == np.arctanh(0.5)
-    assert a.end == np.arctanh(0.5)
+    assert abs(a.start - np.arctanh(0.5)) < 1e-15
+    assert abs(a.end - np.arctanh(0.5)) < 1e-15
 
     a = atanh(1.5)
     assert a.is_valid is False
