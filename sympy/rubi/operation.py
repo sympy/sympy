@@ -21,8 +21,6 @@ class Add(Operation):
 class Pow(Operation):
     name = "Pow"
     arity = Arity.binary
-    associative = False
-    commutative = False
 
 class And(Operation):
     name = "And"
@@ -51,7 +49,7 @@ class List(Operation):
     arity = Arity.variadic
 
 class Log(Operation):
-    name = "log"
+    name = "Log"
     arity = Arity.unary
 
 class RemoveContent(Operation):
@@ -92,7 +90,7 @@ class IntPart(Operation):
 
 class RationalQ(Operation):
     name = "RationalQ"
-    arity = Arity.unary
+    arity = Arity.variadic
 
 class Subst(Operation):
     name = "Subst"
@@ -110,14 +108,62 @@ class ArcCosh(Operation):
     name = "ArcCosh"
     arity = Arity.unary
 
+class Rational(Operation):
+    name = "Rational"
+    arity = Arity.binary
 
+class Less(Operation):
+    name = "Less"
+    arity = Arity.variadic
 
-
-
-
-
-
-
-class ConstantSymbol_parse(Operation):
-    name = "ConstantSymbol"
+class Not(Operation):
+    name = "Not"
     arity = Arity.unary
+
+class Simplify(Operation):
+    name = "Simplify"
+    arity = Arity.unary
+
+class Denominator(Operation):
+    name = "Denominator"
+    arity = Arity.unary
+
+class Coefficient(Operation):
+    name = "Coefficient"
+    arity = Arity.ternary
+
+class SumSimplerQ(Operation):
+    name = "SumSimplerQ"
+    arity = Arity.binary
+
+class Equal(Operation):
+    name = "Equal"
+    arity = Arity.binary
+
+class Unequal(Operation):
+    name = "Unequal"
+    arity = Arity.binary
+
+class SimplerQ(Operation):
+    name = "SimplerQ"
+    arity = Arity.binary
+
+class LessEqual(Operation):
+    name = "LessEqual"
+    arity = Arity.variadic
+
+class IntLinearcQ(Operation):
+    name = "IntLinearcQ"
+    arity = Arity.variadic
+
+class Greater(Operation):
+    name = "Greater"
+    arity = Arity.variadic
+
+class GreaterEqual(Operation):
+    name = "GreaterEqual"
+    arity = Arity.variadic
+
+class FractionQ(Operation):
+    name = "FractionQ"
+    arity = Arity.variadic

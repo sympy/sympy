@@ -1,8 +1,6 @@
 from sympy.rubi.utility_function import *
 from sympy.core.symbol import symbols, S
-from sympy.functions import log, sin, cos
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, asin, acos
-from sympy.functions.elementary.hyperbolic import acosh, atanh, asinh
+from sympy import I
 
 a, b, c, d, x, y, z = symbols('a b c d x y z')
 
@@ -48,10 +46,6 @@ def test_IntegerQ():
     assert not IntegerQ(S(0.0))
     assert IntegerQ(S(-1))
 
-def test_RationalQ():
-    assert RationalQ(S(5)/6)
-    assert not RationalQ(Sqrt(1.6))
-
 def test_PosQ():
     assert PosQ(S(10))
     assert not PosQ(S(-10))
@@ -72,7 +66,9 @@ def test_NegQ():
 
 def test_RationalQ():
     assert RationalQ(S(5)/6)
+    assert RationalQ(S(5)/6, S(4)/5)
     assert not RationalQ(Sqrt(1.6))
+    assert not RationalQ(Sqrt(1.6), S(5)/6)
 
 def test_Sqrt():
     assert Sqrt(S(16)) == 4
@@ -94,23 +90,10 @@ def test_Coefficient():
     assert Coefficient(a + b*x + c*x**3, x, 4) == 0
     assert Coefficient(b*x + c*x**3, x, 3) == c
 
-def test_RemoveContent():
-    assert RemoveContent(3+6*x**3+8*x+2*x**2, x) == 6*x**3 + 2*x**2 + 8*x
-    assert RemoveContent(3+6*x**3+8*x+2, x) == 6*x**3 + 8*x
-    assert RemoveContent(3+b*x**3+a+2, x) == b*x**3
-
-def test_Rt():
-    assert Rt(8, 3) == 2
-    assert Rt(16807, 5) == 7
-
-def test_With():
-    assert With(x*y*z**2, x=2, y=4, z=4) == 128
-
 def test_Denominator():
-    assert Denominator(3/2) == 2
+    assert Denominator(S(3)/2) == 2
     assert Denominator(x/y) == y
     assert Denominator(S(4)/5) == 5
-    assert Denominator(3/6) == 2
 
 def test_Hypergeometric2F1():
     assert Hypergeometric2F1(2, (1,2), 4, 0.75) == 1.303703703703703703703704
@@ -131,32 +114,12 @@ def test_IntegerPart():
     assert IntegerPart(3.6) == 3
     assert IntegerPart(-3.6) == -4
 
-def test_SumSimplerQ():
-    assert not SumSimplerQ(x**3, 3 + 4*x**2 + 8*x**3)
-    assert SumSimplerQ(x**3, -x**3)
-    assert SumSimplerQ(1+x**2, 2-x**2+x)
-
-def test_SimplerQ():
-    assert SimplerQ(x**3, 3+4*x**2+8*x**3)
-    assert SimplerQ(x**3, 3+x**2+x)
-    assert SimplerQ(x**3, 3*x**4+3*x**5)
-    assert not SimplerQ(x**3, 3)
-    assert not SimplerQ(x**3, 3*x)
-    assert SimplerQ(x**3, 3*x**2)
-    assert not SimplerQ(x**3, x**2)
-
-# utility functions used in tests
-
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25) == 1.154700538379251529018298
 
 def test_Simplify():
     assert Simplify(sin(x)**2 + cos(x)**2) == 1
     assert Simplify((x**3 + x**2 - x - 1)/(x**2 + 2*x + 1)) == x - 1
-
-def test_Integrate():
-    assert Integrate(x**2, x) == x**3/3
-    assert Integrate(x**3, x) == integrate(x**3, x)
 
 def test_EllipticPi():
     assert EllipticPi(0.25, 0.25) == 1.956616279119236207279727
@@ -165,11 +128,11 @@ def test_EllipticPi():
 def test_EllipticE():
     assert EllipticE(0) == 1.570796326794896619231322
     assert EllipticE(2) == (0.5990701173677961037199612 + 0.5990701173677961037199612j)
-    assert EllipticE(0.5+0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
+    assert EllipticE(0.5 + 0.25j) == (1.360868682163129682716687 - 0.1238733442561786843557315j)
 
 def test_EllipticF():
     assert EllipticF(0,1) == 0.0
-    assert EllipticF(2+3j,0) == (2.0 + 3.0j)
+    assert EllipticF(2 + 3j,0) == (2.0 + 3.0j)
     assert EllipticF(1,1) == 1.226191170883517070813061
 
 def test_ArcTanh():
@@ -189,3 +152,121 @@ def test_ArcCsc():
 
 def test_ArcCsch():
     assert ArcCsch(a) == acsch(a)
+
+def test_Equal():
+    assert Equal(a, a)
+    assert not Equal(a, b)
+
+def test_LessEqual():
+    assert LessEqual(1, 2, 3)
+    assert LessEqual(1, 1)
+    assert not LessEqual(3, 2, 1)
+
+def test_With():
+    assert With(Set(x, 3), x + y) == 3 + y
+    assert With(List(Set(x, 3), Set(y, c)), x + y) == 3 + c
+
+def test_Less():
+    assert Less(1, 2, 3)
+    assert not Less(1, 1, 3)
+
+def test_Greater():
+    assert Greater(3, 2, 1)
+    assert not Greater(3, 2, 2)
+
+def test_GreaterEqual():
+    assert GreaterEqual(3, 2, 1)
+    assert GreaterEqual(3, 2, 2)
+    assert not GreaterEqual(2, 3)
+
+def test_Unequal():
+    assert Unequal(1, 2)
+    assert not Unequal(1, 1)
+
+def test_FractionQ():
+    assert FractionQ(S(1), S(2), S(1)/3)
+    assert not FractionQ(sqrt(2))
+
+def test_Expand():
+    assert Expand((1 + x)**10) == x**10 + 10*x**9 + 45*x**8 + 120*x**7 + 210*x**6 + 252*x**5 + 210*x**4 + 120*x**3 + 45*x**2 + 10*x + 1
+
+def test_Scan():
+    assert list(Scan(sin, [a, b])) == [sin(a), sin(b)]
+
+def test_MapAnd():
+    assert MapAnd(PositiveQ, [1, 2, 3, 0]) == False
+    assert MapAnd(PositiveQ, [1, 2, 3]) == True
+
+def test_FalseQ():
+    assert FalseQ(True) == False
+    assert FalseQ(False) == True
+
+def test_ComplexNumberQ():
+    assert ComplexNumberQ(1 + I*2, I) == True
+    assert ComplexNumberQ(a + b, I) == False
+
+def test_RealNumericQ():
+    assert RealNumericQ(S(1)) == True
+
+def test_PositiveOrZeroQ():
+    assert PositiveOrZeroQ(S(0)) == True
+    assert PositiveOrZeroQ(S(1)) == True
+    assert PositiveOrZeroQ(-S(1)) == False
+
+def test_RealNumericQ():
+    assert RealNumericQ(S(1)) == True
+    assert RealNumericQ(-S(1)) == True
+
+def test_NegativeOrZeroQ():
+    assert NegativeOrZeroQ(S(0)) == True
+    assert NegativeOrZeroQ(-S(1)) == True
+    assert NegativeOrZeroQ(S(1)) == False
+
+def test_FractionOrNegativeQ():
+    assert FractionOrNegativeQ(S(1)/2) == True
+    assert FractionOrNegativeQ(-S(1)) == True
+
+def test_ProductQ():
+    assert ProductQ(a*b) == True
+    assert ProductQ(a + b) == False
+
+def test_SumQ():
+    assert SumQ(a*b) == False
+    assert SumQ(a + b) == True
+
+def test_NonsumQ():
+    assert NonsumQ(a*b) == True
+    assert NonsumQ(a + b) == False
+
+def test_First():
+    assert First([1, 2, 3, 4]) == 1
+
+def test_Rest():
+    assert Rest([1, 2, 3, 4]) == [2, 3, 4]
+
+def test_SqrtNumberQ():
+    assert SqrtNumberQ(sqrt(2)) == True
+
+def test_IntLinearcQ():
+    assert IntLinearcQ(1, 2, 3, 4, 5, 6, x) == True
+    assert IntLinearcQ(S(1)/100, S(2)/100, S(3)/100, S(4)/100, S(5)/100, S(6)/100, x) == False
+
+def test_IndependentQ():
+    assert IndependentQ(a + b*x, x) == False
+    assert IndependentQ(a + b, x) == True
+
+def test_PowerQ():
+    assert PowerQ(a**b) == True
+    assert PowerQ(a + b) == False
+
+def test_IntegerPowerQ():
+    assert IntegerPowerQ(a**2) == True
+    assert IntegerPowerQ(a**0.5) == False
+
+def test_PositiveIntegerPowerQ():
+    assert PositiveIntegerPowerQ(a**3) == True
+    assert PositiveIntegerPowerQ(a**(-2)) == False
+
+def test_FractionalPowerQ():
+    assert FractionalPowerQ(a**2) == True
+    assert FractionalPowerQ(a**sqrt(2)) == False

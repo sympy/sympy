@@ -1,4 +1,4 @@
-from .patterns import rubi_object
+from .patterns1 import rubi_object
 from .operation import Int
 import matchpy
 from .sympy2matchpy import sympy2matchpy

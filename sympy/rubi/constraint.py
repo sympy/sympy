@@ -7,11 +7,19 @@ class cons(Constraint):
         self.vars = frozenset(v.name for v in vars)
 
     def __call__(self, substitution):
+        if isinstance(self.expr, bool): #handle rules without constraints
+            return self.expr
         sub = substitute(self.expr, substitution)
+
+        print()
+        print(self.expr)
+        print(substitution)
+        print(sub)
+
         try:
             return sympify(str(sub))
         except:
-            print(('Unable to sympify: {}').format(sub))
+            #print(('Unable to sympify: {}').format(sub))
             return False
 
     @property
@@ -19,7 +27,10 @@ class cons(Constraint):
         return self.vars
 
     def with_renamed_vars(self, renaming):
-        copy = cons(self.expr.with_renamed_vars(renaming), [])
+        if isinstance(self.expr, bool):
+            copy = cons(self.expr, [])
+        else:
+            copy = cons(self.expr.with_renamed_vars(renaming), [])
         copy.vars = frozenset(renaming.get(v, v) for v in self.vars)
         return copy
 
