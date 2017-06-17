@@ -22,10 +22,7 @@ a, b, c, q = symbols('a b c q')
 def test_del_operator():
     # Tests for curl
 
-    # assert (delop ^ Vector.zero ==
-    #         (Derivative(0, C.y) - Derivative(0, C.z))*C.i +
-    #         (-Derivative(0, C.x) + Derivative(0, C.z))*C.j +
-    #         (Derivative(0, C.x) - Derivative(0, C.y))*C.k)
+    assert delop ^ Vector.zero == Vector.zero
     assert ((delop ^ Vector.zero).doit() == Vector.zero ==
             curl(Vector.zero))
     assert delop.cross(Vector.zero) == delop ^ Vector.zero
@@ -83,10 +80,10 @@ def test_del_operator():
             -a*sin(y)/x**2 * i + a*cos(y)/x * j)
 
     #Tests for directional derivative
-    # assert (Vector.zero & delop)(a) == S(0)
-    # assert ((Vector.zero & delop)(a)).doit() == S(0)
+    assert (Vector.zero & delop)(a) == S(0)
+    assert ((Vector.zero & delop)(a)).doit() == S(0)
     assert ((v & delop)(Vector.zero)).doit() == Vector.zero
-    # assert ((v & delop)(S(0))).doit() == S(0)
+    assert ((v & delop)(S(0))).doit() == S(0)
     assert ((i & delop)(x)).doit() == 1
     assert ((j & delop)(y)).doit() == 1
     assert ((k & delop)(z)).doit() == 1

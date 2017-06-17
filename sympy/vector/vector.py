@@ -118,8 +118,10 @@ class Vector(BasisDependent):
                     if out == 0 and isinstance(field, Vector):
                         out = Vector.zero
                     return out
-                else:
+                elif isinstance(field, Vector) :
                     return Vector.zero
+                else:
+                    return S(0)
             return directional_derivative
 
         if isinstance(self, VectorZero) or isinstance(other, VectorZero):
