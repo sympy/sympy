@@ -9,7 +9,7 @@ class LambdaPrinter(StrPrinter):
     This printer converts expressions into strings that can be used by
     lambdify.
     """
-    printmethod="_lambda_repr"
+    printmethod = "_lambda"
     
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
@@ -94,6 +94,7 @@ class TensorflowPrinter(LambdaPrinter):
     Tensorflow printer which handles vectorized piecewise functions,
     logical operators, max/min, and relational operators.
     """
+    printmethod = "_tensorflow"
 
     def _print_And(self, expr):
         "Logical And printer"
@@ -172,6 +173,8 @@ class NumPyPrinter(LambdaPrinter):
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
     """
+    printmethod = "_numpy"
+
     _default_settings = {
         "order": "none",
         "full_prec": "auto",
@@ -286,6 +289,8 @@ class NumPyPrinter(LambdaPrinter):
 class NumExprPrinter(LambdaPrinter):
     # key, value pairs correspond to sympy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
+    printmethod = "_numexpr"
+
     _numexpr_functions = {
         'sin' : 'sin',
         'cos' : 'cos',
@@ -367,6 +372,8 @@ class MpmathPrinter(LambdaPrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
     """
+    printmethod = "_mpmath"
+
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that
         # the caller of the lambdified function will have set it to sufficient
