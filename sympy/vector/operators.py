@@ -119,6 +119,11 @@ def curl(vect, coord_sys=None, doit=True):
         The coordinate system to calculate the gradient in.
         Deprecated since version 1.1
 
+    doit : bool
+        If True, the result is returned after calling .doit() on
+        each component. Else, the returned expression contains
+        Derivative instances
+
     Examples
     ========
 
@@ -169,6 +174,11 @@ def divergence(vect, coord_sys=None, doit=True):
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
 
+    doit : bool
+        If True, the result is returned after calling .doit() on
+        each component. Else, the returned expression contains
+        Derivative instances
+
     Examples
     ========
 
@@ -213,6 +223,11 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     coord_sys : CoordSysCartesian
         The coordinate system to calculate the gradient in
         Deprecated since version 1.1
+
+    doit : bool
+        If True, the result is returned after calling .doit() on
+        each component. Else, the returned expression contains
+        Derivative instances
 
     Examples
     ========

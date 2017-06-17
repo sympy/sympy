@@ -73,8 +73,9 @@ class Vector(BasisDependent):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian, Del
         >>> C = CoordSysCartesian('C')
+        >>> delop = Del()
         >>> C.i.dot(C.j)
         0
         >>> C.i & C.i
@@ -82,7 +83,7 @@ class Vector(BasisDependent):
         >>> v = 3*C.i + 4*C.j + 5*C.k
         >>> v.dot(C.k)
         5
-        >>> (C.i & C.delop)(C.x*C.y*C.z)
+        >>> (C.i & delop)(C.x*C.y*C.z)
         C.y*C.z
         >>> d = C.i.outer(C.i)
         >>> C.i.dot(d)

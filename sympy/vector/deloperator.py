@@ -33,12 +33,13 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian, Del
         >>> C = CoordSysCartesian('C')
-        >>> C.delop.gradient(C.x)
+        >>> delop = Del()
+        >>> delop.gradient(C.x)
         (Derivative(C.x, C.x))*C.i + (Derivative(C.x, C.y))*C.j +
             (Derivative(C.x, C.z))*C.k
-        >>> C.delop(C.x*C.y*C.z).doit()
+        >>> delop(C.x*C.y*C.z).doit()
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
         """
@@ -67,12 +68,13 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian, Del
+        >>> delop = Del()
         >>> C = CoordSysCartesian('C')
-        >>> C.delop.dot(C.x*C.i)
+        >>> delop.dot(C.x*C.i)
         Derivative(C.x, C.x)
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
-        >>> (C.delop & v).doit()
+        >>> (delop & v).doit()
         C.x*C.y + C.x*C.z + C.y*C.z
 
         """
@@ -100,13 +102,14 @@ class Del(Basic):
         Examples
         ========
 
-        >>> from sympy.vector import CoordSysCartesian
+        >>> from sympy.vector import CoordSysCartesian, Del
         >>> C = CoordSysCartesian('C')
+        >>> delop = Del()
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
-        >>> C.delop.cross(v, doit = True)
+        >>> delop.cross(v, doit = True)
         (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j +
             (-C.x*C.z + C.y*C.z)*C.k
-        >>> (C.delop ^ C.i).doit()
+        >>> (delop ^ C.i).doit()
         0
 
         """
