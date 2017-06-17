@@ -451,7 +451,7 @@ def test_deprecated():
     # removed, the corresponding tests should be removed.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+        m = matlist(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
         P, Jcells = m.jordan_cells()
-        assert Jcells[1] == Matrix(1, 1, [2])
-        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
+        assert Jcells[1] == matlist(1, 1, [2])
+        assert Jcells[0] == matlist(2, 2, [2, 1, 0, 2])
