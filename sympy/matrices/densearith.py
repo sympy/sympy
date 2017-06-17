@@ -230,6 +230,16 @@ def mulrowcol(row, col, K):
     is expected to be removed later as we have a good data structure to
     facilitate column operations.
 
+def test_deprecated():
+    # Maintain tests for deprecated functions.  We must capture
+    # the deprecation warnings.  When the deprecated functionality is
+    # removed, the corresponding tests should be removed.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+        m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
+        P, Jcells = m.jordan_cells()
+        assert Jcells[1] == Matrix(1, 1, [2])
+        assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
     Examples
     ========
 
