@@ -3,6 +3,8 @@ from __future__ import print_function, division
 from functools import cmp_to_key
 
 from sympy.core import S, Symbol
+
+from sympy.geometry import Segment2D
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point
 from sympy.core.function import diff
@@ -30,18 +32,28 @@ def polytope_integrate(poly, expr, **kwargs):
     >>> polytope_integrate(poly, expr)
     1/4
     """
-    if kwargs['dims'] is None:
-        if isinstance(expr, Expr):
-            dims = tuple(expr.free_symbols)
-        else:
-            dims = (x, y)
+    clockwise = kwargs.get('clockwise', False)
 
-    if kwargs['clockwise'] is True:
+    if clockwise is True and isinstance(poly, Polygon):
         poly = clockwise_sort(poly)
 
+    dims = (x, y)
     polys = decompose(expr)
-    hp_params = hyperplane_parameters(poly)
-    facets = poly.sides
+
+    if isinstance(poly, Polygon):
+        # For Vertex Representation
+        hp_params = hyperplane_parameters(poly)
+        facets = poly.sides
+    else:
+        # For Hyperplane Representation
+        plen = len(poly)
+        intersections = [intersection(poly[(i - 1) % plen], poly[i])
+                         for i in range(0, plen)]
+        hp_params = poly
+        lints = len(intersections)
+        facets = [Segment2D(intersections[i], intersections[(i + 1) % lints])
+                  for i in range(0, lints)]
+
     dim_length = len(dims)
     result = S.Zero
 
@@ -78,16 +90,19 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     if expr == S.Zero:
         return expr
 
+    a, b = (S(a[0]), S(a[1])), S(b)
+
     value = S.Zero
     x0 = best_origin(a, b, facets[index], expr)
     gens = [x, y]
     m = len(facets)
-    gens = [x, y]
-    for i in range(0, len(dims)):
-        df_i = diff(expr, gens[i])
-        if df_i != 0:
-            value += integration_reduction(facets, index, a, b,
-                                           x0[i] * df_i, dims, degree - 1)
+    gens = (x, y)
+
+    inner_product = diff(expr, gens[0]) * x0[0] + diff(expr, gens[1]) * x0[1]
+
+    if inner_product != 0:
+        value += integration_reduction(facets, index, a, b,
+                                       inner_product, dims, degree - 1)
 
     for j in range(0, m):
         intersect = ()
@@ -98,7 +113,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
                                              intersect, x0)))
             if is_vertex(intersect):
                 if isinstance(expr, Expr):
-                    if len(gens) == 3: 
+                    if len(gens) == 3:
                         expr_dict = {gens[0]: intersect[0],
                                      gens[1]: intersect[1],
                                      gens[2]: intersect[2]}
@@ -136,10 +151,10 @@ def hyperplane_parameters(poly):
 
         factor = gcd_list([a1, a2, b])
 
-        b = b/factor
-        a = (a1/factor, a2/factor)
-
+        b = S(b)/factor
+        a = (S(a1)/factor, S(a2)/factor)
         params.append((a, b))
+
     return params
 
 
@@ -252,7 +267,8 @@ def best_origin(a, b, lineseg, expr):
                             if term_type == 0 and univariate in gens:
                                 power_gens[univariate] += 1
                             elif term_type == 2 and univariate.args[0] in gens:
-                                power_gens[univariate.args[0]] += univariate.args[1]
+                                power_gens[univariate.args[0]] +=\
+                                           univariate.args[1]
             elif expr.is_Mul:
                 for term in expr.args:
                     term_type = len(term.args)
@@ -316,8 +332,6 @@ def decompose(expr):
                     if term_type == 0:
                         if monomial.is_Symbol:
                             degree += 1
-                        else:
-                            continue
                     for univariate in monomial.args:
                         term_type = len(univariate.args)
                         if term_type == 0 and univariate.is_Symbol:
@@ -352,11 +366,11 @@ def clockwise_sort(poly):
     Note that it's necessary for input points to be sorted in some order
     (clockwise or anti-clockwise) for the algorithm to work. As a convention
     algorithm has been implemented keeping clockwise orientation in mind.
-    
+
     Parameters
     ==========
     poly: 2-Polytope
-    
+
     Examples
     ========
     >>> from sympy.integrals.intpoly import clockwise_sort
@@ -364,50 +378,53 @@ def clockwise_sort(poly):
     >>> from sympy.geometry.polygon import Polygon
     >>> clockwise_sort(Polygon(Point(0, 0), Point(1, 0), Point(1, 1)))
     Triangle(Point2D(1, 1), Point2D(1, 0), Point2D(0, 0))
-    
+
     """
     n = len(poly.vertices)
     vertices = list(poly.vertices)
     center = Point(sum(map(lambda vertex: vertex.x, poly.vertices)) / n,
                    sum(map(lambda vertex: vertex.y, poly.vertices)) / n)
-    
+
     def compareTo(a, b):
         if a.x - center.x >= 0 and b.x - center.x < 0:
             return -1
         elif a.x - center.x < 0 and b.x - center.x >= 0:
             return 1
-        elif a.x - center.x == 0 and b.x - center.x == 0: 
+        elif a.x - center.x == 0 and b.x - center.x == 0:
             if a.y - center.y >= 0 or b.y - center.y >= 0:
                 return -1 if a.y > b.y else 1
             return -1 if b.y > a.y else 1
 
-        det = (a.x - center.x) * (b.y - center.y) - (b.x - center.x) * (a.y - center.y)
+        det = (a.x - center.x) * (b.y - center.y) -\
+              (b.x - center.x) * (a.y - center.y)
         if det < 0:
             return -1
         elif det > 0:
             return 1
 
-        first = (a.x - center.x) * (a.x - center.x) + (a.y - center.y) * (a.y - center.y)
-        second = (b.x - center.x) * (b.x - center.x) + (b.y - center.y) * (b.y - center.y)
+        first = (a.x - center.x) * (a.x - center.x) +\
+                (a.y - center.y) * (a.y - center.y)
+        second = (b.x - center.x) * (b.x - center.x) +\
+                 (b.y - center.y) * (b.y - center.y)
         return -1 if first > second else 1
 
-    return Polygon(*sorted(vertices, key = cmp_to_key(compareTo)))
+    return Polygon(*sorted(vertices, key=cmp_to_key(compareTo)))
 
 
 def norm(point):
     """Returns the Euclidean norm of a point from origin.
-    
+
     Parameters
     ==========
     point: This denotes a point in the dimensional space.
-    
+
     Examples
     ========
     >>> from sympy.integrals.intpoly import norm
     >>> from sympy.geometry.point import Point
     >>> norm(Point(2, 7))
     sqrt(53)
-    
+
     """
     h = 0
     half = S(1)/2
@@ -446,18 +463,31 @@ def intersection(lineseg_1, lineseg_2):
     (2, 3)
 
     """
-    x1, y1 = lineseg_1.points[0]
-    x2, y2 = lineseg_1.points[1]
-    x3, y3 = lineseg_2.points[0]
-    x4, y4 = lineseg_2.points[1]
+    if isinstance(lineseg_1, Segment2D):
+        x1, y1 = lineseg_1.points[0]
+        x2, y2 = lineseg_1.points[1]
+        x3, y3 = lineseg_2.points[0]
+        x4, y4 = lineseg_2.points[1]
+    else:
+        a1x, a1y = S(lineseg_1[0][0]), S(lineseg_1[0][1])
+        a2x, a2y = S(lineseg_2[0][0]), S(lineseg_2[0][1])
+        b1, b2 = S(lineseg_1[1]), S(lineseg_2[1])
+
+        denom = a1x * a2y - a2x * a1y
+        x_num = (b1 * a2y - b2 * a1y)
+        y_num = (b2 * a1x - b1 * a2x)
+        if denom:
+            return (S(b1 * a2y - b2 * a1y) / denom,
+                    S(b2 * a1x - b1 * a2x) / denom)
+        return ()
 
     denom = (x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4)
 
     if denom:
         t1 = x1*y2 - y1*x2
         t2 = x3*y4 - x4*y3
-        return((t1*(x3 - x4) - t2*(x1 - x2))/denom,
-               (t1*(y3 - y4) - t2*(y1 - y2))/denom)
+        return(S(t1*(x3 - x4) - t2*(x1 - x2))/denom,
+               S(t1*(y3 - y4) - t2*(y1 - y2))/denom)
     return ()
 
 
