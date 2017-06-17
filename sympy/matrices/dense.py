@@ -1281,16 +1281,16 @@ def hessian(f, varlist, constraints=[]):
     return out
 
 
-def jordan_cell(eigenval, n):
+def jordan_block(eigenval, n):
     """
-    Create matrix of Jordan cell kind:
+    Create matrix of Jordan block kind:
 
     Examples
     ========
 
-    >>> from sympy.matrices import jordan_cell
+    >>> from sympy.matrices import jordan_block
     >>> from sympy.abc import x
-    >>> jordan_cell(x, 4)
+    >>> jordan_block(x, 4)
     Matrix([
     [x, 1, 0, 0],
     [0, x, 1, 0],
