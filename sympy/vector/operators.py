@@ -18,12 +18,15 @@ def _get_coord_sys_from_expr(expr, coord_sys=None):
             useinstead="do not use it",
             deprecated_since_version="1.1"
         ).warn()
-    if expr is Vector.zero:
+
+    try:
+        coord_sys = list(expr.atoms(CoordSysCartesian))
+        if len(coord_sys) == 1:
+            return coord_sys[0]
+        else:
+            return None
+    except:
         return None
-    elif expr == 0:
-        return None
-    else:
-        return list(expr.atoms(CoordSysCartesian))[0]
 
 
 class Gradient(Expr):
