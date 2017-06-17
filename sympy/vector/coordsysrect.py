@@ -1,14 +1,14 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
+from sympy.core import S
+from sympy.vector.scalar import BaseScalar
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin
+import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.core import S
-from sympy import sin
-import sympy.vector
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 
 class CoordSysCartesian(Basic):
     """
@@ -150,9 +150,6 @@ class CoordSysCartesian(Basic):
         obj._h2 = S.One
         obj._h3 = S.One
 
-        # Assign a Del operator instance
-        from sympy.vector.deloperator import Del
-        obj._delop = Del()
 
         # Assign params
         obj._parent = parent
@@ -198,7 +195,6 @@ class CoordSysCartesian(Basic):
         if curv_coord_name not in coefficient_mapping:
             raise ValueError('Wrong set of parameters. Type of coordinate system is defined')
         self._h1, self._h2, self._h3 = coefficient_mapping[curv_coord_name]
-        self._delop._h1, self._delop._h2, self._delop._h3 = coefficient_mapping[curv_coord_name]
 
     @property
     def origin(self):
@@ -211,7 +207,8 @@ class CoordSysCartesian(Basic):
             useinstead="it as instance Del class",
             deprecated_since_version="1.1"
             ).warn()
-        return self._delop
+        from sympy.vector.deloperator import Del
+        return Del()
 
     @property
     def i(self):

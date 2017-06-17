@@ -1,3 +1,4 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core import Basic
 from sympy.vector.vector import Vector
 from sympy.vector.operators import gradient, divergence, curl
@@ -9,7 +10,13 @@ class Del(Basic):
     mathematical expressions as the 'nabla' symbol.
     """
 
-    def __new__(cls, ):
+    def __new__(cls, system=None):
+        if system is not None:
+            SymPyDeprecationWarning(
+                feature="delop operator inside coordinate system",
+                useinstead="it as instance Del class",
+                deprecated_since_version="1.1"
+            ).warn()
         obj = super(Del, cls).__new__(cls)
         obj._name = "delop"
         return obj
@@ -36,9 +43,8 @@ class Del(Basic):
         >>> from sympy.vector import CoordSysCartesian, Del
         >>> C = CoordSysCartesian('C')
         >>> delop = Del()
-        >>> delop.gradient(C.x)
-        (Derivative(C.x, C.x))*C.i + (Derivative(C.x, C.y))*C.j +
-            (Derivative(C.x, C.z))*C.k
+        >>> delop.gradient(9)
+        0
         >>> delop(C.x*C.y*C.z).doit()
         C.y*C.z*C.i + C.x*C.z*C.j + C.x*C.y*C.k
 
