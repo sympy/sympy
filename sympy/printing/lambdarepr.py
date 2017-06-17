@@ -9,7 +9,8 @@ class LambdaPrinter(StrPrinter):
     This printer converts expressions into strings that can be used by
     lambdify.
     """
-
+    printmethod="_lambda_repr"
+    
     def _print_MatrixBase(self, expr):
         return "%s(%s)" % (expr.__class__.__name__,
                            self._print((expr.tolist())))
