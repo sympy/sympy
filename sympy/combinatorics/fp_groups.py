@@ -205,9 +205,6 @@ class FpGroup(DefaultPrinting):
                     continue
         if not C:
             return None, None
-
-        if len(C.table) == 1:
-            return self._finite_index_subgroup(half)
         return half, C
 
     def most_frequent_generator(self):
@@ -302,7 +299,9 @@ class CosetTable(DefaultPrinting):
     # which it is emptied
     max_stack_size = 500
 
-    def __init__(self, fp_grp, subgroup, max_cosets=coset_table_max_limit):
+    def __init__(self, fp_grp, subgroup, max_cosets=None):
+        if not max_cosets:
+            max_cosets = CosetTable.coset_table_max_limit
         self.fp_group = fp_grp
         self.subgroup = subgroup
         self.coset_table_max_limit = max_cosets
