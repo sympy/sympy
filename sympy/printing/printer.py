@@ -96,7 +96,7 @@ for your custom SymPy object. See the code below::
 
         def _latex(self, printer=None):
             # This is the printmethod of LatexPrinter.
-            return \"\\\\textbf{{{}}}\".format(self.text)
+            return self.text
 
     class MyPrinter(Printer):
         \"\"\" Our custom Printer. \"\"\"
@@ -150,7 +150,7 @@ The output of the code above is::
     x'
     My expression on steroids.
     MY EXPRESSION ON STEROIDS.
-    \\textbf{My expression on steroids.}
+    My expression on steroids.
 
 """
 
