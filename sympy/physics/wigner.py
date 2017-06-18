@@ -30,6 +30,8 @@ AUTHORS:
 
 - Jens Rasch (2009-05-31): updated to sage-4.0
 
+- Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
+
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from __future__ import print_function, division
@@ -761,6 +763,7 @@ def wigner_d_small(J, beta):
 
     Some examples form [1]:
 
+    >>> from sympy.physics.wigner import wigner_d_small
     >>> from sympy import Integer, symbols, pi
     >>> half = 1/Integer(2)
     >>> beta = symbols("beta", real=True)
@@ -853,6 +856,7 @@ def wigner_d(J, alpha, beta, gamma):
     We use the general formula from [1], equation 4.1.12.
 
     The simplest possible example:
+    >>> from sympy.physics.wigner import wigner_d
     >>> from sympy import Integer, symbols, pprint
     >>> half = 1/Integer(2)
     >>> alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
@@ -878,8 +882,3 @@ def wigner_d(J, alpha, beta, gamma):
     D = [[exp(I*Mi*alpha)*d[i, j]*exp(I*Mj*gamma)
           for j, Mj in enumerate(M)] for i, Mi in enumerate(M)]
     return Matrix(D)
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod(verbose=False)
