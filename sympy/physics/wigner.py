@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Wigner, Clebsch-Gordan, Racah, and Gaunt coefficients
 
@@ -34,7 +35,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from __future__ import print_function, division
 
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm,
-        Function)
+        Function, sin, cos, exp, I, factorial, binomial, Matrix)
 from sympy.core.compatibility import range
 
 # This list of precomputed factorials is needed to massively
@@ -751,3 +752,134 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
     return (-S(1))**(m+p) * Sum(Ynm(k, m+p, theta, phi) * alpha(l,m,j,p,k) / 2 \
         *(k**2-j**2-l**2+k-j-l), (k, abs(l-j), l+j))
+
+
+def wigner_d_small(J, beta):
+    u"""Return the small Wigner d matrix for angular momentum J.
+
+    We use the general formula from [1], equation 4.1.15.
+
+    Some examples form [1]:
+
+    >>> from sympy import Integer, symbols, pi
+    >>> half = 1/Integer(2)
+    >>> beta = symbols("beta", real=True)
+    >>> wigner_d_small(half, beta)
+    Matrix([
+    [ cos(beta/2), sin(beta/2)],
+    [-sin(beta/2), cos(beta/2)]])
+
+    >>> from sympy import pprint
+    >>> pprint(wigner_d_small(2*half, beta), use_unicode=True)
+    ⎡        2⎛β⎞              ⎛β⎞    ⎛β⎞           2⎛β⎞     ⎤
+    ⎢     cos ⎜─⎟        √2⋅sin⎜─⎟⋅cos⎜─⎟        sin ⎜─⎟     ⎥
+    ⎢         ⎝2⎠              ⎝2⎠    ⎝2⎠            ⎝2⎠     ⎥
+    ⎢                                                        ⎥
+    ⎢       ⎛β⎞    ⎛β⎞       2⎛β⎞      2⎛β⎞        ⎛β⎞    ⎛β⎞⎥
+    ⎢-√2⋅sin⎜─⎟⋅cos⎜─⎟  - sin ⎜─⎟ + cos ⎜─⎟  √2⋅sin⎜─⎟⋅cos⎜─⎟⎥
+    ⎢       ⎝2⎠    ⎝2⎠        ⎝2⎠       ⎝2⎠        ⎝2⎠    ⎝2⎠⎥
+    ⎢                                                        ⎥
+    ⎢        2⎛β⎞               ⎛β⎞    ⎛β⎞          2⎛β⎞     ⎥
+    ⎢     sin ⎜─⎟        -√2⋅sin⎜─⎟⋅cos⎜─⎟       cos ⎜─⎟     ⎥
+    ⎣         ⎝2⎠               ⎝2⎠    ⎝2⎠           ⎝2⎠     ⎦
+
+    From table 4 in [1]
+    >>> wigner_d_small(half, beta).subs({beta:pi/2})
+    Matrix([
+    [ sqrt(2)/2, sqrt(2)/2],
+    [-sqrt(2)/2, sqrt(2)/2]])
+
+    >>> wigner_d_small(2*half, beta).subs({beta:pi/2})
+    Matrix([
+    [       1/2,  sqrt(2)/2,       1/2],
+    [-sqrt(2)/2,          0, sqrt(2)/2],
+    [       1/2, -sqrt(2)/2,       1/2]])
+
+    >>> wigner_d_small(3*half, beta).subs({beta:pi/2})
+    Matrix([
+    [ sqrt(2)/4,  sqrt(6)/4,  sqrt(6)/4, sqrt(2)/4],
+    [-sqrt(6)/4, -sqrt(2)/4,  sqrt(2)/4, sqrt(6)/4],
+    [ sqrt(6)/4, -sqrt(2)/4, -sqrt(2)/4, sqrt(6)/4],
+    [-sqrt(2)/4,  sqrt(6)/4, -sqrt(6)/4, sqrt(2)/4]])
+
+    >>> wigner_d_small(4*half, beta).subs({beta:pi/2})
+    Matrix([
+    [      1/4,  1/2, sqrt(6)/4,  1/2,       1/4],
+    [     -1/2, -1/2,         0,  1/2,       1/2],
+    [sqrt(6)/4,    0,      -1/2,    0, sqrt(6)/4],
+    [     -1/2,  1/2,         0, -1/2,       1/2],
+    [      1/4, -1/2, sqrt(6)/4, -1/2,       1/4]])
+
+    [1] A. R. Edmonds. Angular momentum in quantum mechanics. Investigations
+        in physics, 4.; Investigations in physics, no. 4. Princeton, N.J.,
+        Princeton University Press, 1957.
+    """
+    def prod(x):
+        p = 1
+        for i, xi in enumerate(x): p = p*xi
+        return p
+
+    M = [J-i for i in range(2*J+1)]
+    d = []
+    for Mi in M:
+        row = []
+        for Mj in M:
+
+            # We get the maximum and minimum value of sigma.
+            sigmamax = max([-Mi-Mj, J-Mj])
+            sigmamin = min([0, J-Mi])
+
+            dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
+                       factorial(J+Mj)/factorial(J-Mj))
+            terms = [[(-1)**(J-Mi-s),
+                      binomial(J+Mj, J-Mi-s),
+                      binomial(J-Mj, s),
+                      cos(beta/2)**(2*s+Mi+Mj),
+                      sin(beta/2)**(2*J-2*s-Mj-Mi)]
+                     for s in range(sigmamin, sigmamax+1)]
+
+            terms = [prod(term) if 0 not in term else 0 for term in terms]
+
+            dij = dij*sum(terms)
+            row += [dij]
+        d += [row]
+
+    return Matrix(d)
+
+
+def wigner_d(J, alpha, beta, gamma):
+    u"""Return the Wigner D matrix for angular momentum J.
+
+    We use the general formula from [1], equation 4.1.12.
+
+    The simplest possible example:
+    >>> from sympy import Integer, symbols, pprint
+    >>> half = 1/Integer(2)
+    >>> alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
+    >>> pprint(wigner_d(half, alpha, beta, gamma), use_unicode=True)
+    ⎡  ⅈ⋅α  ⅈ⋅γ             ⅈ⋅α  -ⅈ⋅γ         ⎤
+    ⎢  ───  ───             ───  ─────        ⎥
+    ⎢   2    2     ⎛β⎞       2     2      ⎛β⎞ ⎥
+    ⎢ ℯ   ⋅ℯ   ⋅cos⎜─⎟     ℯ   ⋅ℯ     ⋅sin⎜─⎟ ⎥
+    ⎢              ⎝2⎠                    ⎝2⎠ ⎥
+    ⎢                                         ⎥
+    ⎢  -ⅈ⋅α   ⅈ⋅γ          -ⅈ⋅α   -ⅈ⋅γ        ⎥
+    ⎢  ─────  ───          ─────  ─────       ⎥
+    ⎢    2     2     ⎛β⎞     2      2      ⎛β⎞⎥
+    ⎢-ℯ     ⋅ℯ   ⋅sin⎜─⎟  ℯ     ⋅ℯ     ⋅cos⎜─⎟⎥
+    ⎣                ⎝2⎠                   ⎝2⎠⎦
+
+    [1] A. R. Edmonds. Angular momentum in quantum mechanics. Investigations
+        in physics, 4.; Investigations in physics, no. 4. Princeton, N.J.,
+        Princeton University Press, 1957.
+    """
+    d = wigner_d_small(J, beta)
+    M = [J-i for i in range(2*J+1)]
+    D = [[exp(I*Mi*alpha)*d[i, j]*exp(I*Mj*gamma)
+          for j, Mj in enumerate(M)] for i, Mi in enumerate(M)]
+    return Matrix(D)
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(verbose=False)
