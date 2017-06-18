@@ -5,7 +5,6 @@ from sympy.functions import log
 a, b, c, d, e, f, x = symbols('a b c d e f x')
 
 def test_rubi_integrate():
-
     expr = x**a
     assert rubi_integrate(expr, x) == x**(a + 1)/(a + 1)
     expr = x

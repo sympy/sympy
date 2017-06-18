@@ -27,3 +27,6 @@ def rubi_integrate(expr, var):
 
     result = sympify(str(result))
     return result
+
+def Int(expr, var):
+    return rubi_integrate(expr, var)

@@ -15,10 +15,6 @@ from sympy import exp, polylog, N
 
 from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
 
-#from .rubi import rubi_integrate
-
-#def Int(expr, var):
-#    return rubi_integrate(expr, var)
 
 def Set(expr, value):
     return {expr: value}
