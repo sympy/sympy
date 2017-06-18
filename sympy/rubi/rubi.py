@@ -3,15 +3,18 @@ from .operation import Int
 import matchpy
 from .sympy2matchpy import sympy2matchpy
 from sympy.core.sympify import sympify
+from sympy.core.add import Add
 
 rubi = rubi_object()
 
 def rubi_integrate(expr, var):
     '''
     Main function for Rubi integeration.
-
-    This function uses `eval`.
     '''
+
+    if expr.is_Add:
+        args = [rubi_integrate(i, var) for i in expr.args]
+        return Add(*args)
 
     if not isinstance(expr, matchpy.Expression):
         expr = Int(sympy2matchpy(expr), sympy2matchpy(var))

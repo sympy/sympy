@@ -2,17 +2,20 @@
 Utility functions for Constraints in Rubi
 '''
 
-from sympy.functions import (log, sin, cos, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions import (log, sin, cos, tan, cot, csc, sec, sqrt, erf)
+from sympy.functions.elementary.integers import floor, frac
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, acsch, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 from sympy.core.expr import UnevaluatedExpr
-from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.utilities.iterables import postorder_traversal
-from sympy import exp
+from sympy.core.expr import UnevaluatedExpr
+from sympy.functions.elementary.complexes import im, re, Abs
+from sympy import exp, polylog, N
+
+from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 #from .rubi import rubi_integrate
 
@@ -375,5 +378,83 @@ def Numerator(u):
 def NumberQ(u):
     return u.is_Number
 
-def Length(u):
-    return len(u)
+def Length(expr):
+    # returns number of elements in the experssion
+    return len(expr.args)
+
+def AtomQ(expr):
+    return expr.is_Atom
+
+def ListQ(u):
+    return isinstance(u, list)
+
+def Im(u):
+    return im(u)
+
+def InverseHyperbolicQ(u):
+    if not u.is_Atom:
+        u = Head(u)
+
+    return u in [acosh, asinh, atanh, acoth, acsch, acsch]
+
+def InverseFunctionQ(u):
+    # returns True if u is a call on an inverse function; else returns False.
+    return LogQ(u) or InverseTrigQ(u) and Length(u)<=1 or InverseHyperbolicQ(u) or u.func == polylog
+
+def TrigHyperbolicFreeQ(u, x):
+    # If u is free of trig, hyperbolic and calculus functions involving x, TrigHyperbolicFreeQ[u,x] returns true; else it returns False.
+    if AtomQ(u):
+        return True
+    else:
+        if TrigQ(u) | HyperbolicQ(u) | CalculusQ(u):
+            return FreeQ(u, x)
+        else:
+            for i in u.args:
+                if not TrigHyperbolicFreeQ(i, x):
+                    return False
+            return True
+
+def InverseFunctionFreeQ(u, x):
+    # If u is free of inverse, calculus and hypergeometric functions involving x, InverseFunctionFreeQ[u,x] returns true; else it returns False.
+    if AtomQ(u):
+        return True
+    else:
+        if InverseFunctionQ(u) | CalculusQ(u) | u.func == hyp2f1 | u.func == appellf1:
+            return FreeQ(u, x)
+        else:
+            for i in u.args:
+                if not ElementaryFunctionQ(i):
+                    return False
+            return True
+
+def RealQ(u):
+    if ListQ(u):
+        return MapAnd(RealQ, u)
+    elif NumericQ(u):
+        return ZeroQ(Im(N(u)))
+    elif u.is_Pow:
+        u = u.base
+        v = u.exp
+        return RealQ(u) & RealQ(v) & (IntegerQ(v) | PositiveOrZeroQ(u))
+    elif u.is_Mul:
+        return all(RealQ(i) for i in u.args)
+    elif u.is_Add:
+        return all(RealQ(i) for i in u.args)
+    elif u.is_Function:
+        f = u.func
+        u = u.args[0]
+        if f in [sin, cos, tan, cot, sec, csc, atan, acot, erf]:
+            return RealQ(u)
+        else:
+            if f in [asin, acos]:
+                return LE(-1, u, 1)
+            else:
+                if f == log:
+                    return PositiveOrZeroQ(u)
+                else:
+                    return False
+    else:
+        return False
+
+def EqQ(u, v):
+    return ZeroQ(u - v)

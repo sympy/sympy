@@ -5,7 +5,7 @@ from sympy.functions import log, sqrt
 a, b, c, d, e, f, m, x, u = symbols('a b c d e f m x u')
 
 def test_rubi_algebriac_1_2():
-    '''
+
     # Integrands of the form x**m
     assert rubi_integrate(x**m, x) == x**(1 + m)/(1 + m)
     assert rubi_integrate(x**100, x) == 1/101*x**101
@@ -28,7 +28,8 @@ def test_rubi_algebriac_1_2():
     assert rubi_integrate(1/x**(3/2), x) == (-2)/sqrt(x)
     assert rubi_integrate(1/x**(5/2), x) == (-2/3)/x**(3/2)
 
-
+    #assert rubi_integrate(x**3*(a + b*x), x) == 1/4*a*x**4 + 1/5*b*x**5
+    '''
     # Integrands of the form x**(m/3
     assert rubi_integrate(x**(5/3), x) == 3/8*x**(8/3)
     assert rubi_integrate(x**(4/3), x) == 3/7*x**(7/3)
@@ -38,7 +39,7 @@ def test_rubi_algebriac_1_2():
     assert rubi_integrate(1/x**(2/3), x) == 3*x**(1/3)
     assert rubi_integrate(1/x**(4/3), x) == (-3)/x**(1/3)
     assert rubi_integrate(1/x**(5/3), x) == (-3/2)/x**(2/3)
-    '''
+
     # Integrands of the form x**m (a + b x)**n
 
     # n>0
@@ -131,3 +132,4 @@ def test_rubi_algebriac_1_2():
     assert rubi_integrate((a + b*x)**10/x**20, x) == -1/19*a**10/x**19-5/9*a**9*b/x**18-45/17*a**8*b**2/x**17-15/2*a**7*b**3/x**16-14*a**6*b**4/x**15-18*a**5*b**5/x**14-210/13*a**4*b**6/x**13-10*a**3*b**7/x**12-45/11*a**2*b**8/x**11-a*b**9/x**10-1/9*b**10/x**9
     assert rubi_integrate(c*(a + b*x), x) == 1/2*c*(a + b*x)**2/b
     assert rubi_integrate((c + d)*(a + b*x)/e, x) == 1/2*(c + d)*(a + b*x)**2/(b*e)
+    '''
