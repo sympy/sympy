@@ -10,10 +10,12 @@ from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, aco
 from sympy.polys.polytools import degree, Poly
 from sympy.simplify.simplify import fraction, simplify, count_ops
 from sympy.core.expr import UnevaluatedExpr
-from sympy.functions.elementary.complexes import im, re
+from sympy.utilities.iterables import postorder_traversal
+from sympy.core.expr import UnevaluatedExpr
+from sympy.functions.elementary.complexes import im, re, Abs
 from sympy import exp, polylog, N
 
-from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1
+from mpmath import hyp2f1, ellippi, ellipe, ellipf, appellf1, nthroot
 
 
 def Set(expr, value):
@@ -198,14 +200,6 @@ def FractionalPart(a):
 def IntegerPart(a):
     return IntPart(a)
 
-def SumSimplerQ(u, v):
-    # If u+v is simpler than u, SumSimplerQ(u,v) returns True, else it returns False
-    return count_ops(u+v) < count_ops(u)
-
-def SimplerQ(u, v):
-    # If u is simpler than v, SimplerQ(u,v) returns True, else it returns False. SimplerQ(u,u) returns False.
-    return count_ops(u) < count_ops(v)
-
 def AppellF1(a, b1, b2, c, x, y):
     return appellf1(a, b1, b2, c, x, y)
 
@@ -367,6 +361,18 @@ def SinCosQ(f):
 
 def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
+
+def Rt(val, n):
+    return nthroot(val, n)
+
+def LeafCount(expr):
+    return len(list(postorder_traversal(expr)))
+
+def Numerator(u):
+    return fraction(var)[0]
+
+def NumberQ(u):
+    return u.is_Number
 
 def Length(expr):
     # returns number of elements in the experssion
