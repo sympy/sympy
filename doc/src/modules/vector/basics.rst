@@ -5,9 +5,10 @@ Basic Implementation details
 Coordinate Systems and Vectors
 ==============================
 
-As of now, :mod:`sympy.vector` only deals with the Cartesian (also called
-rectangular) coordinate systems. A 3D Cartesian coordinate system can
-be initialized in :mod:`sympy.vector` as
+Currently, :mod:`sympy.vector` is able to deal with the Cartesian (also called
+rectangular), spherical and other curvilinear coordinate systems .
+
+A 3D Cartesian coordinate system can be initialized in :mod:`sympy.vector` as
 
   >>> from sympy.vector import CoordSysCartesian
   >>> N = CoordSysCartesian('N')
