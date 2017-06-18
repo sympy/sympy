@@ -1,7 +1,7 @@
 from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify
 from sympy.utilities.pytest import raises
 
-from sympy.printing.lambdarepr import lambdarepr
+from sympy.printing.lambdarepr import *
 
 x, y, z = symbols("x,y,z")
 i, a, b = symbols("i,a,b")
@@ -177,5 +177,26 @@ def test_multiple_sums():
     assert (lambdify((x, a, b, c, d), s)(2, 3, 4, 5, 6) ==
             s.subs([(x, 2), (a, 3), (b, 4), (c, 5), (d, 6)]).doit())
 
+
 def test_settings():
     raises(TypeError, lambda: lambdarepr(sin(x), method="garbage"))
+
+
+def test_printmethod():
+    # In each case, printmethod is called to test
+    # its working
+
+    obj = LambdaPrinter()
+    assert obj.printmethod == "_lambda"
+
+    obj = TensorflowPrinter()
+    assert obj.printmethod == "_tensorflow"
+
+    obj = NumPyPrinter()
+    assert obj.printmethod == "_numpy"
+
+    obj = NumExprPrinter()
+    assert obj.printmethod == "_numexpr"
+
+    obj = MpmathPrinter()
+    assert obj.printmethod == "_mpmath"
