@@ -150,7 +150,7 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
+        from sympy import gcd
         if self._order != None:
             return self._order
         if self._coset_table != None:
@@ -169,8 +169,8 @@ class FpGroup(DefaultPrinting):
     def _finite_index_subgroup(self, s=[]):
         '''
         Find the elements of `self` that generate a finite index subgroup
-        and return the list of elements and the coset table of `self` by
-        the subgroup
+        and, if found, return the list of elements and the coset table of `self` by
+        the subgroup, otherwise return `(None, None)`
 
         '''
         gen = self.most_frequent_generator()
