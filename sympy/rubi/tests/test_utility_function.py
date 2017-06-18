@@ -369,3 +369,14 @@ def test_SinhCoshQ():
     assert SinhCoshQ(cosh(x))
     assert SinhCoshQ(sech(x))
     assert SinhCoshQ(csch(x))
+
+def test_Rt():
+    assert Rt(8, 3) == 2
+    assert Rt(16807, 5) == 7
+
+def test_LeafCount():
+    assert LeafCount(1 + a + x**2) == 6
+
+def test_Numerator():
+    assert Numerator(S(3)/2) == 3
+    assert Numerator(x/y) == x
