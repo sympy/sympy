@@ -158,12 +158,12 @@ class FpGroup(DefaultPrinting):
         abelian_rels = []
         from sympy.polys.solvers import RawMatrix as Matrix
         from sympy.polys.domains import ZZ
-        from sympy.matrices.normalforms import smith_normal_invariants
+        from sympy.matrices.normalforms import invariants_factors
         for rel in self.relators():
             abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
         m = Matrix(abelian_rels)
         setattr(m, "ring", ZZ)
-        if 0 in smith_normal_invariants(m):
+        if 0 in invariant_factors(m):
             return True
         else:
             return None

@@ -22,7 +22,7 @@ def smith_normal_form(m, domain = None):
     Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
 
     '''
-    invs = smith_normal_invariants(m, domain=domain)
+    invs = invariant_factors(m, domain=domain)
     smf = diag(*invs)
     n = len(invs)
     if m.rows > n:
@@ -31,7 +31,7 @@ def smith_normal_form(m, domain = None):
         smf = smf.col_insert(m.cols, zeros(m.rows, m.cols-n))
     return smf
 
-def smith_normal_invariants(m, domain = None):
+def invariant_factors(m, domain = None):
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)
@@ -127,7 +127,7 @@ def smith_normal_invariants(m, domain = None):
     if 1 in m.shape:
         invs = ()
     else:
-        invs = smith_normal_invariants(m[1:,1:], domain=domain)
+        invs = invariant_factors(m[1:,1:], domain=domain)
 
     if m[0,0]:
         result = [m[0,0]]

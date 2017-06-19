@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Symbol, Poly
 from sympy.polys.solvers import RawMatrix as Matrix
-from sympy.matrices.normalforms import smith_normal_invariants, smith_normal_form
+from sympy.matrices.normalforms import invariant_factors, smith_normal_form
 from sympy.polys.domains import ZZ, QQ
 
 def test_smith_normal():
@@ -17,4 +17,4 @@ def test_smith_normal():
                 [Poly(0,x),Poly(-1,x),Poly(x)]])
     setattr(m, 'ring', QQ[x])
     invs = (Poly(1, x), Poly(x - 1), Poly(x**2 - 1))
-    assert smith_normal_invariants(m) == invs
+    assert invariant_factors(m) == invs
