@@ -444,15 +444,6 @@ def prde_no_cancel_b_small(b, Q, n, DE):
 def prde_cancel_liouvillian(b, Q, n, DE):
     """
     Pg, 237.
-    Examples of this are:
-    Elementary
-    ==========
-    log(x) - log(x - 1)
-
-    Non-elementary
-    ==============
-    log(x + 1)*log(x), log(x + 1)/log(x)
-
     """
     m = len(Q)
     H = []
@@ -464,12 +455,11 @@ def prde_cancel_liouvillian(b, Q, n, DE):
             ba, bd = frac_in(b, DE.t, field=True)
 
     for i in range(n, -1, -1):
-        with DecrementLevel(DE):
-            # there is no need to recheck this
-            if DE.case == 'exp':
-                #TODO: find example
+        if DE.case == 'exp': # this re-checking can be avoided
+            with DecrementLevel(DE):
                 ba, bd = frac_in(b + i*derivation(DE.t, DE)/DE.t,
                                 DE.t, field=True)
+        with DecrementLevel(DE):
             Qy = [frac_in(q.nth(i), DE.t, field=True) for q in Q]
             fi, Ai = param_rischDE(ba, bd, Qy, DE)
         fi = [Poly(fa.as_expr()/fd.as_expr(), DE.t, field=True)
@@ -529,16 +519,16 @@ def param_poly_rischDE(a, b, q, n, DE):
         b, q = b.quo_ground(a), [qi.quo_ground(a) for qi in q]
 
         if not b.is_zero and (DE.case == 'base' or
-                b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
+                b.degree() > max(0, DE.d.degree() - 1)):
             return prde_no_cancel_b_large(b, q, n, DE)
 
-        elif ((b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1)
-                and (DE.case == 'base' or DE.d.degree(DE.t) >= 2)):
+        elif ((b.is_zero or b.degree() < DE.d.degree() - 1)
+                and (DE.case == 'base' or DE.d.degree() >= 2)):
             return prde_no_cancel_b_small(b, q, n, DE)
 
-        elif (DE.d.degree(DE.t) >= 2 and
-              b.degree(DE.t) == DE.d.degree(DE.t) - 1 and
-              n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC()):
+        elif (DE.d.degree() >= 2 and
+              b.degree() == DE.d.degree() - 1 and
+              n > -b.as_poly().LC()/DE.d.as_poly().LC()):
             raise NotImplementedError("prde_no_cancel_b_equal() is "
                 "not yet implemented.")
 

@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, S, symbols
-from sympy.integrals.risch import DifferentialExtension, derivation
+from sympy.integrals.risch import (DifferentialExtension, NonElementaryIntegral,
+        derivation, risch_integrate)
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
@@ -9,7 +9,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
-from sympy.abc import x, t, n
+from sympy import Poly, Matrix, S, symbols, integrate, log, I, pi, exp
+from sympy.abc import x, t, n, y
 
 t0, t1, t2, t3, k = symbols('t:4 k')
 
@@ -144,6 +145,17 @@ def test_prde_no_cancel():
     assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
 
 
+def test_prde_cancel_liouvillian():
+    # case == 'primitive'
+    # also test case for issue #10798
+    assert risch_integrate(integrate(1/(1- (x*y)**2), (x, 0, 1)), y) == \
+            (log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 +
+            NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y))
+    # case == 'exp'
+    assert risch_integrate(log(y/exp(y) + 1), y) == (y*log(y*exp(-y) + 1) +
+                                    NonElementaryIntegral((y**2 - y)/(y + exp(y)), y))
+
+
 def test_param_poly_rischDE():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     a = Poly(x**2 - x, x, field=True)
@@ -270,13 +282,3 @@ def test_parametric_log_deriv():
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
         (2, 6, t*x**5)
-
-
-def test_issue_10798():
-    from sympy import integrate, pi, I, log, polylog, exp_polar, Piecewise, meijerg, Abs
-    from sympy.abc import x, y
-    assert integrate(1/(1-(x*y)**2), (x, 0, 1), y) == \
-        -Piecewise((I*pi*log(y) - polylog(2, y), Abs(y) < 1), (-I*pi*log(1/y) - polylog(2, y), Abs(1/y) < 1), \
-                   (-I*pi*meijerg(((), (1, 1)), ((0, 0), ()), y) + I*pi*meijerg(((1, 1), ()), ((), (0, 0)), y) - polylog(2, y), True))/2 \
-                   - log(y)*log(1 - 1/y)/2 + log(y)*log(1 + 1/y)/2 + log(y)*log(y - 1)/2 \
-                   - log(y)*log(y + 1)/2 + I*pi*log(y)/2 - polylog(2, y*exp_polar(I*pi))/2
