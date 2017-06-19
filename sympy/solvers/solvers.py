@@ -15,7 +15,7 @@ This module contain solvers for all kinds of equations:
 from __future__ import print_function, division
 
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, range)
+    default_sort_key, range, reduce)
 from sympy.core.sympify import sympify
 from sympy.core import S, Add, Symbol, Equality, Dummy, Expr, Mul, Pow
 from sympy.core.exprtools import factor_terms
@@ -1126,6 +1126,7 @@ def solve(f, *symbols, **flags):
             solution and
             ordered_symbols and
             type(solution) is not dict and
+            type(solution) is not Piecewise and
             type(solution[0]) is dict and
             all(s in solution[0] for s in symbols)
     ):
@@ -1206,6 +1207,8 @@ def solve(f, *symbols, **flags):
                     not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
 
+        elif isinstance(solution, Piecewise):
+            no_False = solution
         else:
             raise TypeError('Unrecognized solution')  # improve the checker
 
@@ -1222,6 +1225,15 @@ def solve(f, *symbols, **flags):
 
     as_dict = flags.get('dict', False)
     as_set = flags.get('set', False)
+
+    if isinstance(solution, Piecewise):
+        if type(solution.args[0].expr) is list:
+            args = list(solution.args)
+            for i, (e, c) in enumerate(args):
+                e.sort(key=default_sort_key)
+                args[i] = (e, c)
+            solution = Piecewise(*args, evaluate=False)
+        return solution
 
     if not as_set and isinstance(solution, list):
         # Make sure that a list of solutions is ordered in a canonical way.
@@ -1365,39 +1377,50 @@ def _solve(f, *symbols, **flags):
         flags['simplify'] = False
 
     elif f.is_Piecewise:
-        result = set()
-        for n, (expr, cond) in enumerate(f.args):
-            candidates = _solve(piecewise_fold(expr), symbol, **flags)
-            for candidate in candidates:
-                if candidate in result:
-                    continue
+        sols = [_solve(e, symbol, **flags) for e, c in f.args]
+        args = list(f.args)
+        solset = reduce(set.union, [set(s) for s in sols], set())
+        verified = {}
+        for i, (s, (e, c)) in enumerate(zip(sols, args)):
+            for s in s:
                 try:
-                    v = (cond == True) or cond.subs(symbol, candidate)
-                except:
-                    v = False
-                if v != False:
-                    # Only include solutions that do not match the condition
-                    # of any previous pieces.
-                    matches_other_piece = False
-                    for other_n, (other_expr, other_cond) in enumerate(f.args):
-                        if other_n == n:
+                    v = c.subs(symbol, s)
+                    if v == False:
+                        continue
+                except TypeError:
+                    # reject if imaginary part caused error in
+                    # Relational
+                    continue
+                # if this was already verified as true at a prevous
+                # condition it won't apply at the present condition
+                if verified.get(s, None) is S.true:
+                    continue
+                # if this set a previous condition to true then
+                # it can't be part of this solution at this condition
+                hit = False
+                for _, _c in args[:i]:
+                    try:
+                        vi = _c.subs(symbol, s)
+                        if vi == True:
+                            hit = True
                             break
-                        if other_cond == False:
-                            continue
-                        try:
-                            if other_cond.subs(symbol, candidate) == True:
-                                matches_other_piece = True
-                                break
-                        except:
-                            pass
-                    if not matches_other_piece:
-                        v = v == True or v.doit()
-                        if isinstance(v, Relational):
-                            v = v.canonical
-                        result.add(Piecewise(
-                            (candidate, v),
-                            (S.NaN, True)
-                        ))
+                    except TypeError:
+                        # reject if imaginary part caused error in
+                        # Relational
+                        hit = True
+                        break
+                if hit:
+                    continue
+                verified[s] = v
+        if list(set(verified.values())) == [S.true]:
+            # all solutions verified as being true
+            result = list(ordered(verified.keys()))
+        elif all(len(s) == 1 for s in sols):
+            result = [Piecewise(*[(s[0], c) for s, (e, c) in zip(sols, args)])]
+        else:
+            result = Piecewise(*[(s, c) for s, (e, c) in zip(sols, args)])
+            if not isinstance(result, Piecewise):
+                result = [result]  # it evaluated if it happened to be an unevaluated Piecewise with a True condition first
         check = False
     else:
         # first see if it really depends on symbol and whether there
@@ -1638,7 +1661,17 @@ def _solve(f, *symbols, **flags):
         raise NotImplementedError('\n'.join([msg, not_impl_msg % f]))
 
     if flags.get('simplify', True):
-        result = list(map(simplify, result))
+        if isinstance(result, Piecewise):
+            args = list(result.args)
+            for i, (e, c) in enumerate(args):
+                if type(e) is list:
+                    e = [simplify(_) for _ in e]
+                else:
+                    e = simplify(e)
+                args[i] = (e, c)
+            result = Piecewise(*args, evaluate=False)
+        else:
+            result = list(map(simplify, result))
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
         flags['simplify'] = False
@@ -1647,13 +1680,31 @@ def _solve(f, *symbols, **flags):
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
         dens = _simple_dens(f, symbols)
-        result = [s for s in result if
+        if isinstance(result, Piecewise):
+            bad = []
+            for i, (e, c) in enumerate(result.args):
+                aList = type(e) is list
+                e = [s for s in (e if aList else [e]) if
+                    all(not checksol(d, {symbol: s}, **flags)
+                    for d in dens)]
+                if not e:
+                    continue
+                elif not aList:
+                    e = e[0]
+                args[i] = (e, c)
+            for i in reversed(bad):
+                args.remove(i)
+            result = Piecewise(*args)
+        else:
+            result = [s for s in result if
                   all(not checksol(d, {symbol: s}, **flags)
                     for d in dens)]
     if check:
         # keep only results if the check is not False
         result = [r for r in result if
                   checksol(f_num, {symbol: r}, **flags) is not False]
+    elif isinstance(result, Piecewise) and not type(result.args[0].expr) is list:
+        result = [result]
     return result
 
 
