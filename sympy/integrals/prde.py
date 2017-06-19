@@ -445,7 +445,6 @@ def prde_cancel_liouvillian(b, Q, n, DE):
     """
     Pg, 237.
     """
-    m = len(Q)
     H = []
 
     # Why use DecrementLevel? Below line answers that:
@@ -484,7 +483,7 @@ def prde_cancel_liouvillian(b, Q, n, DE):
         H += hi
         # in the next loop instead of Q it has
         # to be Q + Fi taking its place
-        Q += Fi
+        Q = Q + Fi
 
     return (H, M)
 

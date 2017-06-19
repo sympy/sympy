@@ -5,7 +5,8 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
     prde_no_cancel_b_small, limited_integrate_reduce, limited_integrate,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
-    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE)
+    is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE,
+    prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
 
@@ -146,14 +147,44 @@ def test_prde_no_cancel():
 
 
 def test_prde_cancel_liouvillian():
-    # case == 'primitive'
+    ### 1. case == 'primitive'
     # also test case for issue #10798
     assert risch_integrate(integrate(1/(1- (x*y)**2), (x, 0, 1)), y) == \
             (log(1/y)*log(1 - 1/y)/2 - log(1/y)*log(1 + 1/y)/2 +
             NonElementaryIntegral((I*pi*y**2 - 2*y*log(1/y) - I*pi)/(2*y**3 - 2*y), y))
-    # case == 'exp'
-    assert risch_integrate(log(y/exp(y) + 1), y) == (y*log(y*exp(-y) + 1) +
-                                    NonElementaryIntegral((y**2 - y)/(y + exp(y)), y))
+    # above integral's lower level test for cancel routine
+    # not taken from book
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
+    assert prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE) == \
+        ([Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly((x - 1)*t, t, domain='ZZ(x)'),
+            Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'),
+            Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(x - 1, t, domain='ZZ(x)'),
+            Poly(-x**2 + x, t, domain='ZZ(x)'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'), Poly(0, t, domain='QQ'),
+            Poly(0, t, domain='QQ')], Matrix([[ 0,  1,  0,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [ 0,  0,  0,  0, 1,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [-1,  0,  0,  0, 0,  0,  0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                            [ 0,  0, -1,  0, 0,  0,  0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [ 0,  0,  0, -1, 0,  0,  0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [ 0,  0,  0,  0, 0, -1,  0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [ 0,  0,  0,  0, 0,  0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 ],
+                                            [-1,  0,  0,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                                            [ 0,  0, -1,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ],
+                                            [ 0,  0,  0, -1, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 ],
+                                            [ 0,  0,  0,  0, 0, -1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ],
+                                            [ 0,  0,  0,  0, 0,  0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 ],
+                                            [-1,  0,  1,  0, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                            [ 0, -1,  0,  1, 0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+                                            [-1,  0,  0,  0, 0,  1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                            [ 0, -1,  0,  0, 0,  0,  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]]))
+
+    ### 2. case == 'exp'
+    assert risch_integrate(log(x/exp(x) + 1), x) == (x*log(x*exp(-x) + 1) +
+                                    NonElementaryIntegral((x**2 - x)/(x + exp(x)), x))
+    # the above integral's lower level test of 'cancel routine'
+    # not taken from book
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
+    assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
+            ([Poly(1, t, domain='QQ'), Poly(x, t)], Matrix([[-1, 0, 1]]))
 
 
 def test_param_poly_rischDE():
