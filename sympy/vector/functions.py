@@ -1,9 +1,10 @@
 from sympy.vector.coordsysrect import CoordSysCartesian
-from sympy.vector.dyadic import Dyadic
-from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.scalar import BaseScalar
+from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import sympify, diff, integrate, S, simplify
+from sympy import diff, integrate, S, simplify
+from sympy.core import sympify
+from sympy.vector.dyadic import Dyadic
 
 
 def express(expr, system, system2=None, variables=False):

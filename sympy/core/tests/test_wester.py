@@ -1269,12 +1269,13 @@ def test_O3():
     assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
 
 def test_O4():
-    from sympy.vector import CoordSysCartesian
+    from sympy.vector import CoordSysCartesian, Del
     N = CoordSysCartesian("N")
+    delop = Del()
     i, j, k = N.base_vectors()
     x, y, z = N.base_scalars()
     F = i*(x*y*z) + j*((x*y*z)**2) + k*((y**2)*(z**3))
-    assert N.delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
+    assert delop.cross(F).doit() == (-2*x**2*y**2*z + 2*y*z**3)*i + x*y*j + (2*x*y**2*z**2 - x*z)*k
 
 # The vector module has no way of representing vectors symbolically (without
 # respect to a basis)

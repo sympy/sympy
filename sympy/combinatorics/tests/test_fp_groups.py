@@ -851,3 +851,16 @@ def test_subgroup_presentations():
         "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
         )
     assert str(reidemeister_presentation(f, H)) == k
+
+def test_order():
+    from sympy import S
+    F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert f.order() == 8
+
+    f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
+    assert f.order() == S.Infinity
+
+    F, a, b, c = free_group("a, b, c")
+    f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
+    assert f.order() == 2000

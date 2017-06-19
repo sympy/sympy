@@ -1,5 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, Matrix, S, symbols
+from sympy import Poly, S, symbols
 from sympy.integrals.risch import DifferentialExtension, derivation
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
@@ -7,7 +7,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     is_deriv_k, is_log_deriv_k_t_radical, parametric_log_deriv_heu,
     is_log_deriv_k_t_radical_in_field, param_poly_rischDE, param_rischDE)
 
-from sympy.polys.polymatrix import PolyMatrix
+from sympy.polys.polymatrix import PolyMatrix as Matrix
 
 from sympy.abc import x, t, n
 
@@ -140,8 +140,8 @@ def test_prde_no_cancel():
     V = A.nullspace()
     assert len(V) == 1
     assert V[0] == Matrix([-1/2, 0, 0, 1, 0, 0]*3)
-    assert (PolyMatrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
-    assert (PolyMatrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
+    assert (Matrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
+    assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - 1/2, t, domain='QQ(x)')
 
 
 def test_param_poly_rischDE():

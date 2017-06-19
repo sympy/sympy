@@ -3008,7 +3008,6 @@ class MatrixBase(MatrixDeprecated, MatrixDecompositions,
     def gauss_jordan_solve(self, b, freevar=False):
         """
         Solves Ax = b using Gauss Jordan elimination.
-
         There may be zero, one, or infinite solutions.  If one solution
         exists, it will be returned. If infinite solutions exist, it will
         be returned parametrically. If no solutions exist, It will throw
@@ -3216,7 +3215,6 @@ class MatrixBase(MatrixDeprecated, MatrixDecompositions,
         from .dense import Matrix
         if not self.is_square:
             raise NonSquareMatrixError("A Matrix must be square to invert.")
-
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
         if any(iszerofunc(red[j, j]) for j in range(red.rows)):
