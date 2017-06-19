@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
 from sympy.combinatorics.free_groups import free_group
@@ -836,6 +837,7 @@ def test_subgroup_presentations():
     gens, rels = reidemeister_presentation(f, H)
     assert str(gens) == "(b_1, c_3)"
     assert len(rels) == 18
+
 
 def test_order():
     from sympy import S

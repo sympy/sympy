@@ -1,7 +1,7 @@
 import os
-USE_SYMENGINE = os.getenv('USE_SYMENGINE')
+USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
 
-if USE_SYMENGINE:
+if USE_SYMENGINE.lower() in ('1', 't', 'true'):
     from symengine.sympy_compat import (Symbol, Integer, sympify, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,

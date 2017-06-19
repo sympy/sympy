@@ -150,13 +150,15 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import gcd
+        from sympy import S, gcd
         if self._order != None:
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
         elif len(self.generators) == 1:
             self._order = gcd([r.array_form[0][1] for r in self.relators])
+        elif self._is_infinite():
+            self._order = S.Infinity
         else:
             gens, C = self._finite_index_subgroup()
             if C:
@@ -165,6 +167,27 @@ class FpGroup(DefaultPrinting):
             else:
                 self._order = self.index([])
         return self._order
+
+    def _is_infinite(self):
+        '''
+        Test if the group is infinite. Return `True` if the test succeeds
+        and `None` otherwise
+
+        '''
+        # Abelianisation test: check is the abelianisation is infinite
+        abelian_rels = []
+        from sympy.polys.solvers import RawMatrix as Matrix
+        from sympy.polys.domains import ZZ
+        from sympy.matrices.normalforms import invariant_factors
+        for rel in self.relators:
+            abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
+        m = Matrix(abelian_rels)
+        setattr(m, "ring", ZZ)
+        if 0 in invariant_factors(m):
+            return True
+        else:
+            return None
+
 
     def _finite_index_subgroup(self, s=[]):
         '''
