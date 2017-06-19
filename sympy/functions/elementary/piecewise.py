@@ -305,9 +305,11 @@ define an expression.'''))
     def _eval_evalf(self, prec):
         return self.func(*[(e.evalf(prec), c) for e, c in self.args])
 
-    def _eval_integral(self, x):
+    def _eval_integral(self, x, **kwargs):
         from sympy.integrals import integrate
-        return self.func(*[(integrate(e, x), c) for e, c in self.args])
+        return self.func(*[(integrate(e, x, **kwargs), c) for e, c in self.args])
+
+    piecewise_integrate = _eval_integral
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
