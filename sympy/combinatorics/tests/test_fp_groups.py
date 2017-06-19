@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sympy import S
 from sympy.combinatorics.fp_groups import (FpGroup, CosetTable, low_index_subgroups,
         coset_enumeration_r, coset_enumeration_c, reidemeister_presentation)
 from sympy.combinatorics.free_groups import free_group
@@ -851,6 +852,7 @@ def test_subgroup_presentations():
         "a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1*a_0**5*b_1**-2*a_0*b_1**2*c_3**-1*b_1**-2*c_3**-1*b_1))"
         )
     assert str(reidemeister_presentation(f, H)) == k
+
 
 def test_order():
     from sympy import S
