@@ -1303,9 +1303,7 @@ def test_issue_6060():
     )
     y = Symbol('y')
     assert solve(absxm3 - y, x) == [
-        Piecewise((-y + 3, y > 0), (S.NaN, True)),
-        Piecewise((y + 3, 0 <= y), (S.NaN, True))
-    ]
+        Piecewise((y + 3, x - 3 >= 0), (-y + 3, True))]
     y = Symbol('y', positive=True)
     assert solve(absxm3 - y, x) == [-y + 3, y + 3]
 
@@ -1638,11 +1636,6 @@ def test_det_quick():
     # make sure they work with Sparse
     s = SparseMatrix(2, 2, (1, 2, 1, 4))
     assert det_perm(s) == det_minor(s) == s.det()
-
-
-def test_piecewise():
-    # if no symbol is given the piecewise detection must still work
-    assert solve(Piecewise((x - 2, Gt(x, 2)), (2 - x, True)) - 3) == [-1, 5]
 
 
 def test_real_imag_splitting():
