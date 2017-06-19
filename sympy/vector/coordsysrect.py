@@ -1,13 +1,13 @@
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol
 from sympy.core.compatibility import string_types, range
 from sympy.core.cache import cacheit
+from sympy.core import S
+from sympy.vector.scalar import BaseScalar
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin
+import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.core import S
-from sympy import cos
-import sympy.vector
 
 
 class CoordSysCartesian(Basic):
@@ -150,9 +150,6 @@ class CoordSysCartesian(Basic):
         obj._h2 = S.One
         obj._h3 = S.One
 
-        # Assign a Del operator instance
-        from sympy.vector.deloperator import Del
-        obj._delop = Del(obj)
 
         # Assign params
         obj._parent = parent
@@ -192,7 +189,7 @@ class CoordSysCartesian(Basic):
 
         coefficient_mapping = {
             'cartesian': (1, 1, 1),
-            'spherical': (1, self.x, self.x * cos(self.y)),
+            'spherical': (1, self.x, self.x * sin(self.y)),
             'cylindrical': (1, self.y, 1)
         }
         if curv_coord_name not in coefficient_mapping:
@@ -205,7 +202,13 @@ class CoordSysCartesian(Basic):
 
     @property
     def delop(self):
-        return self._delop
+        SymPyDeprecationWarning(
+            feature="delop operator inside coordinate system",
+            useinstead="it as instance Del class",
+            deprecated_since_version="1.1"
+            ).warn()
+        from sympy.vector.deloperator import Del
+        return Del()
 
     @property
     def i(self):
