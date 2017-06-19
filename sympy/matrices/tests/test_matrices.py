@@ -15,6 +15,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix)
 from sympy.core.compatibility import long, iterable, range
+from sympy.core import Tuple
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises, XFAIL, slow, skip
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -35,7 +36,7 @@ def test_args():
         assert m.rows == 3 and type(m.rows) is int
         assert m.cols == 2 and type(m.cols) is int
         if not c % 2:
-            assert type(m._mat) is list
+            assert type(m._mat) in (list, tuple, Tuple)
         else:
             assert type(m._smat) is dict
 
@@ -2125,23 +2126,6 @@ def test_matrix_norm():
                 dif = simplify((alpha*X).norm(order) -
                     (abs(alpha) * X.norm(order)))
                 assert dif == 0
-
-
-def test_singular_values():
-    x = Symbol('x', real=True)
-
-    A = Matrix([[0, 1*I], [2, 0]])
-    assert A.singular_values() == [2, 1]
-
-    A = eye(3)
-    A[1, 1] = x
-    A[2, 2] = 5
-    vals = A.singular_values()
-    assert 1 in vals and 5 in vals and abs(x) in vals
-
-    A = Matrix([[sin(x), cos(x)], [-cos(x), sin(x)]])
-    vals = [sv.trigsimp() for sv in A.singular_values()]
-    assert vals == [S(1), S(1)]
 
 
 def test_condition_number():

@@ -809,6 +809,9 @@ def test_subgroup_presentations():
     p1 = reidemeister_presentation(f, H)
     assert str(p1) == "((y_1, y_2), (y_1**2, y_2**3, y_2*y_1*y_2*y_1*y_2*y_1))"
 
+    H = f.subgroup(H)
+    assert (H.generators, H.relators) == p1
+
     f = FpGroup(F, [x**3, y**3, (x*y)**3])
     H = [x*y, x*y**-1]
     p2 = reidemeister_presentation(f, H)
@@ -850,7 +853,16 @@ def test_subgroup_presentations():
         )
     assert str(reidemeister_presentation(f, H)) == k
 
-def test_is_infinite():
+
+def test_order():
+    from sympy import S
     F, x, y = free_group("x, y")
+    f = FpGroup(F, [x**4, y**2, x*y*x**-1*y])
+    assert f.order() == 8
+
     f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
     assert f.order() == S.Infinity
+
+    F, a, b, c = free_group("a, b, c")
+    f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
+    assert f.order() == 2000
