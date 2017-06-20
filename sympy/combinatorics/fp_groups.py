@@ -150,13 +150,15 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import gcd
+        from sympy import S, gcd
         if self._order != None:
             return self._order
         if self._coset_table != None:
             self._order = len(self._coset_table.table)
         elif len(self.generators) == 1:
             self._order = gcd([r.array_form[0][1] for r in self.relators])
+        elif self._is_infinite():
+            self._order = S.Infinity
         else:
             gens, C = self._finite_index_subgroup()
             if C:
@@ -165,6 +167,27 @@ class FpGroup(DefaultPrinting):
             else:
                 self._order = self.index([])
         return self._order
+
+    def _is_infinite(self):
+        '''
+        Test if the group is infinite. Return `True` if the test succeeds
+        and `None` otherwise
+
+        '''
+        # Abelianisation test: check is the abelianisation is infinite
+        abelian_rels = []
+        from sympy.polys.solvers import RawMatrix as Matrix
+        from sympy.polys.domains import ZZ
+        from sympy.matrices.normalforms import invariant_factors
+        for rel in self.relators:
+            abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
+        m = Matrix(abelian_rels)
+        setattr(m, "ring", ZZ)
+        if 0 in invariant_factors(m):
+            return True
+        else:
+            return None
+
 
     def _finite_index_subgroup(self, s=[]):
         '''
@@ -1570,45 +1593,41 @@ def elimination_technique_1(C):
     rels = C._reidemeister_relators
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
-    rels.sort(reverse=True)
+    rels.sort()
     gens = C._schreier_generators
     redundant_gens = {}
-    contained_gens = []
+    redundant_rels = []
+    used_gens = set()
     # examine each relator in relator list for any generator occuring exactly
     # once
-    next_i = False
-    for i in range(len(rels) -1, -1, -1):
-        rel = rels[i]
-        # don't look for a new generator occuring once in relator which
-        # has already found to posses a
-        for gen in redundant_gens:
-            gen_sym = gen.array_form[0][0]
-            if any([gen_sym == r[0] for r in rel.array_form]):
-                next_i = True
-                break
-        if next_i:
-            next_i = False
+    for rel in rels:
+        # don't look for a redundant generator in a relator which
+        # depends on previously found ones
+        contained_gens = rel.contains_generators()
+        if any([g in contained_gens for g in redundant_gens]):
             continue
-        for j in range(len(gens) - 1, -1, -1):
-            gen = gens[j]
-            if rel.generator_count(gen) == 1 and gen not in contained_gens:
+        contained_gens = list(contained_gens)
+        contained_gens.sort(reverse = True)
+        for gen in contained_gens:
+            if rel.generator_count(gen) == 1 and gen not in used_gens:
                 k = rel.exponent_sum(gen)
                 gen_index = rel.index(gen**k)
                 bk = rel.subword(gen_index + 1, len(rel))
                 fw = rel.subword(0, gen_index)
                 chi = (bk*fw).identity_cyclic_reduction()
                 redundant_gens[gen] = chi**(-1*k)
-                contained_gens.extend(chi.contains_generators())
-                del rels[i]; del gens[j]
+                used_gens.update(chi.contains_generators())
+                redundant_rels.append(rel)
                 break
-    # eliminate the redundant generator from remaing relators
-    for i, gen in product(range(len(rels)), redundant_gens):
-        rels[i] = (rels[i].eliminate_word(gen, redundant_gens[gen])).identity_cyclic_reduction()
-    rels.sort()
+    rels = [r for r in rels if r not in redundant_rels]
+    # eliminate the redundant generators from remaining relators
+    rels = [r.eliminate_words(redundant_gens, _all = True).identity_cyclic_reduction() for r in rels]
+    rels = list(set(rels))
     try:
         rels.remove(C._schreier_free_group.identity)
     except ValueError:
         pass
+    gens = [g for g in gens if g not in redundant_gens]
     C._reidemeister_relators = rels
     C._schreier_generators = gens
 
@@ -1656,11 +1675,16 @@ def elimination_technique_2(C):
 def simplify_presentation(C):
     """Relies upon ``_simplification_technique_1`` for its functioning. """
     rels = C._reidemeister_relators
-    rels_arr = _simplification_technique_1(rels)
     group = C._schreier_free_group
 
-    # don't add "identity" element in relator list
-    C._reidemeister_relators = [group.dtype(tuple(r)).identity_cyclic_reduction() for r in rels_arr if r]
+    rels = list(set(_simplification_technique_1(rels)))
+    rels.sort()
+    rels = [r.identity_cyclic_reduction() for r in rels]
+    try:
+        rels.remove(C._schreier_free_group.identity)
+    except ValueError:
+        pass
+    C._reidemeister_relators = rels
 
 def _simplification_technique_1(rels):
     """
@@ -1676,69 +1700,56 @@ def _simplification_technique_1(rels):
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
     >>> _simplification_technique_1(w1)
-    [[(x, 3)], [(x, -1), (y, 4)]]
+    [x**-1*y**4, x**3]
 
     >>> w2 = [x**2*y**-4*x**5, x**3, x**2*y**8, y**5]
     >>> _simplification_technique_1(w2)
-    [[(x, 3)], [(y, 5)], [(x, -1), (y, -2)], [(x, -1), (y, 1), (x, -1)]]
+    [x**-1*y*x**-1, x**3, x**-1*y**-2, y**5]
 
     >>> w3 = [x**6*y**4, x**4]
     >>> _simplification_technique_1(w3)
-    [[(x, 4)], [(x, 2), (y, 4)]]
+    [x**2*y**4, x**4]
 
     """
-    rels = list(set(rels))
-    rels.sort()
-    l_rels = len(rels)
+    from sympy import gcd
 
-    # all syllables with single syllable
-    one_syllable_rels = set()
-    # since "nw" has a max size = l_rels, only identity element
-    # removal can possibly happen
-    nw = [None]*l_rels
-    for i in range(l_rels):
-        w = rels[i].identity_cyclic_reduction()
-        if w.number_syllables() == 1:
+    rels = rels[:]
+    # dictionary with "gen: n" where gen^n is one of the relators
+    exps = {}
+    for i in range(len(rels)):
+        rel = rels[i]
+        if rel.number_syllables() == 1:
+            g = rel[0]
+            exp = abs(rel.array_form[0][1])
+            if rel.array_form[0][1] < 0:
+                rels[i] = rels[i]**-1
+                g = g**-1
+            if g in exps:
+                exp = gcd(exp, exps[g].array_form[0][1])
+            exps[g] = g**exp
 
-            # replace one syllable relator with the corresponding inverse
-            # element, for ex. x**-4 -> x**4 in relator list
-            if w.array_form[0][1] < 0:
-                rels[i] = w**-1
-            one_syllable_rels.add(rels[i])
-
-        # since modifies the array rep., so should be
-        # added a list
-        nw[i] = list(rels[i].array_form)
-
-    # bound the exponent of relators, making use of the single
+    one_syllables_words = exps.values()
+    # decrease some of the exponents in relators, making use of the single
     # syllable relators
-    for i in range(l_rels):
-        k = nw[i]
-        rels_i = rels[i]
-        for gen in one_syllable_rels:
-            n = gen.array_form[0][1]
-            gen_arr0 = gen.array_form[0][0]
-            j = len(k) - 1
-            while j >= 0:
-                if gen_arr0 == k[j][0] and gen is not rels_i:
-                    t = Mod(k[j][1], n)
+    for i in range(len(rels)):
+        rel = rels[i]
+        if rel in one_syllables_words:
+            continue
+        rel = rel.eliminate_words(one_syllables_words, _all = True)
+        # if rels[i] contains g**n where abs(n) is greater than half of the power p
+        # of g in exps, g**n can be replaced by g**(n-p) (or g**(p-n) if n<0)
+        for g in rel.contains_generators():
+            if g in exps:
+                exp = exps[g].array_form[0][1]
+                max_exp = (exp + 1)//2
+                rel = rel.eliminate_word(g**(max_exp), g**(max_exp-exp), _all = True)
+                rel = rel.eliminate_word(g**(-max_exp), g**(-(max_exp-exp)), _all = True)
+        rels[i] = rel
+    rels = [r.identity_cyclic_reduction() for r in rels]
+    return rels
 
-                    # multiple of one syllable relator
-                    if t == 0:
-                        del k[j]
-                        zero_mul_simp(k, j - 1)
-                        j = len(k)
 
-                    # power should be bounded by (-n/2, n/2]
-                    elif t <= n/2:
-                        k[j] = k[j][0], Mod(k[j][1], n)
-                    elif t > n/2:
-                        k[j] = k[j][0], Mod(k[j][1], n) - n
-                j -= 1
-
-    return nw
-
-def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2, C=None):
+def reidemeister_presentation(fp_grp, H, C=None):
     """
     fp_group: A finitely presented group, an instance of FpGroup
     H: A subgroup whose presentation is to be found, given as a list
@@ -1781,8 +1792,13 @@ def reidemeister_presentation(fp_grp, H, elm_rounds=2, simp_rounds=2, C=None):
     C.compress(); C.standardize()
     define_schreier_generators(C)
     reidemeister_relators(C)
-    for i in range(20):
-        elimination_technique_1(C)
+    prev_gens = []
+    prev_rels = []
+    while not set(prev_rels) == set(C._reidemeister_relators):
+        prev_rels = C._reidemeister_relators
+        while not set(prev_gens) == set(C._schreier_generators):
+            prev_gens = C._schreier_generators
+            elimination_technique_1(C)
         simplify_presentation(C)
 
     syms = [g.array_form[0][0] for g in C._schreier_generators]

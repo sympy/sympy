@@ -11,6 +11,7 @@ class Field(Ring):
     """Represents a field domain. """
 
     is_Field = True
+    is_PID = True
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
