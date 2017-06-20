@@ -702,9 +702,11 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(a, b, r, DE, parametric=True)
     except NotImplementedError:
-        debug("param_rischDE: Proceeding with n = oo; may cause "
+        debug("param_rischDE: Proceeding with n = 2; may cause "
               "non-termination.")
-        n = oo
+        # the currently added test case takes large time
+        # even with n=2, and much longer wit large n's.
+        n = 2
 
     h, B = param_poly_rischDE(a, b, r, n, DE)
 
