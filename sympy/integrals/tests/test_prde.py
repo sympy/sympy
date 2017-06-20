@@ -224,23 +224,18 @@ def test_param_rischDE():
     y = -p[0] + p[1] + 0*p[2]  # x
     assert y.diff(x) - y/x**2 == 1 - 1/x  # Dy + f*y == -G0 + G1 + 0*G2
 
+    # the below test computation takes place while computing the integral
+    # of 'f = log(log(x + exp(x)))'
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
-    p0, p1 = Poly(0, t, field=True), Poly(1, t, field=True)
-    G = [(Poly(t + 1, t, domain='QQ'), p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1),
-        (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1),
-        (Poly(-t**2, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')), (p0, p1), (p0, p1),
-        (p0, p1), (p0, p1), (p0, p1), (p0, p1), (Poly(-t, t, domain='QQ'), p1), (p0, p1),
-        (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1), (p0, p1),
-        (p0, p1), (p0, p1), (p0, p1), (p0, p1)]
-    h, A = param_rischDE(Poly(-t, t, field=True), Poly(t + 1, t, field=True), G, DE)
-    assert len(h) == 135
-    assert A.shape == (135, 170)
+    G = [(Poly(t + x, t, domain='ZZ(x)'), Poly(1, t, domain='QQ')), (Poly(0, t, domain='QQ'), Poly(1, t, domain='QQ'))]
+    h, A = param_rischDE(Poly(-t - 1, t, field=True), Poly(t + x, t, field=True), G, DE)
+    assert len(h) == 5
     p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
     V = A.nullspace()
-    assert len(V) == 35
-    y = sum([p[i]*V[0][i + 35] for i in range(len(p))]) # t+1
-    G_sum = sum([(G[i][0].as_expr()/G[i][1].as_expr())*V[0][i] for i in range(35)]) # 0
-    assert y.diff(t) - y/(t + 1) == 0  # Dy + f*y = c0*G0 + c1*G1 + ... + cm*Gm
+    assert len(V) == 3
+    assert V[0] == Matrix([0, 0, 0, 0, 1, 0, 0])
+    y = 0*p[0] + 0*p[1] + 1*p[2] + 0*p[3] + 0*p[4]
+    assert y.diff(t) - y/(t + x) == 0   # Dy + f*y = 0*G0 + 0*G1
 
 
 def test_limited_integrate_reduce():
