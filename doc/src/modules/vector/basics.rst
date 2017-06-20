@@ -6,7 +6,7 @@ Coordinate Systems and Vectors
 ==============================
 
 Currently, :mod:`sympy.vector` is able to deal with the Cartesian (also called
-rectangular), spherical and other curvilinear coordinate systems .
+rectangular), spherical and other curvilinear coordinate systems.
 
 A 3D Cartesian coordinate system can be initialized in :mod:`sympy.vector` as
 
