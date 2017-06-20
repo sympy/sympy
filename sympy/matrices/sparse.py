@@ -343,7 +343,7 @@ class SparseMatrix(MatrixBase):
         return len(diff.values()) == 0
 
     def _eval_LDL_decomposition(self):
-        """Algorithm for numeric LDL factization, exploiting sparse structure.
+        """Algorithm for numeric LDL factorization, exploiting sparse structure.
         """
         Lrowstruc = self.row_structure_symbolic_cholesky()
         L = self.eye(self.rows)

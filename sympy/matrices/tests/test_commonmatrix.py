@@ -1278,7 +1278,7 @@ def test_singular_values():
     x = Symbol('x', real=True)
 
     A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
-    
+
     # if singular values can be sorted, they should be in decreasing order
     assert A.singular_values() == [2, 1]
 
@@ -1286,7 +1286,7 @@ def test_singular_values():
     A[1, 1] = x
     A[2, 2] = 5
     vals = A.singular_values()
-    
+
     # since Abs(x) cannot be sorted, test set equality
     assert set(vals) == set([5, 1, Abs(x)])
 
