@@ -1783,8 +1783,8 @@ def test_issue_2840_8155():
         log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)), 2*I*(log(2) -
         log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
         log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
-        log(sqrt(3) + I)), -2*I*log(-(-1)**(1/9)), -2*I*log(-(-1)**(2/9)),
-        -2*I*log((-1)**(7/9)), -2*I*log((-1)**(8/9)), -2*I*log(-sin(pi/18) -
+        log(sqrt(3) + I)), -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
+        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-sin(pi/18) -
         I*cos(pi/18)), -2*I*log(-sin(pi/18) + I*cos(pi/18)),
         -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(sin(pi/18) +
         I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
