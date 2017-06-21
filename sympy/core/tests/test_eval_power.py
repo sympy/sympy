@@ -397,3 +397,8 @@ def test_better_sqrt():
     assert eq.args == (a, S.Half)
     assert expand_multinomial(eq) == sqrt((-117 + 44*I)*(3 + 4*I))/125
     assert eq.expand() == (7 - 24*I)/125
+
+    # issue 12775
+    assert sqrt(2*I) == (1 + I)
+    assert sqrt(2*9*I) == (3 + 3*I)
+    assert Pow(2*I, 3*S.Half) == (1 + I)**3

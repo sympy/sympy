@@ -625,6 +625,15 @@ class Mul(Expr, AssocOp):
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                 Pow(Mul._from_args(nc), e, evaluate=False)
+        if e.is_Rational and e.q == 2:
+            from sympy.core.power import integer_nthroot
+            if b.is_imaginary:
+                try:
+                    r, t = integer_nthroot(b.as_real_imag()[1]/2, 2)
+                    if t:
+                        return (r + S.ImaginaryUnit*r)**e.p
+                except ValueError:
+                    pass
 
         p = Pow(b, e, evaluate=False)
 
