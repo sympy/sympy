@@ -626,23 +626,6 @@ class Mul(Expr, AssocOp):
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                 Pow(Mul._from_args(nc), e, evaluate=False)
 
-        if e is S.Half and b.is_number:
-            from sympy.core.evalf import pure_complex
-            from sympy.functions.elementary.miscellaneous import sqrt
-            n, d = b.as_numer_denom()
-            if d.is_Add:
-                if n.is_Integer:
-                    # sqrt(n/d) = sqrt(1/(d/n)) = 1/sqrt(d/n)
-                    # != sqrt(n)/sqrt(d) unless n >= 0
-                    ri = pure_complex(sqrt(d/n))
-                    if ri:
-                        r, i = ri
-                        return 1/(r + S.ImaginaryUnit*i)
-                elif pure_complex(n):
-                    r, i = b.as_real_imag()
-                    if all(_.is_Rational for _ in (r, i)):
-                        return sqrt(r + S.ImaginaryUnit*i)
-
         p = Pow(b, e, evaluate=False)
 
         if e.is_Rational or e.is_Float:
