@@ -1787,5 +1787,5 @@ def test_issue_11877():
 
 def test_normal():
     x = symbols('x')
-    e = Mul(1 + x, S.Half, evaluate=False)
+    e = Mul(S.Half, 1 + x, evaluate=False)
     assert e.normal() == e

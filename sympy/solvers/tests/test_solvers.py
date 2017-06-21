@@ -1779,19 +1779,20 @@ def test_issue_8828():
 
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, -pi, pi, 2*pi, -2*I*log(-(-1)**(S(1)/9)), -2*I*log(-(-1)**(S(2)/9)),
-        -2*I*log((-1)**(S(7)/9)), -2*I*log((-1)**(S(8)/9)), -2*I*log(-S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(-S(1)/2 + sqrt(3)*I/2), -2*I*log(S(1)/2 -
-        sqrt(3)*I/2), -2*I*log(S(1)/2 + sqrt(3)*I/2), -2*I*log(-sqrt(3)/2 - I/2),
-        -2*I*log(-sqrt(3)/2 + I/2), -2*I*log(sqrt(3)/2 - I/2),
-        -2*I*log(sqrt(3)/2 + I/2), -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)), -2*I*log(sin(pi/18) -
-        I*cos(pi/18)), -2*I*log(sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
+        0, -pi, pi, 2*pi, 2*I*(log(2) - log(-1 - sqrt(3)*I)), 2*I*(log(2) -
+        log(-1 + sqrt(3)*I)), 2*I*(log(2) - log(1 - sqrt(3)*I)), 2*I*(log(2) -
+        log(1 + sqrt(3)*I)), 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
+        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
+        log(sqrt(3) + I)), -2*I*log(-(-1)**(1/9)), -2*I*log(-(-1)**(2/9)),
+        -2*I*log((-1)**(7/9)), -2*I*log((-1)**(8/9)), -2*I*log(-sin(pi/18) -
+        I*cos(pi/18)), -2*I*log(-sin(pi/18) + I*cos(pi/18)),
+        -2*I*log(sin(pi/18) - I*cos(pi/18)), -2*I*log(sin(pi/18) +
+        I*cos(pi/18)), -2*I*log(exp(-2*I*pi/9)), -2*I*log(exp(-I*pi/9)),
         -2*I*log(exp(I*pi/9)), -2*I*log(exp(2*I*pi/9))]
     assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, -pi, pi, -2*I*log(-sqrt(3)/2 - I/2), -2*I*log(-sqrt(3)/2 + I/2),
-        -2*I*log(sqrt(3)/2 - I/2), -2*I*log(sqrt(3)/2 + I/2)]
+        0, -pi, pi, 2*I*(log(2) - log(-sqrt(3) - I)), 2*I*(log(2) -
+        log(-sqrt(3) + I)), 2*I*(log(2) - log(sqrt(3) - I)), 2*I*(log(2) -
+        log(sqrt(3) + I))]
 
 
 def test_issue_9567():
