@@ -651,8 +651,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
 
-    >>> radsimp(1/(I + 1))
-    (1 - I)/2
     >>> radsimp(1/(2 + sqrt(2)))
     (-sqrt(2) + 2)/2
     >>> x,y = map(Symbol, 'xy')
