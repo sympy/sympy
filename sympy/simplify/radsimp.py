@@ -735,14 +735,14 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not d.is_Pow:
             return False
         e = d.exp
-        if e.is_Rational and e.q == 2 or symbolic and fraction(e)[1] == 2:
+        if e.is_Rational and e.q == 2 or symbolic and denom(e) == 2:
             return True
         if log2:
             q = 1
             if e.is_Rational:
                 q = e.q
             elif symbolic:
-                d = fraction(e)[1]
+                d = denom(e)
                 if d.is_Integer:
                     q = d
             if q != 1 and log(q, 2).is_Integer:
@@ -772,7 +772,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return expr
 
         if ispow2(d):
-            d2 = sqrtdenest(sqrt(d.base))**fraction(d.exp)[0]
+            d2 = sqrtdenest(sqrt(d.base))**numer(d.exp)
             if d2 != d:
                 return handle(1/d2)
         elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
