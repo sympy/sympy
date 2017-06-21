@@ -9,7 +9,7 @@ from sympy.matrices.common import (ShapeError, MatrixError, NonSquareMatrixError
     _MinimalMatrix, MatrixShaping, MatrixProperties, MatrixOperations, MatrixArithmetic,
     MatrixSpecial)
 from sympy.matrices.matrices import (DeferredVector, MatrixDeterminant,
-    MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus)
+    MatrixReductions, MatrixSubspaces, MatrixEigen, MatrixCalculus, MatrixDecompositions)
 from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
@@ -90,6 +90,8 @@ class EigenOnlyMatrix(_MinimalMatrix, MatrixEigen):
 class CalculusOnlyMatrix(_MinimalMatrix, MatrixCalculus):
     pass
 
+class DecompositionsOnlyMatrix(_MinimalMatrix, MatrixDecompositions):
+    pass
 
 def test__MinimalMatrix():
     x = _MinimalMatrix(2,3,[1,2,3,4,5,6])
@@ -1276,6 +1278,7 @@ def test_singular_values():
     x = Symbol('x', real=True)
 
     A = EigenOnlyMatrix([[0, 1*I], [2, 0]])
+
     # if singular values can be sorted, they should be in decreasing order
     assert A.singular_values() == [2, 1]
 
@@ -1283,6 +1286,7 @@ def test_singular_values():
     A[1, 1] = x
     A[2, 2] = 5
     vals = A.singular_values()
+
     # since Abs(x) cannot be sorted, test set equality
     assert set(vals) == set([5, 1, Abs(x)])
 
@@ -1322,3 +1326,26 @@ def test_limit():
     x, y = symbols('x y')
     m = CalculusOnlyMatrix(2, 1, [1/x, y])
     assert m.limit(x, 5) == Matrix(2, 1, [S(1)/5, y])
+
+
+# test DecompositionsOnlyMatrix
+def test_cholesky_decomposition():
+    raises(NonSquareMatrixError, lambda: DecompositionsOnlyMatrix(2, 1, (1, 2)).cholesky_decomposition())
+    raises(ValueError, lambda: DecompositionsOnlyMatrix(2, 2, (1, 2, 3, 4)).cholesky_decomposition())
+    A = DecompositionsOnlyMatrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+    Acho = A.cholesky_decomposition()
+    assert Acho*Acho.T == A
+    assert Acho.is_lower
+    assert Acho == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+
+
+def test_LDL_decomposition():
+    raises(NonSquareMatrixError, lambda: DecompositionsOnlyMatrix(2, 1, (1, 2)).LDL_decomposition())
+    raises(ValueError, lambda: DecompositionsOnlyMatrix(2, 2, (1, 2, 3, 4)).LDL_decomposition())
+    A = DecompositionsOnlyMatrix(3, 3, (25, 15, -5, 15, 18, 0, -5, 0, 11))
+    L, D = A.LDL_decomposition()
+    assert L * D * L.T == A
+    assert L.is_lower
+    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
+    assert D.is_diagonal()
+    assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
