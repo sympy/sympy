@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols
+from sympy import Symbol, Add, Number, S, integrate, sqrt, Rational, Abs, diff, symbols, Basic
 from sympy.physics.units import convert_to, find_unit
 
 from sympy.physics.units.definitions import s, m, kg, speed_of_light, day, minute, km, foot, meter, grams, amu, au, \
@@ -233,6 +233,6 @@ def test_sum_of_incompatible_quantities():
     raises(ValueError, lambda: 2 * meter*(mile + centimeter) + km)
 
     expr = 2 * (mile + centimeter)/second + km/hour
-    assert hasattr(expr, "_constructor_postprocessor_mapping")
+    assert expr in Basic._constructor_postprocessor_mapping
     for i in expr.args:
-        assert hasattr(i, "_constructor_postprocessor_mapping")
+        assert i in Basic._constructor_postprocessor_mapping

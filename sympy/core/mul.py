@@ -89,7 +89,7 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
 
-    __slots__ = ['_constructor_postprocessor_mapping']
+    __slots__ = []
 
     is_Mul = True
 

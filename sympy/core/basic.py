@@ -1641,6 +1641,8 @@ class Basic(with_metaclass(ManagedProperties)):
                 else:
                     return self
 
+    _constructor_postprocessor_mapping = {}
+
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
         # WARNING: This API is experimental.
@@ -1651,21 +1653,20 @@ class Basic(with_metaclass(ManagedProperties)):
         # be interpreted as a dictionary containing lists of postprocessing
         # functions for matching expression node names.
 
-        if '_constructor_postprocessor_mapping' not in obj.__slots__:
-            return obj
-
         clsname = obj.__class__.__name__
         postprocessors = defaultdict(list)
         for i in obj.args:
-            if not hasattr(i, "_constructor_postprocessor_mapping"):
-                continue
-            for k, v in i._constructor_postprocessor_mapping.items():
-                postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+            if i in Basic._constructor_postprocessor_mapping:
+                for k, v in Basic._constructor_postprocessor_mapping[i].items():
+                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
+            elif type(i) in Basic._constructor_postprocessor_mapping:
+                for k, v in Basic._constructor_postprocessor_mapping[type(i)].items():
+                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
 
         for f in postprocessors.get(clsname, []):
             obj = f(obj)
-        if len(postprocessors) > 0 and not hasattr(obj, "_constructor_postprocessor_mapping"):
-            obj._constructor_postprocessor_mapping = postprocessors
+        if len(postprocessors) > 0 and obj not in Basic._constructor_postprocessor_mapping:
+            Basic._constructor_postprocessor_mapping[obj] = postprocessors
 
         return obj
 

@@ -1,14 +1,16 @@
-from sympy import Symbol, Mul, symbols
+from sympy import Symbol, Mul, symbols, Basic
 
 
 class SymbolInMulOnce(Symbol):
     # Test class for a symbol that can only appear once in a `Mul` expression.
+    pass
 
-    _constructor_postprocessor_mapping = {
-        "Mul": [lambda x: x],
-        "Pow": [lambda x: x.base if isinstance(x.base, SymbolInMulOnce) else x],
-        "Add": [lambda x: x],
-    }
+
+Basic._constructor_postprocessor_mapping[SymbolInMulOnce] = {
+    "Mul": [lambda x: x],
+    "Pow": [lambda x: x.base if isinstance(x.base, SymbolInMulOnce) else x],
+    "Add": [lambda x: x],
+}
 
 
 def _postprocess_SymbolRemovesOtherSymbols(expr):
@@ -20,10 +22,12 @@ def _postprocess_SymbolRemovesOtherSymbols(expr):
 
 class SymbolRemovesOtherSymbols(Symbol):
     # Test class for a symbol that removes other symbols in `Mul`.
+    pass
 
-    _constructor_postprocessor_mapping = {
-        "Mul": [_postprocess_SymbolRemovesOtherSymbols],
-    }
+
+Basic._constructor_postprocessor_mapping[SymbolRemovesOtherSymbols] = {
+    "Mul": [_postprocess_SymbolRemovesOtherSymbols],
+}
 
 
 def test_constructor_postprocessors1():
