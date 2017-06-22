@@ -370,7 +370,9 @@ class Add(Expr, AssocOp):
                             # principle value
                             (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
                 elif e == -1:
-                    return _unevaluated_Mul(r - i*S.ImaginaryUnit, 1/(r**2 + i**2))
+                    return _unevaluated_Mul(
+                        r - i*S.ImaginaryUnit,
+                        1/(r**2 + i**2))
 
     @cacheit
     def _eval_derivative(self, s):
