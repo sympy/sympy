@@ -10,7 +10,7 @@ from sympy.core.mul import Mul
 from sympy.utilities import public
 
 @public
-def together(expr, deep=False):
+def together(expr, deep=False, _expand=None):
     """
     Denest and combine rational expressions using symbolic methods.
 
@@ -82,15 +82,16 @@ def together(expr, deep=False):
                 return expr.__class__(base, exp)
             else:
                 return expr.__class__(*[ _together(arg) for arg in expr.args ])
-            # handle Mul and Add
-            old_n, d = fraction(rv, exact=True)
-            n = factor_terms(expand_mul(old_n))
-            if n.count_ops() >= old_n.count_ops():
-                return rv
-            if n.is_Add and d.is_Number:
-                return Mul(1/d, n, evaluate=False)
-            elif n != old_n:
-                return n/d
+            if _expand:
+                # handle Mul and Add
+                old_n, d = fraction(rv, exact=True)
+                n = factor_terms(expand_mul(old_n))
+                if n.count_ops() >= old_n.count_ops():
+                    return rv
+                if n.is_Add and d.is_Number:
+                    return Mul(1/d, n, evaluate=False)
+                elif n != old_n:
+                    return n/d
             return rv
         elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
