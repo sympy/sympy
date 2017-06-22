@@ -4,9 +4,7 @@ from __future__ import print_function, division
 
 from sympy.core import Basic, Add, sympify
 from sympy.core.compatibility import iterable
-from sympy.core.exprtools import gcd_terms, factor_terms
-from sympy.core.function import expand_mul
-from sympy.core.mul import Mul
+from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 
 @public
@@ -62,15 +60,12 @@ def together(expr, deep=False):
     (x*exp(x) + 1)*exp(-3*x)/x
 
     """
-    from sympy.simplify.radsimp import fraction
     def _together(expr):
         if isinstance(expr, Basic):
             if expr.is_Atom or (expr.is_Function and not deep):
                 return expr
             elif expr.is_Add:
-                rv = gcd_terms(list(map(_together, expr.args)))
-            elif expr.is_Mul:
-                rv = expr.__class__(*[ _together(arg) for arg in expr.args ])
+                return gcd_terms(list(map(_together, Add.make_args(expr))))
             elif expr.is_Pow:
                 base = _together(expr.base)
 
@@ -82,16 +77,6 @@ def together(expr, deep=False):
                 return expr.__class__(base, exp)
             else:
                 return expr.__class__(*[ _together(arg) for arg in expr.args ])
-            # handle Mul and Add
-            old_n, d = fraction(rv, exact=True)
-            n = factor_terms(expand_mul(old_n))
-            if n.count_ops() >= old_n.count_ops():
-                return rv
-            if n.is_Add and d.is_Number:
-                return Mul(1/d, n, evaluate=False)
-            elif n != old_n:
-                return n/d
-            return rv
         elif iterable(expr):
             return expr.__class__([ _together(ex) for ex in expr ])
 
