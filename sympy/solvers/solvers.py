@@ -2576,12 +2576,15 @@ def _tsolve(eq, sym, **flags):
             if llhs.is_Add:
                 return _solve(llhs - log(rhs), sym, **flags)
 
-        elif lhs.is_Function and len(lhs.args) == 1 and lhs.func in multi_inverses:
-            # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
-            soln = []
-            for i in multi_inverses[lhs.func](rhs):
-                soln.extend(_solve(lhs.args[0] - i, sym, **flags))
-            return list(ordered(soln))
+        elif lhs.is_Function and len(lhs.args) == 1:
+            if lhs.func in multi_inverses:
+                # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
+                soln = []
+                for i in multi_inverses[lhs.func](rhs):
+                    soln.extend(_solve(lhs.args[0] - i, sym, **flags))
+                return list(ordered(soln))
+            elif lhs.func == LambertW:
+                return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
