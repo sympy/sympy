@@ -5792,17 +5792,17 @@ def _symbolic_factor_list(expr, opt, method):
     return coeff, factors
 
 
-def _symbolic_factor(expr, opt, method, **args):
+def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
         if hasattr(expr,'_eval_factor'):
             return expr._eval_factor()
-        coeff, factors = _symbolic_factor_list(together(expr, _expand=args.get('expand', None)), opt, method)
+        coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
-        return expr.func(*[_symbolic_factor(arg, opt, method, **args) for arg in expr.args])
+        return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
     elif hasattr(expr, '__iter__'):
-        return expr.__class__([_symbolic_factor(arg, opt, method, **args) for arg in expr])
+        return expr.__class__([_symbolic_factor(arg, opt, method) for arg in expr])
     else:
         return expr
 
@@ -5815,7 +5815,7 @@ def _generic_factor_list(expr, gens, args, method):
     expr = sympify(expr)
 
     if isinstance(expr, Expr) and not expr.is_Relational:
-        numer, denom = together(expr, _expand=args.get('expand', None)).as_numer_denom()
+        numer, denom = together(expr).as_numer_denom()
 
         cp, fp = _symbolic_factor_list(numer, opt, method)
         cq, fq = _symbolic_factor_list(denom, opt, method)
@@ -5852,7 +5852,7 @@ def _generic_factor(expr, gens, args, method):
     """Helper function for :func:`sqf` and :func:`factor`. """
     options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
-    return _symbolic_factor(sympify(expr), opt, method, **args)
+    return _symbolic_factor(sympify(expr), opt, method)
 
 
 def to_rational_coeffs(f):
@@ -6412,22 +6412,7 @@ def cancel(f, *gens, **args):
     from sympy.functions.elementary.piecewise import Piecewise
     options.allowed_flags(args, ['polys'])
 
-    was_tuple = isinstance(f, tuple)
     f = sympify(f)
-
-    sifted = sift(gens, lambda x: not isinstance(x, Symbol))
-    if sifted[True]:
-        reps = dict([(g, Dummy()) for g in sifted[True]])
-        gens = Tuple(*gens).xreplace(reps)
-        rv = cancel(f.subs(reps), *Tuple(*gens).xreplace(reps), **args)
-        if isinstance(f, Tuple):
-            _reps = dict([(v, k) for k, v in reps.items()])
-            rv = Tuple(*[i.xreplace(_reps) for i in rv])
-            if was_tuple:
-                rv = tuple(rv)
-            return rv
-        else:
-            return rv.xreplace(dict([(v, k) for k, v in reps.items()]))
 
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
