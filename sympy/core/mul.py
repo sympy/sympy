@@ -777,10 +777,11 @@ class Mul(Expr, AssocOp):
         coeffi = []
         addterms = S.One
         for a in self.args:
-            if a.is_real:
-                coeffr.append(a.as_real_imag()[0])
-            elif a.is_imaginary:
-                coeffi.append(a.as_real_imag()[1]*S.ImaginaryUnit)
+            r, i = a.as_real_imag()
+            if i.is_zero:
+                coeffr.append(r)
+            elif r.is_zero:
+                coeffi.append(i*S.ImaginaryUnit)
             elif a.is_commutative:
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
