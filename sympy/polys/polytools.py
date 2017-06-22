@@ -6403,14 +6403,14 @@ def _cancel_pq(p, q, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
-        return Tuple(S.One, p, q)
+        return S.One, p, q
     else:
         c, P, Q = F.cancel(G)
 
         if not opt.polys:
-            return Tuple(c, P.as_expr(), Q.as_expr())
+            return c, P.as_expr(), Q.as_expr()
         else:
-            return Tuple(c, P, Q)
+            return c, P, Q
 
 
 def _cancel(f, *gens, **args):

@@ -2919,7 +2919,7 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
 
-def test_issue_15605():
+def test_issue_11506():
     f = (exp(x) + 1)/exp(x)
     assert cancel(log(f)) == log(f)
     assert cancel(f, exp(-x)) == 1 + exp(-x)
@@ -2927,7 +2927,7 @@ def test_issue_15605():
     # order matters
     assert cancel(f, exp(x), exp(-x)) == f
     raw = cancel((2, 3))
-    assert isinstance(raw, Tuple) and raw == (1, 2, 3)
+    assert isinstance(raw, tuple) and raw == (1, 2, 3)
     raises(ValueError, lambda: cancel((1, 2, 3)))
     raises(ValueError, lambda: cancel([x]))
 
