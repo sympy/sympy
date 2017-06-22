@@ -66,6 +66,7 @@ from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, range
+from sympy.core.function import expand_mul
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
@@ -462,6 +463,10 @@ def make_simp(z):
     def simp(expr):
         """ Efficiently simplify the rational function ``expr``. """
         numer, denom = expr.as_numer_denom()
+        # /!\ poly will not expand unless told to do so
+        # and we want this to be efficient so we use only
+        # mininal expansion
+        numer = expand_mul(numer)
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
 
