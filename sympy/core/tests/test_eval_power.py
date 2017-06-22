@@ -390,6 +390,7 @@ def test_better_sqrt():
     # multiples of 1/2; don't make this too automatic
     assert sqrt((3 + 4*I))**3 == (2 + I)**3
     assert Pow(3 + 4*I, S(3)/2) == 2 + 11*I
+    assert Pow(6 + 8*I, S(3)/2) == 2*sqrt(2)*(2 + 11*I)
     n, d = (3 + 4*I), (3 - 4*I)**3
     a = n/d
     assert a.args == (1/d, n)

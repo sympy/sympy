@@ -365,7 +365,7 @@ class Add(Expr, AssocOp):
                     D = sqrt(r**2 + i**2)
                     if D.is_Rational:
                         # (r, i, D) is a Pythagorean triple
-                        root = sqrt(factor_terms((D - r)/2))
+                        root = sqrt(factor_terms((D - r)/2))**e.p
                         return root*expand_multinomial((
                             # principle value
                             (D + r)/abs(i) + sign(i)*S.ImaginaryUnit)**e.p)
