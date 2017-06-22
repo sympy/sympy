@@ -6395,29 +6395,34 @@ def nth_power_roots_poly(f, n, *gens, **args):
         return result
 
 
-def _cancel(f, *gens, **args):
-    # helper for cancel
+def _cancel_pq(p, q, *gens, **args):
+    # helper for cancel where f is a Tuple
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
-
-    if isinstance(f, Tuple):
-        p, q = f
-    elif f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
-        return f
-    elif isinstance(f, (Mul, Add)):
-        p, q = factor_terms(f, radical=True).as_numer_denom()
-    else:
-        return f.replace(
-            lambda x: isinstance(x, (Mul, Add)),
-            lambda x: _cancel(x, *gens, **args))
 
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed:
-        if not isinstance(f, Tuple):
-            return f
+        return Tuple(S.One, p, q)
+    else:
+        c, P, Q = F.cancel(G)
+
+        if not opt.polys:
+            return Tuple(c, P.as_expr(), Q.as_expr())
         else:
-            return Tuple(S.One, p, q)
+            return Tuple(c, P, Q)
+
+
+def _cancel(f, *gens, **args):
+    # helper for cancel when f is an Expr
+    from sympy.core.exprtools import factor_terms
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    p, q = factor_terms(f, radical=True).as_numer_denom()
+    try:
+        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
+    except PolificationFailed:
+        return f
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6443,14 +6448,7 @@ def _cancel(f, *gens, **args):
             return f.xreplace(dict(reps))
     else:
         c, P, Q = F.cancel(G)
-
-        if not isinstance(f, Tuple):
-            return c*(P.as_expr()/Q.as_expr())
-        else:
-            if not opt.polys:
-                return Tuple(c, P.as_expr(), Q.as_expr())
-            else:
-                return Tuple(c, P, Q)
+        return c*(P.as_expr()/Q.as_expr())
 
 
 @public
@@ -6473,20 +6471,40 @@ def cancel(f, *gens, **args):
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)  # if tuple, now a Tuple
+
+    # argument checking
     if isinstance(f, Tuple) and len(f) != 2:
         raise ValueError(filldedent('''
             Use a tuple of length 2 to send the numerator and
             denominator of an expression.'''))
+    if not isinstance(f, (Tuple, Expr)):
+        raise ValueError('expecting tuple or Expr, not %s' % f)
 
+    # recognize non-Symbol args
     sifted = sift(gens, lambda x: not isinstance(x, Symbol))
     if sifted[True]:
         reps = [(g, Dummy()) for g in sifted[True]]
         # the reps are processed in the order give
-        rv = _cancel(f.subs(reps), *Tuple(*gens).xreplace(dict(reps)), **args)
+        F, G = f.subs(reps), Tuple(*gens).xreplace(dict(reps))
+    else:
+        F, G = f, gens
+
+    # dispatch to helper
+    if isinstance(F, Tuple):
+        p, q = F
+        rv = _cancel_pq(p, q, *G, **args)
+    elif isinstance(F, (Mul, Add)):
+        rv = _cancel(F, *G, **args)
+    else:
+        rv = f.replace(
+            lambda x: isinstance(x, (Mul, Add)),
+            lambda x: _cancel(x, *G, **args))
+
+    # post-process if necessary
+    if sifted[True]:
         _reps = dict([(v, k) for k, v in reps])
         return rv.xreplace(_reps)
-
-    return _cancel(f, *gens, **args)
+    return rv
 
 
 @public

@@ -2929,6 +2929,7 @@ def test_issue_15605():
     raw = cancel((2, 3))
     assert isinstance(raw, Tuple) and raw == (1, 2, 3)
     raises(ValueError, lambda: cancel((1, 2, 3)))
+    raises(ValueError, lambda: cancel([x]))
 
 
 def test_reduced():
