@@ -84,7 +84,14 @@ class BooleanAtom(Boolean):
     Base class of BooleanTrue and BooleanFalse.
     """
     is_Boolean = True
+    is_Atom = True
     _op_priority = 11  # higher than Expr
+
+    def simplify(self, *a, **kw):
+        return self
+
+    def expand(self, *a, **kw):
+        return self
 
     @property
     def canonical(self):
@@ -367,7 +374,7 @@ class And(LatticeOp, BooleanFunction):
         >>> from sympy import And, Symbol
         >>> x = Symbol('x', real=True)
         >>> And(x<2, x>-2).as_set()
-        Interval(-2, 2, True, True)
+        Interval.open(-2, 2)
         """
         from sympy.sets.sets import Intersection
         if len(self.free_symbols) == 1:
@@ -438,7 +445,7 @@ class Or(LatticeOp, BooleanFunction):
         >>> from sympy import Or, Symbol
         >>> x = Symbol('x', real=True)
         >>> Or(x>2, x<-2).as_set()
-        Union(Interval(-oo, -2, True, True), Interval(2, oo, True, True))
+        Union(Interval.open(-oo, -2), Interval.open(2, oo))
         """
         from sympy.sets.sets import Union
         if len(self.free_symbols) == 1:
@@ -531,7 +538,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x', real=True)
         >>> Not(x>0).as_set()
-        Interval(-oo, 0, True)
+        Interval(-oo, 0)
         """
         if len(self.free_symbols) == 1:
             return self.args[0].as_set().complement(S.Reals)

@@ -4,16 +4,21 @@ from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.external import import_module
+from sympy.utilities.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
 from sympy.core.compatibility import exec_, HAS_GMPY, PY3
 from sympy.sets import FiniteSet, EmptySet
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.external import import_module
 
 import mpmath
+
+
+numpy = import_module('numpy')
 
 
 def test_issue_3538():
@@ -494,6 +499,36 @@ def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = sympify(s)
     assert Abs(sin(p)) < 1e-127
+
+
+def test_issue_10295():
+    if not numpy:
+        skip("numpy not installed.")
+
+    A = numpy.array([[1, 3, -1],
+                     [0, 1, 7]])
+    sA = S(A)
+    assert sA.shape == (2, 3)
+    for (ri, ci), val in numpy.ndenumerate(A):
+        assert sA[ri, ci] == val
+
+    B = numpy.array([-7, x, 3*y**2])
+    sB = S(B)
+    assert B[0] == -7
+    assert B[1] == x
+    assert B[2] == 3*y**2
+
+    C = numpy.arange(0, 24)
+    C.resize(2,3,4)
+    sC = S(C)
+    assert sC[0, 0, 0].is_integer
+    assert sC[0, 0, 0] == 0
+
+    a1 = numpy.array([1, 2, 3])
+    a2 = numpy.array([i for i in range(24)])
+    a2.resize(2, 4, 3)
+    assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
+    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
 
 
 def test_Range():

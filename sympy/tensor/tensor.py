@@ -1885,7 +1885,7 @@ def tensor_indices(s, typ):
 
     s : string of comma separated names of indices
 
-    typ : list of ``TensorIndexType`` of the indices
+    typ : ``TensorIndexType`` of the indices
 
     Examples
     ========

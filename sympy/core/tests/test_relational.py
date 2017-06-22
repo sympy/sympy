@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or, Not,
-                   Implies, Xor, zoo, sqrt, Rational, simplify, Function)
+from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
+    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function, Eq,
+    log, cos, sin)
 from sympy.core.compatibility import range
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
@@ -571,6 +572,8 @@ def test_issue_8245():
     assert (r >= a) == False
     assert (r <= a) == True
 
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+
 
 def test_issue_8449():
     p = Symbol('p', nonnegative=True)
@@ -689,6 +692,7 @@ def test_issue_10401():
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
+    assert Eq(inf, -inf) is F
 
 
     assert Eq(fin/(fin + 1), 1) is S.false
@@ -705,3 +709,8 @@ def test_issue_10633():
     assert Eq(False, True) == False
     assert Eq(True, True) == True
     assert Eq(False, False) == True
+
+def test_issue_10927():
+    x = symbols('x')
+    assert str(Eq(x, oo)) == 'Eq(x, oo)'
+    assert str(Eq(x, -oo)) == 'Eq(x, -oo)'

@@ -12,10 +12,9 @@ from __future__ import print_function, division
 from sympy.core.sympify import sympify
 from sympy.core import S, Pow, Dummy, pi, Expr, Wild, Mul, Equality
 from sympy.core.numbers import I, Number, Rational, oo
-from sympy.core.function import (Lambda, expand, expand_complex)
+from sympy.core.function import (Lambda, expand_complex)
 from sympy.core.relational import Eq
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.core.symbol import Symbol
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold)
@@ -866,7 +865,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
       domain leads to a NotImplementedError.
 
     >>> solveset(exp(x) > 1, x, R)
-    Interval(0, oo, True, True)
+    Interval.open(0, oo)
 
     """
     f = sympify(f)
@@ -1274,7 +1273,7 @@ def linsolve(system, *symbols):
         symbols = symbols[0]
 
     try:
-        sym = symbols[0].is_Symbol
+        sym = symbols[0].is_Symbol or symbols[0].is_Function
     except AttributeError:
         sym = False
 

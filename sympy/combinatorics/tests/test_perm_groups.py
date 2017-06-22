@@ -747,3 +747,8 @@ def test_coset_table():
          [6, 6, 6, 6, 2, 1, 11, 11, 2, 2], [9, 10, 8, 10, 11, 3, 1, 1, 7, 7],
          [10, 9, 10, 7, 3, 11, 2, 2, 11, 11], [8, 7, 9, 9, 9, 9, 4, 4, 9, 9],
          [7, 8, 7, 8, 10, 10, 5, 5, 10, 10], [11, 11, 11, 11, 8, 7, 6, 6, 8, 8]]
+
+def test_subgroup():
+    G = PermutationGroup(Permutation(0,1,2), Permutation(0,2,3))
+    H = G.subgroup([Permutation(0,1,3)])
+    assert H.is_subgroup(G)
